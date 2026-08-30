@@ -1,0 +1,10 @@
+{
+  "appId": "com.gleeson.gateescape",
+  "appName": "Gate Escape",
+  "webDir": "www",
+  "backgroundColor": "#0e2c58",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#0e2c58"
+  }
+}

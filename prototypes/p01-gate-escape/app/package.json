@@ -1,0 +1,19 @@
+{
+  "name": "gate-escape-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Native shell for Gate Escape (Capacitor)",
+  "scripts": {
+    "build": "node ../tools/build-app.mjs",
+    "ios:add": "npx cap add ios",
+    "ios:sync": "npx cap sync ios",
+    "ios:open": "npx cap open ios"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.0"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.1.0",
+    "@capacitor/ios": "^6.1.0"
+  }
+}

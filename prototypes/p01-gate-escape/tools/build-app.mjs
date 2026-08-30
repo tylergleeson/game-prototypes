@@ -1,0 +1,67 @@
+#!/usr/bin/env node
+// Assembles app/www/: the installable build of Gate Escape.
+// Same game files + PWA layer (manifest, service worker, iOS meta/icons).
+// This folder is both directly hostable (Add to Home Screen works) and the
+// Capacitor webDir for the native iOS build.
+import fs from 'fs';
+const root = new URL('..', import.meta.url).pathname;
+const out = root + 'app/www/';
+fs.mkdirSync(out + 'icons', { recursive: true });
+
+const VERSION = 'v' + new Date().toISOString().slice(0, 10).replace(/-/g, '');
+
+let html = fs.readFileSync(root + 'index.html', 'utf8');
+html = html.replace('<title>Gate Escape</title>', `<title>Gate Escape</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0e2c58">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gate Escape">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">`);
+html = html.replace('</body>', `  <script>
+    if ('serviceWorker' in navigator && location.protocol === 'https:') {
+      addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+    }
+  </script>
+</body>`);
+fs.writeFileSync(out + 'index.html', html);
+
+for (const f of ['game.js', 'levels.js']) fs.copyFileSync(root + f, out + f);
+for (const f of fs.readdirSync(root + 'icons')) fs.copyFileSync(root + 'icons/' + f, out + 'icons/' + f);
+
+fs.writeFileSync(out + 'manifest.webmanifest', JSON.stringify({
+  name: 'Gate Escape',
+  short_name: 'Gate Escape',
+  description: 'Drag the blocks out through matching gates. 30 blueprint puzzles.',
+  start_url: '.',
+  display: 'standalone',
+  orientation: 'portrait',
+  background_color: '#0e2c58',
+  theme_color: '#0e2c58',
+  icons: [
+    { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+    { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    { src: 'icons/icon-1024.png', sizes: '1024x1024', type: 'image/png' },
+  ],
+}, null, 2));
+
+fs.writeFileSync(out + 'sw.js', `// cache-first service worker, ${VERSION}
+const CACHE = 'gate-escape-${VERSION}';
+const ASSETS = ['.', 'index.html', 'game.js', 'levels.js', 'manifest.webmanifest',
+  'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png'];
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys =>
+    Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+  ).then(() => self.clients.claim()));
+});
+self.addEventListener('fetch', e => {
+  e.respondWith(caches.match(e.request).then(hit => hit || fetch(e.request)));
+});
+`);
+
+console.error('app/www assembled (' + VERSION + ')');

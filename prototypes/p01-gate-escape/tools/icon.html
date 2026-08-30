@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><style>html,body{margin:0;background:transparent}</style></head>
+<body>
+<canvas id="c" width="1024" height="1024"></canvas>
+<script>
+// Gate Escape app icon: blueprint sheet, red hatched block sliding out
+// through a red gate. Drawn at 1024, screenshotted at each needed size.
+const c = document.getElementById('c'), x = c.getContext('2d');
+const S = 1024;
+function rr(a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
+// background
+const g = x.createRadialGradient(S*0.5,S*0.32,S*0.1,S*0.5,S*0.5,S*0.85);
+g.addColorStop(0,'#1d5094'); g.addColorStop(1,'#0e2c58');
+x.fillStyle = g; x.fillRect(0,0,S,S);
+// draft grid
+x.strokeStyle = 'rgba(190,225,255,.13)'; x.lineWidth = 4;
+for (let i = 1; i < 8; i++) {
+  x.beginPath(); x.moveTo(i*S/8, 0); x.lineTo(i*S/8, S); x.stroke();
+  x.beginPath(); x.moveTo(0, i*S/8); x.lineTo(S, i*S/8); x.stroke();
+}
+// drafting frame
+x.strokeStyle = 'rgba(214,238,255,.7)'; x.lineWidth = 10;
+x.strokeRect(S*0.09, S*0.09, S*0.82, S*0.82);
+// gate on the right edge
+x.fillStyle = '#c24d46'; rr(S*0.865, S*0.33, S*0.09, S*0.34, 20); x.fill();
+x.fillStyle = '#ff8078'; rr(S*0.875, S*0.34, S*0.07, S*0.32, 14); x.fill();
+// block (2x2) with hatch
+const bx = S*0.24, by = S*0.30, bs = S*0.40;
+x.save();
+x.shadowColor = 'rgba(4,14,34,.55)'; x.shadowBlur = 40; x.shadowOffsetY = 18;
+x.fillStyle = '#c24d46'; rr(bx, by, bs, bs, 28); x.fill();
+x.restore();
+x.save();
+rr(bx+8, by+8, bs-16, bs-16, 22); x.clip();
+x.fillStyle = '#ff8078'; x.fillRect(bx, by, bs, bs);
+x.strokeStyle = 'rgba(10,25,55,.25)'; x.lineWidth = 9;
+for (let d = -bs; d < bs*1.5; d += 44) {
+  x.beginPath(); x.moveTo(bx+d, by+bs); x.lineTo(bx+d+bs, by); x.stroke();
+}
+x.restore();
+x.strokeStyle = '#c24d46'; x.lineWidth = 16; rr(bx+8, by+8, bs-16, bs-16, 22); x.stroke();
+// white arrow from block to gate
+x.strokeStyle = 'rgba(255,255,255,.95)'; x.lineWidth = 30; x.lineCap = 'round';
+x.beginPath(); x.moveTo(bx+bs+30, S*0.5); x.lineTo(S*0.80, S*0.5); x.stroke();
+x.fillStyle = 'rgba(255,255,255,.95)';
+x.beginPath();
+x.moveTo(S*0.845, S*0.5); x.lineTo(S*0.775, S*0.455); x.lineTo(S*0.775, S*0.545);
+x.closePath(); x.fill();
+// glyph dot on block
+x.fillStyle = 'rgba(255,255,255,.9)';
+x.beginPath(); x.arc(bx+bs/2, by+bs/2, S*0.045, 0, Math.PI*2); x.fill();
+</script>
+</body>
+</html>
