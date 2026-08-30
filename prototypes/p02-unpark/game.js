@@ -382,6 +382,12 @@ function render() {
   for (let y = 2; y < L.h; y += 2) {
     ctx.beginPath(); ctx.moveTo(bx, by + y * cell); ctx.lineTo(bx + bw, by + y * cell); ctx.stroke();
   }
+  // faint stand markings at every cell corner so slide steps read clearly
+  ctx.fillStyle = 'rgba(190,205,235,.14)';
+  for (let x = 1; x < L.w; x++) for (let y = 1; y < L.h; y++) {
+    ctx.fillRect(bx + x * cell - 3, by + y * cell - 0.75, 6, 1.5);
+    ctx.fillRect(bx + x * cell - 0.75, by + y * cell - 3, 1.5, 6);
+  }
   // taxiway centerlines: amber dashes along mid rows/cols
   ctx.strokeStyle = 'rgba(240,190,60,.28)';
   ctx.lineWidth = 2.5;
@@ -446,7 +452,8 @@ function render() {
     const along = (c.axis === 'h' ? w0 : h0);
     const ang = c.axis === 'h' ? (c.dir === 1 ? 0 : Math.PI) : (c.dir === 1 ? Math.PI / 2 : -Math.PI / 2);
     if (dragging) { ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 12; ctx.shadowOffsetY = 4; }
-    drawPlane(cx2, cy2, ang, along * 0.98, cell * (c.len === 2 ? 1.28 : 1.16), col, lift, alpha, now + i);
+    // wingspan stays inside the plane's own lane so occupancy is unambiguous
+    drawPlane(cx2, cy2, ang, along * 0.98, cell * (c.len === 2 ? 1.0 : 0.96), col, lift, alpha, now + i);
     ctx.shadowColor = 'transparent';
   }
 

@@ -376,19 +376,22 @@ function render() {
     if (g.side === 'bottom') { gx = bx + g.start * cell; gy = by + bh + 3; w = along; h = th; ax = gx + w / 2; ay = gy + h / 2; rot = Math.PI; }
     if (g.side === 'left') { gx = bx - th - 3; gy = by + g.start * cell; w = th; h = along; ax = gx + w / 2; ay = gy + h / 2; rot = -Math.PI / 2; }
     if (g.side === 'right') { gx = bx + bw + 3; gy = by + g.start * cell; w = th; h = along; ax = gx + w / 2; ay = gy + h / 2; rot = Math.PI / 2; }
-    // stamped drafting tab: faint ink wash + dashed outline
-    ctx.fillStyle = c.main + '2e';
+    // solid ink stamp — must be unmissable at a glance
+    ctx.fillStyle = c.dark;
     rr(gx, gy, w, h, 4); ctx.fill();
-    ctx.strokeStyle = c.main; ctx.lineWidth = 2;
-    ctx.setLineDash([6, 4]);
-    rr(gx + 1, gy + 1, w - 2, h - 2, 4); ctx.stroke();
+    ctx.fillStyle = c.main;
+    rr(gx + 1.5, gy + 1.5, w - 3, h - 3, 3); ctx.fill();
+    ctx.setLineDash([5, 4]);
+    ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 1.4;
+    rr(gx + 3.5, gy + 3.5, w - 7, h - 7, 2); ctx.stroke();
     ctx.setLineDash([]);
-    // outward chevron
+    // match glyph on the tab + outward chevron floating past it
     ctx.translate(ax, ay); ctx.rotate(rot);
-    ctx.strokeStyle = c.main; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
-    const ch = cell * 0.12;
+    drawGlyph(c.glyph, 0, 0, Math.min(cell * 0.13, th * 0.3), 'rgba(255,255,255,.95)');
+    ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+    const ch = cell * 0.1;
     ctx.beginPath();
-    ctx.moveTo(-ch, ch * 0.6); ctx.lineTo(0, -ch * 0.6); ctx.lineTo(ch, ch * 0.6);
+    ctx.moveTo(-ch, -th * 0.62 - ch * 0.1); ctx.lineTo(0, -th * 0.62 - ch * 1.2); ctx.lineTo(ch, -th * 0.62 - ch * 0.1);
     ctx.stroke();
     ctx.restore();
   }
@@ -428,7 +431,15 @@ function render() {
     const px = bx + disp[i][0] * cell + ox, py = by + disp[i][1] * cell + oy;
     const inset = 3;
     const has = (qx, qy) => b.cells.some(([ax2, ay2]) => ax2 === qx && ay2 === qy);
-    // ink wash over the block's footprint, hatched like a drafting fill
+    // solid ink block that reads as an OBJECT on the paper: shadowed base,
+    // opaque fill, hatch kept only as a subtle texture
+    ctx.save();
+    ctx.shadowColor = 'rgba(4,14,34,.5)'; ctx.shadowBlur = dragging ? 12 : 6; ctx.shadowOffsetY = dragging ? 5 : 3;
+    ctx.fillStyle = c.dark;
+    for (const [cx, cy] of b.cells) {
+      ctx.fillRect(px + cx * cell + inset, py + cy * cell + inset, cell - inset * 2, cell - inset * 2);
+    }
+    ctx.restore();
     ctx.save();
     ctx.beginPath();
     for (const [cx, cy] of b.cells) {
@@ -440,9 +451,9 @@ function render() {
       if (has(cx, cy + 1)) ctx.rect(px + cx * cell + inset, py + cy * cell + cell - inset - 2, cell - inset * 2, inset * 2 + 4);
     }
     ctx.clip();
-    ctx.fillStyle = c.main + (dragging ? '52' : '38');
+    ctx.fillStyle = c.main;
     ctx.fillRect(px - cell, py - cell, cell * 6, cell * 6);
-    ctx.strokeStyle = c.main + 'aa';
+    ctx.strokeStyle = 'rgba(10,25,55,.22)';
     ctx.lineWidth = 1.4;
     const span = cell * 6;
     for (let d = -span; d < span; d += 7) {
@@ -454,7 +465,7 @@ function render() {
     ctx.restore();
     ctx.shadowColor = 'transparent';
     // heavy ink outline only on the block's outer edges
-    ctx.strokeStyle = c.main; ctx.lineWidth = 2.6; ctx.lineCap = 'square';
+    ctx.strokeStyle = c.dark; ctx.lineWidth = 2.6; ctx.lineCap = 'square';
     for (const [cx, cy] of b.cells) {
       const x = px + cx * cell, y = py + cy * cell;
       const L2 = x + inset, R2 = x + cell - inset, T2 = y + inset, B2 = y + cell - inset;
@@ -480,7 +491,7 @@ function render() {
       for (const [cx, cy] of b.cells) { gx2 += cx + 0.5; gy2 += cy + 0.5; }
       gx2 /= b.cells.length; gy2 /= b.cells.length;
       if (!has(Math.floor(gx2), Math.floor(gy2))) { const [cx, cy] = b.cells[0]; gx2 = cx + 0.5; gy2 = cy + 0.5; }
-      drawGlyph(c.glyph, px + gx2 * cell, py + gy2 * cell, cell * 0.16, c.main);
+      drawGlyph(c.glyph, px + gx2 * cell, py + gy2 * cell, cell * 0.16, 'rgba(255,255,255,.85)');
     }
     ctx.restore();
   }

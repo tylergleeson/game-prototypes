@@ -232,6 +232,25 @@ function drawBolt(px, py, r, color, dim) {
   ctx.fillStyle = dome;
   ctx.beginPath(); ctx.arc(0, 0, r * 0.62, 0, Math.PI * 2); ctx.fill();
   ctx.shadowColor = 'transparent';
+  // etched match symbol — every color pairs with a shape, no exceptions
+  const es = r * 0.3;
+  ctx.fillStyle = 'rgba(15,8,4,.5)';
+  ctx.strokeStyle = 'rgba(15,8,4,.5)';
+  ctx.lineWidth = Math.max(1.4, r * 0.12);
+  if (color === 0) { // red: ring
+    ctx.beginPath(); ctx.arc(0, 0, es * 0.85, 0, Math.PI * 2); ctx.stroke();
+  } else if (color === 1) { // blue: triangle
+    ctx.beginPath(); ctx.moveTo(0, -es); ctx.lineTo(es * 0.95, es * 0.75); ctx.lineTo(-es * 0.95, es * 0.75); ctx.closePath(); ctx.fill();
+  } else if (color === 2) { // green: square
+    ctx.fillRect(-es * 0.75, -es * 0.75, es * 1.5, es * 1.5);
+  } else if (color === 3) { // amber: diamond
+    ctx.save(); ctx.rotate(Math.PI / 4); ctx.fillRect(-es * 0.75, -es * 0.75, es * 1.5, es * 1.5); ctx.restore();
+  } else { // purple: cross
+    ctx.beginPath();
+    ctx.moveTo(-es, 0); ctx.lineTo(es, 0);
+    ctx.moveTo(0, -es); ctx.lineTo(0, es);
+    ctx.stroke();
+  }
   // specular
   ctx.fillStyle = 'rgba(255,255,255,.55)';
   ctx.beginPath(); ctx.ellipse(-r * 0.2, -r * 0.26, r * 0.16, r * 0.1, -0.6, 0, Math.PI * 2); ctx.fill();

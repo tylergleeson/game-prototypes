@@ -1,8 +1,8 @@
 'use strict';
 /* Pour Sort — tap a tube, tap another, sort every color into its own tube. */
 
-const LIQ = ['#ff5a5f', '#3f9bf5', '#37d17e', '#ffb020', '#a06ef5', '#37c8dd', '#ff7ab6', '#b6e04a', '#ff8a3c'];
-const LIQ_DARK = ['#b83438', '#295f9e', '#1f8a52', '#b57508', '#6a44b8', '#1f8b9b', '#c24f82', '#7fa22e', '#c25a1e'];
+const LIQ = ['#ff5a5f', '#3f9bf5', '#37d17e', '#ffb020', '#a06ef5', '#37c8dd', '#ff7ab6', '#b6e04a', '#a9714b'];
+const LIQ_DARK = ['#b83438', '#295f9e', '#1f8a52', '#b57508', '#6a44b8', '#1f8b9b', '#c24f82', '#7fa22e', '#7a4e30'];
 
 const cv = document.getElementById('cv');
 const ctx = cv.getContext('2d');
@@ -273,10 +273,32 @@ function render() {
       // pages (fore-edge showing on the right)
       ctx.fillStyle = '#efe6cf';
       ctx.fillRect(bx2 + bw - Math.max(3, bw * 0.09), sy + 1.5, Math.max(2, bw * 0.06), bh - 3);
-      // spine ornament: two thin bands
-      ctx.fillStyle = 'rgba(255,246,220,.5)';
-      ctx.fillRect(bx2 + bw * 0.12, sy + bh * 0.28, bw * 0.55, Math.max(1, bh * 0.08));
-      ctx.fillRect(bx2 + bw * 0.12, sy + bh * 0.55, bw * 0.36, Math.max(1, bh * 0.08));
+      // per-color spine motif: color + motif together identify a set,
+      // so near hues (red/pink, green/lime) can never be confused
+      ctx.fillStyle = 'rgba(255,250,235,.85)';
+      const mx = bx2 + bw * 0.42, my = sy + bh * 0.42, ms = Math.max(2.5, bh * 0.2);
+      const band = (n) => {
+        for (let k = 0; k < n; k++) {
+          ctx.fillRect(bx2 + bw * 0.14, sy + bh * (0.25 + k * 0.22), bw * 0.5, Math.max(1.5, bh * 0.1));
+        }
+      };
+      if (c === 0) band(1);
+      else if (c === 1) band(2);
+      else if (c === 2) band(3);
+      else if (c === 3) { ctx.beginPath(); ctx.arc(mx, my, ms * 0.7, 0, Math.PI * 2); ctx.fill(); }
+      else if (c === 4) { ctx.save(); ctx.translate(mx, my); ctx.rotate(Math.PI / 4); ctx.fillRect(-ms * 0.55, -ms * 0.55, ms * 1.1, ms * 1.1); ctx.restore(); }
+      else if (c === 5) {
+        ctx.strokeStyle = 'rgba(255,250,235,.85)'; ctx.lineWidth = Math.max(1.5, bh * 0.09); ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(mx - ms * 0.6, my - ms * 0.6); ctx.lineTo(mx + ms * 0.6, my + ms * 0.6);
+        ctx.moveTo(mx + ms * 0.6, my - ms * 0.6); ctx.lineTo(mx - ms * 0.6, my + ms * 0.6); ctx.stroke();
+      } else if (c === 6) { ctx.beginPath(); ctx.moveTo(mx, my - ms * 0.75); ctx.lineTo(mx + ms * 0.75, my + ms * 0.6); ctx.lineTo(mx - ms * 0.75, my + ms * 0.6); ctx.closePath(); ctx.fill(); }
+      else if (c === 7) {
+        ctx.beginPath(); ctx.arc(mx - ms * 0.7, my, ms * 0.42, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(mx + ms * 0.7, my, ms * 0.42, 0, Math.PI * 2); ctx.fill();
+      } else {
+        ctx.strokeStyle = 'rgba(255,250,235,.85)'; ctx.lineWidth = Math.max(1.5, bh * 0.09);
+        ctx.beginPath(); ctx.arc(mx, my, ms * 0.65, 0, Math.PI * 2); ctx.stroke();
+      }
     }
     // soft inner shadow so books sit inside
     ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 2;
