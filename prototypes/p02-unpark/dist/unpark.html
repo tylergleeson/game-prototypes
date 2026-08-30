@@ -1,0 +1,540 @@
+<title>Unpark!</title>
+<style>
+  :root { --bg1:#2a2d33; --bg2:#191b1f; --ink:#f2f0ea; --dim:#9a978f; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; overflow:hidden; }
+  body {
+    background: radial-gradient(120% 100% at 50% 0%, var(--bg1) 0%, var(--bg2) 70%);
+    color:var(--ink); font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    display:flex; flex-direction:column; align-items:center; user-select:none; touch-action:none;
+  }
+  #hud {
+    width:100%; max-width:560px; display:flex; align-items:center; justify-content:space-between;
+    padding:calc(10px + env(safe-area-inset-top)) 16px 6px;
+  }
+  #hud .lvl { font-weight:800; font-size:18px; letter-spacing:.4px; }
+  #hud .moves { font-weight:800; font-size:18px; }
+  #hud .moves.low { color:#ff6b5e; animation:pulse 1s infinite; }
+  #hud button {
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:var(--ink);
+    border-radius:10px; padding:6px 12px; font-size:14px; font-weight:700; cursor:pointer;
+  }
+  @keyframes pulse { 50% { opacity:.45; } }
+  #wrap { flex:1; width:100%; display:flex; align-items:center; justify-content:center; }
+  canvas { display:block; }
+  .modal {
+    position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(12,12,14,.66); backdrop-filter:blur(3px); z-index:10;
+  }
+  .card {
+    background:linear-gradient(180deg,#34383f,#26292e); border:1px solid rgba(255,255,255,.12);
+    border-radius:20px; padding:26px 30px; text-align:center; width:min(86vw,340px);
+    box-shadow:0 18px 50px rgba(0,0,0,.5); animation:pop .28s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes pop { from { transform:scale(.7); opacity:0; } }
+  .card h2 { font-size:26px; margin-bottom:6px; }
+  .card p { color:var(--dim); font-size:15px; margin-bottom:16px; }
+  .card .stars { font-size:30px; letter-spacing:6px; margin-bottom:10px; color:#ffc63d; }
+  .card button {
+    width:100%; border:0; border-radius:14px; padding:14px; font-size:17px; font-weight:800;
+    cursor:pointer; margin-top:8px; color:#fff;
+  }
+  .card button.primary { background:linear-gradient(180deg,#ffb020,#e08f00); box-shadow:0 6px 0 #a86b00; color:#231a00; }
+  .card button.rescue  { background:linear-gradient(180deg,#33d17a,#1fae5f); box-shadow:0 6px 0 #12854a; }
+  .card button.ghost   { background:rgba(255,255,255,.09); box-shadow:none; font-weight:600; font-size:15px; }
+  .card button:active { transform:translateY(3px); box-shadow:none; }
+  [hidden] { display:none !important; }
+</style>
+
+  <div id="hud">
+    <div class="lvl" id="hudLevel">Level 1</div>
+    <div class="moves"><span id="hudMoves">0</span> moves</div>
+    <button id="btnRestart" aria-label="Restart">&#8635;</button>
+  </div>
+  <div id="wrap"><canvas id="cv"></canvas></div>
+
+  <div class="modal" id="winModal" hidden>
+    <div class="card">
+      <div class="stars" id="winStars">★★★</div>
+      <h2>Lot cleared!</h2>
+      <p id="winSub"></p>
+      <button class="primary" id="btnNext">Next level</button>
+    </div>
+  </div>
+
+  <div class="modal" id="failModal" hidden>
+    <div class="card">
+      <h2>Gridlock!</h2>
+      <p id="failSub"></p>
+      <button class="rescue" id="btnRescue">+3 moves</button>
+      <button class="ghost" id="btnRetry">Retry level</button>
+    </div>
+  </div>
+
+  <script>
+const LEVELS = [{"w":6,"h":6,"stones":[],"cars":[{"x":1,"y":2,"len":2,"axis":"v","dir":1,"color":0}],"par":1,"moves":7},{"w":6,"h":6,"stones":[],"cars":[{"x":3,"y":4,"len":2,"axis":"v","dir":1,"color":0},{"x":0,"y":3,"len":2,"axis":"h","dir":1,"color":1}],"par":2,"moves":8},{"w":6,"h":6,"stones":[],"cars":[{"x":2,"y":2,"len":2,"axis":"h","dir":-1,"color":0},{"x":2,"y":1,"len":2,"axis":"h","dir":1,"color":1},{"x":3,"y":4,"len":3,"axis":"h","dir":-1,"color":2}],"par":3,"moves":9},{"w":6,"h":6,"stones":[],"cars":[{"x":3,"y":4,"len":3,"axis":"h","dir":1,"color":0},{"x":3,"y":5,"len":3,"axis":"h","dir":-1,"color":1},{"x":5,"y":1,"len":3,"axis":"v","dir":-1,"color":2},{"x":1,"y":0,"len":3,"axis":"h","dir":1,"color":3}],"par":4,"moves":10},{"w":6,"h":6,"stones":[],"cars":[{"x":4,"y":2,"len":3,"axis":"v","dir":-1,"color":0},{"x":0,"y":1,"len":3,"axis":"h","dir":1,"color":1},{"x":3,"y":4,"len":2,"axis":"v","dir":-1,"color":2},{"x":5,"y":0,"len":3,"axis":"v","dir":-1,"color":3}],"par":4,"moves":10},{"w":6,"h":6,"stones":[],"cars":[{"x":0,"y":3,"len":2,"axis":"v","dir":1,"color":0},{"x":2,"y":3,"len":3,"axis":"h","dir":1,"color":1},{"x":4,"y":0,"len":2,"axis":"v","dir":-1,"color":2},{"x":0,"y":5,"len":3,"axis":"h","dir":-1,"color":3},{"x":1,"y":1,"len":2,"axis":"v","dir":1,"color":4}],"par":5,"moves":11},{"w":6,"h":6,"stones":[],"cars":[{"x":4,"y":3,"len":2,"axis":"v","dir":-1,"color":0},{"x":5,"y":4,"len":2,"axis":"v","dir":1,"color":1},{"x":1,"y":4,"len":2,"axis":"h","dir":1,"color":2},{"x":4,"y":0,"len":2,"axis":"h","dir":1,"color":3},{"x":1,"y":5,"len":3,"axis":"h","dir":-1,"color":4}],"par":5,"moves":11},{"w":6,"h":6,"stones":[],"cars":[{"x":3,"y":0,"len":3,"axis":"h","dir":-1,"color":0},{"x":0,"y":4,"len":3,"axis":"h","dir":1,"color":1},{"x":2,"y":1,"len":3,"axis":"h","dir":1,"color":2},{"x":1,"y":1,"len":3,"axis":"v","dir":1,"color":3},{"x":2,"y":3,"len":2,"axis":"h","dir":1,"color":4},{"x":0,"y":2,"len":2,"axis":"v","dir":1,"color":5}],"par":6,"moves":12},{"w":6,"h":6,"stones":[],"cars":[{"x":1,"y":5,"len":3,"axis":"h","dir":-1,"color":0},{"x":2,"y":2,"len":3,"axis":"h","dir":1,"color":1},{"x":2,"y":4,"len":3,"axis":"h","dir":-1,"color":2},{"x":1,"y":2,"len":3,"axis":"v","dir":1,"color":3},{"x":4,"y":5,"len":2,"axis":"h","dir":1,"color":4},{"x":4,"y":3,"len":2,"axis":"h","dir":1,"color":5}],"par":6,"moves":12},{"w":6,"h":6,"stones":[],"cars":[{"x":4,"y":1,"len":2,"axis":"h","dir":1,"color":0},{"x":1,"y":3,"len":2,"axis":"h","dir":1,"color":1},{"x":2,"y":0,"len":2,"axis":"v","dir":-1,"color":2},{"x":0,"y":4,"len":2,"axis":"v","dir":1,"color":3},{"x":3,"y":5,"len":3,"axis":"h","dir":-1,"color":4},{"x":2,"y":2,"len":2,"axis":"h","dir":-1,"color":5},{"x":2,"y":4,"len":2,"axis":"h","dir":1,"color":0}],"par":7,"moves":13},{"w":6,"h":6,"stones":[[1,1],[3,5]],"cars":[{"x":0,"y":3,"len":2,"axis":"h","dir":1,"color":0},{"x":1,"y":2,"len":2,"axis":"h","dir":1,"color":1},{"x":1,"y":0,"len":2,"axis":"h","dir":-1,"color":2},{"x":2,"y":3,"len":3,"axis":"v","dir":1,"color":3},{"x":5,"y":0,"len":2,"axis":"v","dir":-1,"color":4},{"x":4,"y":0,"len":3,"axis":"v","dir":-1,"color":5},{"x":5,"y":2,"len":3,"axis":"v","dir":-1,"color":0}],"par":7,"moves":11},{"w":6,"h":6,"stones":[[2,2],[2,4]],"cars":[{"x":5,"y":4,"len":2,"axis":"v","dir":-1,"color":0},{"x":1,"y":0,"len":3,"axis":"v","dir":-1,"color":1},{"x":5,"y":1,"len":2,"axis":"v","dir":-1,"color":2},{"x":1,"y":4,"len":2,"axis":"v","dir":-1,"color":3},{"x":0,"y":3,"len":2,"axis":"h","dir":-1,"color":4},{"x":0,"y":1,"len":2,"axis":"v","dir":-1,"color":5},{"x":2,"y":5,"len":3,"axis":"h","dir":-1,"color":0}],"par":7,"moves":11},{"w":6,"h":6,"stones":[[3,1],[3,0]],"cars":[{"x":4,"y":0,"len":2,"axis":"v","dir":-1,"color":0},{"x":1,"y":2,"len":3,"axis":"h","dir":1,"color":1},{"x":0,"y":1,"len":3,"axis":"h","dir":-1,"color":2},{"x":4,"y":2,"len":2,"axis":"v","dir":1,"color":3},{"x":5,"y":2,"len":2,"axis":"v","dir":1,"color":4},{"x":0,"y":3,"len":3,"axis":"h","dir":-1,"color":5},{"x":1,"y":5,"len":3,"axis":"h","dir":1,"color":0}],"par":7,"moves":11},{"w":7,"h":7,"stones":[[5,4],[1,2]],"cars":[{"x":6,"y":4,"len":3,"axis":"v","dir":1,"color":0},{"x":1,"y":1,"len":3,"axis":"h","dir":-1,"color":1},{"x":3,"y":5,"len":2,"axis":"h","dir":-1,"color":2},{"x":4,"y":2,"len":3,"axis":"v","dir":1,"color":3},{"x":2,"y":4,"len":2,"axis":"h","dir":-1,"color":4},{"x":5,"y":1,"len":2,"axis":"v","dir":-1,"color":5},{"x":6,"y":0,"len":2,"axis":"v","dir":1,"color":0},{"x":1,"y":6,"len":2,"axis":"h","dir":-1,"color":1},{"x":4,"y":0,"len":2,"axis":"v","dir":-1,"color":2}],"par":9,"moves":13},{"w":7,"h":7,"stones":[[3,2],[3,0]],"cars":[{"x":4,"y":5,"len":3,"axis":"h","dir":1,"color":0},{"x":4,"y":2,"len":3,"axis":"v","dir":1,"color":1},{"x":0,"y":1,"len":2,"axis":"h","dir":1,"color":2},{"x":4,"y":0,"len":2,"axis":"v","dir":-1,"color":3},{"x":1,"y":2,"len":3,"axis":"v","dir":-1,"color":4},{"x":6,"y":0,"len":3,"axis":"v","dir":-1,"color":5},{"x":2,"y":1,"len":2,"axis":"h","dir":1,"color":0},{"x":5,"y":3,"len":2,"axis":"h","dir":1,"color":1},{"x":2,"y":3,"len":2,"axis":"v","dir":1,"color":2}],"par":9,"moves":13},{"w":7,"h":7,"stones":[[0,2],[6,6]],"cars":[{"x":3,"y":6,"len":3,"axis":"h","dir":-1,"color":0},{"x":1,"y":0,"len":3,"axis":"v","dir":1,"color":1},{"x":1,"y":6,"len":2,"axis":"h","dir":-1,"color":2},{"x":2,"y":3,"len":2,"axis":"h","dir":-1,"color":3},{"x":3,"y":0,"len":2,"axis":"h","dir":1,"color":4},{"x":3,"y":5,"len":3,"axis":"h","dir":-1,"color":5},{"x":0,"y":4,"len":2,"axis":"v","dir":1,"color":0},{"x":5,"y":2,"len":2,"axis":"v","dir":-1,"color":1},{"x":1,"y":4,"len":3,"axis":"h","dir":1,"color":2}],"par":9,"moves":13},{"w":7,"h":7,"stones":[[1,0],[5,1]],"cars":[{"x":3,"y":0,"len":3,"axis":"h","dir":1,"color":0},{"x":4,"y":1,"len":3,"axis":"v","dir":1,"color":1},{"x":6,"y":1,"len":2,"axis":"v","dir":1,"color":2},{"x":5,"y":3,"len":2,"axis":"h","dir":1,"color":3},{"x":0,"y":4,"len":2,"axis":"v","dir":-1,"color":4},{"x":3,"y":4,"len":2,"axis":"h","dir":-1,"color":5},{"x":0,"y":2,"len":3,"axis":"h","dir":1,"color":0},{"x":1,"y":6,"len":3,"axis":"h","dir":1,"color":1}],"par":9,"moves":13},{"w":7,"h":7,"stones":[[1,0],[5,1]],"cars":[{"x":3,"y":0,"len":3,"axis":"h","dir":1,"color":0},{"x":4,"y":1,"len":3,"axis":"v","dir":1,"color":1},{"x":6,"y":1,"len":2,"axis":"v","dir":1,"color":2},{"x":5,"y":3,"len":2,"axis":"h","dir":1,"color":3},{"x":0,"y":4,"len":2,"axis":"v","dir":-1,"color":4},{"x":3,"y":4,"len":2,"axis":"h","dir":-1,"color":5},{"x":0,"y":2,"len":3,"axis":"h","dir":1,"color":0},{"x":1,"y":6,"len":3,"axis":"h","dir":1,"color":1}],"par":9,"moves":13},{"w":7,"h":7,"stones":[[1,0],[5,1]],"cars":[{"x":3,"y":0,"len":3,"axis":"h","dir":1,"color":0},{"x":4,"y":1,"len":3,"axis":"v","dir":1,"color":1},{"x":6,"y":1,"len":2,"axis":"v","dir":1,"color":2},{"x":5,"y":3,"len":2,"axis":"h","dir":1,"color":3},{"x":0,"y":4,"len":2,"axis":"v","dir":-1,"color":4},{"x":3,"y":4,"len":2,"axis":"h","dir":-1,"color":5},{"x":0,"y":2,"len":3,"axis":"h","dir":1,"color":0},{"x":1,"y":6,"len":3,"axis":"h","dir":1,"color":1}],"par":9,"moves":13},{"w":7,"h":7,"stones":[[0,5],[0,4]],"cars":[{"x":1,"y":0,"len":3,"axis":"v","dir":1,"color":0},{"x":5,"y":3,"len":2,"axis":"v","dir":-1,"color":1},{"x":0,"y":3,"len":2,"axis":"h","dir":1,"color":2},{"x":4,"y":6,"len":3,"axis":"h","dir":-1,"color":3},{"x":6,"y":2,"len":2,"axis":"v","dir":1,"color":4},{"x":5,"y":1,"len":2,"axis":"h","dir":-1,"color":5},{"x":1,"y":4,"len":2,"axis":"h","dir":1,"color":0},{"x":3,"y":0,"len":2,"axis":"v","dir":1,"color":1}],"par":9,"moves":11},{"w":7,"h":7,"stones":[[2,4],[5,4]],"cars":[{"x":6,"y":4,"len":3,"axis":"v","dir":1,"color":0},{"x":4,"y":0,"len":2,"axis":"v","dir":1,"color":1},{"x":0,"y":0,"len":3,"axis":"h","dir":1,"color":2},{"x":2,"y":2,"len":2,"axis":"v","dir":-1,"color":3},{"x":0,"y":5,"len":2,"axis":"v","dir":-1,"color":4},{"x":3,"y":6,"len":3,"axis":"h","dir":-1,"color":5},{"x":4,"y":2,"len":2,"axis":"h","dir":-1,"color":0},{"x":0,"y":3,"len":2,"axis":"v","dir":-1,"color":1}],"par":10,"moves":12},{"w":7,"h":7,"stones":[[0,5],[2,2]],"cars":[{"x":3,"y":3,"len":2,"axis":"h","dir":-1,"color":0},{"x":0,"y":6,"len":3,"axis":"h","dir":1,"color":1},{"x":0,"y":2,"len":3,"axis":"v","dir":-1,"color":2},{"x":3,"y":0,"len":2,"axis":"v","dir":1,"color":3},{"x":0,"y":0,"len":3,"axis":"h","dir":1,"color":4},{"x":5,"y":1,"len":2,"axis":"h","dir":-1,"color":5},{"x":5,"y":3,"len":2,"axis":"v","dir":-1,"color":0},{"x":5,"y":2,"len":2,"axis":"h","dir":1,"color":1}],"par":9,"moves":11},{"w":7,"h":7,"stones":[[1,6],[0,5]],"cars":[{"x":2,"y":3,"len":2,"axis":"h","dir":1,"color":0},{"x":4,"y":1,"len":3,"axis":"v","dir":-1,"color":1},{"x":2,"y":0,"len":3,"axis":"v","dir":-1,"color":2},{"x":0,"y":2,"len":2,"axis":"h","dir":1,"color":3},{"x":3,"y":4,"len":3,"axis":"h","dir":-1,"color":4},{"x":1,"y":3,"len":2,"axis":"v","dir":-1,"color":5},{"x":4,"y":0,"len":2,"axis":"h","dir":-1,"color":0},{"x":5,"y":1,"len":2,"axis":"v","dir":1,"color":1}],"par":9,"moves":11},{"w":7,"h":7,"stones":[[0,5],[2,2]],"cars":[{"x":3,"y":3,"len":2,"axis":"h","dir":-1,"color":0},{"x":0,"y":6,"len":3,"axis":"h","dir":1,"color":1},{"x":0,"y":2,"len":3,"axis":"v","dir":-1,"color":2},{"x":3,"y":0,"len":2,"axis":"v","dir":1,"color":3},{"x":0,"y":0,"len":3,"axis":"h","dir":1,"color":4},{"x":5,"y":1,"len":2,"axis":"h","dir":-1,"color":5},{"x":5,"y":3,"len":2,"axis":"v","dir":-1,"color":0},{"x":5,"y":2,"len":2,"axis":"h","dir":1,"color":1}],"par":9,"moves":11},{"w":7,"h":7,"stones":[[1,6],[0,5]],"cars":[{"x":2,"y":3,"len":2,"axis":"h","dir":1,"color":0},{"x":4,"y":1,"len":3,"axis":"v","dir":-1,"color":1},{"x":2,"y":0,"len":3,"axis":"v","dir":-1,"color":2},{"x":0,"y":2,"len":2,"axis":"h","dir":1,"color":3},{"x":3,"y":4,"len":3,"axis":"h","dir":-1,"color":4},{"x":1,"y":3,"len":2,"axis":"v","dir":-1,"color":5},{"x":4,"y":0,"len":2,"axis":"h","dir":-1,"color":0},{"x":5,"y":1,"len":2,"axis":"v","dir":1,"color":1}],"par":9,"moves":11},{"w":8,"h":8,"stones":[[3,4],[5,1]],"cars":[{"x":4,"y":2,"len":3,"axis":"v","dir":1,"color":0},{"x":4,"y":6,"len":3,"axis":"h","dir":-1,"color":1},{"x":0,"y":4,"len":3,"axis":"v","dir":-1,"color":2},{"x":2,"y":0,"len":3,"axis":"h","dir":1,"color":3},{"x":6,"y":0,"len":3,"axis":"v","dir":1,"color":4},{"x":7,"y":4,"len":2,"axis":"v","dir":-1,"color":5},{"x":1,"y":3,"len":2,"axis":"h","dir":-1,"color":0},{"x":2,"y":2,"len":2,"axis":"h","dir":1,"color":1},{"x":2,"y":4,"len":3,"axis":"v","dir":-1,"color":2}],"par":10,"moves":13},{"w":8,"h":8,"stones":[[0,4],[3,4]],"cars":[{"x":1,"y":5,"len":3,"axis":"v","dir":-1,"color":0},{"x":4,"y":2,"len":3,"axis":"h","dir":1,"color":1},{"x":4,"y":6,"len":2,"axis":"h","dir":-1,"color":2},{"x":6,"y":3,"len":3,"axis":"v","dir":-1,"color":3},{"x":6,"y":6,"len":2,"axis":"h","dir":-1,"color":4},{"x":1,"y":2,"len":3,"axis":"h","dir":1,"color":5},{"x":6,"y":7,"len":2,"axis":"h","dir":-1,"color":0},{"x":7,"y":2,"len":2,"axis":"v","dir":1,"color":1},{"x":5,"y":1,"len":3,"axis":"h","dir":-1,"color":2}],"par":10,"moves":13},{"w":8,"h":8,"stones":[[7,7],[0,5]],"cars":[{"x":5,"y":1,"len":3,"axis":"h","dir":-1,"color":0},{"x":3,"y":3,"len":3,"axis":"v","dir":-1,"color":1},{"x":7,"y":5,"len":2,"axis":"v","dir":-1,"color":2},{"x":6,"y":3,"len":2,"axis":"h","dir":1,"color":3},{"x":2,"y":1,"len":2,"axis":"v","dir":1,"color":4},{"x":3,"y":0,"len":2,"axis":"h","dir":-1,"color":5},{"x":1,"y":4,"len":2,"axis":"v","dir":-1,"color":0},{"x":6,"y":5,"len":2,"axis":"v","dir":-1,"color":1},{"x":1,"y":6,"len":2,"axis":"h","dir":1,"color":2}],"par":10,"moves":13},{"w":8,"h":8,"stones":[[0,2],[2,4]],"cars":[{"x":5,"y":7,"len":3,"axis":"h","dir":-1,"color":0},{"x":3,"y":6,"len":2,"axis":"v","dir":1,"color":1},{"x":5,"y":0,"len":3,"axis":"h","dir":-1,"color":2},{"x":2,"y":3,"len":2,"axis":"h","dir":1,"color":3},{"x":2,"y":5,"len":2,"axis":"h","dir":1,"color":4},{"x":0,"y":1,"len":3,"axis":"h","dir":1,"color":5},{"x":6,"y":5,"len":2,"axis":"v","dir":-1,"color":0},{"x":3,"y":0,"len":3,"axis":"v","dir":1,"color":1},{"x":1,"y":5,"len":2,"axis":"v","dir":-1,"color":2}],"par":10,"moves":13},{"w":8,"h":8,"stones":[[5,0],[6,6]],"cars":[{"x":3,"y":5,"len":3,"axis":"h","dir":-1,"color":0},{"x":7,"y":4,"len":3,"axis":"v","dir":-1,"color":1},{"x":1,"y":1,"len":2,"axis":"h","dir":1,"color":2},{"x":3,"y":6,"len":2,"axis":"v","dir":-1,"color":3},{"x":2,"y":3,"len":2,"axis":"v","dir":-1,"color":4},{"x":4,"y":4,"len":3,"axis":"h","dir":-1,"color":5},{"x":4,"y":0,"len":3,"axis":"v","dir":1,"color":0},{"x":3,"y":3,"len":2,"axis":"h","dir":-1,"color":1},{"x":0,"y":3,"len":3,"axis":"v","dir":-1,"color":2}],"par":10,"moves":13}];
+
+'use strict';
+/* Unpark! — slide cars along their axis and drive them out through their front. */
+
+const CAR_COLORS = [
+  { main: '#e8564f', dark: '#a83732', lite: '#ff8a80' },
+  { main: '#4596e8', dark: '#2c66a5', lite: '#82bdf5' },
+  { main: '#43c56d', dark: '#2a8a4a', lite: '#7fe0a2' },
+  { main: '#f0a72e', dark: '#b3781a', lite: '#ffd070' },
+  { main: '#9b6ef3', dark: '#6a44b8', lite: '#c3a4ff' },
+  { main: '#3fc4c0', dark: '#26908d', lite: '#7fe3e0' },
+];
+
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const hudLevel = document.getElementById('hudLevel');
+const hudMoves = document.getElementById('hudMoves');
+const winModal = document.getElementById('winModal');
+const failModal = document.getElementById('failModal');
+const winStars = document.getElementById('winStars');
+const winSub = document.getElementById('winSub');
+const failSub = document.getElementById('failSub');
+
+function track(ev, data) {
+  try {
+    const s = JSON.parse(localStorage.getItem('up_stats') || '{}');
+    s[ev] = (s[ev] || 0) + 1;
+    s.log = (s.log || []).slice(-199);
+    s.log.push([Date.now(), ev, data || null]);
+    localStorage.setItem('up_stats', JSON.stringify(s));
+  } catch (e) {}
+}
+
+let li = 0;
+try { li = Math.min(parseInt(localStorage.getItem('up_level') || '0', 10) || 0, LEVELS.length - 1); } catch (e) {}
+let L = null;
+let offs = [];       // origin along axis per car, null = exited
+let disp = [];       // eased display offset
+let exitAnim = [];   // {t} per car or null
+let moves = 0, movesLeft = 0, rescued = false, over = false;
+let drag = null;     // {ci, grab, start, counted}
+let particles = [], shakeT = 0, hintT = 0;
+let cell = 40, bx = 0, by = 0;
+
+const originOf = c => (c.axis === 'h' ? c.x : c.y);
+
+function loadLevel(i) {
+  li = Math.max(0, Math.min(i, LEVELS.length - 1));
+  try { localStorage.setItem('up_level', String(li)); } catch (e) {}
+  L = JSON.parse(JSON.stringify(LEVELS[li]));
+  offs = L.cars.map(originOf);
+  disp = offs.slice();
+  exitAnim = L.cars.map(() => null);
+  moves = 0; movesLeft = L.moves; rescued = false; over = false;
+  drag = null; particles = []; hintT = 0;
+  hudLevel.textContent = 'Level ' + (li + 1);
+  winModal.hidden = true; failModal.hidden = true;
+  updateHud(); layout();
+  track('level_start', li + 1);
+}
+function updateHud() {
+  hudMoves.textContent = movesLeft;
+  hudMoves.parentElement.classList.toggle('low', movesLeft <= 2);
+}
+
+// ---------- grid ----------
+function carCellsAt(ci, off) {
+  const c = L.cars[ci], out = [];
+  for (let j = 0; j < c.len; j++) out.push(c.axis === 'h' ? [off + j, c.y] : [c.x, off + j]);
+  return out;
+}
+function occAt(x, y, skip) {
+  if (x < 0 || y < 0 || x >= L.w || y >= L.h) return -3;
+  for (const [sx, sy] of L.stones) if (sx === x && sy === y) return -2;
+  for (let i = 0; i < L.cars.length; i++) {
+    if (i === skip || offs[i] === null) continue;
+    for (const [cx, cy] of carCellsAt(i, offs[i])) if (cx === x && cy === y) return i;
+  }
+  return -1;
+}
+function freeAt(ci, off) {
+  return carCellsAt(ci, off).every(([x, y]) => {
+    const o = occAt(x, y, ci);
+    return o === -1;
+  });
+}
+function canExitNow(ci) {
+  const c = L.cars[ci], off = offs[ci];
+  const lim = c.axis === 'h' ? L.w : L.h;
+  if (c.dir === 1) {
+    for (let o = off + c.len; o < lim; o++) {
+      const [x, y] = c.axis === 'h' ? [o, c.y] : [c.x, o];
+      if (occAt(x, y, ci) !== -1) return false;
+    }
+  } else {
+    for (let o = off - 1; o >= 0; o--) {
+      const [x, y] = c.axis === 'h' ? [o, c.y] : [c.x, o];
+      if (occAt(x, y, ci) !== -1) return false;
+    }
+  }
+  return true;
+}
+
+// step toward fractional target offset; returns true if the car drove out
+function stepToward(ci, want) {
+  const c = L.cars[ci];
+  const lim = c.axis === 'h' ? L.w : L.h;
+  for (let guard = 0; guard < 16; guard++) {
+    const d = want - offs[ci];
+    if (Math.abs(d) < 0.51) break;
+    const s = Math.sign(d);
+    const no = offs[ci] + s;
+    const inBounds = no >= 0 && no <= lim - c.len;
+    if (inBounds && freeAt(ci, no)) { offs[ci] = no; drag.moved = true; continue; }
+    // pushing past the boundary through the front = drive out
+    if (!inBounds && s === c.dir && Math.abs(d) > 0.62 && canExitNow(ci)) return true;
+    break;
+  }
+  return false;
+}
+
+function startExit(ci) {
+  exitAnim[ci] = { t: 0 };
+  const c = L.cars[ci];
+  const [px, py] = carRearPx(ci);
+  for (let i = 0; i < 16; i++) {
+    particles.push({
+      x: px, y: py,
+      vx: (Math.random() - 0.5) * 3 - (c.axis === 'h' ? c.dir : 0) * 2.5,
+      vy: (Math.random() - 0.5) * 3 - (c.axis === 'v' ? c.dir : 0) * 2.5,
+      life: 1, color: 'rgba(210,205,190,.8)', r: 2.5 + Math.random() * 3.5,
+    });
+  }
+  shakeT = 0.12;
+  offs[ci] = null;
+  countMove();
+  sound('exit');
+  track('car_exit', li + 1);
+  if (offs.every(o => o === null)) setTimeout(win, 420);
+  else maybeFail();
+}
+
+function countMove() {
+  moves++; movesLeft--;
+  updateHud();
+  if (drag) drag.counted = true;
+}
+function maybeFail() {
+  if (over) return;
+  if (movesLeft <= 0 && offs.some(o => o !== null)) {
+    over = true;
+    setTimeout(() => {
+      const out = offs.filter(o => o === null).length;
+      failSub.textContent = `${out} of ${offs.length} cars out — no moves left.`;
+      document.getElementById('btnRescue').hidden = rescued;
+      failModal.hidden = false;
+      sound('fail');
+      track('fail', li + 1);
+    }, 420);
+  }
+}
+function win() {
+  if (!winModal.hidden) return;
+  over = true;
+  const stars = moves <= L.par ? 3 : moves <= L.par + 2 ? 2 : 1;
+  winStars.textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
+  winSub.textContent = `Cleared in ${moves} moves` + (moves <= L.par ? ' — perfect!' : ` (best: ${L.par})`);
+  winModal.hidden = false;
+  sound('win');
+  track('win', { lvl: li + 1, moves, stars });
+}
+
+// ---------- input ----------
+function evCell(e) {
+  const r = cv.getBoundingClientRect();
+  return [(e.clientX - r.left - bx) / cell, (e.clientY - r.top - by) / cell];
+}
+function pickCar(fx, fy) {
+  const x = Math.floor(fx), y = Math.floor(fy);
+  const direct = occAt(x, y, -9);
+  if (direct >= 0) return direct;
+  for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+    const o = occAt(x + dx, y + dy, -9);
+    if (o < 0) continue;
+    const edgeDist = dx === 1 ? (x + 1 - fx) : dx === -1 ? (fx - x) : dy === 1 ? (y + 1 - fy) : (fy - y);
+    if (edgeDist < 0.38) return o;
+  }
+  return -1;
+}
+cv.addEventListener('pointerdown', (e) => {
+  audioInit();
+  if (over) return;
+  const [fx, fy] = evCell(e);
+  const ci = pickCar(fx, fy);
+  if (ci < 0) return;
+  cv.setPointerCapture(e.pointerId);
+  const along = L.cars[ci].axis === 'h' ? fx : fy;
+  drag = { ci, grab: along - offs[ci], start: offs[ci], moved: false, counted: false };
+  sound('tap');
+});
+cv.addEventListener('pointermove', (e) => {
+  if (!drag || over || offs[drag.ci] === null) return;
+  const [fx, fy] = evCell(e);
+  const along = L.cars[drag.ci].axis === 'h' ? fx : fy;
+  if (stepToward(drag.ci, along - drag.grab)) {
+    const ci = drag.ci;
+    drag = null;
+    startExit(ci);
+  }
+});
+function endDrag() {
+  if (!drag) return;
+  const d = drag; drag = null;
+  if (offs[d.ci] === null) return;
+  if (offs[d.ci] !== d.start && !d.counted) { countMove(); maybeFail(); }
+}
+cv.addEventListener('pointerup', endDrag);
+cv.addEventListener('pointercancel', endDrag);
+
+document.getElementById('btnRestart').onclick = () => { track('restart', li + 1); loadLevel(li); };
+document.getElementById('btnNext').onclick = () => loadLevel(li + 1);
+document.getElementById('btnRetry').onclick = () => { track('retry', li + 1); loadLevel(li); };
+document.getElementById('btnRescue').onclick = () => {
+  rescued = true; over = false; movesLeft += 3; failModal.hidden = true;
+  updateHud(); sound('win'); track('rescue_used', li + 1);
+};
+
+// ---------- layout / render ----------
+function layout() {
+  const wrap = document.getElementById('wrap');
+  const availW = Math.min(wrap.clientWidth - 12, 560);
+  const availH = wrap.clientHeight - 12;
+  cell = Math.floor(Math.min(availW / (L.w + 1.2), availH / (L.h + 1.2)));
+  const W = Math.round(cell * (L.w + 1.2)), H = Math.round(cell * (L.h + 1.2));
+  const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  bx = Math.round(cell * 0.6); by = Math.round(cell * 0.6);
+}
+window.addEventListener('resize', layout);
+
+function carRectPx(ci) {
+  const c = L.cars[ci];
+  const o = disp[ci];
+  const m = cell * 0.09;
+  if (c.axis === 'h') return [bx + o * cell + m, by + c.y * cell + m, c.len * cell - m * 2, cell - m * 2];
+  return [bx + c.x * cell + m, by + o * cell + m, cell - m * 2, c.len * cell - m * 2];
+}
+function carRearPx(ci) {
+  const c = L.cars[ci];
+  const [x, y, w, h] = carRectPx(ci);
+  if (c.axis === 'h') return c.dir === 1 ? [x, y + h / 2] : [x + w, y + h / 2];
+  return c.dir === 1 ? [x + w / 2, y] : [x + w / 2, y + h];
+}
+function rr(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+let lastT = performance.now();
+function frame(t) {
+  const dt = Math.min((t - lastT) / 1000, 0.05); lastT = t;
+  for (let i = 0; i < disp.length; i++) {
+    if (exitAnim[i]) { exitAnim[i].t += dt * 2.4; continue; }
+    if (offs[i] === null) continue;
+    disp[i] += (offs[i] - disp[i]) * Math.min(1, dt * 22);
+  }
+  for (const p of particles) { p.x += p.vx; p.y += p.vy; p.vx *= 0.94; p.vy *= 0.94; p.life -= dt * 1.9; }
+  particles = particles.filter(p => p.life > 0);
+  if (shakeT > 0) shakeT -= dt;
+  hintT += dt;
+  render();
+  requestAnimationFrame(frame);
+}
+
+function render() {
+  ctx.save();
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  if (shakeT > 0) ctx.translate((Math.random() - 0.5) * 6 * shakeT * 8, (Math.random() - 0.5) * 6 * shakeT * 8);
+
+  const bw = L.w * cell, bh = L.h * cell;
+  // curb
+  ctx.fillStyle = '#c79b3b';
+  rr(bx - 7, by - 7, bw + 14, bh + 14, 14); ctx.fill();
+  // asphalt
+  ctx.fillStyle = '#33363c';
+  rr(bx, by, bw, bh, 9); ctx.fill();
+  // parking-line dashes between cells
+  ctx.strokeStyle = 'rgba(240,235,220,.13)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([cell * 0.28, cell * 0.24]);
+  for (let x = 1; x < L.w; x++) {
+    ctx.beginPath(); ctx.moveTo(bx + x * cell, by + 4); ctx.lineTo(bx + x * cell, by + bh - 4); ctx.stroke();
+  }
+  for (let y = 1; y < L.h; y++) {
+    ctx.beginPath(); ctx.moveTo(bx + 4, by + y * cell); ctx.lineTo(bx + bw - 4, by + y * cell); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // planters (stones)
+  for (const [sx, sy] of L.stones) {
+    const x = bx + sx * cell, y = by + sy * cell;
+    ctx.fillStyle = '#5a5f68';
+    rr(x + 4, y + 4, cell - 8, cell - 8, 8); ctx.fill();
+    ctx.fillStyle = '#474b53';
+    rr(x + 4, y + cell * 0.55, cell - 8, cell * 0.45 - 4, 8); ctx.fill();
+    ctx.fillStyle = '#3f9e58';
+    ctx.beginPath(); ctx.arc(x + cell / 2, y + cell * 0.44, cell * 0.2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#57c274';
+    ctx.beginPath(); ctx.arc(x + cell * 0.42, y + cell * 0.38, cell * 0.11, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // cars
+  for (let i = 0; i < L.cars.length; i++) {
+    if (offs[i] === null && !exitAnim[i]) continue;
+    const c = L.cars[i], col = CAR_COLORS[c.color];
+    let ox = 0, oy = 0, alpha = 1;
+    if (exitAnim[i]) {
+      const a = exitAnim[i];
+      if (a.t >= 1) { exitAnim[i] = null; continue; }
+      const dist = a.t * a.t * cell * 9; // accelerate
+      if (c.axis === 'h') ox = c.dir * dist; else oy = c.dir * dist;
+      alpha = 1 - a.t;
+    }
+    const dragging = drag && drag.ci === i;
+    const [x0, y0, w0, h0] = carRectPx(i);
+    const x = x0 + ox, y = y0 + oy, w = w0, h = h0;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    if (dragging) { ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 12; ctx.shadowOffsetY = 4; }
+    const rad = Math.min(w, h) * 0.3;
+    // body
+    ctx.fillStyle = col.dark;
+    rr(x, y, w, h, rad); ctx.fill();
+    ctx.shadowColor = 'transparent';
+    const grad = c.axis === 'h' ? ctx.createLinearGradient(0, y, 0, y + h) : ctx.createLinearGradient(x, 0, x + w, 0);
+    grad.addColorStop(0, col.lite); grad.addColorStop(0.5, col.main); grad.addColorStop(1, col.main);
+    ctx.fillStyle = grad;
+    rr(x + 1.5, y + 1.5, w - 3, h - 3 - (c.axis === 'h' ? h * 0.08 : 0), rad);
+    ctx.fill();
+    // windshield block toward the front
+    ctx.fillStyle = 'rgba(25,32,44,.55)';
+    const frontward = c.dir === 1;
+    if (c.axis === 'h') {
+      const gw = w * 0.2, gx = frontward ? x + w * 0.58 : x + w * 0.22;
+      rr(gx, y + h * 0.16, gw, h * 0.68, 5); ctx.fill();
+    } else {
+      const gh = h * 0.2, gy = frontward ? y + h * 0.58 : y + h * 0.22;
+      rr(x + w * 0.16, gy, w * 0.68, gh, 5); ctx.fill();
+    }
+    // headlights on the front edge
+    ctx.fillStyle = '#ffe9a8';
+    const hl = Math.min(w, h) * 0.09;
+    if (c.axis === 'h') {
+      const fx2 = frontward ? x + w - hl * 1.6 : x + hl * 1.6;
+      ctx.beginPath(); ctx.arc(fx2, y + h * 0.26, hl, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(fx2, y + h * 0.74, hl, 0, Math.PI * 2); ctx.fill();
+    } else {
+      const fy2 = frontward ? y + h - hl * 1.6 : y + hl * 1.6;
+      ctx.beginPath(); ctx.arc(x + w * 0.26, fy2, hl, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x + w * 0.74, fy2, hl, 0, Math.PI * 2); ctx.fill();
+    }
+    // facing chevron
+    ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+    const chs = Math.min(w, h) * 0.14;
+    let cxp, cyp, ang;
+    if (c.axis === 'h') { cxp = frontward ? x + w * 0.85 : x + w * 0.15; cyp = y + h / 2; ang = frontward ? 0 : Math.PI; }
+    else { cxp = x + w / 2; cyp = frontward ? y + h * 0.85 : y + h * 0.15; ang = frontward ? Math.PI / 2 : -Math.PI / 2; }
+    ctx.save();
+    ctx.translate(cxp, cyp); ctx.rotate(ang);
+    ctx.beginPath();
+    ctx.moveTo(-chs * 0.5, -chs); ctx.lineTo(chs * 0.6, 0); ctx.lineTo(-chs * 0.5, chs);
+    ctx.stroke();
+    ctx.restore();
+    ctx.restore();
+  }
+
+  // particles
+  for (const p of particles) {
+    ctx.globalAlpha = Math.max(p.life, 0) * 0.8;
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // level-1 hint arrow
+  if (li === 0 && offs[0] !== null && moves === 0) {
+    const c = L.cars[0];
+    const [x, y, w, h] = carRectPx(0);
+    const pulse = (Math.sin(hintT * 5) + 1) / 2;
+    const len = cell * (0.8 + pulse * 0.5);
+    let sx2, sy2, dx2, dy2;
+    if (c.axis === 'h') { sx2 = c.dir === 1 ? x + w : x; sy2 = y + h / 2; dx2 = c.dir; dy2 = 0; }
+    else { sx2 = x + w / 2; sy2 = c.dir === 1 ? y + h : y; dx2 = 0; dy2 = c.dir; }
+    const ex = sx2 + dx2 * len, ey = sy2 + dy2 * len;
+    ctx.strokeStyle = `rgba(255,255,255,${0.5 + pulse * 0.4})`;
+    ctx.lineWidth = 5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(sx2 + dx2 * 6, sy2 + dy2 * 6); ctx.lineTo(ex, ey); ctx.stroke();
+    const pa = Math.atan2(dy2, dx2);
+    ctx.fillStyle = `rgba(255,255,255,${0.5 + pulse * 0.4})`;
+    ctx.beginPath();
+    ctx.moveTo(ex + Math.cos(pa) * 10, ey + Math.sin(pa) * 10);
+    ctx.lineTo(ex + Math.cos(pa + 2.5) * 10, ey + Math.sin(pa + 2.5) * 10);
+    ctx.lineTo(ex + Math.cos(pa - 2.5) * 10, ey + Math.sin(pa - 2.5) * 10);
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+
+// ---------- sound ----------
+let actx = null;
+function audioInit() {
+  if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+  if (actx && actx.state === 'suspended') actx.resume();
+}
+function blip(freq, dur, type, vol, when = 0, slide = 0) {
+  if (!actx) return;
+  const t0 = actx.currentTime + when;
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t0);
+  if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(40, freq + slide), t0 + dur);
+  g.gain.setValueAtTime(vol, t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(actx.destination);
+  o.start(t0); o.stop(t0 + dur + 0.02);
+}
+function sound(kind) {
+  if (!actx) return;
+  if (kind === 'tap') blip(240, 0.05, 'square', 0.08);
+  else if (kind === 'exit') { blip(140, 0.3, 'sawtooth', 0.16, 0, 220); blip(560, 0.12, 'sine', 0.12, 0.08, 300); }
+  else if (kind === 'win') { blip(523, 0.14, 'triangle', 0.2); blip(659, 0.14, 'triangle', 0.2, 0.09); blip(784, 0.22, 'triangle', 0.22, 0.18); }
+  else if (kind === 'fail') { blip(220, 0.25, 'sawtooth', 0.12, 0, -80); blip(160, 0.3, 'sawtooth', 0.1, 0.12, -60); }
+}
+
+// ---------- test hooks ----------
+window.UP = {
+  get level() { return li; },
+  get offs() { return offs; },
+  get L() { return L; },
+  get moves() { return moves; },
+  get movesLeft() { return movesLeft; },
+  load: loadLevel,
+  drag(ci, target) {
+    if (over || offs[ci] === null) return false;
+    drag = { ci, grab: 0, start: offs[ci], moved: false, counted: false };
+    if (stepToward(ci, target)) { drag = null; startExit(ci); return 'exit'; }
+    endDrag();
+    return true;
+  },
+  exit(ci) {
+    const c = L.cars[ci];
+    return this.drag(ci, c.dir === 1 ? 99 : -99);
+  },
+};
+
+loadLevel(li);
+requestAnimationFrame(frame);
+
+</script>

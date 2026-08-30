@@ -1,0 +1,395 @@
+'use strict';
+/* Blockfall — drag pieces onto the 8x8 grid; full rows and columns clear. Endless. */
+
+const N = 8;
+
+// shape cells + color + deal weight
+const SHAPES = [
+  { c: [[0, 0]], col: 0, w: 2 },
+  { c: [[0, 0], [1, 0]], col: 1, w: 5 }, { c: [[0, 0], [0, 1]], col: 1, w: 5 },
+  { c: [[0, 0], [1, 0], [2, 0]], col: 2, w: 5 }, { c: [[0, 0], [0, 1], [0, 2]], col: 2, w: 5 },
+  { c: [[0, 0], [1, 0], [2, 0], [3, 0]], col: 3, w: 3 }, { c: [[0, 0], [0, 1], [0, 2], [0, 3]], col: 3, w: 3 },
+  { c: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0]], col: 4, w: 2 }, { c: [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4]], col: 4, w: 2 },
+  { c: [[0, 0], [1, 0], [0, 1], [1, 1]], col: 5, w: 6 },
+  { c: [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1], [0, 2], [1, 2], [2, 2]], col: 6, w: 2 },
+  { c: [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1]], col: 7, w: 3 }, { c: [[0, 0], [1, 0], [0, 1], [1, 1], [0, 2], [1, 2]], col: 7, w: 3 },
+  { c: [[0, 0], [0, 1], [1, 1]], col: 8, w: 4 }, { c: [[1, 0], [0, 1], [1, 1]], col: 8, w: 4 },
+  { c: [[0, 0], [1, 0], [0, 1]], col: 8, w: 4 }, { c: [[0, 0], [1, 0], [1, 1]], col: 8, w: 4 },
+  { c: [[0, 0], [0, 1], [0, 2], [1, 2]], col: 9, w: 3 }, { c: [[1, 0], [1, 1], [1, 2], [0, 2]], col: 9, w: 3 },
+  { c: [[0, 0], [1, 0], [0, 1], [0, 2]], col: 9, w: 3 }, { c: [[0, 0], [1, 0], [1, 1], [1, 2]], col: 9, w: 3 },
+];
+const PCOLORS = [
+  { main: '#ffd04d', dark: '#b98f1c' }, { main: '#4fc3f7', dark: '#2a86b5' },
+  { main: '#ff8a65', dark: '#bf5a3a' }, { main: '#aed581', dark: '#75974e' },
+  { main: '#f06292', dark: '#b03a63' }, { main: '#4dd0a6', dark: '#2a9273' },
+  { main: '#9575cd', dark: '#63489b' }, { main: '#4db6ac', dark: '#2a7f77' },
+  { main: '#ffb74d', dark: '#bd7f22' }, { main: '#7986cb', dark: '#4d5899' },
+];
+
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const hudScore = document.getElementById('hudScore');
+const hudBest = document.getElementById('hudBest');
+const overModal = document.getElementById('overModal');
+
+function track(ev, data) {
+  try {
+    const s = JSON.parse(localStorage.getItem('bf_stats') || '{}');
+    s[ev] = (s[ev] || 0) + 1;
+    s.log = (s.log || []).slice(-199);
+    s.log.push([Date.now(), ev, data || null]);
+    localStorage.setItem('bf_stats', JSON.stringify(s));
+  } catch (e) {}
+}
+
+let grid = [];       // N x N, -1 empty else color index
+let tray = [];       // up to 3 shapes or null
+let score = 0, best = 0, over = false, revived = false;
+let drag = null;     // {ti, px, py}
+let clearAnims = [], particles = [], popups = [], shakeT = 0;
+let cell = 40, bx = 0, by = 0, trayY = 0, trayCell = 22;
+let rngState = (Date.now() ^ 0x9e3779b9) & 0x7fffffff;
+function rnd() { rngState = (rngState * 1103515245 + 12345) & 0x7fffffff; return rngState / 0x7fffffff; }
+
+try { best = parseInt(localStorage.getItem('bf_best') || '0', 10) || 0; } catch (e) {}
+
+function newGame() {
+  grid = Array.from({ length: N }, () => Array(N).fill(-1));
+  tray = [];
+  score = 0; over = false; revived = false;
+  clearAnims = []; particles = []; popups = [];
+  deal();
+  overModal.hidden = true;
+  updateHud();
+  track('game_start');
+}
+function updateHud() {
+  hudScore.textContent = score;
+  hudBest.textContent = best;
+}
+
+// ---------- rules ----------
+function fitsAt(shape, gx, gy) {
+  for (const [dx, dy] of shape.c) {
+    const x = gx + dx, y = gy + dy;
+    if (x < 0 || y < 0 || x >= N || y >= N || grid[y][x] !== -1) return false;
+  }
+  return true;
+}
+function fitsAnywhere(shape) {
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (fitsAt(shape, x, y)) return true;
+  return false;
+}
+function anyTrayFits() {
+  return tray.some(s => s && fitsAnywhere(s));
+}
+function weightedPick() {
+  let tot = 0;
+  for (const s of SHAPES) tot += s.w;
+  let r = rnd() * tot;
+  for (const s of SHAPES) { r -= s.w; if (r <= 0) return s; }
+  return SHAPES[0];
+}
+function deal() {
+  // kind RNG: guarantee at least one dealt piece is placeable
+  for (let t = 0; t < 40; t++) {
+    tray = [weightedPick(), weightedPick(), weightedPick()];
+    if (anyTrayFits()) return;
+  }
+  const fallback = SHAPES.find(s => fitsAnywhere(s));
+  tray = [fallback || SHAPES[0], weightedPick(), weightedPick()];
+}
+
+function place(ti, gx, gy) {
+  const shape = tray[ti];
+  if (over || !shape || !fitsAt(shape, gx, gy)) return false;
+  for (const [dx, dy] of shape.c) grid[gy + dy][gx + dx] = shape.col;
+  tray[ti] = null;
+  let gained = shape.c.length;
+  // find full rows/cols
+  const rows = [], cols = [];
+  for (let y = 0; y < N; y++) if (grid[y].every(v => v !== -1)) rows.push(y);
+  for (let x = 0; x < N; x++) { let full = true; for (let y = 0; y < N; y++) if (grid[y][x] === -1) { full = false; break; } if (full) cols.push(x); }
+  const lines = rows.length + cols.length;
+  if (lines) {
+    const cleared = new Set();
+    for (const y of rows) for (let x = 0; x < N; x++) cleared.add(x + ',' + y);
+    for (const x of cols) for (let y = 0; y < N; y++) cleared.add(x + ',' + y);
+    for (const k of cleared) {
+      const [x, y] = k.split(',').map(Number);
+      const col = grid[y][x];
+      clearAnims.push({ x, y, col, t: 0 });
+      for (let i = 0; i < 3; i++) {
+        particles.push({
+          x: bx + (x + 0.5) * cell, y: by + (y + 0.5) * cell,
+          vx: (Math.random() - 0.5) * 6, vy: (Math.random() - 0.5) * 6 - 2,
+          life: 1, color: PCOLORS[col].main, r: 2 + Math.random() * 3,
+        });
+      }
+      grid[y][x] = -1;
+    }
+    gained += cleared.size * 10 * lines;
+    shakeT = 0.1 + lines * 0.05;
+    popups.push({ text: lines >= 2 ? `COMBO ×${lines}!` : '+' + cleared.size * 10, x: bx + N * cell / 2, y: by + N * cell / 2, t: 0, big: lines >= 2 });
+    sound(lines >= 2 ? 'combo' : 'clear');
+    track('clear', lines);
+  } else {
+    sound('place');
+  }
+  score += gained;
+  if (score > best) { best = score; try { localStorage.setItem('bf_best', String(best)); } catch (e) {} }
+  if (tray.every(s => !s)) deal();
+  updateHud();
+  if (!anyTrayFits()) { over = true; setTimeout(gameOver, 500); }
+  return true;
+}
+
+function gameOver() {
+  document.getElementById('overScore').textContent = score;
+  document.getElementById('overSub').textContent = score >= best && score > 0 ? 'New best score!' : `Best: ${best}`;
+  document.getElementById('btnRevive').hidden = revived;
+  document.getElementById('overTitle').textContent = 'No room left!';
+  overModal.hidden = false;
+  sound('fail');
+  track('game_over', score);
+}
+document.getElementById('btnRevive').onclick = () => {
+  revived = true; over = false;
+  // second chance: clear the middle four rows
+  for (let y = 2; y <= 5; y++) for (let x = 0; x < N; x++) {
+    if (grid[y][x] !== -1) {
+      clearAnims.push({ x, y, col: grid[y][x], t: 0 });
+      grid[y][x] = -1;
+    }
+  }
+  if (!anyTrayFits()) deal();
+  overModal.hidden = true;
+  shakeT = 0.2; sound('combo'); track('revive_used');
+};
+document.getElementById('btnAgain').onclick = newGame;
+document.getElementById('btnRestart').onclick = () => { track('restart'); newGame(); };
+
+// ---------- input ----------
+function evPx(e) {
+  const r = cv.getBoundingClientRect();
+  return [e.clientX - r.left, e.clientY - r.top];
+}
+cv.addEventListener('pointerdown', (e) => {
+  audioInit();
+  if (over) return;
+  const [px, py] = evPx(e);
+  // hit-test tray slots
+  for (let i = 0; i < 3; i++) {
+    const sx = traySlotX(i);
+    if (tray[i] && px > sx - trayCell * 3 && px < sx + trayCell * 3 && py > trayY - trayCell * 3 && py < trayY + trayCell * 3.4) {
+      drag = { ti: i, px, py };
+      cv.setPointerCapture(e.pointerId);
+      sound('tap');
+      return;
+    }
+  }
+});
+cv.addEventListener('pointermove', (e) => {
+  if (!drag) return;
+  const [px, py] = evPx(e);
+  drag.px = px; drag.py = py;
+});
+function dragGridPos() {
+  if (!drag) return null;
+  const shape = tray[drag.ti];
+  const { w, h } = shapeSize(shape);
+  // piece floats above the finger; snap by its top-left corner
+  const cxp = drag.px - (w * cell) / 2;
+  const cyp = drag.py - h * cell - cell * 0.8;
+  const gx = Math.round((cxp - bx) / cell);
+  const gy = Math.round((cyp - by) / cell);
+  return [gx, gy];
+}
+cv.addEventListener('pointerup', () => {
+  if (!drag) return;
+  const [gx, gy] = dragGridPos();
+  const ti = drag.ti;
+  drag = null;
+  place(ti, gx, gy);
+});
+cv.addEventListener('pointercancel', () => { drag = null; });
+
+// ---------- layout / render ----------
+function shapeSize(s) {
+  let w = 0, h = 0;
+  for (const [x, y] of s.c) { w = Math.max(w, x + 1); h = Math.max(h, y + 1); }
+  return { w, h };
+}
+function layout() {
+  const wrap = document.getElementById('wrap');
+  const availW = Math.min(wrap.clientWidth - 12, 520);
+  const availH = wrap.clientHeight - 12;
+  cell = Math.floor(Math.min(availW / (N + 0.8), (availH - 110) / (N + 0.8)));
+  const W = Math.round(cell * (N + 0.8)), H = Math.round(cell * (N + 0.8)) + 110;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  bx = Math.round(cell * 0.4); by = Math.round(cell * 0.4);
+  trayY = by + N * cell + 58;
+  trayCell = Math.max(14, Math.floor(cell * 0.5));
+}
+function traySlotX(i) {
+  const W = cv.width / Math.min(window.devicePixelRatio || 1, 2.5);
+  return W / 2 + (i - 1) * (W / 3.2);
+}
+window.addEventListener('resize', layout);
+
+function rr(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+function drawCell(x, y, col, size, alpha = 1) {
+  const c = PCOLORS[col];
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = c.dark;
+  rr(x + 1.5, y + 1.5, size - 3, size - 3, size * 0.22); ctx.fill();
+  const g = ctx.createLinearGradient(0, y, 0, y + size);
+  g.addColorStop(0, c.main); g.addColorStop(1, c.dark);
+  ctx.fillStyle = g;
+  rr(x + 1.5, y + 1.5, size - 3, size - 3 - size * 0.1, size * 0.22); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.25)';
+  rr(x + size * 0.16, y + size * 0.12, size * 0.68, size * 0.16, size * 0.08); ctx.fill();
+  ctx.globalAlpha = 1;
+}
+
+let lastT = performance.now();
+function frame(t) {
+  const dt = Math.min((t - lastT) / 1000, 0.05); lastT = t;
+  for (const a of clearAnims) a.t += dt * 4;
+  clearAnims = clearAnims.filter(a => a.t < 1);
+  for (const p of particles) { p.x += p.vx; p.y += p.vy; p.vy += 0.2; p.life -= dt * 2; }
+  particles = particles.filter(p => p.life > 0);
+  for (const p of popups) p.t += dt;
+  popups = popups.filter(p => p.t < 1);
+  if (shakeT > 0) shakeT -= dt;
+  render();
+  requestAnimationFrame(frame);
+}
+
+function render() {
+  ctx.save();
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  if (shakeT > 0) ctx.translate((Math.random() - 0.5) * 8 * shakeT * 5, (Math.random() - 0.5) * 8 * shakeT * 5);
+
+  // board
+  ctx.fillStyle = 'rgba(255,255,255,.05)';
+  rr(bx - 5, by - 5, N * cell + 10, N * cell + 10, 14); ctx.fill();
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    ctx.fillStyle = 'rgba(6,14,13,.5)';
+    rr(bx + x * cell + 1.5, by + y * cell + 1.5, cell - 3, cell - 3, cell * 0.22); ctx.fill();
+  }
+  // ghost preview
+  if (drag) {
+    const shape = tray[drag.ti];
+    const [gx, gy] = dragGridPos();
+    const ok = fitsAt(shape, gx, gy);
+    for (const [dx, dy] of shape.c) {
+      const x = gx + dx, y = gy + dy;
+      if (x < 0 || y < 0 || x >= N || y >= N) continue;
+      ctx.fillStyle = ok ? 'rgba(120,255,190,.28)' : 'rgba(255,90,90,.22)';
+      rr(bx + x * cell + 2, by + y * cell + 2, cell - 4, cell - 4, cell * 0.22); ctx.fill();
+    }
+  }
+  // filled cells
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    if (grid[y][x] !== -1) drawCell(bx + x * cell, by + y * cell, grid[y][x], cell);
+  }
+  // clearing cells
+  for (const a of clearAnims) {
+    const s = cell * (1 - a.t);
+    const off = (cell - s) / 2;
+    drawCell(bx + a.x * cell + off, by + a.y * cell + off, a.col, s, 1 - a.t);
+  }
+  // tray
+  for (let i = 0; i < 3; i++) {
+    const shape = tray[i];
+    if (!shape || (drag && drag.ti === i)) continue;
+    const { w, h } = shapeSize(shape);
+    const sx = traySlotX(i) - (w * trayCell) / 2;
+    const sy = trayY - (h * trayCell) / 2;
+    const placeable = fitsAnywhere(shape);
+    for (const [dx, dy] of shape.c) drawCell(sx + dx * trayCell, sy + dy * trayCell, shape.col, trayCell, placeable ? 1 : 0.35);
+  }
+  // dragged piece (full size, floating above finger)
+  if (drag) {
+    const shape = tray[drag.ti];
+    const { w, h } = shapeSize(shape);
+    const cxp = drag.px - (w * cell) / 2;
+    const cyp = drag.py - h * cell - cell * 0.8;
+    ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 8;
+    for (const [dx, dy] of shape.c) drawCell(cxp + dx * cell, cyp + dy * cell, shape.col, cell);
+    ctx.shadowColor = 'transparent';
+  }
+  // particles
+  for (const p of particles) {
+    ctx.globalAlpha = Math.max(p.life, 0);
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  // popups
+  for (const p of popups) {
+    const a = 1 - p.t;
+    ctx.globalAlpha = a;
+    ctx.fillStyle = p.big ? '#ffd04d' : '#eefbf7';
+    ctx.font = `800 ${p.big ? 30 : 20}px system-ui`;
+    ctx.textAlign = 'center';
+    ctx.fillText(p.text, p.x, p.y - p.t * 40);
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+}
+
+// ---------- sound ----------
+let actx = null;
+function audioInit() {
+  if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+  if (actx && actx.state === 'suspended') actx.resume();
+}
+function blip(freq, dur, type, vol, when = 0, slide = 0) {
+  if (!actx) return;
+  const t0 = actx.currentTime + when;
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t0);
+  if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(40, freq + slide), t0 + dur);
+  g.gain.setValueAtTime(vol, t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(actx.destination);
+  o.start(t0); o.stop(t0 + dur + 0.02);
+}
+function sound(kind) {
+  if (!actx) return;
+  if (kind === 'tap') blip(300, 0.05, 'sine', 0.1);
+  else if (kind === 'place') blip(220, 0.08, 'sine', 0.15, 0, 60);
+  else if (kind === 'clear') { blip(520, 0.14, 'sine', 0.2, 0, 260); blip(780, 0.1, 'triangle', 0.12, 0.06); }
+  else if (kind === 'combo') { blip(523, 0.12, 'triangle', 0.2); blip(659, 0.12, 'triangle', 0.2, 0.07); blip(880, 0.18, 'triangle', 0.22, 0.14); }
+  else if (kind === 'fail') { blip(220, 0.25, 'sawtooth', 0.12, 0, -80); blip(160, 0.3, 'sawtooth', 0.1, 0.12, -60); }
+}
+
+// ---------- test hooks ----------
+window.BF = {
+  get grid() { return grid; },
+  get tray() { return tray; },
+  get score() { return score; },
+  get over() { return over; },
+  place,
+  fitsAt: (ti, x, y) => tray[ti] && fitsAt(tray[ti], x, y),
+  newGame,
+  _setGrid(g) { grid = g.map(r => r.slice()); },
+  _checkOver() { if (!anyTrayFits()) { over = true; gameOver(); } },
+};
+
+newGame();
+layout();
+requestAnimationFrame(frame);
