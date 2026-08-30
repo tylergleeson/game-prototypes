@@ -1,6 +1,6 @@
-<title>Pour Sort</title>
+<title>Shelved</title>
 <style>
-  :root { --bg1:#332343; --bg2:#1d1229; --ink:#f5effc; --dim:#a394b8; }
+  :root { --bg1:#3d2f24; --bg2:#241a12; --ink:#f7efe3; --dim:#b3a48c; }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body { height:100%; overflow:hidden; }
   body {
@@ -29,7 +29,7 @@
     background:rgba(14,8,22,.66); backdrop-filter:blur(3px); z-index:10;
   }
   .card {
-    background:linear-gradient(180deg,#3d2b52,#2a1c3c); border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg,#4a3826,#33261a); border:1px solid rgba(255,255,255,.12);
     border-radius:20px; padding:26px 30px; text-align:center; width:min(86vw,340px);
     box-shadow:0 18px 50px rgba(0,0,0,.5); animation:pop .28s cubic-bezier(.34,1.56,.64,1);
   }
@@ -41,7 +41,7 @@
     width:100%; border:0; border-radius:14px; padding:14px; font-size:17px; font-weight:800;
     cursor:pointer; margin-top:8px; color:#fff;
   }
-  .card button.primary { background:linear-gradient(180deg,#b07ef5,#8a4fe0); box-shadow:0 6px 0 #6534b0; }
+  .card button.primary { background:linear-gradient(180deg,#d8a44c,#b8802a); box-shadow:0 6px 0 #8a5c14; color:#2e2008; }
   .card button.rescue  { background:linear-gradient(180deg,#33d17a,#1fae5f); box-shadow:0 6px 0 #12854a; }
   .card button.ghost   { background:rgba(255,255,255,.09); box-shadow:none; font-weight:600; font-size:15px; }
   .card button:active { transform:translateY(3px); box-shadow:none; }
@@ -62,7 +62,7 @@
   <div class="modal" id="winModal" hidden>
     <div class="card">
       <div class="stars" id="winStars">★★★</div>
-      <h2>All sorted!</h2>
+      <h2>Shelf sorted!</h2>
       <p id="winSub"></p>
       <button class="primary" id="btnNext">Next level</button>
     </div>
@@ -124,7 +124,7 @@ function loadLevel(i) {
   selected = -1; undoStack = []; anims = []; particles = [];
   hudLevel.textContent = 'Level ' + (li + 1);
   winModal.hidden = true; failModal.hidden = true;
-  hintEl.textContent = li === 0 ? 'Tap a tube, then tap where to pour' : '';
+  hintEl.textContent = li === 0 ? 'Tap a stack, then tap where to move it' : '';
   updateHud(); layout();
   track('level_start', li + 1);
 }
@@ -291,50 +291,86 @@ function frame(t) {
   requestAnimationFrame(frame);
 }
 
+function hash2(a, b) { // stable per-book jitter
+  let h = (a * 374761393 + b * 668265263) & 0x7fffffff;
+  h = (h ^ (h >> 13)) * 1274126177 & 0x7fffffff;
+  return ((h ^ (h >> 16)) % 1000) / 1000;
+}
+
 function render() {
   ctx.clearRect(0, 0, cv.width, cv.height);
+  // bookcase slab behind everything
+  if (geo.rects.length) {
+    let minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
+    for (const [x, y, w, h] of geo.rects) {
+      minX = Math.min(minX, x); minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x + w); maxY = Math.max(maxY, y + h);
+    }
+    const woodG = ctx.createLinearGradient(0, minY - 20, 0, maxY + 20);
+    woodG.addColorStop(0, '#6b4f33'); woodG.addColorStop(1, '#4a3521');
+    ctx.fillStyle = woodG;
+    rr(minX - 16, minY - 16, maxX - minX + 32, maxY - minY + 32, 10); ctx.fill();
+    // wood grain streaks
+    ctx.strokeStyle = 'rgba(30,18,8,.18)'; ctx.lineWidth = 1.5;
+    for (let g = 0; g < 7; g++) {
+      const gy = minY - 10 + ((maxY - minY + 20) * g) / 7 + 4;
+      ctx.beginPath();
+      ctx.moveTo(minX - 12, gy);
+      ctx.bezierCurveTo(minX + 60, gy + 3, maxX - 60, gy - 3, maxX + 12, gy + 2);
+      ctx.stroke();
+    }
+  }
   for (let i = 0; i < tubes.length; i++) {
     const [x0, y0, w, h] = geo.rects[i];
-    const lift = selected === i ? -14 : 0;
+    // cubby opening
+    ctx.fillStyle = '#2a1d11';
+    rr(x0 - 3, y0 - 3, w + 6, h + 6, 4); ctx.fill();
+    const inner = ctx.createLinearGradient(0, y0, 0, y0 + h);
+    inner.addColorStop(0, '#1d1409'); inner.addColorStop(1, '#33241a');
+    ctx.fillStyle = inner;
+    rr(x0 - 1, y0 - 1, w + 2, h + 2, 3); ctx.fill();
+    // shelf lip at the bottom of the cubby
+    ctx.fillStyle = '#7a5b3a';
+    ctx.fillRect(x0 - 3, y0 + h + 1, w + 6, 4);
+
+    const lift = selected === i ? -12 : 0;
     const bump = anims.find(a => a.tube === i);
     const squish = bump ? Math.sin(bump.t * Math.PI) * 3 : 0;
-    const x = x0, y = y0 + lift + squish;
-    const segH = (h - 10) / cap;
-    // glass back
-    ctx.fillStyle = 'rgba(255,255,255,.07)';
-    rr(x, y, w, h, w * 0.32); ctx.fill();
-    // liquid segments (bottom-up)
+    const y = y0 + lift + squish;
+    const segH = (h - 6) / cap;
+    // books lying flat, stacked bottom-up
     for (let s = 0; s < tubes[i].length; s++) {
       const c = tubes[i][s];
-      const sy = y + h - 5 - (s + 1) * segH;
-      const isBottom = s === 0;
+      const j1 = hash2(i * 31 + s, c * 7);
+      const j2 = hash2(i * 17 + s * 5, c * 13 + 3);
+      const bw = w - 6 - j1 * w * 0.16;               // varied widths
+      const bx2 = x0 + 3 + (j2 - 0.5) * (w * 0.08);   // nudged alignment
+      const sy = y + h - 3 - (s + 1) * segH;
+      const bh = segH - 1.5;
+      // cover
+      ctx.fillStyle = LIQ_DARK[c];
+      rr(bx2, sy, bw, bh, 2.5); ctx.fill();
       ctx.fillStyle = LIQ[c];
-      if (isBottom) { rr(x + 4, sy, w - 8, segH, w * 0.28); ctx.fill(); ctx.fillRect(x + 4, sy, w - 8, segH / 2); }
-      else ctx.fillRect(x + 4, sy, w - 8, segH + 0.5);
-      // surface shine on the top segment
-      if (s === tubes[i].length - 1) {
-        ctx.fillStyle = 'rgba(255,255,255,.28)';
-        ctx.fillRect(x + 4, sy, w - 8, 3);
-      }
-      // subtle divider
-      ctx.fillStyle = 'rgba(0,0,0,.10)';
-      if (!isBottom) ctx.fillRect(x + 4, sy + segH - 1, w - 8, 1);
+      rr(bx2, sy, bw, bh - Math.max(2, bh * 0.16), 2.5); ctx.fill();
+      // pages (fore-edge showing on the right)
+      ctx.fillStyle = '#efe6cf';
+      ctx.fillRect(bx2 + bw - Math.max(3, bw * 0.09), sy + 1.5, Math.max(2, bw * 0.06), bh - 3);
+      // spine ornament: two thin bands
+      ctx.fillStyle = 'rgba(255,246,220,.5)';
+      ctx.fillRect(bx2 + bw * 0.12, sy + bh * 0.28, bw * 0.55, Math.max(1, bh * 0.08));
+      ctx.fillRect(bx2 + bw * 0.12, sy + bh * 0.55, bw * 0.36, Math.max(1, bh * 0.08));
     }
-    // glass front: rim + highlight
-    ctx.strokeStyle = 'rgba(255,255,255,.35)';
-    ctx.lineWidth = 2;
-    rr(x + 1, y + 1, w - 2, h - 2, w * 0.32); ctx.stroke();
-    ctx.fillStyle = 'rgba(255,255,255,.12)';
-    rr(x + w * 0.14, y + 6, w * 0.13, h - 16, 4); ctx.fill();
-    // rim lip
-    ctx.fillStyle = 'rgba(255,255,255,.25)';
-    rr(x - 2, y - 3, w + 4, 6, 3); ctx.fill();
-    // done tick
+    // soft inner shadow so books sit inside
+    ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 2;
+    rr(x0 - 1, y0 - 1, w + 2, h + 2, 3); ctx.stroke();
+    // completed cubby: small brass plaque
     if (tubes[i].length === cap && tubes[i].every(c => c === tubes[i][0])) {
-      ctx.fillStyle = 'rgba(255,255,255,.9)';
-      ctx.font = `700 ${Math.round(w * 0.42)}px system-ui`;
+      ctx.fillStyle = '#c9a24f';
+      rr(x0 + w / 2 - 11, y0 - 14, 22, 10, 3); ctx.fill();
+      ctx.fillStyle = '#3a2a10';
+      ctx.font = '700 9px system-ui';
       ctx.textAlign = 'center';
-      ctx.fillText('✓', x + w / 2, y - 10);
+      ctx.fillText('✓', x0 + w / 2, y0 - 6);
     }
   }
   for (const p of particles) {

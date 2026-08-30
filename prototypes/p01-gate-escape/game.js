@@ -2,11 +2,12 @@
 /* Gate Escape — drag colored blocks out through matching gates. */
 
 // ---------- palette (each color also gets a glyph for colorblind players) ----------
+// drafting inks on blueprint paper
 const COLORS = [
-  { main: '#ff5a5f', dark: '#b83438', lite: '#ff8a8e', glyph: 'circle' },
-  { main: '#41a0f7', dark: '#2668ad', lite: '#7cc0ff', glyph: 'triangle' },
-  { main: '#35d381', dark: '#1e8f55', lite: '#74e5a8', glyph: 'square' },
-  { main: '#ffb020', dark: '#b57508', lite: '#ffd070', glyph: 'star' },
+  { main: '#ff8078', dark: '#c24d46', lite: '#ffb3ac', glyph: 'circle' },
+  { main: '#72d8ff', dark: '#3d9cc4', lite: '#b5ecff', glyph: 'triangle' },
+  { main: '#5fe89b', dark: '#2fae67', lite: '#a5f5c8', glyph: 'square' },
+  { main: '#ffd04d', dark: '#c99a1e', lite: '#ffe9a8', glyph: 'star' },
 ];
 
 // ---------- dom ----------
@@ -334,16 +335,34 @@ function render() {
   ctx.clearRect(0, 0, W, H);
   if (shakeT > 0) ctx.translate((Math.random() - 0.5) * 7 * shakeT * 6, (Math.random() - 0.5) * 7 * shakeT * 6);
 
-  // board panel
+  // blueprint sheet
   const bw = L.w * cell, bh = L.h * cell;
-  ctx.fillStyle = 'rgba(255,255,255,.055)';
-  rr(bx - 6, by - 6, bw + 12, bh + 12, 16); ctx.fill();
-  ctx.fillStyle = 'rgba(10,13,30,.55)';
-  rr(bx, by, bw, bh, 10); ctx.fill();
-  // grid dots
-  ctx.fillStyle = 'rgba(255,255,255,.07)';
-  for (let x = 1; x < L.w; x++) for (let y = 1; y < L.h; y++) {
-    ctx.beginPath(); ctx.arc(bx + x * cell, by + y * cell, 1.6, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.045)';
+  ctx.fillRect(bx - 14, by - 14, bw + 28, bh + 28);
+  // fine draft grid over the whole sheet
+  ctx.strokeStyle = 'rgba(190,225,255,.10)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= L.w; x++) {
+    ctx.beginPath(); ctx.moveTo(bx + x * cell + 0.5, by - 8); ctx.lineTo(bx + x * cell + 0.5, by + bh + 8); ctx.stroke();
+  }
+  for (let y = 0; y <= L.h; y++) {
+    ctx.beginPath(); ctx.moveTo(bx - 8, by + y * cell + 0.5); ctx.lineTo(bx + bw + 8, by + y * cell + 0.5); ctx.stroke();
+  }
+  // double drafting border with corner ticks
+  ctx.strokeStyle = 'rgba(214,238,255,.65)';
+  ctx.lineWidth = 1.8;
+  ctx.strokeRect(bx - 0.5, by - 0.5, bw + 1, bh + 1);
+  ctx.strokeStyle = 'rgba(214,238,255,.28)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(bx - 6.5, by - 6.5, bw + 13, bh + 13);
+  ctx.strokeStyle = 'rgba(214,238,255,.8)';
+  ctx.lineWidth = 2;
+  for (const [cx2, cy2, dx2, dy2] of [
+    [bx, by, 1, 1], [bx + bw, by, -1, 1], [bx, by + bh, 1, -1], [bx + bw, by + bh, -1, -1],
+  ]) {
+    ctx.beginPath();
+    ctx.moveTo(cx2 + dx2 * 10, cy2); ctx.lineTo(cx2, cy2); ctx.lineTo(cx2, cy2 + dy2 * 10);
+    ctx.stroke();
   }
 
   // gates
@@ -357,29 +376,39 @@ function render() {
     if (g.side === 'bottom') { gx = bx + g.start * cell; gy = by + bh + 3; w = along; h = th; ax = gx + w / 2; ay = gy + h / 2; rot = Math.PI; }
     if (g.side === 'left') { gx = bx - th - 3; gy = by + g.start * cell; w = th; h = along; ax = gx + w / 2; ay = gy + h / 2; rot = -Math.PI / 2; }
     if (g.side === 'right') { gx = bx + bw + 3; gy = by + g.start * cell; w = th; h = along; ax = gx + w / 2; ay = gy + h / 2; rot = Math.PI / 2; }
-    ctx.fillStyle = c.dark;
-    rr(gx, gy, w, h, 7); ctx.fill();
-    ctx.fillStyle = c.main;
-    rr(gx + 2, gy + 2, w - 4, h - 4, 5); ctx.fill();
-    // outward chevron(s)
+    // stamped drafting tab: faint ink wash + dashed outline
+    ctx.fillStyle = c.main + '2e';
+    rr(gx, gy, w, h, 4); ctx.fill();
+    ctx.strokeStyle = c.main; ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    rr(gx + 1, gy + 1, w - 2, h - 2, 4); ctx.stroke();
+    ctx.setLineDash([]);
+    // outward chevron
     ctx.translate(ax, ay); ctx.rotate(rot);
-    ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 2.4; ctx.lineCap = 'round';
-    const ch = cell * 0.11;
+    ctx.strokeStyle = c.main; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+    const ch = cell * 0.12;
     ctx.beginPath();
     ctx.moveTo(-ch, ch * 0.6); ctx.lineTo(0, -ch * 0.6); ctx.lineTo(ch, ch * 0.6);
     ctx.stroke();
     ctx.restore();
   }
 
-  // stones
+  // stones: crosshatched "solid fill" drafting squares
   for (const [sx, sy] of L.stones) {
     const x = bx + sx * cell, y = by + sy * cell;
-    ctx.fillStyle = '#3a4166';
-    rr(x + 3, y + 3, cell - 6, cell - 6, 8); ctx.fill();
-    ctx.fillStyle = '#2c3252';
-    rr(x + 3, y + cell * 0.55, cell - 6, cell * 0.45 - 3, 8); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,.10)';
-    ctx.beginPath(); ctx.arc(x + cell * 0.35, y + cell * 0.34, cell * 0.07, 0, Math.PI * 2); ctx.fill();
+    ctx.save();
+    ctx.strokeStyle = 'rgba(214,238,255,.75)'; ctx.lineWidth = 1.8;
+    ctx.strokeRect(x + 4, y + 4, cell - 8, cell - 8);
+    ctx.beginPath();
+    ctx.rect(x + 4, y + 4, cell - 8, cell - 8);
+    ctx.clip();
+    ctx.lineWidth = 1.1;
+    ctx.strokeStyle = 'rgba(214,238,255,.5)';
+    for (let d = -cell; d < cell; d += 6) {
+      ctx.beginPath(); ctx.moveTo(x + d, y + cell); ctx.lineTo(x + d + cell, y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x + d, y); ctx.lineTo(x + d + cell, y + cell); ctx.stroke();
+    }
+    ctx.restore();
   }
 
   // blocks
@@ -397,42 +426,61 @@ function render() {
     ctx.globalAlpha = alpha;
     if (dragging) { ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 14; ctx.shadowOffsetY = 5; }
     const px = bx + disp[i][0] * cell + ox, py = by + disp[i][1] * cell + oy;
-    const inset = dragging ? 2 : 3;
-    // cell bodies
+    const inset = 3;
+    const has = (qx, qy) => b.cells.some(([ax2, ay2]) => ax2 === qx && ay2 === qy);
+    // ink wash over the block's footprint, hatched like a drafting fill
+    ctx.save();
+    ctx.beginPath();
     for (const [cx, cy] of b.cells) {
-      const x = px + cx * cell, y = py + cy * cell;
-      ctx.fillStyle = c.dark;
-      rr(x + inset, y + inset, cell - inset * 2, cell - inset * 2, 9); ctx.fill();
+      ctx.rect(px + cx * cell + inset, py + cy * cell + inset, cell - inset * 2, cell - inset * 2);
     }
+    // expand path across internal seams
+    for (const [cx, cy] of b.cells) {
+      if (has(cx + 1, cy)) ctx.rect(px + cx * cell + cell - inset - 2, py + cy * cell + inset, inset * 2 + 4, cell - inset * 2);
+      if (has(cx, cy + 1)) ctx.rect(px + cx * cell + inset, py + cy * cell + cell - inset - 2, cell - inset * 2, inset * 2 + 4);
+    }
+    ctx.clip();
+    ctx.fillStyle = c.main + (dragging ? '52' : '38');
+    ctx.fillRect(px - cell, py - cell, cell * 6, cell * 6);
+    ctx.strokeStyle = c.main + 'aa';
+    ctx.lineWidth = 1.4;
+    const span = cell * 6;
+    for (let d = -span; d < span; d += 7) {
+      ctx.beginPath();
+      ctx.moveTo(px + d, py + span);
+      ctx.lineTo(px + d + span, py);
+      ctx.stroke();
+    }
+    ctx.restore();
     ctx.shadowColor = 'transparent';
+    // heavy ink outline only on the block's outer edges
+    ctx.strokeStyle = c.main; ctx.lineWidth = 2.6; ctx.lineCap = 'square';
     for (const [cx, cy] of b.cells) {
       const x = px + cx * cell, y = py + cy * cell;
-      const grad = ctx.createLinearGradient(0, y, 0, y + cell);
-      grad.addColorStop(0, c.lite); grad.addColorStop(0.55, c.main); grad.addColorStop(1, c.main);
-      ctx.fillStyle = grad;
-      rr(x + inset, y + inset, cell - inset * 2, cell - inset * 2 - cell * 0.09, 9); ctx.fill();
+      const L2 = x + inset, R2 = x + cell - inset, T2 = y + inset, B2 = y + cell - inset;
+      // horizontal edges stretch across seams into same-block neighbors
+      const lx = has(cx - 1, cy) ? x : L2, rx2 = has(cx + 1, cy) ? x + cell : R2;
+      const ty2 = has(cx, cy - 1) ? y : T2, by2 = has(cx, cy + 1) ? y + cell : B2;
+      if (!has(cx, cy - 1)) { ctx.beginPath(); ctx.moveTo(lx, T2); ctx.lineTo(rx2, T2); ctx.stroke(); }
+      if (!has(cx, cy + 1)) { ctx.beginPath(); ctx.moveTo(lx, B2); ctx.lineTo(rx2, B2); ctx.stroke(); }
+      if (!has(cx - 1, cy)) { ctx.beginPath(); ctx.moveTo(L2, ty2); ctx.lineTo(L2, by2); ctx.stroke(); }
+      if (!has(cx + 1, cy)) { ctx.beginPath(); ctx.moveTo(R2, ty2); ctx.lineTo(R2, by2); ctx.stroke(); }
     }
-    // outline each cell so touching same-color blocks stay distinct
-    ctx.strokeStyle = 'rgba(10,13,30,.85)';
-    ctx.lineWidth = 2.5;
+    // corner registration dots
+    ctx.fillStyle = c.lite;
     for (const [cx, cy] of b.cells) {
-      const x = px + cx * cell, y = py + cy * cell;
-      rr(x + inset, y + inset, cell - inset * 2, cell - inset * 2, 9); ctx.stroke();
+      if (!has(cx - 1, cy) && !has(cx, cy - 1)) { ctx.beginPath(); ctx.arc(px + cx * cell + inset, py + cy * cell + inset, 2.2, 0, Math.PI * 2); ctx.fill(); }
+      if (!has(cx + 1, cy) && !has(cx, cy - 1)) { ctx.beginPath(); ctx.arc(px + cx * cell + cell - inset, py + cy * cell + inset, 2.2, 0, Math.PI * 2); ctx.fill(); }
+      if (!has(cx - 1, cy) && !has(cx, cy + 1)) { ctx.beginPath(); ctx.arc(px + cx * cell + inset, py + cy * cell + cell - inset, 2.2, 0, Math.PI * 2); ctx.fill(); }
+      if (!has(cx + 1, cy) && !has(cx, cy + 1)) { ctx.beginPath(); ctx.arc(px + cx * cell + cell - inset, py + cy * cell + cell - inset, 2.2, 0, Math.PI * 2); ctx.fill(); }
     }
-    // merge seams between adjacent cells of same block
-    ctx.fillStyle = c.main;
-    for (const [cx, cy] of b.cells) {
-      for (const [dx2, dy2] of [[1, 0], [0, 1]]) {
-        if (b.cells.some(([qx, qy]) => qx === cx + dx2 && qy === cy + dy2)) {
-          const x = px + cx * cell, y = py + cy * cell;
-          if (dx2) ctx.fillRect(x + cell - inset - 4, y + inset + 4, inset * 2 + 8, cell - inset * 2 - 8 - cell * 0.09);
-          else ctx.fillRect(x + inset + 4, y + cell - inset - 4, cell - inset * 2 - 8, inset * 2 + 8);
-        }
-      }
-    }
-    // glyphs
-    for (const [cx, cy] of b.cells) {
-      drawGlyph(c.glyph, px + (cx + 0.5) * cell, py + (cy + 0.5) * cell, cell * 0.14, 'rgba(255,255,255,.34)');
+    // glyph at block centroid
+    {
+      let gx2 = 0, gy2 = 0;
+      for (const [cx, cy] of b.cells) { gx2 += cx + 0.5; gy2 += cy + 0.5; }
+      gx2 /= b.cells.length; gy2 /= b.cells.length;
+      if (!has(Math.floor(gx2), Math.floor(gy2))) { const [cx, cy] = b.cells[0]; gx2 = cx + 0.5; gy2 = cy + 0.5; }
+      drawGlyph(c.glyph, px + gx2 * cell, py + gy2 * cell, cell * 0.16, c.main);
     }
     ctx.restore();
   }

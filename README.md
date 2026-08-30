@@ -9,8 +9,8 @@ signal to mobile publishers (submissions are non-exclusive and keep all IP).
 | # | Prototype | Mechanic family | Loop | Status |
 |---|-----------|-----------------|------|--------|
 | 01 | [Gate Escape](prototypes/p01-gate-escape/) | color-gate unblock (Color Block Jam) | drag blocks out through matching gates | 30 levels, machine-verified |
-| 02 | [Unpark!](prototypes/p02-unpark/) | parking jam | drive axis-locked cars out through their front | 30 levels, machine-verified |
-| 03 | [Pour Sort](prototypes/p03-poursort/) | color sort | pour liquids until each tube is one color | 30 levels, machine-verified |
+| 02 | [Tarmac](prototypes/p02-unpark/) | parking jam | taxi planes out through their nose; night-airfield art | 30 levels, machine-verified |
+| 03 | [Shelved](prototypes/p03-poursort/) | color sort | restack books until each cubby holds one color | 30 levels, machine-verified |
 | 04 | [Blockfall](prototypes/p04-blockfall/) | block-fit grid clear (Block Blast) | place pieces, clear rows+columns, endless score | endless, bot-verified |
 | 05 | [Bolt Out](prototypes/p05-boltout/) | nuts & bolts (Screw Jam) | unscrew layered plates, triple-match bolts in a tray | 30 levels, machine-verified |
 

@@ -6,7 +6,7 @@ const levels = fs.readFileSync(root + 'levels.js', 'utf8');
 const game = fs.readFileSync(root + 'game.js', 'utf8');
 const style = html.match(/<style>[\s\S]*?<\/style>/)[0];
 const body = html.match(/<body>([\s\S]*?)<script/)[1];
-const out = `<title>Pour Sort</title>\n${style}\n${body}<script>\n${levels}\n${game}\n</script>\n`;
+const out = `<title>Shelved</title>\n${style}\n${body}<script>\n${levels}\n${game}\n</script>\n`;
 fs.mkdirSync(root + 'dist', { recursive: true });
 fs.writeFileSync(root + 'dist/poursort.html', out);
 console.error('dist/poursort.html: ' + out.length + ' bytes');

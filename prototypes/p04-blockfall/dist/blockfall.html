@@ -1,6 +1,6 @@
 <title>Blockfall</title>
 <style>
-  :root { --bg1:#1c3230; --bg2:#0f1d1c; --ink:#eefbf7; --dim:#8fb3ab; }
+  :root { --bg1:#2e2938; --bg2:#171420; --ink:#f3edfa; --dim:#9c93ad; }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body { height:100%; overflow:hidden; }
   body {
@@ -25,7 +25,7 @@
     background:rgba(6,14,13,.7); backdrop-filter:blur(3px); z-index:10;
   }
   .card {
-    background:linear-gradient(180deg,#274541,#1a2f2c); border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg,#3b3447,#282232); border:1px solid rgba(255,255,255,.12);
     border-radius:20px; padding:26px 30px; text-align:center; width:min(86vw,340px);
     box-shadow:0 18px 50px rgba(0,0,0,.5); animation:pop .28s cubic-bezier(.34,1.56,.64,1);
   }
@@ -83,12 +83,18 @@ const SHAPES = [
   { c: [[0, 0], [0, 1], [0, 2], [1, 2]], col: 9, w: 3 }, { c: [[1, 0], [1, 1], [1, 2], [0, 2]], col: 9, w: 3 },
   { c: [[0, 0], [1, 0], [0, 1], [0, 2]], col: 9, w: 3 }, { c: [[0, 0], [1, 0], [1, 1], [1, 2]], col: 9, w: 3 },
 ];
+// stained-glass jewel tones: translucent pane + deep edge + inner light
 const PCOLORS = [
-  { main: '#ffd04d', dark: '#b98f1c' }, { main: '#4fc3f7', dark: '#2a86b5' },
-  { main: '#ff8a65', dark: '#bf5a3a' }, { main: '#aed581', dark: '#75974e' },
-  { main: '#f06292', dark: '#b03a63' }, { main: '#4dd0a6', dark: '#2a9273' },
-  { main: '#9575cd', dark: '#63489b' }, { main: '#4db6ac', dark: '#2a7f77' },
-  { main: '#ffb74d', dark: '#bd7f22' }, { main: '#7986cb', dark: '#4d5899' },
+  { main: '#e8b647', dark: '#8a6416', lite: '#ffe9b0' }, // amber
+  { main: '#4a9fd4', dark: '#1d5a85', lite: '#b8e2ff' }, // sapphire
+  { main: '#c94f46', dark: '#7a231d', lite: '#ffb3ac' }, // ruby
+  { main: '#7fae52', dark: '#42691f', lite: '#d3f0b0' }, // moss
+  { main: '#b65a8e', dark: '#6f2a52', lite: '#f5bcdd' }, // rose
+  { main: '#43a893', dark: '#1d6153', lite: '#aeeadf' }, // jade
+  { main: '#8a68c9', dark: '#4d3380', lite: '#d4c2f5' }, // amethyst
+  { main: '#4f8f9e', dark: '#22525e', lite: '#bde5ee' }, // teal glass
+  { main: '#d47f3c', dark: '#84461a', lite: '#ffd4ab' }, // copper
+  { main: '#6f7fc9', dark: '#374482', lite: '#c8d1f7' }, // periwinkle
 ];
 
 const cv = document.getElementById('cv');
@@ -315,17 +321,41 @@ function rr(x, y, w, h, r) {
   ctx.closePath();
 }
 function drawCell(x, y, col, size, alpha = 1) {
+  // a leaded stained-glass pane: dark came border, glowing translucent glass,
+  // faceted with a diagonal seam and a candle-light hotspot
   const c = PCOLORS[col];
+  ctx.save();
   ctx.globalAlpha = alpha;
-  ctx.fillStyle = c.dark;
-  rr(x + 1.5, y + 1.5, size - 3, size - 3, size * 0.22); ctx.fill();
-  const g = ctx.createLinearGradient(0, y, 0, y + size);
-  g.addColorStop(0, c.main); g.addColorStop(1, c.dark);
+  // lead came (border)
+  ctx.fillStyle = '#17141c';
+  rr(x + 0.5, y + 0.5, size - 1, size - 1, size * 0.1); ctx.fill();
+  const in2 = size * 0.09;
+  // glass body lit from behind
+  const g = ctx.createRadialGradient(
+    x + size * 0.38, y + size * 0.34, size * 0.08,
+    x + size * 0.5, y + size * 0.5, size * 0.85
+  );
+  g.addColorStop(0, c.lite); g.addColorStop(0.42, c.main); g.addColorStop(1, c.dark);
   ctx.fillStyle = g;
-  rr(x + 1.5, y + 1.5, size - 3, size - 3 - size * 0.1, size * 0.22); ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,.25)';
-  rr(x + size * 0.16, y + size * 0.12, size * 0.68, size * 0.16, size * 0.08); ctx.fill();
-  ctx.globalAlpha = 1;
+  rr(x + in2, y + in2, size - in2 * 2, size - in2 * 2, size * 0.07); ctx.fill();
+  // facet seam (each pane is two shards)
+  ctx.strokeStyle = 'rgba(23,20,28,.5)';
+  ctx.lineWidth = Math.max(1, size * 0.045);
+  ctx.beginPath();
+  ctx.moveTo(x + in2 + 1, y + size - in2 - 1);
+  ctx.lineTo(x + size - in2 - 1, y + in2 + 1);
+  ctx.stroke();
+  // lower shard slightly deeper
+  ctx.fillStyle = 'rgba(23,20,28,.14)';
+  ctx.beginPath();
+  ctx.moveTo(x + in2, y + size - in2);
+  ctx.lineTo(x + size - in2, y + in2);
+  ctx.lineTo(x + size - in2, y + size - in2);
+  ctx.closePath(); ctx.fill();
+  // hotspot
+  ctx.fillStyle = 'rgba(255,250,230,.30)';
+  ctx.beginPath(); ctx.arc(x + size * 0.36, y + size * 0.32, size * 0.11, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
 }
 
 let lastT = performance.now();
@@ -347,14 +377,49 @@ function render() {
   ctx.clearRect(0, 0, cv.width, cv.height);
   if (shakeT > 0) ctx.translate((Math.random() - 0.5) * 8 * shakeT * 5, (Math.random() - 0.5) * 8 * shakeT * 5);
 
-  // board
-  ctx.fillStyle = 'rgba(255,255,255,.05)';
-  rr(bx - 5, by - 5, N * cell + 10, N * cell + 10, 14); ctx.fill();
-  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
-    ctx.fillStyle = 'rgba(6,14,13,.5)';
-    rr(bx + x * cell + 1.5, by + y * cell + 1.5, cell - 3, cell - 3, cell * 0.22); ctx.fill();
+  // stone window frame with mortar joints
+  const fw = 16;
+  const frameG = ctx.createLinearGradient(0, by - fw, 0, by + N * cell + fw);
+  frameG.addColorStop(0, '#6a6274'); frameG.addColorStop(1, '#413a4d');
+  ctx.fillStyle = frameG;
+  rr(bx - fw, by - fw, N * cell + fw * 2, N * cell + fw * 2, 8); ctx.fill();
+  // brick joints around the frame
+  ctx.strokeStyle = 'rgba(20,16,28,.5)'; ctx.lineWidth = 2;
+  const step = cell * 1.5;
+  for (let x = bx - fw + step / 2; x < bx + N * cell + fw; x += step) {
+    ctx.beginPath(); ctx.moveTo(x, by - fw); ctx.lineTo(x, by - 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x + step / 2, by + N * cell + 2); ctx.lineTo(x + step / 2, by + N * cell + fw); ctx.stroke();
   }
-  // ghost preview
+  for (let y = by - fw + step / 2; y < by + N * cell + fw; y += step) {
+    ctx.beginPath(); ctx.moveTo(bx - fw, y); ctx.lineTo(bx - 2, y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bx + N * cell + 2, y + step / 2); ctx.lineTo(bx + fw + N * cell, y + step / 2); ctx.stroke();
+  }
+  ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = 1.5;
+  rr(bx - fw + 3, by - fw + 3, N * cell + fw * 2 - 6, N * cell + fw * 2 - 6, 6); ctx.stroke();
+  // night sky through the unglazed openings (deterministic stars)
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const nx = bx + x * cell, ny = by + y * cell;
+    const sky = ctx.createLinearGradient(0, ny, 0, ny + cell);
+    sky.addColorStop(0, '#0d1026'); sky.addColorStop(1, '#141031');
+    ctx.fillStyle = sky;
+    rr(nx + 1, ny + 1, cell - 2, cell - 2, cell * 0.08); ctx.fill();
+    const h = ((x * 73 + y * 149) % 97) / 97;
+    if (h > 0.35) {
+      const sxp = nx + cell * (0.2 + ((x * 31 + y * 17) % 60) / 100);
+      const syp = ny + cell * (0.2 + ((x * 53 + y * 29) % 60) / 100);
+      const tw = 0.35 + 0.4 * Math.abs(Math.sin(performance.now() / 900 + x * 3 + y * 7));
+      ctx.fillStyle = `rgba(220,228,255,${0.25 * tw + h * 0.3})`;
+      ctx.beginPath(); ctx.arc(sxp, syp, h > 0.85 ? 1.6 : 1, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  // moonbeam falling across the window
+  const beam = ctx.createLinearGradient(bx, by, bx + N * cell, by + N * cell);
+  beam.addColorStop(0, 'rgba(190,205,255,.09)');
+  beam.addColorStop(0.45, 'rgba(190,205,255,.02)');
+  beam.addColorStop(1, 'rgba(190,205,255,0)');
+  ctx.fillStyle = beam;
+  ctx.fillRect(bx, by, N * cell, N * cell);
+  // ghost preview: candlelight through the empty opening
   if (drag) {
     const shape = tray[drag.ti];
     const [gx, gy] = dragGridPos();
@@ -362,8 +427,8 @@ function render() {
     for (const [dx, dy] of shape.c) {
       const x = gx + dx, y = gy + dy;
       if (x < 0 || y < 0 || x >= N || y >= N) continue;
-      ctx.fillStyle = ok ? 'rgba(120,255,190,.28)' : 'rgba(255,90,90,.22)';
-      rr(bx + x * cell + 2, by + y * cell + 2, cell - 4, cell - 4, cell * 0.22); ctx.fill();
+      ctx.fillStyle = ok ? 'rgba(255,228,150,.30)' : 'rgba(200,70,60,.25)';
+      rr(bx + x * cell + 2, by + y * cell + 2, cell - 4, cell - 4, cell * 0.08); ctx.fill();
     }
   }
   // filled cells

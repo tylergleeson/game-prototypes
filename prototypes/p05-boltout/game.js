@@ -9,14 +9,15 @@ const BOLT_COLORS = [
   { main: '#ffb020', dark: '#b57508' },
   { main: '#a06ef5', dark: '#6a44b8' },
 ];
+// machine metals: brass, copper, steel — each {hi, top, side} for brushed look
 const PLATE_TONES = [
-  { top: '#8a6f4d', side: '#6b543a' },
-  { top: '#9c8563', side: '#7a6549' },
-  { top: '#7d7f8a', side: '#5f616b' },
-  { top: '#a5906e', side: '#836f52' },
-  { top: '#8f9aa8', side: '#6f7986' },
-  { top: '#b09a75', side: '#8c7859' },
-  { top: '#75808f', side: '#59636f' },
+  { hi: '#d9b96a', top: '#b08c3e', side: '#7a5c22' }, // brass
+  { hi: '#cf8f6b', top: '#a5643f', side: '#6f3f26' }, // copper
+  { hi: '#aeb8c6', top: '#828d9e', side: '#565f6d' }, // steel
+  { hi: '#c9ad72', top: '#9d8146', side: '#6b5628' }, // old brass
+  { hi: '#b9a08e', top: '#8d7261', side: '#5e4a3d' }, // bronze
+  { hi: '#9aa7b8', top: '#707d90', side: '#4a5462' }, // gunmetal
+  { hi: '#d3a35f', top: '#a97b35', side: '#73501d' }, // polished brass
 ];
 
 const cv = document.getElementById('cv');
@@ -205,30 +206,35 @@ function rr(x, y, w, h, r) {
 }
 
 function drawBolt(px, py, r, color, dim) {
+  // a glowing gem rivet set in a notched metal collar
   const c = BOLT_COLORS[color];
   ctx.save();
   ctx.translate(px, py);
   ctx.globalAlpha = dim ? 0.95 : 1;
-  // hex head
-  ctx.fillStyle = c.dark;
-  ctx.beginPath();
-  for (let i = 0; i < 6; i++) {
-    const a = Math.PI / 6 + i * Math.PI / 3;
-    ctx[i ? 'lineTo' : 'moveTo'](Math.cos(a) * r, Math.sin(a) * r);
+  // collar
+  const collar = ctx.createLinearGradient(0, -r, 0, r);
+  collar.addColorStop(0, '#e8d5a8'); collar.addColorStop(0.5, '#9b8a5e'); collar.addColorStop(1, '#4f4327');
+  ctx.fillStyle = collar;
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+  // collar notches (screw affordance)
+  ctx.strokeStyle = 'rgba(30,22,8,.6)'; ctx.lineWidth = Math.max(1.2, r * 0.1); ctx.lineCap = 'round';
+  for (let i = 0; i < 4; i++) {
+    const a = Math.PI / 4 + i * Math.PI / 2;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * r * 0.78, Math.sin(a) * r * 0.78);
+    ctx.lineTo(Math.cos(a) * r * 0.98, Math.sin(a) * r * 0.98);
+    ctx.stroke();
   }
-  ctx.closePath(); ctx.fill();
-  ctx.fillStyle = c.main;
-  ctx.beginPath(); ctx.arc(0, 0, r * 0.72, 0, Math.PI * 2); ctx.fill();
-  // slot cross
-  ctx.strokeStyle = 'rgba(30,20,10,.55)';
-  ctx.lineWidth = Math.max(1.5, r * 0.16); ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(-r * 0.4, 0); ctx.lineTo(r * 0.4, 0);
-  ctx.moveTo(0, -r * 0.4); ctx.lineTo(0, r * 0.4);
-  ctx.stroke();
-  // shine
-  ctx.fillStyle = 'rgba(255,255,255,.35)';
-  ctx.beginPath(); ctx.arc(-r * 0.28, -r * 0.3, r * 0.18, 0, Math.PI * 2); ctx.fill();
+  // glowing gem dome
+  ctx.shadowColor = c.main; ctx.shadowBlur = r * 0.9;
+  const dome = ctx.createRadialGradient(-r * 0.2, -r * 0.24, r * 0.06, 0, 0, r * 0.66);
+  dome.addColorStop(0, '#ffffff'); dome.addColorStop(0.25, c.main); dome.addColorStop(1, c.dark);
+  ctx.fillStyle = dome;
+  ctx.beginPath(); ctx.arc(0, 0, r * 0.62, 0, Math.PI * 2); ctx.fill();
+  ctx.shadowColor = 'transparent';
+  // specular
+  ctx.fillStyle = 'rgba(255,255,255,.55)';
+  ctx.beginPath(); ctx.ellipse(-r * 0.2, -r * 0.26, r * 0.16, r * 0.1, -0.6, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
 }
 
@@ -267,19 +273,30 @@ function render() {
     ctx.translate(ox + p.cx * scale, oy + p.cy * scale + dy);
     ctx.rotate(rot);
     const w = p.w * scale, h = p.h * scale;
-    ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 12; ctx.shadowOffsetY = 6;
+    ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 14; ctx.shadowOffsetY = 7;
     ctx.fillStyle = tone.side;
-    rr(-w / 2, -h / 2, w, h, 9); ctx.fill();
+    rr(-w / 2, -h / 2, w, h, 7); ctx.fill();
     ctx.shadowColor = 'transparent';
-    ctx.fillStyle = tone.top;
-    rr(-w / 2, -h / 2, w, h - 4, 9); ctx.fill();
-    // grain lines
-    ctx.strokeStyle = 'rgba(0,0,0,.09)'; ctx.lineWidth = 1.5;
-    for (let g = 1; g <= 2; g++) {
-      ctx.beginPath();
-      ctx.moveTo(-w / 2 + 8, -h / 2 + (h - 4) * g / 3);
-      ctx.lineTo(w / 2 - 8, -h / 2 + (h - 4) * g / 3);
-      ctx.stroke();
+    // brushed metal face
+    const face = ctx.createLinearGradient(-w / 2, -h / 2, w / 2, h / 2);
+    face.addColorStop(0, tone.hi); face.addColorStop(0.45, tone.top); face.addColorStop(0.75, tone.side); face.addColorStop(1, tone.top);
+    ctx.fillStyle = face;
+    rr(-w / 2, -h / 2, w, h - 4, 7); ctx.fill();
+    // brushed streaks
+    ctx.strokeStyle = 'rgba(255,255,255,.07)'; ctx.lineWidth = 1;
+    for (let g = 1; g <= 5; g++) {
+      const gy = -h / 2 + (h - 4) * g / 6;
+      ctx.beginPath(); ctx.moveTo(-w / 2 + 5, gy); ctx.lineTo(w / 2 - 5, gy); ctx.stroke();
+    }
+    // etched border line
+    ctx.strokeStyle = 'rgba(30,20,8,.4)'; ctx.lineWidth = 1.6;
+    rr(-w / 2 + 5, -h / 2 + 5, w - 10, h - 14, 4); ctx.stroke();
+    // corner rivets
+    ctx.fillStyle = 'rgba(255,240,200,.5)';
+    for (const [rx2, ry2] of [[-w / 2 + 8, -h / 2 + 8], [w / 2 - 8, -h / 2 + 8], [-w / 2 + 8, h / 2 - 11], [w / 2 - 8, h / 2 - 11]]) {
+      ctx.beginPath(); ctx.arc(rx2, ry2, 2.4, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(20,12,4,.5)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(rx2, ry2, 3.1, 0, Math.PI * 2); ctx.stroke();
     }
     ctx.restore();
     // this plate's bolts (world space, on top of the plate)
@@ -309,16 +326,25 @@ function render() {
       break;
     }
   }
-  // tray
+  // tray: riveted iron manifold with glass ports
   const [tx, ty, tw, th] = trayRect;
-  ctx.fillStyle = 'rgba(0,0,0,.35)';
-  rr(tx, ty, tw, th, 14); ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,.15)'; ctx.lineWidth = 1.5;
-  rr(tx + 1, ty + 1, tw - 2, th - 2, 13); ctx.stroke();
+  const iron = ctx.createLinearGradient(0, ty, 0, ty + th);
+  iron.addColorStop(0, '#4a4640'); iron.addColorStop(1, '#2b2823');
+  ctx.fillStyle = iron;
+  rr(tx, ty, tw, th, 12); ctx.fill();
+  ctx.strokeStyle = 'rgba(233,200,130,.25)'; ctx.lineWidth = 1.5;
+  rr(tx + 2, ty + 2, tw - 4, th - 4, 10); ctx.stroke();
+  ctx.fillStyle = 'rgba(233,210,160,.4)';
+  for (const [rx2, ry2] of [[tx + 9, ty + 9], [tx + tw - 9, ty + 9], [tx + 9, ty + th - 9], [tx + tw - 9, ty + th - 9]]) {
+    ctx.beginPath(); ctx.arc(rx2, ry2, 2.2, 0, Math.PI * 2); ctx.fill();
+  }
   for (let i = 0; i < traySize; i++) {
     const [sx, sy] = traySlotPx(i);
-    ctx.fillStyle = 'rgba(255,255,255,.06)';
-    ctx.beginPath(); ctx.arc(sx, sy, 20, 0, Math.PI * 2); ctx.fill();
+    // recessed glass port
+    ctx.fillStyle = 'rgba(8,6,4,.6)';
+    ctx.beginPath(); ctx.arc(sx, sy, 21, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(233,200,130,.35)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(sx, sy, 21, 0, Math.PI * 2); ctx.stroke();
     if (i < tray.length && !flights.some(f => f.slot === i)) {
       drawBolt(sx, sy, 15, tray[i], false);
     }

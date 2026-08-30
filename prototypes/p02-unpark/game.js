@@ -1,7 +1,8 @@
 'use strict';
-/* Unpark! — slide cars along their axis and drive them out through their front. */
+/* Tarmac — taxi planes along their heading and clear the airfield.
+   Same engine as a parking-jam: axis-locked craft exit through their nose. */
 
-const CAR_COLORS = [
+const CAR_COLORS = [ // airline liveries: fuselage stays pale, these tint fin & stripe
   { main: '#e8564f', dark: '#a83732', lite: '#ff8a80' },
   { main: '#4596e8', dark: '#2c66a5', lite: '#82bdf5' },
   { main: '#43c56d', dark: '#2a8a4a', lite: '#7fe0a2' },
@@ -127,7 +128,7 @@ function startExit(ci) {
       x: px, y: py,
       vx: (Math.random() - 0.5) * 3 - (c.axis === 'h' ? c.dir : 0) * 2.5,
       vy: (Math.random() - 0.5) * 3 - (c.axis === 'v' ? c.dir : 0) * 2.5,
-      life: 1, color: 'rgba(210,205,190,.8)', r: 2.5 + Math.random() * 3.5,
+      life: 1, color: 'rgba(180,200,235,.8)', r: 2.5 + Math.random() * 3.5,
     });
   }
   shakeT = 0.12;
@@ -278,106 +279,175 @@ function frame(t) {
   requestAnimationFrame(frame);
 }
 
+function drawPlane(cx2, cy2, ang, len, wspan, col, lift, alpha, blinkT) {
+  // top-down airliner pointing +x. len = full length px, wspan = wing span px.
+  ctx.save();
+  ctx.translate(cx2, cy2);
+  ctx.rotate(ang);
+  const s = 1 + lift * 0.35;
+  ctx.scale(s, s);
+  ctx.globalAlpha = alpha;
+  const L2 = len / 2, W2 = wspan / 2, fus = wspan * 0.23;
+  // ground shadow separates on takeoff
+  if (lift > 0.02) {
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.35 * (1 - lift * 0.5);
+    ctx.fillStyle = '#000';
+    ctx.translate(-lift * len * 0.14, lift * len * 0.2);
+    ctx.beginPath(); ctx.ellipse(0, 0, L2 * 0.8, fus * 1.4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+  // wings (swept back from just ahead of center)
+  ctx.fillStyle = '#c7ccd8';
+  ctx.beginPath();
+  ctx.moveTo(len * 0.09, -fus * 0.55);
+  ctx.lineTo(-len * 0.14, -W2);
+  ctx.lineTo(-len * 0.26, -W2);
+  ctx.lineTo(-len * 0.10, -fus * 0.55);
+  ctx.closePath(); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(len * 0.09, fus * 0.55);
+  ctx.lineTo(-len * 0.14, W2);
+  ctx.lineTo(-len * 0.26, W2);
+  ctx.lineTo(-len * 0.10, fus * 0.55);
+  ctx.closePath(); ctx.fill();
+  // tailplane
+  ctx.fillStyle = '#b4bac9';
+  ctx.beginPath();
+  ctx.moveTo(-L2 * 0.72, -fus * 0.4);
+  ctx.lineTo(-L2 * 0.95, -W2 * 0.42);
+  ctx.lineTo(-L2 * 1.0, -W2 * 0.42);
+  ctx.lineTo(-L2 * 0.88, -fus * 0.4);
+  ctx.closePath(); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-L2 * 0.72, fus * 0.4);
+  ctx.lineTo(-L2 * 0.95, W2 * 0.42);
+  ctx.lineTo(-L2 * 1.0, W2 * 0.42);
+  ctx.lineTo(-L2 * 0.88, fus * 0.4);
+  ctx.closePath(); ctx.fill();
+  // fuselage
+  const bodyG = ctx.createLinearGradient(0, -fus, 0, fus);
+  bodyG.addColorStop(0, '#f4f6fb'); bodyG.addColorStop(0.55, '#dde2ec'); bodyG.addColorStop(1, '#aeb5c4');
+  ctx.fillStyle = bodyG;
+  ctx.beginPath();
+  ctx.moveTo(L2, 0);
+  ctx.bezierCurveTo(L2 * 0.92, -fus, L2 * 0.55, -fus, 0, -fus);
+  ctx.lineTo(-L2 * 0.92, -fus * 0.62);
+  ctx.quadraticCurveTo(-L2, 0, -L2 * 0.92, fus * 0.62);
+  ctx.lineTo(0, fus);
+  ctx.bezierCurveTo(L2 * 0.55, fus, L2 * 0.92, fus, L2, 0);
+  ctx.closePath(); ctx.fill();
+  // livery stripe + tail fin
+  ctx.fillStyle = col.main;
+  ctx.fillRect(-L2 * 0.9, -fus * 0.22, L2 * 1.7, fus * 0.44);
+  ctx.beginPath(); // fin seen from above = colored teardrop at tail
+  ctx.moveTo(-L2 * 0.98, 0);
+  ctx.quadraticCurveTo(-L2 * 0.7, -fus * 0.5, -L2 * 0.45, 0);
+  ctx.quadraticCurveTo(-L2 * 0.7, fus * 0.5, -L2 * 0.98, 0);
+  ctx.closePath(); ctx.fill();
+  // cockpit
+  ctx.fillStyle = '#232c40';
+  ctx.beginPath();
+  ctx.moveTo(L2 * 0.97, 0);
+  ctx.quadraticCurveTo(L2 * 0.88, -fus * 0.62, L2 * 0.68, -fus * 0.55);
+  ctx.quadraticCurveTo(L2 * 0.82, 0, L2 * 0.68, fus * 0.55);
+  ctx.quadraticCurveTo(L2 * 0.88, fus * 0.62, L2 * 0.97, 0);
+  ctx.closePath(); ctx.fill();
+  // nav lights: red left wingtip, green right, blinking
+  const blink = Math.sin(blinkT * 6) > 0.2 ? 1 : 0.25;
+  ctx.fillStyle = `rgba(255,80,70,${blink})`;
+  ctx.beginPath(); ctx.arc(-len * 0.2, -W2 + 2, 2.4, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = `rgba(80,255,120,${blink})`;
+  ctx.beginPath(); ctx.arc(-len * 0.2, W2 - 2, 2.4, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
 function render() {
   ctx.save();
   ctx.clearRect(0, 0, cv.width, cv.height);
   if (shakeT > 0) ctx.translate((Math.random() - 0.5) * 6 * shakeT * 8, (Math.random() - 0.5) * 6 * shakeT * 8);
 
   const bw = L.w * cell, bh = L.h * cell;
-  // curb
-  ctx.fillStyle = '#c79b3b';
-  rr(bx - 7, by - 7, bw + 14, bh + 14, 14); ctx.fill();
-  // asphalt
-  ctx.fillStyle = '#33363c';
-  rr(bx, by, bw, bh, 9); ctx.fill();
-  // parking-line dashes between cells
-  ctx.strokeStyle = 'rgba(240,235,220,.13)';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([cell * 0.28, cell * 0.24]);
-  for (let x = 1; x < L.w; x++) {
-    ctx.beginPath(); ctx.moveTo(bx + x * cell, by + 4); ctx.lineTo(bx + x * cell, by + bh - 4); ctx.stroke();
+  const now = performance.now() / 1000;
+  // apron concrete
+  ctx.fillStyle = '#1d2433';
+  rr(bx - 8, by - 8, bw + 16, bh + 16, 10); ctx.fill();
+  ctx.fillStyle = '#232c40';
+  rr(bx, by, bw, bh, 6); ctx.fill();
+  // concrete slab joints (big panels, not a parking grid)
+  ctx.strokeStyle = 'rgba(10,14,26,.55)'; ctx.lineWidth = 2;
+  for (let x = 2; x < L.w; x += 2) {
+    ctx.beginPath(); ctx.moveTo(bx + x * cell, by); ctx.lineTo(bx + x * cell, by + bh); ctx.stroke();
   }
-  for (let y = 1; y < L.h; y++) {
-    ctx.beginPath(); ctx.moveTo(bx + 4, by + y * cell); ctx.lineTo(bx + bw - 4, by + y * cell); ctx.stroke();
+  for (let y = 2; y < L.h; y += 2) {
+    ctx.beginPath(); ctx.moveTo(bx, by + y * cell); ctx.lineTo(bx + bw, by + y * cell); ctx.stroke();
   }
+  // taxiway centerlines: amber dashes along mid rows/cols
+  ctx.strokeStyle = 'rgba(240,190,60,.28)';
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([cell * 0.32, cell * 0.3]);
+  ctx.beginPath(); ctx.moveTo(bx, by + bh / 2); ctx.lineTo(bx + bw, by + bh / 2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bx + bw / 2, by); ctx.lineTo(bx + bw / 2, by + bh); ctx.stroke();
   ctx.setLineDash([]);
+  // blue taxiway edge lights around the field, softly pulsing
+  for (let x = 0; x <= L.w; x++) {
+    for (const yy of [by - 8, by + bh + 8]) {
+      const tw2 = 0.55 + 0.45 * Math.sin(now * 2 + x * 0.9);
+      ctx.fillStyle = `rgba(90,160,255,${0.35 + 0.3 * tw2})`;
+      ctx.beginPath(); ctx.arc(bx + x * cell, yy, 2.6, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  for (let y = 0; y <= L.h; y++) {
+    for (const xx of [bx - 8, bx + bw + 8]) {
+      const tw2 = 0.55 + 0.45 * Math.sin(now * 2 + y * 0.9 + 2);
+      ctx.fillStyle = `rgba(90,160,255,${0.35 + 0.3 * tw2})`;
+      ctx.beginPath(); ctx.arc(xx, by + y * cell, 2.6, 0, Math.PI * 2); ctx.fill();
+    }
+  }
 
-  // planters (stones)
+  // cargo containers (stones)
   for (const [sx, sy] of L.stones) {
     const x = bx + sx * cell, y = by + sy * cell;
-    ctx.fillStyle = '#5a5f68';
-    rr(x + 4, y + 4, cell - 8, cell - 8, 8); ctx.fill();
-    ctx.fillStyle = '#474b53';
-    rr(x + 4, y + cell * 0.55, cell - 8, cell * 0.45 - 4, 8); ctx.fill();
-    ctx.fillStyle = '#3f9e58';
-    ctx.beginPath(); ctx.arc(x + cell / 2, y + cell * 0.44, cell * 0.2, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#57c274';
-    ctx.beginPath(); ctx.arc(x + cell * 0.42, y + cell * 0.38, cell * 0.11, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#3b4257';
+    rr(x + 4, y + 5, cell - 8, cell - 9, 5); ctx.fill();
+    ctx.fillStyle = '#4a5470';
+    rr(x + 4, y + 5, cell - 8, cell * 0.4, 5); ctx.fill();
+    // hazard stripe
+    ctx.save();
+    ctx.beginPath(); rr(x + 4, y + cell * 0.62, cell - 8, cell * 0.16, 2); ctx.clip();
+    for (let sx2 = -1; sx2 < 6; sx2++) {
+      ctx.fillStyle = sx2 % 2 ? '#d8a62c' : '#2a3040';
+      ctx.beginPath();
+      ctx.moveTo(x + sx2 * cell * 0.2, y + cell * 0.8);
+      ctx.lineTo(x + sx2 * cell * 0.2 + cell * 0.12, y + cell * 0.55);
+      ctx.lineTo(x + sx2 * cell * 0.2 + cell * 0.24, y + cell * 0.55);
+      ctx.lineTo(x + sx2 * cell * 0.2 + cell * 0.12, y + cell * 0.8);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
   }
 
-  // cars
+  // planes
   for (let i = 0; i < L.cars.length; i++) {
     if (offs[i] === null && !exitAnim[i]) continue;
     const c = L.cars[i], col = CAR_COLORS[c.color];
-    let ox = 0, oy = 0, alpha = 1;
+    let ox = 0, oy = 0, alpha = 1, lift = 0;
     if (exitAnim[i]) {
       const a = exitAnim[i];
       if (a.t >= 1) { exitAnim[i] = null; continue; }
-      const dist = a.t * a.t * cell * 9; // accelerate
+      const dist = a.t * a.t * cell * 11; // accelerate down the runway
       if (c.axis === 'h') ox = c.dir * dist; else oy = c.dir * dist;
-      alpha = 1 - a.t;
+      lift = Math.max(0, a.t - 0.3) / 0.7;
+      alpha = 1 - Math.max(0, a.t - 0.6) / 0.4;
     }
     const dragging = drag && drag.ci === i;
     const [x0, y0, w0, h0] = carRectPx(i);
-    const x = x0 + ox, y = y0 + oy, w = w0, h = h0;
-    ctx.save();
-    ctx.globalAlpha = alpha;
+    const cx2 = x0 + w0 / 2 + ox, cy2 = y0 + h0 / 2 + oy;
+    const along = (c.axis === 'h' ? w0 : h0);
+    const ang = c.axis === 'h' ? (c.dir === 1 ? 0 : Math.PI) : (c.dir === 1 ? Math.PI / 2 : -Math.PI / 2);
     if (dragging) { ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 12; ctx.shadowOffsetY = 4; }
-    const rad = Math.min(w, h) * 0.3;
-    // body
-    ctx.fillStyle = col.dark;
-    rr(x, y, w, h, rad); ctx.fill();
+    drawPlane(cx2, cy2, ang, along * 0.98, cell * (c.len === 2 ? 1.28 : 1.16), col, lift, alpha, now + i);
     ctx.shadowColor = 'transparent';
-    const grad = c.axis === 'h' ? ctx.createLinearGradient(0, y, 0, y + h) : ctx.createLinearGradient(x, 0, x + w, 0);
-    grad.addColorStop(0, col.lite); grad.addColorStop(0.5, col.main); grad.addColorStop(1, col.main);
-    ctx.fillStyle = grad;
-    rr(x + 1.5, y + 1.5, w - 3, h - 3 - (c.axis === 'h' ? h * 0.08 : 0), rad);
-    ctx.fill();
-    // windshield block toward the front
-    ctx.fillStyle = 'rgba(25,32,44,.55)';
-    const frontward = c.dir === 1;
-    if (c.axis === 'h') {
-      const gw = w * 0.2, gx = frontward ? x + w * 0.58 : x + w * 0.22;
-      rr(gx, y + h * 0.16, gw, h * 0.68, 5); ctx.fill();
-    } else {
-      const gh = h * 0.2, gy = frontward ? y + h * 0.58 : y + h * 0.22;
-      rr(x + w * 0.16, gy, w * 0.68, gh, 5); ctx.fill();
-    }
-    // headlights on the front edge
-    ctx.fillStyle = '#ffe9a8';
-    const hl = Math.min(w, h) * 0.09;
-    if (c.axis === 'h') {
-      const fx2 = frontward ? x + w - hl * 1.6 : x + hl * 1.6;
-      ctx.beginPath(); ctx.arc(fx2, y + h * 0.26, hl, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(fx2, y + h * 0.74, hl, 0, Math.PI * 2); ctx.fill();
-    } else {
-      const fy2 = frontward ? y + h - hl * 1.6 : y + hl * 1.6;
-      ctx.beginPath(); ctx.arc(x + w * 0.26, fy2, hl, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(x + w * 0.74, fy2, hl, 0, Math.PI * 2); ctx.fill();
-    }
-    // facing chevron
-    ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
-    const chs = Math.min(w, h) * 0.14;
-    let cxp, cyp, ang;
-    if (c.axis === 'h') { cxp = frontward ? x + w * 0.85 : x + w * 0.15; cyp = y + h / 2; ang = frontward ? 0 : Math.PI; }
-    else { cxp = x + w / 2; cyp = frontward ? y + h * 0.85 : y + h * 0.15; ang = frontward ? Math.PI / 2 : -Math.PI / 2; }
-    ctx.save();
-    ctx.translate(cxp, cyp); ctx.rotate(ang);
-    ctx.beginPath();
-    ctx.moveTo(-chs * 0.5, -chs); ctx.lineTo(chs * 0.6, 0); ctx.lineTo(-chs * 0.5, chs);
-    ctx.stroke();
-    ctx.restore();
-    ctx.restore();
   }
 
   // particles

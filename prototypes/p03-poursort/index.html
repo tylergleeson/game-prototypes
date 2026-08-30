@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Pour Sort</title>
+<title>Shelved</title>
 <style>
-  :root { --bg1:#332343; --bg2:#1d1229; --ink:#f5effc; --dim:#a394b8; }
+  :root { --bg1:#3d2f24; --bg2:#241a12; --ink:#f7efe3; --dim:#b3a48c; }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body { height:100%; overflow:hidden; }
   body {
@@ -34,7 +34,7 @@
     background:rgba(14,8,22,.66); backdrop-filter:blur(3px); z-index:10;
   }
   .card {
-    background:linear-gradient(180deg,#3d2b52,#2a1c3c); border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg,#4a3826,#33261a); border:1px solid rgba(255,255,255,.12);
     border-radius:20px; padding:26px 30px; text-align:center; width:min(86vw,340px);
     box-shadow:0 18px 50px rgba(0,0,0,.5); animation:pop .28s cubic-bezier(.34,1.56,.64,1);
   }
@@ -46,7 +46,7 @@
     width:100%; border:0; border-radius:14px; padding:14px; font-size:17px; font-weight:800;
     cursor:pointer; margin-top:8px; color:#fff;
   }
-  .card button.primary { background:linear-gradient(180deg,#b07ef5,#8a4fe0); box-shadow:0 6px 0 #6534b0; }
+  .card button.primary { background:linear-gradient(180deg,#d8a44c,#b8802a); box-shadow:0 6px 0 #8a5c14; color:#2e2008; }
   .card button.rescue  { background:linear-gradient(180deg,#33d17a,#1fae5f); box-shadow:0 6px 0 #12854a; }
   .card button.ghost   { background:rgba(255,255,255,.09); box-shadow:none; font-weight:600; font-size:15px; }
   .card button:active { transform:translateY(3px); box-shadow:none; }
@@ -68,7 +68,7 @@
   <div class="modal" id="winModal" hidden>
     <div class="card">
       <div class="stars" id="winStars">★★★</div>
-      <h2>All sorted!</h2>
+      <h2>Shelf sorted!</h2>
       <p id="winSub"></p>
       <button class="primary" id="btnNext">Next level</button>
     </div>
