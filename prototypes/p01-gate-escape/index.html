@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Gate Escape</title>
+<style>
+  :root { --bg1:#1b2340; --bg2:#0e1226; --ink:#eef1ff; --dim:#8b93b8; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; overflow:hidden; }
+  body {
+    background: radial-gradient(120% 100% at 50% 0%, var(--bg1) 0%, var(--bg2) 70%);
+    color:var(--ink); font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    display:flex; flex-direction:column; align-items:center; user-select:none; touch-action:none;
+  }
+  #hud {
+    width:100%; max-width:560px; display:flex; align-items:center; justify-content:space-between;
+    padding:calc(10px + env(safe-area-inset-top)) 16px 6px;
+  }
+  #hud .lvl { font-weight:800; font-size:18px; letter-spacing:.4px; }
+  #hud .moves { font-weight:800; font-size:18px; }
+  #hud .moves.low { color:#ff5a5f; animation:pulse 1s infinite; }
+  #hud button {
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:var(--ink);
+    border-radius:10px; padding:6px 12px; font-size:14px; font-weight:700; cursor:pointer;
+  }
+  @keyframes pulse { 50% { opacity:.45; } }
+  #wrap { flex:1; width:100%; display:flex; align-items:center; justify-content:center; }
+  canvas { display:block; }
+  .modal {
+    position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(8,10,24,.66); backdrop-filter:blur(3px); z-index:10;
+  }
+  .card {
+    background:linear-gradient(180deg,#232c52,#1a2140); border:1px solid rgba(255,255,255,.12);
+    border-radius:20px; padding:26px 30px; text-align:center; width:min(86vw,340px);
+    box-shadow:0 18px 50px rgba(0,0,0,.5); animation:pop .28s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes pop { from { transform:scale(.7); opacity:0; } }
+  .card h2 { font-size:26px; margin-bottom:6px; }
+  .card p { color:var(--dim); font-size:15px; margin-bottom:16px; }
+  .card .stars { font-size:30px; letter-spacing:6px; margin-bottom:10px; }
+  .card button {
+    width:100%; border:0; border-radius:14px; padding:14px; font-size:17px; font-weight:800;
+    cursor:pointer; margin-top:8px; color:#fff;
+  }
+  .card button.primary { background:linear-gradient(180deg,#4aa8ff,#2f7fe0); box-shadow:0 6px 0 #1d5eb0; }
+  .card button.rescue  { background:linear-gradient(180deg,#33d17a,#1fae5f); box-shadow:0 6px 0 #12854a; }
+  .card button.ghost   { background:rgba(255,255,255,.09); box-shadow:none; font-weight:600; font-size:15px; }
+  .card button:active { transform:translateY(3px); box-shadow:none; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+  <div id="hud">
+    <div class="lvl" id="hudLevel">Level 1</div>
+    <div class="moves"><span id="hudMoves">0</span> moves</div>
+    <button id="btnRestart" aria-label="Restart">&#8635;</button>
+  </div>
+  <div id="wrap"><canvas id="cv"></canvas></div>
+
+  <div class="modal" id="winModal" hidden>
+    <div class="card">
+      <div class="stars" id="winStars">★★★</div>
+      <h2>Level clear!</h2>
+      <p id="winSub"></p>
+      <button class="primary" id="btnNext">Next level</button>
+    </div>
+  </div>
+
+  <div class="modal" id="failModal" hidden>
+    <div class="card">
+      <h2>So close!</h2>
+      <p id="failSub"></p>
+      <button class="rescue" id="btnRescue">+3 moves</button>
+      <button class="ghost" id="btnRetry">Retry level</button>
+    </div>
+  </div>
+
+  <script src="levels.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
