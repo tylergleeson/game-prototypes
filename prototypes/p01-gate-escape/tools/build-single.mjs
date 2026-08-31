@@ -8,6 +8,7 @@ const html = fs.readFileSync(root + 'index.html', 'utf8');
 const levels = fs.readFileSync(root + 'levels.js', 'utf8');
 const game = fs.readFileSync(root + 'game.js', 'utf8');
 const menu = fs.readFileSync(root + 'menu.js', 'utf8');
+const beacon = fs.readFileSync(root + 'beacon.js', 'utf8');
 
 const style = html.match(/<style>[\s\S]*?<\/style>/)[0];
 const body = html.match(/<body>([\s\S]*?)<script/)[1];
@@ -15,9 +16,11 @@ const body = html.match(/<body>([\s\S]*?)<script/)[1];
 const out = `<title>Gate Escape</title>
 ${style}
 ${body}<script>
+window.BEACON_URL = window.BEACON_URL || ''; // '' = beacon disabled (zero network) — artifact builds stay offline
 ${levels}
 ${game}
 ${menu}
+${beacon}
 </script>
 `;
 fs.mkdirSync(root + 'dist', { recursive: true });

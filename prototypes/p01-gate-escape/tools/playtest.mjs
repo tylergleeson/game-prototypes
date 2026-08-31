@@ -19,6 +19,10 @@ const executablePath = process.env.PW_CHROMIUM || (fs.existsSync('/opt/pw-browse
 const browser = await chromium.launch({ executablePath });
 const page = await browser.newPage({ viewport: { width: 420, height: 780 } });
 page.on('pageerror', e => { console.error('PAGE ERROR:', e.message); process.exitCode = 1; });
+// beacon guard: with BEACON_URL empty (the shipped default) the page must never touch the
+// network — every request in this whole run has to be file:// (the game has zero deps)
+const netReqs = [];
+page.on('request', r => { if (!r.url().startsWith('file://')) netReqs.push(r.url()); });
 
 await page.goto('file://' + root + 'index.html');
 await page.waitForFunction(() => window.GE && window.GE.L);
@@ -649,6 +653,151 @@ const burnLevel = () => page.evaluate(() => {
   else { failures++; console.error('chest open FAIL:', JSON.stringify({ c0, c1, c2, c3, c4 })); }
 }
 
+// ---------- streaks + daily goal (2026-08-31) ----------
+// same-day clears count today only; a next-day clear extends the streak; a 2-day gap breaks it
+// and offers ONE repair per streak; repair restores the streak (today's clear = len+1); decline
+// starts fresh at 1; the goal beat fires once per day; the menu row renders both states
+{
+  await page.evaluate(() => { localStorage.removeItem('ge_streak'); localStorage.setItem('ge_stats', '{}'); });
+  await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L);
+  await page.evaluate(() => { window.__day = 0; const real = Date.now.bind(Date); window.GE.now = () => real() + window.__day * 864e5; });
+  const setDay = d => page.evaluate(d => { window.__day = d; }, d);
+  const winOnce = async () => {
+    await page.evaluate(() => window.GE.load(0));
+    await page.waitForTimeout(60);
+    await page.evaluate(sol => { for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side); }, solutions[0]);
+    await page.waitForSelector('#winModal:not([hidden])', { timeout: 2500 });
+  };
+  const S = () => page.evaluate(() => ({ ...window.GE_MENU.streak, stats: JSON.parse(localStorage.getItem('ge_stats') || '{}') }));
+  const dailyRow = () => page.evaluate(() => ({ hidden: document.getElementById('winDaily').hidden, stamp: document.getElementById('winDailyStamp').textContent, k: document.getElementById('winDailyK').textContent, v: document.getElementById('winDailyV').textContent }));
+  const menuRow = () => page.evaluate(() => ({ today: document.getElementById('fToday').textContent.trim(), streak: document.getElementById('fStreak').textContent }));
+  await winOnce(); const d1 = await S();
+  await winOnce(); const d2 = await S();
+  await winOnce(); await page.waitForTimeout(1400);
+  const d3 = await S(), d3row = await dailyRow();
+  await page.screenshot({ path: `${shotDir}/win-daily-goal.png` });
+  await winOnce(); await page.waitForTimeout(1400);
+  const d4 = await S(), d4row = await dailyRow();
+  const sameDay = d1.todayCount === 1 && d1.len === 1 && d2.todayCount === 2 && d2.len === 1 && d2.stats.streak_day === 1
+    && d3.todayCount === 3 && d3.len === 1 && d3.stats.daily_goal_met === 1 && !d3row.hidden && d3row.stamp === 'GOAL' && /^3 levels cleared today/.test(d3row.v)
+    && d4.todayCount === 4 && d4.stats.daily_goal_met === 1 && d4row.hidden;
+  if (sameDay) console.log('daily goal ok: clears count 1→4 today, streak stays 1; the GOAL beat fires once, on the 3rd clear');
+  else { failures++; console.error('daily goal FAIL:', JSON.stringify({ d1, d2, d3, d3row, d4, d4row })); }
+  await page.evaluate(() => window.GE_MENU.show('menu')); await page.waitForTimeout(80);
+  const row0 = await menuRow();
+  // next day: streak extends to 2 (its first BEST beat), the day counter resets
+  await setDay(1);
+  await winOnce(); await page.waitForTimeout(1400);
+  const n1 = await S(), n1row = await dailyRow();
+  const nextDay = n1.len === 2 && n1.best === 2 && n1.todayCount === 1 && n1.stats.streak_day === 2
+    && !n1row.hidden && n1row.stamp === 'BEST' && /2 days/.test(n1row.v)
+    && row0.today === '▮▮▮3/3' && row0.streak === '1 day';
+  if (nextDay) console.log('streak ok: next-day clear extends to 2 with the BEST beat; menu row was "▮▮▮3/3 · 1 day"');
+  else { failures++; console.error('streak next-day FAIL:', JSON.stringify({ n1, n1row, row0 })); }
+  // +2 days: exactly one day missed → the repair card, once; ad → repair; today's clear = len+1
+  // (dismiss the win card first: the offer only ever fires at launch, over the title block)
+  await page.click('#btnNext'); await page.waitForTimeout(80);
+  await page.evaluate(() => window.GE_MENU.show('menu')); await page.waitForTimeout(80);
+  await setDay(3);
+  const off1 = await page.evaluate(() => window.GE_MENU.checkStreak());
+  const card = await page.evaluate(() => ({ up: !document.getElementById('streakModal').hidden, sub: document.getElementById('streakSub').textContent }));
+  await page.waitForTimeout(450); // card entrance + menu fade settle before the shot
+  await page.screenshot({ path: `${shotDir}/streak-repair-card.png` });
+  await page.click('#btnStreakRepair');
+  const adUp = await page.evaluate(() => window.GE.adUp);
+  await page.waitForFunction(() => !window.GE.adUp && document.getElementById('streakModal').hidden, null, { timeout: 4000 });
+  const rep = await S();
+  const reOffer = await page.evaluate(() => window.GE_MENU.checkStreak()); // gap is 1 now: no card
+  await winOnce(); const rep2 = await S();
+  const repairOk = off1 === true && card.up && /^Your 2-day streak — repair it\?$/.test(card.sub) && adUp
+    && rep.len === 2 && !!rep.repairUsedFor && rep.stats.streak_repair_offered === 1 && rep.stats.streak_repair_taken === 1
+    && reOffer === false && rep2.len === 3 && rep2.stats.streak_day === 3;
+  if (repairOk) console.log('streak repair ok: one missed day offers the card once; ad → repaired; today\'s clear lands len 3 (= len+1)');
+  else { failures++; console.error('streak repair FAIL:', JSON.stringify({ off1, card, adUp, rep, reOffer, rep2 })); }
+  // a second miss on the SAME streak gets no second repair; then a NEW streak earns its own
+  // offer, and declining starts fresh at 1 with today's clear
+  await setDay(5);
+  const off2 = await page.evaluate(() => window.GE_MENU.checkStreak());
+  await winOnce(); const fresh = await S();
+  await setDay(6); await winOnce(); const s6 = await S();
+  await setDay(8);
+  const off3 = await page.evaluate(() => window.GE_MENU.checkStreak());
+  await page.click('#btnStreakDecline');
+  const dec = await S();
+  await winOnce(); const s8 = await S();
+  const onceOk = off2 === false && fresh.len === 1 && !fresh.repairUsedFor && s6.len === 2
+    && off3 === true && dec.len === 0 && dec.lastDate === null && dec.stats.streak_repair_declined === 1
+    && s8.len === 1 && s8.stats.streak_repair_offered === 2 && s8.best === 3;
+  if (onceOk) console.log('streak repair ok: once per streak (2nd miss → no offer, fresh at 1); a new streak is offered its own; decline → fresh at 1');
+  else { failures++; console.error('streak once/decline FAIL:', JSON.stringify({ off2, fresh, s6, off3, dec, s8 })); }
+  // menu row renders both persisted states across a real reload (real clock)
+  await page.evaluate(() => { localStorage.removeItem('ge_streak'); });
+  await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L);
+  await page.waitForTimeout(400);
+  const rowFresh = await menuRow();
+  await page.screenshot({ path: `${shotDir}/menu-daily-fresh.png` });
+  await page.evaluate(() => {
+    const day = t => { const x = new Date(t); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
+    localStorage.setItem('ge_streak', JSON.stringify({ len: 4, best: 4, lastDate: day(Date.now()), todayCount: 2, todayDate: day(Date.now()), repairUsedFor: null }));
+  });
+  await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L);
+  await page.waitForTimeout(400);
+  const row4 = await menuRow();
+  await page.screenshot({ path: `${shotDir}/menu-daily-streak4.png` });
+  if (rowFresh.today === '▯▯▯0/3' && rowFresh.streak === '—' && row4.today === '▮▮▯2/3' && row4.streak === '4 days')
+    console.log('menu daily row ok: fresh "▯▯▯0/3 · —", live "▮▮▯2/3 · 4 days" (persisted across reload)');
+  else { failures++; console.error('menu daily row FAIL:', JSON.stringify({ rowFresh, row4 })); }
+}
+
+// ---------- beacon (2026-08-31) ----------
+// with a stub endpoint injected before load, events batch and flush with the right shape and
+// the install id persists across reloads; the zero-network guard for the shipped empty
+// BEACON_URL is asserted at the very end of the run
+{
+  const bctx = await browser.newContext({ viewport: { width: 420, height: 780 } });
+  const bpage = await bctx.newPage();
+  await bpage.addInitScript(() => { window.BEACON_URL = 'https://beacon.example/e'; });
+  const batches = [];
+  await bpage.route('https://beacon.example/**', route => {
+    try { batches.push(JSON.parse(route.request().postData() || 'null')); } catch (e) { batches.push(null); }
+    route.fulfill({ status: 204, body: '', headers: { 'Access-Control-Allow-Origin': '*' } });
+  });
+  await bpage.goto('file://' + root + 'index.html');
+  await bpage.waitForFunction(() => window.GE && window.GE.L && window.GE_BEACON && window.GE_BEACON.enabled);
+  await bpage.evaluate(() => window.GE.load(0));
+  await bpage.waitForTimeout(60);
+  await bpage.evaluate(sol => { for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side); }, solutions[0]);
+  await bpage.waitForSelector('#winModal:not([hidden])', { timeout: 2500 });
+  const iid1 = await bpage.evaluate(() => localStorage.getItem('ge_iid'));
+  const sid1 = await bpage.evaluate(() => window.GE_BEACON.sid);
+  await bpage.evaluate(() => window.GE_BEACON.flush());
+  await bpage.waitForTimeout(600);
+  const qAfterFlush = await bpage.evaluate(() => window.GE_BEACON.queue.length);
+  const manual = batches.filter(Array.isArray).flat();
+  // 20 queued events trigger an automatic flush without any timer
+  const before = batches.length;
+  await bpage.evaluate(() => { for (let i = 0; i < 22; i++) window.track('bot_ping', i); });
+  await bpage.waitForTimeout(400);
+  const auto = batches.length > before && batches.slice(before).some(b => Array.isArray(b) && b.length >= 20);
+  await bpage.reload(); await bpage.waitForFunction(() => window.GE && window.GE.L && window.GE_BEACON && window.GE_BEACON.enabled);
+  const iid2 = await bpage.evaluate(() => localStorage.getItem('ge_iid'));
+  const sid2 = await bpage.evaluate(() => window.GE_BEACON.sid);
+  await bctx.close();
+  const uuidRe = /^[0-9a-f-]{8,36}$/i;
+  const shapeOk = manual.length >= 4 && manual.every(e => e && e.iid === iid1 && uuidRe.test(e.iid) && e.sid === sid1
+    && Number.isInteger(e.seq) && Number.isInteger(e.t) && typeof e.ev === 'string' && typeof e.v === 'string' && 'lvl' in e && 'data' in e);
+  const seqOk = manual.every((e, i) => i === 0 || e.seq > manual[i - 1].seq);
+  const ss = manual[0];
+  const ssOk = ss && ss.ev === 'session_start' && ['v', 'w', 'h', 'dpr', 'lang', 'tz'].every(k => ss.data && k in ss.data);
+  const names = manual.map(e => e.ev);
+  const win = manual.find(e => e.ev === 'win');
+  const funnelOk = names.includes('level_start') && names.includes('block_exit') && win && win.lvl === 1;
+  const capOk = batches.filter(Array.isArray).every(b => b.length <= 64);
+  if (shapeOk && seqOk && ssOk && funnelOk && qAfterFlush === 0 && auto && capOk && iid2 === iid1 && sid2 !== sid1)
+    console.log(`beacon ok: stub URL → ${manual.length} events (session_start first, level_start/win present), seq monotonic, batches ≤64, auto-flush at 20, iid persists across reload (fresh sid)`);
+  else { failures++; console.error('beacon FAIL:', JSON.stringify({ n: manual.length, shapeOk, seqOk, ssOk, funnelOk, qAfterFlush, auto, capOk, iidSame: iid2 === iid1, sidNew: sid2 !== sid1, sample: manual.slice(0, 3) })); }
+}
+
 // Reset progress is a two-tap arm: one tap changes nothing but the label (runs last: it wipes progress
 // — chests close with the stars and the paper returns to the cyanotype)
 {
@@ -662,6 +811,10 @@ const burnLevel = () => page.evaluate(() => {
   if (r1.prog === p0 && /again/i.test(r1.label) && r2.prog === '{"u":0,"s":[]}' && !/again/i.test(r2.label) && r2.theme === 'cyan' && r2.open === 0) console.log('reset ok: first tap arms, second erases (chests closed, paper back to cyanotype)');
   else { failures++; console.error('reset FAIL:', JSON.stringify({ p0, r1, r2 })); }
 }
+
+// with BEACON_URL empty (the shipped index.html) the whole run must have been network-silent
+if (netReqs.length) { failures++; console.error('beacon off FAIL: unexpected network requests:', JSON.stringify(netReqs.slice(0, 5))); }
+else console.log('beacon off ok: BEACON_URL empty → zero network requests across the whole run');
 
 await browser.close();
 if (failures) { console.error(`\n${failures} FAILURES`); process.exit(1); }

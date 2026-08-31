@@ -106,6 +106,7 @@
     $('playLabel').textContent = (resumable() ? 'Resume level ' : 'Play level ') + (GE.level + 1);
     refreshSound();
     refreshPapers();
+    refreshDaily();
   }
   function buildGrid() {
     const g = $('levelGrid');
@@ -177,6 +178,7 @@
   $('btnPauseHome').onclick = () => { pauseModal.hidden = true; show('menu'); };
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
+    if (!$('streakModal').hidden) { $('btnStreakDecline').click(); return; } // dismiss = decline (fresh streak)
     if (!screens.legend.hidden) $('btnLegendBack').click();
     else if (!screens.levels.hidden) $('btnLevelsBack').click();
     else if (screens.menu.hidden) $('btnMenu').click();
@@ -213,8 +215,95 @@
   }
   btnTry.onclick = () => { if (chestSkin && setSkin(chestSkin, 'win')) { btnTry.disabled = true; btnTry.textContent = 'On'; } };
 
+  // ---------- daily goal + streak (decoupled; one repair per streak) ----------
+  // Goal: clear DAILY_GOAL levels today — replays count, resets at local midnight. Streak:
+  // consecutive local calendar days with ≥1 clear — deliberately decoupled from the goal.
+  // Missing exactly one day offers ONE repair per streak (the same free rewarded flow as
+  // rescue/hint); declining just starts fresh. Nothing is gated on either. The date comes
+  // from GE.now() so bots simulate day changes without touching the system clock.
+  const DAILY_GOAL = 3;
+  let streak = { len: 0, best: 0, lastDate: null, todayCount: 0, todayDate: null, repairUsedFor: null };
+  try { const s = JSON.parse(localStorage.getItem('ge_streak') || 'null'); if (s && typeof s.len === 'number') streak = { ...streak, ...s }; } catch (e) {}
+  const saveStreak = () => { try { localStorage.setItem('ge_streak', JSON.stringify(streak)); } catch (e) {} };
+  const dayStr = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const dayGap = (a, b) => Math.round((new Date(b + 'T12:00') - new Date(a + 'T12:00')) / 864e5); // noon-anchored: DST-safe
+  function onClear(lvl) {
+    const today = dayStr(GE.now());
+    if (streak.todayDate !== today) { streak.todayDate = today; streak.todayCount = 0; }
+    streak.todayCount++;
+    const goalMet = streak.todayCount === DAILY_GOAL; // exactly once per day: the count is monotonic within a day
+    let newBest = false;
+    if (streak.lastDate !== today) {
+      const gap = streak.lastDate ? dayGap(streak.lastDate, today) : 99;
+      if (gap === 1 && streak.len > 0) streak.len++;
+      else { streak.len = 1; streak.repairUsedFor = null; } // a fresh streak gets a fresh repair
+      streak.lastDate = today;
+      if (streak.len > streak.best) { newBest = streak.len >= 2; streak.best = streak.len; } // day one is not an announcement
+      track('streak_day', { len: streak.len });
+    }
+    if (goalMet) track('daily_goal_met', { lvl });
+    saveStreak();
+    return { goalMet, newBest };
+  }
+  function refreshDaily() {
+    const today = dayStr(GE.now());
+    const n = streak.todayDate === today ? Math.min(streak.todayCount, DAILY_GOAL) : 0;
+    $('fToday').innerHTML = `<span class="boxes">${'▮'.repeat(n)}<span class="off">${'▯'.repeat(DAILY_GOAL - n)}</span></span>${n}/${DAILY_GOAL}`;
+    const live = streak.lastDate && streak.len > 0 && dayGap(streak.lastDate, today) <= 1 ? streak.len : 0;
+    $('fStreak').textContent = live ? `${live} day${live === 1 ? '' : 's'}` : '—';
+  }
+  // win-card beat: the moment the third clear of the day lands (or a new best streak) — a small
+  // stamped row after the stars, with a quiet chime. A play beat, never a purchase event.
+  let dailyTimer = 0;
+  const winDaily = $('winDaily');
+  window.addEventListener('ge:win', e => {
+    const r = onClear(e.detail.lvl + 1);
+    clearTimeout(dailyTimer); winDaily.hidden = true;
+    if (!r.goalMet && !r.newBest) return;
+    const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    dailyTimer = setTimeout(() => {
+      if (r.goalMet) {
+        $('winDailyStamp').textContent = 'GOAL'; $('winDailyK').textContent = 'Daily goal met';
+        $('winDailyV').textContent = `${DAILY_GOAL} levels cleared today` + (r.newBest ? ` · best streak ${streak.len}` : '');
+      } else {
+        $('winDailyStamp').textContent = 'BEST'; $('winDailyK').textContent = 'New best streak';
+        $('winDailyV').textContent = `${streak.len} days in a row`;
+      }
+      winDaily.hidden = false;
+      GE.sound('gate');
+    }, reduced ? 0 : 1150);
+  });
+  // launch check: exactly one missed day on a ≥2-day streak, and this streak's repair unused
+  const streakModal = $('streakModal');
+  function checkStreak() {
+    const today = dayStr(GE.now());
+    if (!(streak.len >= 2 && streak.lastDate && dayGap(streak.lastDate, today) === 2 && !streak.repairUsedFor)) return false;
+    $('streakSub').textContent = `Your ${streak.len}-day streak — repair it?`;
+    streakModal.hidden = false;
+    track('streak_repair_offered', { len: streak.len });
+    return true;
+  }
+  $('btnStreakRepair').onclick = () => {
+    if (streakModal.hidden || GE.adUp) return;
+    GE.rewarded('streak', () => {
+      streak.lastDate = dayStr(GE.now() - 864e5); // yesterday: today's first clear extends the streak
+      streak.repairUsedFor = streak.lastDate;     // once per streak (cleared when a fresh streak starts)
+      saveStreak();
+      track('streak_repair_taken', { len: streak.len });
+      streakModal.hidden = true;
+      refreshDaily();
+    });
+  };
+  $('btnStreakDecline').onclick = () => {
+    track('streak_repair_declined', { len: streak.len });
+    streak.len = 0; streak.lastDate = null; streak.repairUsedFor = null; // today's first clear starts fresh at 1
+    saveStreak();
+    streakModal.hidden = true;
+    refreshDaily();
+  };
+
   // ---------- engine events ----------
-  window.addEventListener('ge:load', () => { show(null); pauseModal.hidden = true; GE.paused = false; levelsFrom = 'menu'; clearTimeout(chestTimer); winChest.hidden = true; });
+  window.addEventListener('ge:load', () => { show(null); pauseModal.hidden = true; GE.paused = false; levelsFrom = 'menu'; clearTimeout(chestTimer); winChest.hidden = true; clearTimeout(dailyTimer); winDaily.hidden = true; });
   window.addEventListener('ge:win', e => {
     const { lvl, stars, last } = e.detail;
     const before = starsTotal(), sheet = Math.floor(lvl / PER), sheetBefore = sheetStars(sheet);
@@ -376,5 +465,7 @@
 
 
   show('menu');
-  window.GE_MENU = { show, get prog() { return prog; }, setSkin, CHEST_STARS, CHEST_SKINS };
+  checkStreak(); // the repair offer rides over the title block on launch (and only then)
+  window.GE_MENU = { show, get prog() { return prog; }, setSkin, CHEST_STARS, CHEST_SKINS,
+    get streak() { return streak; }, checkStreak, refreshDaily, DAILY_GOAL };
 })();

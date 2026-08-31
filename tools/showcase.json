@@ -1,0 +1,57 @@
+{
+  "_comment": "Gate Escape (p01) — curated ad/creative moments. Every entry is REAL gameplay reachable by any player at the stated level; tools/capture.mjs plays each recipe through the shipped engine with real pointer gestures and records stills + a short webm into prototypes/p01-gate-escape/marketing/. ASA 'core experience' compliance: nothing shown here is staged, sped up, or exclusive to the capture build — the honest-claim note on each moment says where it lives in the game.",
+  "viewport": { "width": 390, "height": 844, "deviceScaleFactor": 2 },
+  "moments": [
+    {
+      "id": "m1-opener",
+      "level": 1,
+      "film": "Title block → Play → the red block dragged straight out through its gate in one gesture: gate flash, particles, the 3-star win card.",
+      "recipe": [
+        "fresh save (no localStorage)",
+        "tap #btnPlay",
+        "pointer-drag block 0 along solutions[0] (one drag, out the right gate)",
+        "hold on the win card through the star drop"
+      ],
+      "console": "GE.load(0); then GE.dragVia(0, [], 'right')",
+      "honest_claim": "Level 1 exactly as every new player sees it; the ghost route on the board is the built-in L1 teaching overlay, shown to everyone."
+    },
+    {
+      "id": "m2-rescue",
+      "level": 6,
+      "film": "The first deadlock level played into the ground: budget burned, the 'So close!' sheet slides up with the board fitted above it and the one-drag-from-freedom ghost route pulsing, then the rescue: AD placeholder → +3 lands green on the counter.",
+      "recipe": [
+        "seed L1–5 cleared (ge_prog {u:5, s:[3,3,3,3,3]}), start level 6",
+        "burn the 9-move budget with legal non-solving one-cell drags",
+        "fail sheet up → tap #btnRescue → ad placeholder completes → +3 moves",
+        "play the solver's reference moves with the rescued budget"
+      ],
+      "console": "GE.load(5); shuffle any block until movesLeft is 0; btnRescue",
+      "honest_claim": "Level 6 is the first level whose par exceeds its block count; every player who runs out of moves sees exactly this sheet, route and rescue (rescue is once per attempt)."
+    },
+    {
+      "id": "m3-hint",
+      "level": 10,
+      "film": "A corked mid-game board, 6 blocks and stones; the HUD hint (AD ?) tapped: ad placeholder → the designer's reference move ghosts across the board as a marching dashed route with a travelling finger pip.",
+      "recipe": [
+        "seed L1–9 cleared (ge_prog {u:9, s:[3×9]}, ge_level 9), start level 10",
+        "idle a beat, tap #btnHint",
+        "ad placeholder completes → ghost route / parking outline renders",
+        "hold ~4 s while the route pulses"
+      ],
+      "console": "GE.load(9); GE.showHint()",
+      "honest_claim": "Level 10 is the game's second deadlock board; the hint is available on every level from the HUD (one per board position, rewarded slot)."
+    },
+    {
+      "id": "m4-chest",
+      "level": 8,
+      "film": "A par (3-star) clear of level 8 that carries Sheet 1 across 24★: stars drop with the spark burst, then the chest row pops — lid swings open, sparks, chime — naming the Sepia draft paper with its Try it button.",
+      "recipe": [
+        "seed L1–7 at 3★ (21★, chest at 24★ needs this win), start level 8",
+        "pointer-drag the par solution (solutions[7])",
+        "hold through stars → chest reveal → Try it"
+      ],
+      "console": "seed ge_prog {u:29, s:[3,3,3,3,3,3,3]}; GE.load(7); play solutions[7]",
+      "honest_claim": "Chests open at 24 of a sheet's 30 stars and reward a cosmetic paper skin only; nothing is gated on them. Any player crossing 24★ on Sheet 1 sees exactly this reveal."
+    }
+  ]
+}

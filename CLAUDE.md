@@ -18,6 +18,10 @@ Quick orientation:
 - `tools/build-single.mjs` bundles a game into one HTML file (for Claude
   artifacts / portals). p01 also has `tools/build-app.mjs` → `app/www/`
   (installable PWA + Capacitor webDir for iOS).
+- Monetization rule (Robinhood consent order / EU DFA): NEVER fire
+  celebratory feedback (confetti, chimes, flashes) on a purchase event. The
+  rescue/hint "+grant" celebration is acceptable only while those are free
+  rewarded-ad grants — it must not carry over to any IAP path.
 - Non-negotiable design rules: 3-second sound-off legibility; deterministic
   machine-verified levels; CrazyLabs difficulty curve (no-fail L1–2, one new
   obstacle at a time, spike at L20–25); a fail/rescue surface at the moment

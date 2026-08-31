@@ -29,6 +29,10 @@ Stars have a cosmetic sink: each sheet of ten levels on the level select has a c
 (Sepia draft / Night vellum / Whiteprint; Cyanotype is the default). Skins change only the drafting sheet (page, ink, grid, cards) — never block,
 gate or HUD state colours — and nothing is gated on a chest. The "Paper" picker on the main menu and the pause card lists the skins; a locked swatch
 shows the chest it comes from. A win that opens a chest adds a "Chest opened — <paper>" row with a "Try it" button to the win card.
+Daily goal + streak (title block "Today"/"Streak" row): the goal is 3 level clears today (replays count); the streak is consecutive calendar days
+with ≥1 clear — decoupled from the goal. The third clear of the day stamps a quiet "Daily goal met" row on the win card; a new best streak (≥2 days)
+gets a one-time "New best streak" row. Missing exactly one day offers ONE streak repair per streak at launch (rewarded-ad placeholder, free);
+declining or Escape starts fresh. Nothing is gated on either. Dates come from GE.now (overridable for testing).
 Coordinates: (x,y) cells, x to the right, y downward, origin top-left. A block's position is its
 top-left origin; its cells are listed absolute.`,
   buttons: {
@@ -42,6 +46,8 @@ top-left origin; its cells are listed absolute.`,
     btnTrySkin: 'win card: Try it — apply the paper skin the chest just opened (only shown on a win that opened a chest)',
     btnPaperCyan: 'main menu: Paper → Cyanotype (default)', btnPaperSepia: 'main menu: Paper → Sepia draft (Sheet 1 chest)', btnPaperNight: 'main menu: Paper → Night vellum (Sheet 2 chest)', btnPaperWhite: 'main menu: Paper → Whiteprint (Sheet 3 chest)',
     btnPausePaperCyan: 'pause: Paper → Cyanotype', btnPausePaperSepia: 'pause: Paper → Sepia draft', btnPausePaperNight: 'pause: Paper → Night vellum', btnPausePaperWhite: 'pause: Paper → Whiteprint',
+    btnStreakRepair: 'streak-repair card: repair the streak (rewarded-ad placeholder, ~1.2 s; shown at launch only when exactly one day was missed, once per streak)',
+    btnStreakDecline: 'streak-repair card: Start fresh — decline the repair; today\'s first clear starts a new streak at 1 (Escape does the same)',
   },
 
   async ready(page) {
@@ -77,7 +83,10 @@ top-left origin; its cells are listed absolute.`,
       return {
         level: GE.level, L: GE.L, pos: GE.pos, moves: GE.moves, movesLeft: GE.movesLeft,
         over: GE.over, paused: GE.paused, metrics: GE.metrics, rect: { left: r.left, top: r.top },
-        screens: { menu: vis('menu'), levels: vis('levels'), legend: vis('legend'), pause: vis('pauseModal'), win: vis('winModal'), fail: vis('failModal'), ad: vis('adModal') },
+        screens: { menu: vis('menu'), levels: vis('levels'), legend: vis('legend'), pause: vis('pauseModal'), win: vis('winModal'), fail: vis('failModal'), ad: vis('adModal'), streak: vis('streakModal') },
+        streak: (window.GE_MENU && window.GE_MENU.streak) || null,
+        winDaily: vis('winDaily') ? document.getElementById('winDaily').innerText.replace(/\s+/g, ' ').trim() : null,
+        menuDaily: vis('menu') ? (document.getElementById('fToday').textContent + ' · ' + document.getElementById('fStreak').textContent).trim() : null,
         hint: GE.hint ? { block: GE.hint.bi, path: GE.hint.path, exit: GE.hint.side || null } : null,
         paper: GE.theme, skins: (window.GE_MENU && window.GE_MENU.prog.skins) || [],
         chestRow: vis('winChest') ? document.querySelector('#winChest').innerText.replace(/\s+/g, ' ').trim() : null,
@@ -102,6 +111,8 @@ top-left origin; its cells are listed absolute.`,
       gates: L.gates.map(g => ({ color: COLOR[g.color], side: g.side, lanes: `${g.start}..${g.start + g.len - 1}` })),
       winCard: raw.winText, failCard: raw.failText, rescueAvailable: raw.screens.fail && !raw.rescueHidden, hintShown: raw.hint,
       paper: raw.paper, skinsUnlocked: raw.skins, chestOpened: raw.chestRow,
+      daily: raw.streak ? { todayCount: raw.streak.todayCount, goal: 3, streakDays: raw.streak.len, bestStreak: raw.streak.best } : null,
+      winBeat: raw.winDaily, menuDailyRow: raw.menuDaily,
       hud: raw.hud, jsErrors: raw.errors.length, recentErrors: raw.errors.slice(-5),
     };
   },

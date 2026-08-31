@@ -199,6 +199,23 @@
   .papers .cap.lock { color:var(--dim); font-weight:600; }
   .card .papers { margin:8px 0 0; padding:8px 10px; }
   .card .papers .cap { font-size:12px; }
+  /* daily goal + streak: a second drafting-log row on the title block. Decoupled by design:
+     the goal is DAILY_GOAL clears today (replays count), the streak is calendar days with ≥1
+     clear. Nothing is gated on either; menu.js owns the state (ge_streak). */
+  .fields.daily { margin-top:8px; }
+  .fields.daily .v { font-size:14px; }
+  .fields.daily .v .boxes { font-family:var(--mono); font-weight:600; letter-spacing:2px; color:var(--amber-ink); margin-right:5px; }
+  .fields.daily .v .boxes .off { color:var(--star-off); }
+  /* win-card beat rows (daily goal met / new best streak): a stamped drafting annotation —
+     these celebrate progress, never a purchase */
+  .card .daily-row { position:relative; display:flex; align-items:center; gap:12px; text-align:left; border:1px solid var(--line2); padding:8px 10px; margin:0 0 6px; animation:pop .45s cubic-bezier(.34,1.56,.64,1) both; }
+  .card .daily-row .stamp { flex:none; font:800 11px/1 var(--mono); letter-spacing:.14em; color:var(--green-ink); border:2px solid var(--green-ink); border-radius:3px; padding:5px 6px; transform:rotate(-7deg); animation:stamppop .5s cubic-bezier(.34,1.56,.64,1) both; }
+  @keyframes stamppop { from { transform:rotate(-7deg) scale(2.1); opacity:0; } 60% { transform:rotate(-7deg) scale(.92); opacity:1; } to { transform:rotate(-7deg) scale(1); opacity:1; } }
+  .card .daily-row .k { display:block; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); margin-bottom:4px; }
+  .card .daily-row .v { font-weight:800; font-size:14px; }
+  /* streak repair card: sits above the title block (screens are z-20); offered once per streak,
+     no pressure timer, no guilt copy — Escape or "Start fresh" declines */
+  #streakModal { z-index:25; }
   .gatebtn {
     position:relative; display:flex; align-items:center; justify-content:center; gap:12px; width:100%; margin-top:18px;
     border:0; border-radius:8px; padding:17px 14px; background:var(--amber); color:#1a2a44;
@@ -253,7 +270,7 @@
   .legend .li canvas { width:64px; height:44px; flex:none; }
   .legend .li b { display:block; font-size:15px; }
   .legend .li span { color:var(--dim); font-size:13px; }
-  @media (prefers-reduced-motion: reduce) { .gatebtn, .gatebtn .blk, .tblock, .card, .card .stars span, #toast, #btnHint.nudge, .chest-ico, .card .chest-row { animation:none; } .chest-ico .lid { transition:none; } }
+  @media (prefers-reduced-motion: reduce) { .gatebtn, .gatebtn .blk, .tblock, .card, .card .stars span, #toast, #btnHint.nudge, .chest-ico, .card .chest-row, .card .daily-row, .card .daily-row .stamp { animation:none; } .chest-ico .lid { transition:none; } }
   [hidden] { display:none !important; }
 </style>
 
@@ -285,6 +302,10 @@
         <svg class="chest-ico open" viewBox="0 0 24 20" aria-hidden="true"><g class="lid"><path d="M2 8V5.5A3.5 3.5 0 0 1 5.5 2h13A3.5 3.5 0 0 1 22 5.5V8"/><path d="M2 8h20"/></g><rect x="2" y="8" width="20" height="10" rx="1.5"/><path d="M10.5 8v4h3V8"/><path class="star" d="M12 9.2l.9 1.9 2.1.3-1.5 1.4.4 2.1-1.9-1-1.9 1 .4-2.1-1.5-1.4 2.1-.3z"/></svg>
         <div><span class="k">Chest opened</span><span class="v" id="winChestName">Sepia draft</span></div>
         <button class="ghost" id="btnTrySkin">Try it</button>
+      </div>
+      <div class="daily-row" id="winDaily" hidden>
+        <span class="stamp" id="winDailyStamp">GOAL</span>
+        <div><span class="k" id="winDailyK">Daily goal met</span><span class="v" id="winDailyV"></span></div>
       </div>
       <button class="primary" id="btnNext">Next level</button>
       <button class="ghost" id="btnReplay" hidden>Replay for ★★★</button>
@@ -326,6 +347,19 @@
     </div>
   </div>
 
+  <!-- streak repair: shown on launch only when exactly one day was missed on a ≥2-day streak,
+       once per streak. The repair is the same free rewarded flow as rescue/hint; declining (or
+       Escape) simply starts a fresh streak — no countdown, no guilt copy. -->
+  <div class="modal" id="streakModal" hidden>
+    <div class="card">
+      <span class="no">FIELD LOG</span>
+      <h2>Streak paused</h2>
+      <p id="streakSub"></p>
+      <button class="rescue" id="btnStreakRepair"><span class="ad">AD</span> Repair streak <small>· watch to keep it</small></button>
+      <button class="ghost" id="btnStreakDecline">Start fresh</button>
+    </div>
+  </div>
+
   <!-- title block: the main menu -->
   <div class="screen" id="menu" hidden>
     <div class="tblock">
@@ -335,6 +369,10 @@
       <div class="fields">
         <div><span class="k">Level</span><span class="v" id="fLevel">1 / 30</span></div>
         <div><span class="k">Stars</span><span class="v" id="fStars">0 / 90</span></div>
+      </div>
+      <div class="fields daily" id="menuDaily">
+        <div><span class="k">Today</span><span class="v" id="fToday"></span></div>
+        <div><span class="k">Streak</span><span class="v" id="fStreak">—</span></div>
       </div>
       <button class="gatebtn" id="btnPlay">
         <svg class="blk" viewBox="0 0 22 22" aria-hidden="true"><defs><pattern id="h" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#ff8078"/><rect width="1.4" height="4" fill="#c24d46" opacity=".55"/></pattern></defs><rect x="1.5" y="1.5" width="19" height="19" fill="url(#h)" stroke="#c24d46" stroke-width="2"/><circle cx="11" cy="11" r="3" fill="#fff" opacity=".9"/></svg>
@@ -373,6 +411,7 @@
   </div>
 
   <script>
+window.BEACON_URL = window.BEACON_URL || ''; // '' = beacon disabled (zero network) — artifact builds stay offline
 const LEVELS = [{"w":4,"h":5,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":1,"y":2}],"gates":[{"color":0,"side":"right","start":2,"len":3}],"par":1,"moves":5},{"w":4,"h":5,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[1,0]],"x":2,"y":3},{"color":1,"cells":[[0,0]],"x":2,"y":1}],"gates":[{"color":0,"side":"right","start":1,"len":3},{"color":1,"side":"top","start":2,"len":2}],"par":2,"moves":6},{"w":5,"h":6,"stones":[],"blocks":[{"color":0,"cells":[[0,0]],"x":4,"y":0},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":1},{"color":0,"cells":[[0,0],[0,1]],"x":4,"y":2}],"gates":[{"color":0,"side":"bottom","start":0,"len":3}],"par":3,"moves":7},{"w":5,"h":7,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[1,0]],"x":1,"y":2},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":3},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":4},{"color":0,"cells":[[0,0]],"x":3,"y":0}],"gates":[{"color":0,"side":"left","start":2,"len":4},{"color":1,"side":"bottom","start":0,"len":4}],"par":4,"moves":8},{"w":5,"h":7,"stones":[[4,3]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":1,"y":1},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":6},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":0,"y":0},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":1}],"gates":[{"color":0,"side":"left","start":3,"len":3},{"color":1,"side":"bottom","start":1,"len":4}],"par":4,"moves":7},{"w":6,"h":8,"stones":[[5,4]],"blocks":[{"color":0,"cells":[[0,0],[1,0]],"x":3,"y":1},{"color":1,"cells":[[0,0],[0,1]],"x":0,"y":0},{"color":1,"cells":[[0,0],[0,1]],"x":0,"y":5},{"color":1,"cells":[[0,0],[0,1]],"x":5,"y":2},{"color":1,"cells":[[0,0]],"x":1,"y":3}],"gates":[{"color":0,"side":"top","start":0,"len":2},{"color":1,"side":"top","start":3,"len":2}],"par":6,"moves":9},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0]],"x":0,"y":1},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":2},{"color":0,"cells":[[0,0]],"x":4,"y":3},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":5},{"color":1,"cells":[[0,0]],"x":5,"y":4}],"gates":[{"color":0,"side":"right","start":0,"len":4},{"color":1,"side":"bottom","start":1,"len":4}],"par":5,"moves":8},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":5,"y":4},{"color":2,"cells":[[0,0],[1,0]],"x":2,"y":1},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":1,"y":4},{"color":1,"cells":[[0,0],[0,1]],"x":1,"y":2},{"color":1,"cells":[[0,0],[1,0]],"x":2,"y":6}],"gates":[{"color":0,"side":"right","start":2,"len":4},{"color":1,"side":"bottom","start":2,"len":4},{"color":2,"side":"top","start":3,"len":3}],"par":6,"moves":9},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":2},{"color":1,"cells":[[0,0],[0,1]],"x":2,"y":6},{"color":2,"cells":[[0,0],[0,1]],"x":0,"y":6},{"color":2,"cells":[[0,0],[0,1]],"x":1,"y":1},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":5},{"color":2,"cells":[[0,0],[0,1]],"x":1,"y":3}],"gates":[{"color":0,"side":"left","start":3,"len":4},{"color":1,"side":"left","start":0,"len":3},{"color":2,"side":"right","start":0,"len":4}],"par":6,"moves":9},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":3},{"color":2,"cells":[[0,0],[0,1]],"x":2,"y":3},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":7},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":5,"y":1},{"color":1,"cells":[[0,0],[1,0]],"x":1,"y":7}],"gates":[{"color":0,"side":"right","start":2,"len":4},{"color":1,"side":"bottom","start":2,"len":4},{"color":2,"side":"left","start":2,"len":2}],"par":7,"moves":10},{"w":6,"h":8,"stones":[[0,7],[4,6]],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":2,"y":3},{"color":1,"cells":[[0,0],[1,0]],"x":1,"y":5},{"color":2,"cells":[[0,0]],"x":1,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":3,"y":0},{"color":1,"cells":[[0,0]],"x":3,"y":4},{"color":0,"cells":[[0,0],[0,1]],"x":4,"y":2}],"gates":[{"color":0,"side":"top","start":2,"len":3},{"color":1,"side":"right","start":2,"len":3},{"color":2,"side":"left","start":3,"len":2}],"par":6,"moves":9},{"w":6,"h":8,"stones":[[2,6],[0,7]],"blocks":[{"color":0,"cells":[[0,0]],"x":5,"y":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":3,"y":4},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":3},{"color":0,"cells":[[0,0],[0,1]],"x":3,"y":6},{"color":2,"cells":[[0,0],[1,0]],"x":1,"y":2}],"gates":[{"color":0,"side":"top","start":2,"len":3},{"color":1,"side":"left","start":3,"len":3},{"color":2,"side":"right","start":2,"len":2}],"par":7,"moves":10},{"w":6,"h":8,"stones":[[0,5],[1,6]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":0,"y":2},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":3},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":4},{"color":1,"cells":[[0,0],[1,0]],"x":4,"y":6},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":3,"y":6}],"gates":[{"color":0,"side":"left","start":1,"len":3},{"color":1,"side":"top","start":3,"len":3},{"color":2,"side":"bottom","start":1,"len":4}],"par":7,"moves":10},{"w":6,"h":8,"stones":[[5,7]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[1,1]],"x":4,"y":2},{"color":1,"cells":[[0,0],[0,1]],"x":0,"y":3},{"color":2,"cells":[[0,0],[0,1]],"x":2,"y":5},{"color":1,"cells":[[0,0],[0,1]],"x":4,"y":6},{"color":1,"cells":[[0,0],[0,1]],"x":3,"y":6}],"gates":[{"color":0,"side":"top","start":2,"len":3},{"color":1,"side":"bottom","start":0,"len":3},{"color":2,"side":"right","start":0,"len":3}],"par":5,"moves":8},{"w":6,"h":8,"stones":[[4,0]],"blocks":[{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":4},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":2,"y":6},{"color":2,"cells":[[0,0],[1,0]],"x":3,"y":3},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":4},{"color":1,"cells":[[0,0],[1,0]],"x":0,"y":2},{"color":2,"cells":[[0,0],[0,1]],"x":5,"y":1}],"gates":[{"color":0,"side":"left","start":0,"len":3},{"color":1,"side":"left","start":5,"len":3},{"color":2,"side":"bottom","start":3,"len":2}],"par":7,"moves":10},{"w":6,"h":8,"stones":[[1,2]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":0},{"color":1,"cells":[[0,0],[0,1]],"x":5,"y":4},{"color":2,"cells":[[0,0]],"x":2,"y":7},{"color":2,"cells":[[0,0],[1,0]],"x":2,"y":3},{"color":2,"cells":[[0,0],[0,1]],"x":5,"y":2},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":0}],"gates":[{"color":0,"side":"right","start":0,"len":4},{"color":1,"side":"left","start":5,"len":2},{"color":2,"side":"left","start":1,"len":2}],"par":7,"moves":10},{"w":7,"h":9,"stones":[[5,6],[0,8]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":5},{"color":1,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":2},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":4,"y":2},{"color":3,"cells":[[0,0],[0,1]],"x":3,"y":6},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":0},{"color":3,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":4},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":4,"y":5}],"gates":[{"color":0,"side":"right","start":2,"len":3},{"color":1,"side":"top","start":0,"len":3},{"color":2,"side":"bottom","start":1,"len":3},{"color":3,"side":"left","start":1,"len":4}],"par":8,"moves":11},{"w":7,"h":9,"stones":[[2,8],[2,4]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":3,"y":0},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":0},{"color":2,"cells":[[0,0],[1,0]],"x":0,"y":5},{"color":3,"cells":[[0,0],[0,1],[0,2]],"x":5,"y":5},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":1,"y":0},{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":5,"y":3},{"color":1,"cells":[[0,0],[0,1]],"x":4,"y":6}],"gates":[{"color":0,"side":"bottom","start":2,"len":3},{"color":1,"side":"right","start":3,"len":4},{"color":2,"side":"left","start":3,"len":4},{"color":3,"side":"top","start":1,"len":4}],"par":8,"moves":11},{"w":7,"h":9,"stones":[[5,1],[4,0]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":5,"y":2},{"color":1,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":5},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":0,"y":2},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":1,"y":0},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":6},{"color":3,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":1},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":3}],"gates":[{"color":0,"side":"left","start":5,"len":3},{"color":1,"side":"left","start":1,"len":3},{"color":2,"side":"bottom","start":3,"len":3},{"color":3,"side":"right","start":1,"len":4}],"par":8,"moves":11},{"w":6,"h":8,"stones":[[4,0],[3,3]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":2},{"color":1,"cells":[[0,0],[1,0],[0,1]],"x":0,"y":0},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":4,"y":3},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":5},{"color":0,"cells":[[0,0],[1,0],[0,1]],"x":1,"y":6},{"color":2,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":3},{"color":1,"cells":[[0,0],[0,1]],"x":2,"y":2}],"gates":[{"color":0,"side":"top","start":1,"len":3},{"color":1,"side":"left","start":0,"len":2},{"color":2,"side":"bottom","start":3,"len":2},{"color":3,"side":"right","start":1,"len":2}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[2,4],[4,7]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":6},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":5},{"color":2,"cells":[[0,0],[1,0]],"x":0,"y":3},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":3,"y":0},{"color":0,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":4},{"color":1,"cells":[[0,0],[1,0],[0,1]],"x":3,"y":4},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":4,"y":2}],"gates":[{"color":0,"side":"left","start":2,"len":2},{"color":1,"side":"bottom","start":0,"len":3},{"color":2,"side":"top","start":3,"len":2},{"color":3,"side":"left","start":4,"len":2}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[5,6],[0,5]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":1},{"color":1,"cells":[[0,0],[0,1]],"x":1,"y":6},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":3,"y":4},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":3,"y":0},{"color":3,"cells":[[0,0],[1,0],[1,1]],"x":3,"y":6},{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":1,"y":2},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":1,"y":0}],"gates":[{"color":0,"side":"top","start":4,"len":2},{"color":1,"side":"right","start":0,"len":2},{"color":2,"side":"bottom","start":0,"len":2},{"color":3,"side":"top","start":0,"len":2}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[5,5],[0,1]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":5},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":1},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":3,"y":0},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":0,"y":2},{"color":3,"cells":[[0,0],[0,1]],"x":5,"y":1},{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":2,"y":6},{"color":2,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":4}],"gates":[{"color":0,"side":"top","start":4,"len":2},{"color":1,"side":"left","start":3,"len":4},{"color":2,"side":"bottom","start":1,"len":2},{"color":3,"side":"right","start":5,"len":3}],"par":9,"moves":11},{"w":6,"h":8,"stones":[[4,4],[1,2]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":0},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":4},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":2},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":4},{"color":3,"cells":[[0,0],[0,1]],"x":4,"y":6},{"color":0,"cells":[[0,0],[1,0]],"x":2,"y":5},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":0}],"gates":[{"color":0,"side":"right","start":4,"len":3},{"color":1,"side":"bottom","start":0,"len":2},{"color":2,"side":"top","start":1,"len":2},{"color":3,"side":"bottom","start":3,"len":2}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[1,2],[1,0]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":3},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":1,"y":6},{"color":3,"cells":[[0,0],[1,0]],"x":4,"y":6},{"color":3,"cells":[[0,0],[1,0],[0,1]],"x":0,"y":5},{"color":3,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":6},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":3}],"gates":[{"color":0,"side":"bottom","start":0,"len":2},{"color":1,"side":"left","start":2,"len":3},{"color":2,"side":"top","start":1,"len":3},{"color":3,"side":"right","start":4,"len":2}],"par":8,"moves":10},{"w":7,"h":9,"stones":[[4,0],[2,4]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":4},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":5,"y":7},{"color":2,"cells":[[0,0],[0,1]],"x":4,"y":1},{"color":3,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":1},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":2},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":4},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":3}],"gates":[{"color":0,"side":"top","start":1,"len":2},{"color":1,"side":"right","start":4,"len":4},{"color":2,"side":"left","start":3,"len":3},{"color":3,"side":"right","start":0,"len":2}],"par":8,"moves":11},{"w":7,"h":9,"stones":[[0,4],[3,3]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":6,"y":0},{"color":1,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":7},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":2},{"color":3,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":5},{"color":2,"cells":[[0,0],[1,0]],"x":4,"y":3},{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":0},{"color":0,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":4}],"gates":[{"color":0,"side":"top","start":1,"len":3},{"color":1,"side":"left","start":1,"len":2},{"color":2,"side":"bottom","start":1,"len":4},{"color":3,"side":"left","start":6,"len":3}],"par":8,"moves":11},{"w":7,"h":9,"stones":[[5,2],[0,8]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":3,"y":0},{"color":1,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":2},{"color":2,"cells":[[0,0],[0,1]],"x":3,"y":2},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":8},{"color":2,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":0},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":4,"y":3},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":5,"y":6}],"gates":[{"color":0,"side":"right","start":3,"len":2},{"color":1,"side":"bottom","start":5,"len":2},{"color":2,"side":"top","start":3,"len":3},{"color":3,"side":"top","start":0,"len":3}],"par":9,"moves":12},{"w":7,"h":9,"stones":[[3,8],[6,1]],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":5,"y":5},{"color":1,"cells":[[0,0],[1,0]],"x":2,"y":2},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":5},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":0},{"color":2,"cells":[[0,0],[1,0],[1,1]],"x":1,"y":7},{"color":0,"cells":[[0,0],[1,0]],"x":0,"y":4},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":1}],"gates":[{"color":0,"side":"bottom","start":1,"len":2},{"color":1,"side":"right","start":1,"len":3},{"color":2,"side":"right","start":5,"len":2},{"color":3,"side":"left","start":5,"len":3}],"par":8,"moves":11},{"w":7,"h":9,"stones":[[5,4],[6,7]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":6},{"color":1,"cells":[[0,0],[1,0]],"x":1,"y":7},{"color":2,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":3},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":6},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":1},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":2},{"color":2,"cells":[[0,0],[1,0]],"x":5,"y":0}],"gates":[{"color":0,"side":"right","start":1,"len":3},{"color":1,"side":"bottom","start":0,"len":3},{"color":2,"side":"left","start":6,"len":3},{"color":3,"side":"top","start":5,"len":2}],"par":8,"moves":11}];
 
 'use strict';
@@ -1073,7 +1112,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) cance
 const AD_MS = 1200;
 function rewarded(kind, grant) {
   adClose();
-  adModal.querySelector('h2').textContent = kind === 'hint' ? 'Hint' : 'Rescue';
+  adModal.querySelector('h2').textContent = { hint: 'Hint', streak: 'Streak repair' }[kind] || 'Rescue';
   adBar.style.transition = 'none'; adBar.style.width = '0%'; void adBar.offsetWidth;
   adBar.style.transition = `width ${AD_MS}ms linear`; adBar.style.width = '100%';
   adModal.hidden = false;
@@ -1560,6 +1599,10 @@ window.GE = {
   get hint() { return hint; },          // the reference move currently ghosted (null if none)
   get best() { return best[li] || 0; }, // personal best moves on this level (0 = never cleared)
   get adUp() { return !adModal.hidden; },
+  // overridable clock: the daily-goal / streak logic (menu.js) reads dates through this, so
+  // bots simulate day changes without touching the system clock (assign GE.now = () => fakeMs)
+  now: () => Date.now(),
+  rewarded, // the placeholder rewarded-ad flow — menu.js's streak repair runs the same contract as rescue/hint
   // paper skins: id + table for menu.js and the bots; setTheme repaints instantly (next frame)
   get theme() { return themeId; }, get themes() { return THEMES; }, setTheme,
   burst, sound, // the chest reveal on the win card reuses the third-star burst and the generated audio
@@ -1712,6 +1755,7 @@ requestAnimationFrame(frame);
     $('playLabel').textContent = (resumable() ? 'Resume level ' : 'Play level ') + (GE.level + 1);
     refreshSound();
     refreshPapers();
+    refreshDaily();
   }
   function buildGrid() {
     const g = $('levelGrid');
@@ -1783,6 +1827,7 @@ requestAnimationFrame(frame);
   $('btnPauseHome').onclick = () => { pauseModal.hidden = true; show('menu'); };
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
+    if (!$('streakModal').hidden) { $('btnStreakDecline').click(); return; } // dismiss = decline (fresh streak)
     if (!screens.legend.hidden) $('btnLegendBack').click();
     else if (!screens.levels.hidden) $('btnLevelsBack').click();
     else if (screens.menu.hidden) $('btnMenu').click();
@@ -1819,8 +1864,95 @@ requestAnimationFrame(frame);
   }
   btnTry.onclick = () => { if (chestSkin && setSkin(chestSkin, 'win')) { btnTry.disabled = true; btnTry.textContent = 'On'; } };
 
+  // ---------- daily goal + streak (decoupled; one repair per streak) ----------
+  // Goal: clear DAILY_GOAL levels today — replays count, resets at local midnight. Streak:
+  // consecutive local calendar days with ≥1 clear — deliberately decoupled from the goal.
+  // Missing exactly one day offers ONE repair per streak (the same free rewarded flow as
+  // rescue/hint); declining just starts fresh. Nothing is gated on either. The date comes
+  // from GE.now() so bots simulate day changes without touching the system clock.
+  const DAILY_GOAL = 3;
+  let streak = { len: 0, best: 0, lastDate: null, todayCount: 0, todayDate: null, repairUsedFor: null };
+  try { const s = JSON.parse(localStorage.getItem('ge_streak') || 'null'); if (s && typeof s.len === 'number') streak = { ...streak, ...s }; } catch (e) {}
+  const saveStreak = () => { try { localStorage.setItem('ge_streak', JSON.stringify(streak)); } catch (e) {} };
+  const dayStr = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const dayGap = (a, b) => Math.round((new Date(b + 'T12:00') - new Date(a + 'T12:00')) / 864e5); // noon-anchored: DST-safe
+  function onClear(lvl) {
+    const today = dayStr(GE.now());
+    if (streak.todayDate !== today) { streak.todayDate = today; streak.todayCount = 0; }
+    streak.todayCount++;
+    const goalMet = streak.todayCount === DAILY_GOAL; // exactly once per day: the count is monotonic within a day
+    let newBest = false;
+    if (streak.lastDate !== today) {
+      const gap = streak.lastDate ? dayGap(streak.lastDate, today) : 99;
+      if (gap === 1 && streak.len > 0) streak.len++;
+      else { streak.len = 1; streak.repairUsedFor = null; } // a fresh streak gets a fresh repair
+      streak.lastDate = today;
+      if (streak.len > streak.best) { newBest = streak.len >= 2; streak.best = streak.len; } // day one is not an announcement
+      track('streak_day', { len: streak.len });
+    }
+    if (goalMet) track('daily_goal_met', { lvl });
+    saveStreak();
+    return { goalMet, newBest };
+  }
+  function refreshDaily() {
+    const today = dayStr(GE.now());
+    const n = streak.todayDate === today ? Math.min(streak.todayCount, DAILY_GOAL) : 0;
+    $('fToday').innerHTML = `<span class="boxes">${'▮'.repeat(n)}<span class="off">${'▯'.repeat(DAILY_GOAL - n)}</span></span>${n}/${DAILY_GOAL}`;
+    const live = streak.lastDate && streak.len > 0 && dayGap(streak.lastDate, today) <= 1 ? streak.len : 0;
+    $('fStreak').textContent = live ? `${live} day${live === 1 ? '' : 's'}` : '—';
+  }
+  // win-card beat: the moment the third clear of the day lands (or a new best streak) — a small
+  // stamped row after the stars, with a quiet chime. A play beat, never a purchase event.
+  let dailyTimer = 0;
+  const winDaily = $('winDaily');
+  window.addEventListener('ge:win', e => {
+    const r = onClear(e.detail.lvl + 1);
+    clearTimeout(dailyTimer); winDaily.hidden = true;
+    if (!r.goalMet && !r.newBest) return;
+    const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    dailyTimer = setTimeout(() => {
+      if (r.goalMet) {
+        $('winDailyStamp').textContent = 'GOAL'; $('winDailyK').textContent = 'Daily goal met';
+        $('winDailyV').textContent = `${DAILY_GOAL} levels cleared today` + (r.newBest ? ` · best streak ${streak.len}` : '');
+      } else {
+        $('winDailyStamp').textContent = 'BEST'; $('winDailyK').textContent = 'New best streak';
+        $('winDailyV').textContent = `${streak.len} days in a row`;
+      }
+      winDaily.hidden = false;
+      GE.sound('gate');
+    }, reduced ? 0 : 1150);
+  });
+  // launch check: exactly one missed day on a ≥2-day streak, and this streak's repair unused
+  const streakModal = $('streakModal');
+  function checkStreak() {
+    const today = dayStr(GE.now());
+    if (!(streak.len >= 2 && streak.lastDate && dayGap(streak.lastDate, today) === 2 && !streak.repairUsedFor)) return false;
+    $('streakSub').textContent = `Your ${streak.len}-day streak — repair it?`;
+    streakModal.hidden = false;
+    track('streak_repair_offered', { len: streak.len });
+    return true;
+  }
+  $('btnStreakRepair').onclick = () => {
+    if (streakModal.hidden || GE.adUp) return;
+    GE.rewarded('streak', () => {
+      streak.lastDate = dayStr(GE.now() - 864e5); // yesterday: today's first clear extends the streak
+      streak.repairUsedFor = streak.lastDate;     // once per streak (cleared when a fresh streak starts)
+      saveStreak();
+      track('streak_repair_taken', { len: streak.len });
+      streakModal.hidden = true;
+      refreshDaily();
+    });
+  };
+  $('btnStreakDecline').onclick = () => {
+    track('streak_repair_declined', { len: streak.len });
+    streak.len = 0; streak.lastDate = null; streak.repairUsedFor = null; // today's first clear starts fresh at 1
+    saveStreak();
+    streakModal.hidden = true;
+    refreshDaily();
+  };
+
   // ---------- engine events ----------
-  window.addEventListener('ge:load', () => { show(null); pauseModal.hidden = true; GE.paused = false; levelsFrom = 'menu'; clearTimeout(chestTimer); winChest.hidden = true; });
+  window.addEventListener('ge:load', () => { show(null); pauseModal.hidden = true; GE.paused = false; levelsFrom = 'menu'; clearTimeout(chestTimer); winChest.hidden = true; clearTimeout(dailyTimer); winDaily.hidden = true; });
   window.addEventListener('ge:win', e => {
     const { lvl, stars, last } = e.detail;
     const before = starsTotal(), sheet = Math.floor(lvl / PER), sheetBefore = sheetStars(sheet);
@@ -1982,7 +2114,95 @@ requestAnimationFrame(frame);
 
 
   show('menu');
-  window.GE_MENU = { show, get prog() { return prog; }, setSkin, CHEST_STARS, CHEST_SKINS };
+  checkStreak(); // the repair offer rides over the title block on launch (and only then)
+  window.GE_MENU = { show, get prog() { return prog; }, setSkin, CHEST_STARS, CHEST_SKINS,
+    get streak() { return streak; }, checkStreak, refreshDaily, DAILY_GOAL };
+})();
+
+'use strict';
+/* Gate Escape — analytics beacon (client half; the server half is tools/beacon/).
+   Wraps the existing local telemetry: every track(ev, data) call ALSO enqueues an
+   anonymous event for the collector, batched and flushed in the background.
+
+   Privacy posture: no PII, no fingerprinting. The install id is a random UUID in
+   localStorage (ge_iid), the session id a random UUID per page load; the only
+   device facts sent are screen size / dpr / coarse language / timezone offset in
+   the one session_start event (needed to sanity-check viewports and cohort hours).
+
+   Fail-safety: everything is wrapped in try/catch, nothing throws, nothing blocks
+   gameplay, and with window.BEACON_URL empty this file does nothing at all — zero
+   network. Offline, the queue is capped at 200 events and simply drops the rest. */
+(function () {
+  var V = 'p01.20260831'; // build version, stamped on every event
+  var URL_ = '';
+  try { URL_ = (typeof window.BEACON_URL === 'string' && window.BEACON_URL) || ''; } catch (e) {}
+  if (!URL_) { window.GE_BEACON = { enabled: false, queue: [], flush: function () {} }; return; }
+  try {
+    var uuid = function () {
+      try { if (window.crypto && crypto.randomUUID) return crypto.randomUUID(); } catch (e) {}
+      var s = '';
+      for (var i = 0; i < 32; i++) s += Math.floor(Math.random() * 16).toString(16);
+      return s;
+    };
+    var iid = null;
+    try { iid = localStorage.getItem('ge_iid'); } catch (e) {}
+    if (!iid || !/^[0-9a-f-]{8,36}$/i.test(iid)) {
+      iid = uuid();
+      try { localStorage.setItem('ge_iid', iid); } catch (e) {}
+    }
+    var sid = uuid(), seq = 0, q = [];
+    var MAX_Q = 200, BATCH_AT = 20, FLUSH_MS = 15000, HEARTBEAT_MS = 60000;
+    var lvl = function () { try { return window.GE ? window.GE.level + 1 : null; } catch (e) { return null; } };
+    var enqueue = function (ev, data) {
+      try {
+        if (q.length >= MAX_Q) return; // offline / endpoint down: drop, never grow
+        q.push({ iid: iid, sid: sid, seq: seq++, t: Date.now(), ev: ev, data: data === undefined ? null : data, lvl: lvl(), v: V });
+        if (q.length >= BATCH_AT) flush();
+      } catch (e) {}
+    };
+    var restore = function (batch) { try { if (q.length + batch.length <= MAX_Q) q = batch.concat(q); } catch (e) {} };
+    var flush = function (sync) {
+      try {
+        if (!q.length) return;
+        var batch = q.splice(0, 64); // the worker caps a batch at 64 events
+        var body = JSON.stringify(batch);
+        // text/plain keeps both paths a "simple" CORS request (no preflight); the worker
+        // parses the body as JSON regardless of content type
+        if (sync && navigator.sendBeacon) {
+          if (!navigator.sendBeacon(URL_, new Blob([body], { type: 'text/plain' }))) restore(batch);
+        } else if (window.fetch) {
+          fetch(URL_, { method: 'POST', body: body, keepalive: true, headers: { 'Content-Type': 'text/plain' } })
+            .then(function (r) { if (!r.ok) restore(batch); })
+            .catch(function () { restore(batch); });
+        } else if (navigator.sendBeacon) {
+          navigator.sendBeacon(URL_, new Blob([body], { type: 'text/plain' }));
+        }
+      } catch (e) {}
+    };
+    // wrap the game's telemetry: the local ge_stats counters keep working untouched
+    var orig = window.track;
+    window.track = function (ev, data) {
+      try { if (orig) orig(ev, data); } catch (e) {}
+      enqueue(ev, data);
+    };
+    enqueue('session_start', {
+      v: V,
+      w: (screen && screen.width) || 0, h: (screen && screen.height) || 0,
+      dpr: Math.round((window.devicePixelRatio || 1) * 100) / 100,
+      lang: String((navigator.language || '')).slice(0, 8),
+      tz: -new Date().getTimezoneOffset(),
+    });
+    // game.js fired its first level_start before this script loaded: restore parity
+    enqueue('level_start', lvl());
+    setInterval(function () { try { flush(); } catch (e) {} }, FLUSH_MS);
+    // heartbeat for playtime metrics: one per minute while the tab is visible
+    setInterval(function () { try { if (!document.hidden) enqueue('heartbeat', null); } catch (e) {} }, HEARTBEAT_MS);
+    document.addEventListener('visibilitychange', function () { try { if (document.hidden) flush(true); } catch (e) {} });
+    window.addEventListener('pagehide', function () { try { flush(true); } catch (e) {} });
+    window.GE_BEACON = { enabled: true, iid: iid, sid: sid, get queue() { return q; }, flush: flush };
+  } catch (e) {
+    try { window.GE_BEACON = { enabled: false, queue: [], flush: function () {} }; } catch (e2) {}
+  }
 })();
 
 </script>

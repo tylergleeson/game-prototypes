@@ -696,7 +696,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) cance
 const AD_MS = 1200;
 function rewarded(kind, grant) {
   adClose();
-  adModal.querySelector('h2').textContent = kind === 'hint' ? 'Hint' : 'Rescue';
+  adModal.querySelector('h2').textContent = { hint: 'Hint', streak: 'Streak repair' }[kind] || 'Rescue';
   adBar.style.transition = 'none'; adBar.style.width = '0%'; void adBar.offsetWidth;
   adBar.style.transition = `width ${AD_MS}ms linear`; adBar.style.width = '100%';
   adModal.hidden = false;
@@ -1183,6 +1183,10 @@ window.GE = {
   get hint() { return hint; },          // the reference move currently ghosted (null if none)
   get best() { return best[li] || 0; }, // personal best moves on this level (0 = never cleared)
   get adUp() { return !adModal.hidden; },
+  // overridable clock: the daily-goal / streak logic (menu.js) reads dates through this, so
+  // bots simulate day changes without touching the system clock (assign GE.now = () => fakeMs)
+  now: () => Date.now(),
+  rewarded, // the placeholder rewarded-ad flow — menu.js's streak repair runs the same contract as rescue/hint
   // paper skins: id + table for menu.js and the bots; setTheme repaints instantly (next frame)
   get theme() { return themeId; }, get themes() { return THEMES; }, setTheme,
   burst, sound, // the chest reveal on the win card reuses the third-star burst and the generated audio

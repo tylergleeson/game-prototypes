@@ -82,6 +82,23 @@ Built to the hybrid-casual grammar:
   amber/red/green *text* inks darken on the two light papers so they still clear
   4.5:1. Persisted in `ge_prog` (`skin`, `skins`, `seen`); `chest_open` /
   `skin_select` tracked.
+- **Daily goal + streak** (the evidenced retention pair, deliberately decoupled): the
+  title block carries a drafting-log row — `TODAY ▮▮▯ 2/3` (3 clears a day, replays
+  count) and `STREAK 4 days` (calendar days with ≥1 clear). The third clear of the day
+  stamps a quiet `GOAL` row on the win card; a new best streak (≥2 days) stamps `BEST`
+  once. Missing exactly **one** day offers a single repair per streak on the next launch
+  (`rewarded('streak', …)`, same free placeholder flow as rescue/hint); declining or
+  Escape starts fresh — no guilt copy, no timer, nothing gated. State in `ge_streak`;
+  all dates flow through the overridable `GE.now` so bots simulate day changes.
+  Tracked: `daily_goal_met`, `streak_day`, `streak_repair_offered/taken/declined`.
+- **Analytics beacon** (`beacon.js`, loaded last): wraps `track()` so every event also
+  batches to `BEACON_URL` (one line in `index.html`; empty = fully disabled, zero
+  network — bot-asserted). Anonymous `ge_iid`/session UUIDs, seq numbers, build tag; a
+  single `session_start` carries screen/dpr/lang/tz; a 60 s visible-tab heartbeat feeds
+  playtime. Flushes every 15 s / at 20 events / on hide via `sendBeacon`; offline it
+  caps at 200 events and drops. No PII, no fingerprinting; try/catch everywhere. The
+  collector (Cloudflare Worker + D1) and the D1/D7/funnel report live in
+  `tools/beacon/` at the repo root.
 - **Navigation**: Levels opened from pause returns to pause; "Main menu"
   keeps the paused attempt on the board and Play becomes "Resume level N".
   The resume pointer advances on the win itself, not on the Next tap.
@@ -112,6 +129,10 @@ Built to the hybrid-casual grammar:
 - [x] Breaker session #1 actioned (`reviews/p01-break-20260831-0005/dev-report.md`): undo/rescue/exit-window/pointercancel hardening
 - [x] Parallel critic ×2 + breaker sessions actioned (`reviews/p01-par-20260831-0056-s1/dev-report.md`): multitouch fix, hint slot, block seams, fail-sheet fit, win-card meta, curve retune (L6, L12–16)
 - [x] Cosmetic chapter chests + paper skins (`reviews/p01-par-20260831-0056-s1/chests-report.md`): chest at 24/30 per sheet, three skins, Paper picker, win-card reveal
-- [ ] Web-portal upload (itch.io first)
-- [ ] Real analytics endpoint (D1 retention, level funnel)
+- [x] Daily goal (3 clears/day, title-block row, quiet GOAL stamp on the win card) + calendar-day streak with best-streak beat and a once-per-streak repair card (rewarded placeholder, decline = fresh start); dates flow through the overridable `GE.now` so the bots simulate days (`reviews/p01-par-20260831-0056-s1/meta-report.md`)
+- [x] Analytics beacon: `beacon.js` (anonymous install/session ids, batched, fail-safe, disabled while `BEACON_URL` is empty — zero network, bot-verified) + Cloudflare Worker/D1 collector and retention/funnel report in `tools/beacon/` (repo root; not deployed yet)
+- [x] Ad-moment capture (`tools/showcase.json` + `tools/capture.mjs` at the repo root): four real-gameplay moments filmed at iPhone size into `marketing/` (stills + webm), plus the itch cover
+- [x] itch.io bundle (`tools/build-itch.mjs` → `dist/itch/gate-escape-itch.zip`, index.html at the zip root) and page copy in `marketing/itch-page.md`; embed verified at 412×732 and 960×720
+- [ ] Web-portal upload (itch.io first — zip + copy ready, needs the account)
+- [ ] Beacon deployment (Cloudflare account; commands in `tools/beacon/README.md`), then paste the worker URL into `index.html`
 - [ ] Publisher packet (gameplay capture + KPI sheet)

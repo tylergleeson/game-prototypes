@@ -1,0 +1,11 @@
+# Gate Escape analytics beacon — Cloudflare Workers + D1, fits the free tier.
+# Deploy steps: see README.md in this directory. Not deployed yet (no account).
+name = "ge-beacon"
+main = "worker.js"
+compatibility_date = "2026-08-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ge-beacon"
+# paste the id printed by `wrangler d1 create ge-beacon` here before deploying:
+database_id = "PASTE_ID_FROM_wrangler_d1_create"
