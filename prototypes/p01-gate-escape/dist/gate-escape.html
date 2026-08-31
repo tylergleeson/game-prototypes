@@ -270,12 +270,61 @@
   .legend .li canvas { width:64px; height:44px; flex:none; }
   .legend .li b { display:block; font-size:15px; }
   .legend .li span { color:var(--dim); font-size:13px; }
+  /* press-depth beat, unified: every tappable control dips on :active (cards already translateY(3)) */
+  #hud button:not(:disabled):active { transform:translateY(2px); }
+  .ghostbtn:active { transform:translateY(2px); background:var(--fill2); }
+  .shead .back:active, .tblock button.no:active { transform:translateY(2px); }
+  .papers .paper:not(.locked):active { transform:scale(.9); }
+  /* lives: hearts are the one non-drafting glyph — filled vs hollow is the shape cue, red-ink vs
+     dim the colour cue. HUD top band + title block + the out-of-lives card share the row. */
+  .hearts { font-family:system-ui; color:var(--red-ink); letter-spacing:2px; }
+  .hearts .off { color:var(--star-off); }
+  #hudLives { font-size:11px; letter-spacing:1.5px; line-height:1.2; font-weight:400; }
+  #livesModal { z-index:25; }
+  #livesModal .hearts { display:block; font-size:26px; letter-spacing:7px; margin-bottom:8px; }
+  #freezeModal { z-index:25; }
+  /* daily quests: a drafting-log list on the title block — label, progress bar, count, ✓ stamp */
+  .quests { border:1px solid var(--line2); margin-top:8px; text-align:left; }
+  .quests .qh { display:flex; justify-content:space-between; padding:6px 10px 4px; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); text-transform:uppercase; }
+  .quests .qh b { color:var(--green-ink); letter-spacing:.06em; }
+  .quests .q { display:flex; align-items:center; gap:8px; padding:5px 10px 6px; border-top:1px solid var(--line2); }
+  .quests .q .ql { flex:1; font-size:12.5px; font-weight:700; }
+  .quests .q .qbar { width:52px; height:5px; border:1px solid var(--line2); border-radius:2px; overflow:hidden; flex:none; }
+  .quests .q .qbar i { display:block; height:100%; background:var(--amber-ink); }
+  .quests .q .qv { font:700 11px var(--mono); color:var(--dim); min-width:28px; text-align:right; font-variant-numeric:tabular-nums; }
+  .quests .q .qstamp { flex:none; font:800 10px/1 var(--mono); color:var(--green-ink); border:1.5px solid var(--green-ink); border-radius:3px; padding:2px 3px; transform:rotate(-7deg); }
+  .quests .q.done .ql { color:var(--dim); }
+  .quests .q.done .qbar i { background:var(--green-ink); }
+  /* streak / lives row under the quests; small sub-lines for "n of last 7" and the refill label */
+  .fields.daily .v small { display:block; font:600 10px/1.3 var(--mono); letter-spacing:.04em; color:var(--dim); margin-top:3px; }
+  .fields.daily:has(#menuLivesBox[hidden]) { grid-template-columns:1fr; }
+  .fields.daily .v .mark { color:var(--amber-ink); font-weight:800; margin-left:4px; }
+  /* Field Survey: the weekly log row (opens the survey card) + its milestone stamps */
+  .surveyrow { display:flex; align-items:center; gap:8px; width:100%; border:1px solid var(--line2); margin-top:8px; padding:8px 10px; background:none; color:var(--ink); cursor:pointer; font-family:inherit; }
+  .surveyrow .k { font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); text-transform:uppercase; }
+  .surveyrow .v { flex:1; text-align:right; font-weight:800; font-size:14px; font-variant-numeric:tabular-nums; }
+  .surveyrow .chev { color:var(--dim); font-size:16px; line-height:1; }
+  .surveyrow:active { transform:translateY(2px); }
+  .mstones { display:flex; justify-content:center; gap:9px; margin:4px 0 12px; }
+  .mstones .ms { width:58px; border:1px solid var(--line2); padding:8px 4px 7px; text-align:center; }
+  .mstones .ms b { display:block; font:800 17px var(--mono); color:var(--dim); }
+  .mstones .ms span { font:600 8.5px/1 var(--mono); letter-spacing:.1em; color:var(--dim); text-transform:uppercase; }
+  .mstones .ms.got { border-color:var(--green-ink); }
+  .mstones .ms.got b { color:var(--green-ink); }
+  .mstones .ms .mark { display:block; font-size:15px; line-height:1; color:var(--amber-ink); margin-bottom:1px; }
+  #surveyLast { font:600 11px var(--mono); color:var(--dim); margin-bottom:12px; }
+  #surveyModal { z-index:25; } /* the survey card opens over the title block (screens are z-20) */
   @media (prefers-reduced-motion: reduce) { .gatebtn, .gatebtn .blk, .tblock, .card, .card .stars span, #toast, #btnHint.nudge, .chest-ico, .card .chest-row, .card .daily-row, .card .daily-row .stamp { animation:none; } .chest-ico .lid { transition:none; } }
+  /* the Motion toggle (pause card) forces the same reduced path via body.reduce-motion */
+  body.reduce-motion .gatebtn, body.reduce-motion .gatebtn .blk, body.reduce-motion .tblock, body.reduce-motion .card, body.reduce-motion .card .stars span, body.reduce-motion #toast, body.reduce-motion #btnHint.nudge, body.reduce-motion .chest-ico, body.reduce-motion .card .chest-row, body.reduce-motion .card .daily-row, body.reduce-motion .card .daily-row .stamp { animation:none; }
+  body.reduce-motion .chest-ico .lid { transition:none; }
+  body.reduce-motion #hud .moves.low { animation:none; }
+  body.reduce-motion #hud .moves.shake, body.reduce-motion #hud .moves.boost { animation:none; }
   [hidden] { display:none !important; }
 </style>
 
   <div id="hud">
-    <div class="lvl" id="hudLevel">Level 1</div>
+    <div class="lvl"><div id="hudLevel">Level 1</div><div class="hearts" id="hudLives" hidden aria-label="Lives"></div></div>
     <div class="moves" id="hudMovesBox"><span id="hudMoves">0</span> <span id="hudUnit">moves</span><span class="meter" aria-label="Stars at this pace"><span id="hudMeter"><span>★</span><span>★</span><span>★</span></span><em id="hudPar">par 1</em></span></div>
     <div class="right">
       <button id="btnHint" aria-label="Hint: show the next move (rewarded ad)" disabled><span class="ad">AD</span>?</button>
@@ -342,6 +391,8 @@
       <button class="ghost" id="btnPauseLevels">Levels</button>
       <button class="ghost" id="btnPauseLegend">How to play</button>
       <button class="ghost" id="btnPauseSound">Sound: on</button>
+      <button class="ghost" id="btnPauseMotion">Motion: on</button>
+      <button class="ghost" id="btnPauseHaptics" hidden>Haptics: on</button>
       <div class="papers" id="pausePapers" aria-label="Paper"><span class="k">Paper</span><div class="sw"></div><span class="cap"></span></div>
       <button class="ghost" id="btnPauseHome">Main menu</button>
     </div>
@@ -360,19 +411,62 @@
     </div>
   </div>
 
+  <!-- streak freeze notice: an earned freeze (all 3 daily quests) was consumed automatically for a
+       missed day. Informational only — one calm line, one button, nothing to buy. -->
+  <div class="modal" id="freezeModal" hidden>
+    <div class="card">
+      <span class="no">FIELD LOG</span>
+      <h2>Streak safe</h2>
+      <p id="freezeSub"></p>
+      <button class="primary" id="btnFreezeOk">Continue</button>
+    </div>
+  </div>
+
+  <!-- out of lives: a calm card — refill timer, one rewarded refill, back to menu. It never blocks
+       the menu or level browsing, and levels 1–5 never cost a life at all. -->
+  <div class="modal" id="livesModal" hidden>
+    <div class="card">
+      <span class="no">FIELD LOG</span>
+      <div class="hearts" id="livesCardHearts" aria-hidden="true"></div>
+      <h2>Out of lives</h2>
+      <p id="livesSub"></p>
+      <button class="rescue" id="btnLifeRefill"><span class="ad">AD</span> +1 life <small>· watch to refill</small></button>
+      <button class="ghost" id="btnLivesHome">Back to menu</button>
+    </div>
+  </div>
+
+  <!-- Field Survey: the weekly personal ladder. 1 point per clear, +1 at par; milestone stamps at
+       3 / 7 / 12 / 20. No leaderboard, no comparison — every participant can finish. -->
+  <div class="modal" id="surveyModal" hidden>
+    <div class="card">
+      <span class="no">FIELD SURVEY</span>
+      <h2>Weekly log</h2>
+      <p id="surveySub"></p>
+      <div class="mstones" id="surveyTrack"></div>
+      <p id="surveyLast"></p>
+      <button class="ghost" id="btnSurveyClose">Close</button>
+    </div>
+  </div>
+
   <!-- title block: the main menu -->
   <div class="screen" id="menu" hidden>
     <div class="tblock">
-      <span class="no">NO. GE-01</span><button class="no r" id="btnSound" aria-label="Toggle sound">SOUND <b id="fSound">on</b></button>
+      <span class="no">NO. GE-01</span><button class="no r" id="btnHaptics" style="right:104px" aria-label="Toggle haptics" hidden>HAPTICS <b id="fHaptics">on</b></button><button class="no r" id="btnSound" aria-label="Toggle sound">SOUND <b id="fSound">on</b></button>
       <div class="title">Gate Escape</div>
       <div class="sub">Drag every block out through the gate of its color.</div>
       <div class="fields">
         <div><span class="k">Level</span><span class="v" id="fLevel">1 / 30</span></div>
         <div><span class="k">Stars</span><span class="v" id="fStars">0 / 90</span></div>
       </div>
-      <div class="fields daily" id="menuDaily">
-        <div><span class="k">Today</span><span class="v" id="fToday"></span></div>
-        <div><span class="k">Streak</span><span class="v" id="fStreak">—</span></div>
+      <div id="menuDaily">
+        <div class="quests" id="menuQuests" aria-label="Daily quests"></div>
+        <div class="fields daily">
+          <div><span class="k">Streak</span><span class="v" id="fStreak">—</span></div>
+          <div id="menuLivesBox" hidden><span class="k">Lives</span><span class="v" id="fLives"></span></div>
+        </div>
+        <button class="surveyrow" id="btnSurvey" aria-label="Field Survey — open the weekly log">
+          <span class="k">Field survey</span><span class="v" id="fSurvey">0 pts</span><span class="chev">›</span>
+        </button>
       </div>
       <button class="gatebtn" id="btnPlay">
         <svg class="blk" viewBox="0 0 22 22" aria-hidden="true"><defs><pattern id="h" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#ff8078"/><rect width="1.4" height="4" fill="#c24d46" opacity=".55"/></pattern></defs><rect x="1.5" y="1.5" width="19" height="19" fill="url(#h)" stroke="#c24d46" stroke-width="2"/><circle cx="11" cy="11" r="3" fill="#fff" opacity=".9"/></svg>
@@ -435,17 +529,35 @@ const NATIVE = (() => {
       ? window.Capacitor.Plugins : null;
   } catch (e) { return null; }
 })();
-// subtle taptic feedback on the four beats that matter; never load-bearing (sound/visuals
-// already carry each of these), fire-and-forget, and silent wherever haptics don't exist
+// ---------- haptics ----------
+// The native shell (AppDelegate's HapticsDriver) owns prepared, reused UIKit feedback
+// generators per the design playbook: selection ticks for pickup and cell steps, impact
+// light/medium for settles and gate exits, notification success/warning/error for
+// win/low-moves/fail — plus ONE Core Haptics signature pattern (the exit whoosh, with a
+// medium-impact fallback). This side only posts beat names, never per animation frame
+// (cell steps are rate-limited). In a plain browser — or before the driver attaches —
+// there is no message handler and every call is a no-op, so the web build's behaviour is
+// untouched. Toggle: GE.hapticsOn (independent of sound), persisted by menu.js
+// (ge_haptics); the toggle buttons only appear in the native app.
+let hapticsOn = true;
+let hapticStepT = 0;
 function haptic(kind) {
-  if (!NATIVE || !NATIVE.Haptics) return;
+  if (!hapticsOn) return;
   try {
-    if (kind === 'pick') NATIVE.Haptics.impact({ style: 'LIGHT' }).catch(() => {});
-    else if (kind === 'exit') NATIVE.Haptics.impact({ style: 'MEDIUM' }).catch(() => {});
-    else if (kind === 'win') NATIVE.Haptics.notification({ type: 'SUCCESS' }).catch(() => {});
-    else if (kind === 'fail') NATIVE.Haptics.notification({ type: 'WARNING' }).catch(() => {});
+    const port = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.haptics;
+    if (port) port.postMessage(kind);
   } catch (e) { /* haptics are garnish */ }
 }
+
+// ---------- reduced motion ----------
+// The OS setting already gates the CSS animations via the media query; the canvas renderer
+// honours it here too: no screen shake, half the particles, static dashes instead of marching
+// or pulsing ghost routes, and no press/settle scale beats. The pause card's Motion toggle
+// (menu.js, ge_motion) forces the same path when off via body.reduce-motion.
+const SYS_REDUCED = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+let motionOn = true;
+const reducedMotion = () => !motionOn || !!(SYS_REDUCED && SYS_REDUCED.matches);
+function setMotion(on) { motionOn = !!on; try { document.body.classList.toggle('reduce-motion', !on); } catch (e) {} }
 
 // ---------- paper skins (cosmetic, chest rewards) ----------
 // A skin changes ONLY the drafting sheet: page gradient, ink, rules, card tints, the canvas
@@ -566,6 +678,120 @@ function track(ev, data) {
   } catch (e) { /* storage may be unavailable; play on */ }
 }
 
+// ---------- lives (flag-gated, default ON) ----------
+// Five hearts. Levels 1–5 are the onboarding runway and never cost anything; from L6 on, a
+// failed attempt that ends in RETRY costs one life — the rescue SAVES the attempt (no life),
+// Restart mid-level costs nothing, winning costs nothing. Refill: one life per 25 minutes,
+// derived from a single anchor timestamp (never five timers); conservative under clock changes
+// (a backwards jump only re-anchors — the player is never accused, and a forward jump can at
+// most fill to 5). Out of lives: a calm card — timer, one rewarded +1 per appearance, back to
+// menu — that never blocks the menu or level browsing. Flag: LIVES_ENABLED below, overridable
+// via localStorage ge_flags {"lives":0}, the ?lives=0 URL param, or GE.livesEnabled (bots).
+const LIVES_ENABLED = true, LIVES_MAX = 5, LIFE_MS = 25 * 60 * 1000, LIVES_FREE_LEVELS = 5;
+let livesOn = (() => {
+  let on = LIVES_ENABLED;
+  try { const f = JSON.parse(localStorage.getItem('ge_flags') || '{}'); if ('lives' in f) on = !!+f.lives; } catch (e) {}
+  try { const q = new URLSearchParams(location.search).get('lives'); if (q !== null) on = q !== '0'; } catch (e) {}
+  return on;
+})();
+let lives = { n: LIVES_MAX, anchor: null };
+try {
+  const l = JSON.parse(localStorage.getItem('ge_lives') || 'null');
+  if (l && Number.isInteger(l.n)) lives = { n: Math.max(0, Math.min(LIVES_MAX, l.n)), anchor: typeof l.anchor === 'number' ? l.anchor : null };
+} catch (e) {}
+const saveLives = () => { try { localStorage.setItem('ge_lives', JSON.stringify(lives)); } catch (e) {} };
+function syncLives() { // derive the current count from the one anchor; monotonic and forgiving
+  if (lives.n >= LIVES_MAX) { lives.anchor = null; return; }
+  const now = GE.now();
+  if (lives.anchor == null) { lives.anchor = now; saveLives(); return; }
+  if (now < lives.anchor) { lives.anchor = now; saveLives(); return; } // clock went backwards: keep waiting from here
+  const gained = Math.floor((now - lives.anchor) / LIFE_MS);
+  if (gained > 0) {
+    lives.n = Math.min(LIVES_MAX, lives.n + gained);
+    lives.anchor = lives.n >= LIVES_MAX ? null : lives.anchor + gained * LIFE_MS;
+    saveLives();
+  }
+}
+function livesNow() { if (!livesOn) return LIVES_MAX; syncLives(); return lives.n; }
+function spendLife() {
+  syncLives();
+  if (lives.n < 1) return;
+  lives.n--;
+  if (lives.anchor == null) lives.anchor = GE.now();
+  saveLives(); track('life_lost', li + 1); livesChanged();
+}
+function grantLife() { // rewarded refill: +1, ceiling LIVES_MAX
+  syncLives();
+  lives.n = Math.min(LIVES_MAX, lives.n + 1);
+  if (lives.n >= LIVES_MAX) lives.anchor = null;
+  saveLives(); track('life_ad_refill', li + 1); livesChanged();
+}
+const fmtDur = ms => { const m = Math.max(1, Math.ceil(ms / 60000)); return m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}m`; };
+function livesInfo() {
+  const n = livesNow();
+  const wait = livesOn && n < LIVES_MAX && lives.anchor != null;
+  return {
+    n, max: LIVES_MAX,
+    nextIn: wait ? fmtDur(Math.max(0, lives.anchor + LIFE_MS - GE.now())) : '',
+    fullIn: wait ? fmtDur(Math.max(0, lives.anchor + (LIVES_MAX - n) * LIFE_MS - GE.now())) : '',
+  };
+}
+const heartsRow = (n, max) => '♥'.repeat(n) + `<span class="off">${'♡'.repeat(max - n)}</span>`;
+let livesAdUsed = false; // one rewarded refill per appearance of the empty-state card
+function updateLivesUI() {
+  const info = livesInfo();
+  const hud = document.getElementById('hudLives');
+  hud.hidden = !livesOn;
+  document.body.classList.toggle('lives-on', livesOn);
+  if (livesOn) hud.innerHTML = heartsRow(info.n, info.max);
+  const modal = document.getElementById('livesModal');
+  if (!modal.hidden) {
+    if (info.n > 0 || !livesOn) modal.hidden = true; // a life is in the bank again: the card has no job
+    else {
+      document.getElementById('livesCardHearts').innerHTML = heartsRow(info.n, info.max);
+      document.getElementById('livesSub').textContent = info.nextIn ? `Next life in ${info.nextIn} · full in ${info.fullIn}` : 'Lives refill over time.';
+      document.getElementById('btnLifeRefill').hidden = livesAdUsed;
+    }
+  }
+}
+function livesChanged() { updateLivesUI(); window.dispatchEvent(new CustomEvent('ge:lives', { detail: livesInfo() })); }
+function showLivesCard() {
+  syncLives();
+  livesAdUsed = false;
+  track('lives_empty', li + 1);
+  document.getElementById('livesModal').hidden = false;
+  updateLivesUI();
+}
+// entry gate: entering L6+ needs a life in the bank (entry itself costs nothing); L1–5 always open
+function livesGate(target) {
+  if (!livesOn || target < LIVES_FREE_LEVELS) return true;
+  if (livesNow() > 0) return true;
+  showLivesCard();
+  return false;
+}
+function setLivesEnabled(v) {
+  livesOn = !!v;
+  if (!livesOn) document.getElementById('livesModal').hidden = true;
+  livesChanged();
+}
+document.getElementById('btnLifeRefill').onclick = () => {
+  if (document.getElementById('livesModal').hidden || livesAdUsed || adCb) return;
+  if (livesNow() >= LIVES_MAX) return;
+  livesAdUsed = true;
+  rewarded('life', () => { grantLife(); document.getElementById('livesModal').hidden = true; });
+};
+let livesTickAcc = 0;
+function livesTick(dt) { // 1 s cadence: the empty-card timer stays live, refills land as they mature
+  if (!livesOn) return;
+  livesTickAcc += dt;
+  if (livesTickAcc < 1) return;
+  livesTickAcc = 0;
+  const before = lives.n;
+  syncLives();
+  if (lives.n !== before) livesChanged();
+  else if (!document.getElementById('livesModal').hidden) updateLivesUI();
+}
+
 // ---------- state ----------
 let li = 0;
 try { li = Math.min(parseInt(localStorage.getItem('ge_level') || '0', 10) || 0, LEVELS.length - 1); } catch (e) {}
@@ -586,7 +812,9 @@ let gateFlash = [];    // per-color: seconds since that color's gate closed (or 
 let failRoute = null;  // ghost route shown behind the fail card
 let hint = null;       // {bi, path, side, to} — the reference next move, shown until the board changes
 let idleT = 0;         // seconds since the last input (nudges the hint button)
-let exited = 0;        // blocks out this level (escape pitch rises with it)
+let exitChain = 0, lastExitAt = 0; // consecutive-exit pitch chain (resets after ~4 s without an exit)
+let settleT = [];      // per-block seconds since a released drag settled (overshoot beat)
+let attemptUndos = 0, attemptHints = 0; // per-attempt counters, ride on ge:win (daily quests)
 let winTimers = [];
 let toastTimer = 0;
 let adTimer = 0, adCb = null;
@@ -606,8 +834,10 @@ function loadLevel(i) {
   pos = L.blocks.map(b => [b.x, b.y]);
   disp = L.blocks.map(b => [b.x, b.y]);
   exitAnim = L.blocks.map(() => null);
+  settleT = L.blocks.map(() => 0);
   moves = 0; movesLeft = L.moves; rescued = false; over = false;
-  drag = null; particles = []; hintT = 0; idleT = 0; exited = 0;
+  attemptUndos = 0; attemptHints = 0;
+  drag = null; particles = []; hintT = 0; idleT = 0; exitChain = 0; lastExitAt = 0;
   undoSnap = null; pendingSnap = null; failRoute = null; hint = null;
   gateFlash = COLORS.map(() => -1);
   for (const t of winTimers) clearTimeout(t);
@@ -661,7 +891,7 @@ function updateHud() {
   // amber: the 3-star pace is gone. red: point of no return — every remaining move must be an exit.
   const low = left > 0 && movesLeft <= left;
   const warn = !low && left > 0 && now < 3;
-  if (low && !hudBox.classList.contains('low')) { hudBox.classList.add('shake'); setTimeout(() => hudBox.classList.remove('shake'), 400); }
+  if (low && !hudBox.classList.contains('low')) { hudBox.classList.add('shake'); setTimeout(() => hudBox.classList.remove('shake'), 400); haptic('low'); }
   hudBox.classList.toggle('low', low);
   hudBox.classList.toggle('warn', warn);
   // the HUD goes inert the instant the round is decided (`over` flips before any card
@@ -864,7 +1094,8 @@ function snapshot() {
   return { pos: pos.map(p => (p ? [p[0], p[1]] : null)), moves, movesLeft };
 }
 function beginDrag(bi, gx, gy, pid = -1) {
-  drag = { bi, pid, gx, gy, sx: pos[bi][0], sy: pos[bi][1], moved: false, counted: false };
+  // t0 drives the pickup press beat: a 70 ms dip before the lift reads as started (render)
+  drag = { bi, pid, gx, gy, sx: pos[bi][0], sy: pos[bi][1], moved: false, counted: false, t0: performance.now() };
   pendingSnap = snapshot();
 }
 
@@ -879,7 +1110,13 @@ function stepToward(bi, wantX, wantY) {
     for (const [sx, sy, mag] of tryOrder) {
       if (mag < 0.51 || (sx === 0 && sy === 0)) continue;
       const nx = pos[bi][0] + sx, ny = pos[bi][1] + sy;
-      if (fits(bi, nx, ny)) { pos[bi] = [nx, ny]; drag.moved = true; stepped = true; break; }
+      if (fits(bi, nx, ny)) {
+        pos[bi] = [nx, ny]; drag.moved = true; stepped = true;
+        // picker-style selection tick as the block walks cells under the finger (rate-limited)
+        const tn = performance.now();
+        if (tn - hapticStepT > 70) { hapticStepT = tn; haptic('step'); }
+        break;
+      }
       // blocked by the board edge? if a matching gate covers us, that's an exit.
       if (mag > 0.62 && wouldLeaveBoard(bi, sx, sy)) {
         const side = sx === 1 ? 'right' : sx === -1 ? 'left' : sy === 1 ? 'bottom' : 'top';
@@ -903,7 +1140,8 @@ function startExit(bi, side) {
   exitAnim[bi] = { dx, dy, t: 0 };
   const b = L.blocks[bi];
   const cen = blockCenterPx(bi);
-  for (let i = 0; i < 22; i++) {
+  const NP = reducedMotion() ? 11 : 22; // reduced motion: half the burst
+  for (let i = 0; i < NP; i++) {
     particles.push({
       x: cen[0], y: cen[1],
       vx: (Math.random() - 0.5) * 7 + dx * 4, vy: (Math.random() - 0.5) * 7 + dy * 4 - 2,
@@ -911,12 +1149,17 @@ function startExit(bi, side) {
       r: 2 + Math.random() * 3.4,
     });
   }
-  shakeT = 0.16;
+  shakeT = reducedMotion() ? 0 : 0.16;
   pos[bi] = null;
   // last block of its color gone? the gate closes with a flash
   if (!L.blocks.some((o, i) => pos[i] && o.color === b.color)) { gateFlash[b.color] = 0; sound('gate'); }
   countMove();
-  sound('exit', exited++); // each escape in a level rings a step higher
+  // each escape rings a step higher while the chain is alive; ~4 s without an exit resets the
+  // pitch (a slow, thoughtful clear starts each escape fresh instead of climbing forever)
+  const tex = performance.now();
+  if (tex - lastExitAt > 4000) exitChain = 0;
+  lastExitAt = tex;
+  sound('exit', exitChain++);
   haptic('exit');
   track('block_exit', li + 1);
   // lock the board while the last block flies out; the pending win dies with the level
@@ -943,7 +1186,9 @@ function undo() {
   moves = s.moves; movesLeft = s.movesLeft;
   exitAnim = L.blocks.map(() => null);
   gateFlash = COLORS.map(() => -1);
-  exited = pos.filter(p => !p).length;
+  settleT = L.blocks.map(() => 0);
+  exitChain = 0; // an undone exit ends the pitch chain
+  attemptUndos++;
   hint = null;
   for (let i = 0; i < pos.length; i++) if (pos[i]) disp[i] = [pos[i][0], pos[i][1]];
   updateHud();
@@ -1010,6 +1255,7 @@ function win() {
   updateHud();
   const stars = starsFor(moves);
   const last = li === LEVELS.length - 1;
+  const winUndos = attemptUndos, winHints = attemptHints;
   document.getElementById('winTitle').textContent = winTitleFor(stars);
   btnNext.textContent = last ? 'Back to menu' : 'Next level';
   // par is the target, never "best"; the player's own best is a separate fact once one exists
@@ -1022,7 +1268,7 @@ function win() {
   // on this card must not send the player back into a level they just cleared
   if (!last) { try { localStorage.setItem('ge_level', String(li + 1)); } catch (e) {} }
   // stars drop in one at a time; a burst on the third; buttons go live once the reward has landed
-  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduced = reducedMotion();
   const delays = reduced ? [0, 0, 0] : [80, 260, 440];
   winStars.innerHTML = '';
   for (let i = 0; i < 3; i++) {
@@ -1038,7 +1284,7 @@ function win() {
   btnNext.disabled = btnReplay.disabled = !reduced;
   winTimers.push(setTimeout(() => { btnNext.disabled = btnReplay.disabled = false; }, delays[2] + 400 + 400));
   winModal.hidden = false;
-  window.dispatchEvent(new CustomEvent('ge:win', { detail: { lvl: li, stars, moves, last } }));
+  window.dispatchEvent(new CustomEvent('ge:win', { detail: { lvl: li, stars, moves, last, par: L.par, undos: winUndos, hints: winHints } }));
   sound('win');
   haptic('win');
   track('win', { lvl: li + 1, moves, stars });
@@ -1046,7 +1292,7 @@ function win() {
 
 // DOM spark burst from an element's centre (win card, third star)
 function burst(el) {
-  if (!el || !el.animate) return;
+  if (!el || !el.animate || reducedMotion()) return;
   const host = el.parentElement;
   const r = el.getBoundingClientRect(), hr = host.getBoundingClientRect();
   const cx = r.left + r.width / 2 - hr.left, cy = r.top + r.height / 2 - hr.top;
@@ -1121,8 +1367,10 @@ function endDrag(count = true) {
   const d = drag; drag = null;
   if (!count) return;
   if (!pos[d.bi]) { pendingSnap = null; return; }
+  if (pos[d.bi][0] !== d.sx || pos[d.bi][1] !== d.sy) settleT[d.bi] = 0.0001; // settle overshoot beat (render)
   if ((pos[d.bi][0] !== d.sx || pos[d.bi][1] !== d.sy) && !d.counted) {
     countMove();
+    haptic('settle'); // the block snaps into its new cell
     maybeFail();
   } else pendingSnap = null;
 }
@@ -1149,7 +1397,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) cance
 const AD_MS = 1200;
 function rewarded(kind, grant) {
   adClose();
-  adModal.querySelector('h2').textContent = { hint: 'Hint', streak: 'Streak repair' }[kind] || 'Rescue';
+  adModal.querySelector('h2').textContent = { hint: 'Hint', streak: 'Streak repair', life: '+1 life' }[kind] || 'Rescue';
   adBar.style.transition = 'none'; adBar.style.width = '0%'; void adBar.offsetWidth;
   adBar.style.transition = `width ${AD_MS}ms linear`; adBar.style.width = '100%';
   adModal.hidden = false;
@@ -1163,11 +1411,21 @@ function adClose() { clearTimeout(adTimer); adTimer = 0; adCb = null; adModal.hi
 btnRestart.onclick = () => { if (over || paused) return; track('restart', li + 1); loadLevel(li); };
 btnUndo.onclick = () => { audioInit(); undo(); };
 btnNext.onclick = () => {
-  if (li === LEVELS.length - 1) window.dispatchEvent(new CustomEvent('ge:finished'));
-  else loadLevel(li + 1);
+  if (li === LEVELS.length - 1) { window.dispatchEvent(new CustomEvent('ge:finished')); return; }
+  if (!livesGate(li + 1)) return;
+  loadLevel(li + 1);
 };
-btnReplay.onclick = () => { track('replay', li + 1); loadLevel(li); };
-document.getElementById('btnRetry').onclick = () => { track('retry', li + 1); loadLevel(li); };
+btnReplay.onclick = () => { if (!livesGate(li)) return; track('replay', li + 1); loadLevel(li); };
+// Retry after a loss is the ONE thing that costs a life (from L6 on): the rescue saves the
+// attempt instead (no life), Restart mid-level is free, winning is free. At zero lives the
+// calm empty-state card takes over (timer + one rewarded refill + back to menu).
+document.getElementById('btnRetry').onclick = () => {
+  if (livesOn && li >= LIVES_FREE_LEVELS) {
+    if (livesNow() < 1) { showLivesCard(); return; }
+    spendLife();
+  }
+  track('retry', li + 1); loadLevel(li);
+};
 function grantRescue() {
   rescued = true; over = false; movesLeft += 3; failModal.hidden = true; failRoute = null;
   document.body.classList.remove('fail-up'); cv.style.transform = '';
@@ -1194,6 +1452,7 @@ function showHint() {
   const mv = solveFrom(pos);
   if (!mv) { toast('No way out from here — try Undo or Restart.'); track('hint_none', li + 1); return; }
   hint = mv;
+  attemptHints++;
   updateHud();
   sound('hint');
   track('hint', li + 1);
@@ -1355,17 +1614,18 @@ function drawRoute(bi, route, strength) {
     // ghost outline of the block at its parking spot
     const [tx, ty] = route.to || route.path[route.path.length - 1];
     ctx.save();
-    ctx.setLineDash([6, 5]); ctx.lineDashOffset = -hintT * 30;
+    ctx.setLineDash([6, 5]); ctx.lineDashOffset = reducedMotion() ? 0 : -hintT * 30;
     ctx.strokeStyle = `rgba(${THEME.route},${strength * 0.85})`; ctx.lineWidth = 2.5;
     for (const [cx, cy] of b.cells) ctx.strokeRect(bx + (tx + cx) * cell + 5, by + (ty + cy) * cell + 5, cell - 10, cell - 10);
     ctx.restore();
   }
-  const pulse = (Math.sin(hintT * 5) + 1) / 2;
+  // reduced motion: the route is a static dash at steady alpha — no march, no pulse, no pip
+  const pulse = reducedMotion() ? 0.5 : (Math.sin(hintT * 5) + 1) / 2;
   const a = strength * (0.45 + pulse * 0.4);
   ctx.save();
   ctx.strokeStyle = `rgba(${THEME.route},${a})`;
   ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  ctx.setLineDash([9, 9]); ctx.lineDashOffset = -hintT * 40;
+  ctx.setLineDash([9, 9]); ctx.lineDashOffset = reducedMotion() ? 0 : -hintT * 40;
   ctx.beginPath();
   pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
   ctx.stroke();
@@ -1382,7 +1642,7 @@ function drawRoute(bi, route, strength) {
   let total = 0; const seg = [];
   for (let i = 1; i < pts.length; i++) { const l = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); seg.push(l); total += l; }
   let t = ((hintT * cell * 2.2) % (total + cell)) ;
-  if (t < total) {
+  if (!reducedMotion() && t < total) {
     for (let i = 0; i < seg.length; i++) {
       if (t <= seg[i]) {
         const u = seg[i] ? t / seg[i] : 0;
@@ -1412,6 +1672,8 @@ function frame(t) {
   particles = particles.filter(p => p.life > 0);
   if (shakeT > 0) shakeT -= dt;
   for (let c = 0; c < gateFlash.length; c++) if (gateFlash[c] >= 0) gateFlash[c] += dt;
+  for (let i = 0; i < settleT.length; i++) if (settleT[i] > 0) { settleT[i] += dt; if (settleT[i] > 0.4) settleT[i] = 0; }
+  livesTick(dt);
   hintT += dt;
   // a player who has done nothing for 20 s is stuck: the hint button beckons (the hint
   // itself is never shown unasked — that would give the level away)
@@ -1537,7 +1799,7 @@ function render() {
 
   // blocks
   const failUp = over && !failModal.hidden;
-  const pulse = (Math.sin(hintT * 6) + 1) / 2;
+  const pulse = reducedMotion() ? 0.5 : (Math.sin(hintT * 6) + 1) / 2; // static breath under reduced motion
   // every block is inset from its cells so a gutter of paper always separates neighbours —
   // two red blocks side by side must never read as one slab (3-second rule)
   const inset = Math.max(4, Math.round(cell * 0.1));
@@ -1555,6 +1817,18 @@ function render() {
     ctx.globalAlpha = alpha;
     const px = bx + disp[i][0] * cell + ox, py = by + disp[i][1] * cell + oy;
     const stranded = failUp && pos[i];
+    // feel beats: a 70 ms press dip on pickup that recovers as the lift lands, and a damped
+    // ~5% overshoot when a released block settles into its cell — both off under reduced motion
+    let bscale = 1;
+    if (!reducedMotion()) {
+      if (dragging && drag.t0) {
+        const bt = (performance.now() - drag.t0) / 1000;
+        bscale = bt < 0.07 ? 1 - 0.035 * (bt / 0.07) : 0.965 + 0.035 * Math.min(1, (bt - 0.07) / 0.08);
+      } else if (settleT[i] > 0) {
+        bscale = 1 + 0.05 * Math.exp(-settleT[i] * 9) * Math.sin(settleT[i] * 26);
+      }
+    }
+    if (bscale !== 1) { const [bcx, bcy] = blockCenterPx(i); ctx.translate(bcx, bcy); ctx.scale(bscale, bscale); ctx.translate(-bcx, -bcy); }
     drawBlockShape(b, px, py, inset, {
       main: c.main, dark: c.dark, lite: c.lite, glyph: c.glyph,
       shadow: dragging ? 12 : 6, lift: dragging ? 5 : 3,
@@ -1605,17 +1879,27 @@ function blip(freq, dur, type, vol, when = 0, slide = 0) {
   o.connect(g); g.connect(actx.destination);
   o.start(t0); o.stop(t0 + dur + 0.02);
 }
-// every sound is additive: nothing here carries information the board doesn't show
+// every sound is additive: nothing here carries information the board doesn't show.
+// Repeated sounds (tap / exit / star) drift ±2–4% in pitch so chains never machine-gun.
+const jitter = () => 1 + (Math.random() * 0.06 - 0.03);
 function sound(kind, n = 0) {
   if (!actx || !soundOn) return;
-  if (kind === 'tap') blip(300, 0.06, 'sine', 0.12);
-  // escapes climb a step each time within a level — the reward sound rises with the streak
-  else if (kind === 'exit') { const k = Math.pow(1.122, Math.min(n, 7)); blip(420 * k, 0.16, 'sine', 0.22, 0, 460 * k); blip(880 * k, 0.1, 'triangle', 0.1, 0.05); }
+  const j = jitter();
+  if (kind === 'tap') blip(300 * j, 0.06, 'sine', 0.12);
+  // escapes climb a step while the chain is alive (reset after ~4 s idle, see startExit); three
+  // synth variants rotate underneath so a fast clear reads as a phrase, not a repeated sample
+  else if (kind === 'exit') {
+    const k = Math.pow(1.122, Math.min(n, 7)) * j;
+    const v = n % 3;
+    if (v === 0) { blip(420 * k, 0.16, 'sine', 0.22, 0, 460 * k); blip(880 * k, 0.1, 'triangle', 0.1, 0.05); }
+    else if (v === 1) { blip(400 * k, 0.15, 'triangle', 0.2, 0, 540 * k); blip(940 * k, 0.11, 'sine', 0.09, 0.04); }
+    else { blip(445 * k, 0.17, 'sine', 0.21, 0, 400 * k); blip(668 * k, 0.09, 'triangle', 0.08, 0.02); blip(1100 * k, 0.09, 'sine', 0.06, 0.07); }
+  }
   else if (kind === 'hint') { blip(660, 0.1, 'sine', 0.12); blip(990, 0.14, 'sine', 0.1, 0.08); }
   // chest: a latch click, then a rising three-note chime
   else if (kind === 'chest') { blip(240, 0.05, 'square', 0.08); blip(784, 0.16, 'triangle', 0.16, 0.12); blip(1046, 0.16, 'triangle', 0.16, 0.24); blip(1568, 0.3, 'sine', 0.18, 0.36, 120); }
   else if (kind === 'gate') { blip(1046, 0.18, 'triangle', 0.14, 0.08); blip(1568, 0.22, 'sine', 0.1, 0.14); }
-  else if (kind === 'star') blip(880 * Math.pow(1.25, n), 0.16, 'triangle', 0.18, 0, 200);
+  else if (kind === 'star') blip(880 * Math.pow(1.25, n) * j, 0.16, 'triangle', 0.18, 0, 200);
   else if (kind === 'undo') blip(520, 0.12, 'sine', 0.14, 0, -220);
   else if (kind === 'win') { blip(523, 0.14, 'triangle', 0.2); blip(659, 0.14, 'triangle', 0.2, 0.09); blip(784, 0.22, 'triangle', 0.22, 0.18); }
   else if (kind === 'fail') { blip(220, 0.25, 'sawtooth', 0.12, 0, -80); blip(160, 0.3, 'sawtooth', 0.1, 0.12, -60); }
@@ -1632,6 +1916,16 @@ window.GE = {
   get over() { return over; },
   get paused() { return paused; }, set paused(v) { paused = !!v; if (paused) cancelDrag(); updateHud(); },
   get soundOn() { return soundOn; }, set soundOn(v) { soundOn = !!v; },
+  get hapticsOn() { return hapticsOn; }, set hapticsOn(v) { hapticsOn = !!v; },
+  // reduced motion: the OS preference OR the pause card's Motion toggle (menu.js persists it)
+  get motionOn() { return motionOn; }, set motionOn(v) { setMotion(v); },
+  get reduced() { return reducedMotion(); },
+  // lives: derived from the anchor on every read; the setter is the bot/flag override
+  get livesEnabled() { return livesOn; }, set livesEnabled(v) { setLivesEnabled(v); },
+  get lives() { return livesNow(); }, get livesMax() { return LIVES_MAX; },
+  get livesInfo() { return livesInfo(); },
+  livesGate, // menu.js runs Play / level-tile entries through the same gate as Next/Replay/Retry
+  haptic, // fire one beat directly (menu.js confirms the toggle with a sample tick; testing)
   get canUndo() { return !!undoSnap && !over && !paused; },
   get hint() { return hint; },          // the reference move currently ghosted (null if none)
   get best() { return best[li] || 0; }, // personal best moves on this level (0 = never cleared)
@@ -1681,6 +1975,7 @@ window.GE = {
 };
 
 // ---------- go ----------
+updateLivesUI();
 loadLevel(li);
 requestAnimationFrame(frame);
 
@@ -1773,6 +2068,43 @@ requestAnimationFrame(frame);
     $('btnPauseSound').textContent = 'Sound: ' + (GE.soundOn ? 'on' : 'off');
   }
 
+  // ---------- haptics (native shell only) ----------
+  // an independent toggle beside Sound. In a plain browser the buttons stay hidden and the
+  // engine's haptic() is a no-op, so the web build is behaviourally untouched. Persisted like
+  // sound; turning it on plays one sample tick so the setting confirms itself on hardware.
+  const canHaptics = (() => {
+    try { return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }
+    catch (e) { return false; }
+  })();
+  try { GE.hapticsOn = localStorage.getItem('ge_haptics') !== '0'; } catch (e) {}
+  function refreshHaptics() {
+    $('btnHaptics').hidden = $('btnPauseHaptics').hidden = !canHaptics;
+    $('fHaptics').textContent = GE.hapticsOn ? 'on' : 'off';
+    $('btnPauseHaptics').textContent = 'Haptics: ' + (GE.hapticsOn ? 'on' : 'off');
+  }
+  function setHaptics(on) {
+    GE.hapticsOn = on;
+    try { localStorage.setItem('ge_haptics', on ? '1' : '0'); } catch (e) {}
+    refreshHaptics();
+    if (on) GE.haptic('pick');
+  }
+  $('btnHaptics').onclick = () => setHaptics(!GE.hapticsOn);
+  $('btnPauseHaptics').onclick = () => setHaptics(!GE.hapticsOn);
+  refreshHaptics();
+
+  // ---------- motion ----------
+  // The OS "reduce motion" preference always wins (CSS media query + the canvas checks); this
+  // toggle forces the same calm path when the OS setting is off. Persisted like sound.
+  try { GE.motionOn = localStorage.getItem('ge_motion') !== '0'; } catch (e) {}
+  function refreshMotion() { $('btnPauseMotion').textContent = 'Motion: ' + (GE.motionOn ? 'on' : 'off'); }
+  function setMotionPref(on) {
+    GE.motionOn = on;
+    try { localStorage.setItem('ge_motion', on ? '1' : '0'); } catch (e) {}
+    refreshMotion();
+  }
+  $('btnPauseMotion').onclick = () => setMotionPref(!GE.motionOn);
+  refreshMotion();
+
   // ---------- screens ----------
   let legendAnim = false, demoT0 = 0;
   function show(name) {
@@ -1822,7 +2154,7 @@ requestAnimationFrame(frame);
       b.dataset.level = i + 1; // tiles are addressed by level, not by grid position (headers are children too)
       b.disabled = locked;
       b.innerHTML = `<span>${String(i + 1).padStart(2, '0')}</span><span class="st">${prog.s[i] ? '★'.repeat(prog.s[i]) : ''}</span>`;
-      if (!locked) b.onclick = () => GE.load(i);
+      if (!locked) b.onclick = () => { if (GE.livesGate(i)) GE.load(i); };
       g.appendChild(b);
     }
     $('levelsNote').textContent = `${prog.s.filter(Boolean).length} of ${N} cleared · ${starsTotal()} stars`;
@@ -1851,6 +2183,8 @@ requestAnimationFrame(frame);
     GE.paused = true;
     $('pauseSub').textContent = `Level ${GE.level + 1} · ${GE.movesLeft} moves left`;
     refreshSound();
+    refreshMotion();
+    refreshHaptics();
     refreshPapers();
     pauseModal.hidden = false;
   }
@@ -1864,6 +2198,9 @@ requestAnimationFrame(frame);
   $('btnPauseHome').onclick = () => { pauseModal.hidden = true; show('menu'); };
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
+    if (!$('surveyModal').hidden) { $('btnSurveyClose').click(); return; }
+    if (!$('freezeModal').hidden) { $('btnFreezeOk').click(); return; }
+    if (!$('livesModal').hidden) { $('btnLivesHome').click(); return; }
     if (!$('streakModal').hidden) { $('btnStreakDecline').click(); return; } // dismiss = decline (fresh streak)
     if (!screens.legend.hidden) $('btnLegendBack').click();
     else if (!screens.levels.hidden) $('btnLevelsBack').click();
@@ -1871,7 +2208,12 @@ requestAnimationFrame(frame);
   });
 
   // ---------- title block buttons ----------
-  $('btnPlay').onclick = () => { if (resumable()) { show(null); resume(); } else GE.load(GE.level); };
+  $('btnPlay').onclick = () => {
+    if (resumable()) { show(null); resume(); return; }
+    if (!GE.livesGate(GE.level)) return; // out of lives on L6+: the calm card, browsing never blocked
+    GE.load(GE.level);
+  };
+  $('btnLivesHome').onclick = () => { $('livesModal').hidden = true; show('menu'); };
   $('btnLevels').onclick = () => { levelsFrom = 'menu'; show('levels'); };
   $('btnLegend').onclick = () => { legendFrom = 'menu'; show('legend'); };
   $('btnSound').onclick = () => setSound(!GE.soundOn);
@@ -1901,23 +2243,76 @@ requestAnimationFrame(frame);
   }
   btnTry.onclick = () => { if (chestSkin && setSkin(chestSkin, 'win')) { btnTry.disabled = true; btnTry.textContent = 'On'; } };
 
-  // ---------- daily goal + streak (decoupled; one repair per streak) ----------
-  // Goal: clear DAILY_GOAL levels today — replays count, resets at local midnight. Streak:
-  // consecutive local calendar days with ≥1 clear — deliberately decoupled from the goal.
-  // Missing exactly one day offers ONE repair per streak (the same free rewarded flow as
-  // rescue/hint); declining just starts fresh. Nothing is gated on either. The date comes
-  // from GE.now() so bots simulate day changes without touching the system clock.
-  const DAILY_GOAL = 3;
-  let streak = { len: 0, best: 0, lastDate: null, todayCount: 0, todayDate: null, repairUsedFor: null };
+  // ---------- daily quests + streak (freezes, week marks) + weekly ladder ----------
+  // Three quests roll each local day, deterministically from the date (every player shares the
+  // day's set); the templates are safe telemetry facts — never ad views, boosters or spending,
+  // and nothing a content change could make impossible. Completing all three banks ONE streak
+  // freeze (max 2 held). The streak day-mark stays "≥1 level cleared"; a missed day consumes a
+  // banked freeze automatically (calm notice at next launch); the once-per-streak ad repair
+  // remains the fallback and declining still just starts fresh. The Field Survey is a weekly
+  // personal ladder: 1 point per clear, +1 at par, stamps at 3/7/12/20 — no leaderboard, no
+  // comparison, everyone can finish. All dates flow through GE.now() so bots simulate days;
+  // state lives in separate keys: ge_streak / ge_quests / ge_ladder.
+  const QUEST_TEMPLATES = {
+    clear3:   { label: 'Clear 3 levels',               target: 3,  gain: d => 1 },
+    clear5:   { label: 'Clear 5 levels',               target: 5,  gain: d => 1 },
+    stars6:   { label: 'Earn 6 stars',                 target: 6,  gain: d => d.stars },
+    stars9:   { label: 'Earn 9 stars',                 target: 9,  gain: d => d.stars },
+    par2:     { label: 'Clear 2 levels at par',        target: 2,  gain: d => (d.moves <= d.par ? 1 : 0) },
+    noundo1:  { label: 'Clear a level without undo',   target: 1,  gain: d => (d.undos === 0 ? 1 : 0) },
+    nohint2:  { label: 'Clear 2 levels without hints', target: 2,  gain: d => (d.hints === 0 ? 1 : 0) },
+    blocks12: { label: 'Clear 12 blocks',              target: 12, gain: d => d.blocks },
+  };
+  const FREEZE_MAX = 2, MILESTONES = [3, 7, 12, 20];
+  let streak = { len: 0, best: 0, lastDate: null, repairUsedFor: null, freezes: 0, marks: [] };
   try { const s = JSON.parse(localStorage.getItem('ge_streak') || 'null'); if (s && typeof s.len === 'number') streak = { ...streak, ...s }; } catch (e) {}
+  if (!Array.isArray(streak.marks)) streak.marks = [];
+  if (!Number.isInteger(streak.freezes)) streak.freezes = 0;
   const saveStreak = () => { try { localStorage.setItem('ge_streak', JSON.stringify(streak)); } catch (e) {} };
+  let quests = { date: null, ids: [], prog: {}, done: [], all: false };
+  try { const q = JSON.parse(localStorage.getItem('ge_quests') || 'null'); if (q && Array.isArray(q.ids)) quests = { ...quests, ...q }; } catch (e) {}
+  const saveQuests = () => { try { localStorage.setItem('ge_quests', JSON.stringify(quests)); } catch (e) {} };
+  let lad = { week: null, pts: 0, ms: [], last: null };
+  try { const l = JSON.parse(localStorage.getItem('ge_ladder') || 'null'); if (l && typeof l.pts === 'number') lad = { ...lad, ...l }; } catch (e) {}
+  const saveLadder = () => { try { localStorage.setItem('ge_ladder', JSON.stringify(lad)); } catch (e) {} };
   const dayStr = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
   const dayGap = (a, b) => Math.round((new Date(b + 'T12:00') - new Date(a + 'T12:00')) / 864e5); // noon-anchored: DST-safe
-  function onClear(lvl) {
+  // deterministic roll: FNV-1a of the local date seeds a tiny PRNG — every player, same three
+  const seedOf = s => { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+  const prng = seed => () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  function rollQuests(date) {
+    const r = prng(seedOf('ge-quests-' + date)), pool = Object.keys(QUEST_TEMPLATES), ids = [];
+    while (ids.length < 3) { const id = pool[Math.floor(r() * pool.length)]; if (!ids.includes(id)) ids.push(id); }
+    return ids;
+  }
+  function questsToday() {
     const today = dayStr(GE.now());
-    if (streak.todayDate !== today) { streak.todayDate = today; streak.todayCount = 0; }
-    streak.todayCount++;
-    const goalMet = streak.todayCount === DAILY_GOAL; // exactly once per day: the count is monotonic within a day
+    if (quests.date !== today) { quests = { date: today, ids: rollQuests(today), prog: {}, done: [], all: false }; saveQuests(); }
+    return quests;
+  }
+  function onWinQuests(d) {
+    const q = questsToday(), justDone = [];
+    for (const id of q.ids) {
+      if (q.done.includes(id)) continue;
+      const t = QUEST_TEMPLATES[id];
+      if (!t) continue;
+      q.prog[id] = Math.min(t.target, (q.prog[id] || 0) + t.gain(d));
+      if (q.prog[id] >= t.target) { q.done.push(id); justDone.push(id); track('quest_done', { id }); }
+    }
+    let allJustDone = false, freezeBanked = false;
+    if (!q.all && q.ids.length === 3 && q.done.length === 3) {
+      q.all = true; allJustDone = true;
+      track('quests_all_done', { date: q.date });
+      if (streak.freezes < FREEZE_MAX) { streak.freezes++; freezeBanked = true; saveStreak(); }
+    }
+    saveQuests();
+    return { justDone, allJustDone, freezeBanked };
+  }
+  // streak day-mark (unchanged: ≥1 clear marks the day) + the rolling last-7-days marks
+  function onClear() {
+    const today = dayStr(GE.now());
+    if (!streak.marks.includes(today)) streak.marks.push(today);
+    streak.marks = streak.marks.filter(m => { const g = dayGap(m, today); return g >= 0 && g < 7; });
     let newBest = false;
     if (streak.lastDate !== today) {
       const gap = streak.lastDate ? dayGap(streak.lastDate, today) : 99;
@@ -1927,48 +2322,124 @@ requestAnimationFrame(frame);
       if (streak.len > streak.best) { newBest = streak.len >= 2; streak.best = streak.len; } // day one is not an announcement
       track('streak_day', { len: streak.len });
     }
-    if (goalMet) track('daily_goal_met', { lvl });
     saveStreak();
-    return { goalMet, newBest };
+    return { newBest };
   }
+  // weekly ladder (ISO week via GE.now); history keeps just last week's result line
+  function isoWeek(t) {
+    const d = new Date(t), th = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    th.setDate(th.getDate() + 3 - ((th.getDay() + 6) % 7)); // the week's Thursday decides the ISO year
+    const wk1 = new Date(th.getFullYear(), 0, 4);
+    const w = 1 + Math.round(((th - wk1) / 864e5 - 3 + ((wk1.getDay() + 6) % 7)) / 7);
+    return th.getFullYear() + '-W' + String(w).padStart(2, '0');
+  }
+  function ladderWeek() {
+    const w = isoWeek(GE.now());
+    if (lad.week !== w) { if (lad.week) lad.last = { week: lad.week, pts: lad.pts }; lad.week = w; lad.pts = 0; lad.ms = []; saveLadder(); }
+    return lad;
+  }
+  function onWinLadder(d) {
+    ladderWeek();
+    const gain = 1 + (d.moves <= d.par ? 1 : 0);
+    lad.pts += gain;
+    track('ladder_point', { pts: lad.pts, gain });
+    const hit = MILESTONES.filter(n => lad.pts >= n && !lad.ms.includes(n));
+    for (const n of hit) { lad.ms.push(n); track('ladder_milestone', { n }); }
+    saveLadder();
+    return { gain, hit };
+  }
+  const surveyorMark = () => { ladderWeek(); return lad.ms.includes(20); }; // the 20-point mark, rest of the week
+  // title-block rendering: quest list, streak/lives row, survey row
   function refreshDaily() {
     const today = dayStr(GE.now());
-    const n = streak.todayDate === today ? Math.min(streak.todayCount, DAILY_GOAL) : 0;
-    $('fToday').innerHTML = `<span class="boxes">${'▮'.repeat(n)}<span class="off">${'▯'.repeat(DAILY_GOAL - n)}</span></span>${n}/${DAILY_GOAL}`;
+    const q = questsToday();
+    const rows = q.ids.map(id => {
+      const t = QUEST_TEMPLATES[id] || { label: id, target: 1 };
+      const p = Math.min(t.target, q.prog[id] || 0), done = q.done.includes(id);
+      return `<div class="q${done ? ' done' : ''}" data-quest="${id}"><span class="ql">${t.label}</span>`
+        + `<span class="qbar"><i style="width:${Math.round((p / t.target) * 100)}%"></i></span>`
+        + `<span class="qv">${p}/${t.target}</span>${done ? '<span class="qstamp">✓</span>' : ''}</div>`;
+    }).join('');
+    $('menuQuests').innerHTML = `<div class="qh"><span>Daily quests</span>${q.all ? '<b>ALL DONE</b>' : ''}</div>` + rows;
     const live = streak.lastDate && streak.len > 0 && dayGap(streak.lastDate, today) <= 1 ? streak.len : 0;
-    $('fStreak').textContent = live ? `${live} day${live === 1 ? '' : 's'}` : '—';
+    const wk = streak.marks.filter(m => { const g = dayGap(m, today); return g >= 0 && g < 7; }).length;
+    $('fStreak').innerHTML = (live ? `${live} day${live === 1 ? '' : 's'}` : '—')
+      + (surveyorMark() ? '<span class="mark" title="Field Survey complete this week">⌖</span>' : '')
+      + `<small>${wk} of last 7 days${streak.freezes ? ` · ${streak.freezes} freeze${streak.freezes > 1 ? 's' : ''} held` : ''}</small>`;
+    $('fSurvey').textContent = `${lad.pts} pt${lad.pts === 1 ? '' : 's'}`;
+    refreshLives();
   }
-  // win-card beat: the moment the third clear of the day lands (or a new best streak) — a small
-  // stamped row after the stars, with a quiet chime. A play beat, never a purchase event.
+  function refreshLives() {
+    const on = GE.livesEnabled;
+    $('menuLivesBox').hidden = !on;
+    if (!on) return;
+    const i = GE.livesInfo;
+    $('fLives').innerHTML = `<span class="hearts">${'♥'.repeat(i.n)}<span class="off">${'♡'.repeat(i.max - i.n)}</span></span>`
+      + (i.fullIn ? `<small>full in ${i.fullIn}</small>` : '');
+  }
+  window.addEventListener('ge:lives', () => { if (!screens.menu.hidden) refreshLives(); });
+  // win-card beat: ONE quiet stamped row after the stars — all-quests-done (banks the freeze)
+  // over a single quest, over a new best streak. A play beat, never a purchase event.
   let dailyTimer = 0;
   const winDaily = $('winDaily');
   window.addEventListener('ge:win', e => {
-    const r = onClear(e.detail.lvl + 1);
+    const d = e.detail, lvl = d.lvl;
+    const info = { stars: d.stars, moves: d.moves, par: d.par != null ? d.par : LEVELS[lvl].par, undos: d.undos || 0, hints: d.hints || 0, blocks: LEVELS[lvl].blocks.length };
+    const sr = onClear();
+    const qr = onWinQuests(info);
+    onWinLadder(info);
     clearTimeout(dailyTimer); winDaily.hidden = true;
-    if (!r.goalMet && !r.newBest) return;
-    const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let row = null;
+    if (qr.allJustDone) row = { stamp: 'DONE', k: 'All quests complete', v: qr.freezeBanked ? `Streak freeze banked · ${streak.freezes} held` : 'All 3 daily quests done' };
+    else if (qr.justDone.length) row = { stamp: 'QUEST', k: 'Quest complete', v: QUEST_TEMPLATES[qr.justDone[0]].label };
+    else if (sr.newBest) row = { stamp: 'BEST', k: 'New best streak', v: `${streak.len} days in a row` };
+    if (!row) return;
     dailyTimer = setTimeout(() => {
-      if (r.goalMet) {
-        $('winDailyStamp').textContent = 'GOAL'; $('winDailyK').textContent = 'Daily goal met';
-        $('winDailyV').textContent = `${DAILY_GOAL} levels cleared today` + (r.newBest ? ` · best streak ${streak.len}` : '');
-      } else {
-        $('winDailyStamp').textContent = 'BEST'; $('winDailyK').textContent = 'New best streak';
-        $('winDailyV').textContent = `${streak.len} days in a row`;
-      }
+      $('winDailyStamp').textContent = row.stamp; $('winDailyK').textContent = row.k; $('winDailyV').textContent = row.v;
       winDaily.hidden = false;
       GE.sound('gate');
-    }, reduced ? 0 : 1150);
+    }, GE.reduced ? 0 : 1150);
   });
-  // launch check: exactly one missed day on a ≥2-day streak, and this streak's repair unused
+  // launch check: banked freezes cover the missed day(s) automatically (calm notice, nothing to
+  // buy); otherwise exactly one missed day on a ≥2-day streak gets the once-per-streak ad repair
   const streakModal = $('streakModal');
   function checkStreak() {
     const today = dayStr(GE.now());
-    if (!(streak.len >= 2 && streak.lastDate && dayGap(streak.lastDate, today) === 2 && !streak.repairUsedFor)) return false;
-    $('streakSub').textContent = `Your ${streak.len}-day streak — repair it?`;
-    streakModal.hidden = false;
-    track('streak_repair_offered', { len: streak.len });
-    return true;
+    if (!streak.lastDate || streak.len < 1) return false;
+    const gap = dayGap(streak.lastDate, today);
+    if (gap <= 1) return false;
+    const missed = gap - 1;
+    if (streak.freezes >= missed) {
+      streak.freezes -= missed;
+      streak.lastDate = dayStr(GE.now() - 864e5); // yesterday: today's first clear extends the streak
+      saveStreak();
+      track('streak_freeze_used', { missed, left: streak.freezes });
+      $('freezeSub').textContent = `Freeze used — streak safe · ${streak.freezes} left`;
+      $('freezeModal').hidden = false;
+      refreshDaily();
+      return 'freeze';
+    }
+    if (streak.len >= 2 && gap === 2 && !streak.repairUsedFor) {
+      $('streakSub').textContent = `Your ${streak.len}-day streak — repair it?`;
+      streakModal.hidden = false;
+      track('streak_repair_offered', { len: streak.len });
+      return true;
+    }
+    return false;
   }
+  $('btnFreezeOk').onclick = () => { $('freezeModal').hidden = true; };
+  // Field Survey card (weekly log): milestone stamps, points line, last week's result
+  function renderSurvey() {
+    ladderWeek();
+    $('surveySub').textContent = `${lad.pts} point${lad.pts === 1 ? '' : 's'} this week · 1 per clear · +1 at par`;
+    $('surveyTrack').innerHTML = MILESTONES.map(n => {
+      const got = lad.ms.includes(n);
+      return `<div class="ms${got ? ' got' : ''}" data-ms="${n}">${n === 20 ? '<span class="mark">⌖</span>' : ''}<b>${n}</b><span>${got ? 'stamped' : 'points'}</span></div>`;
+    }).join('');
+    $('surveyLast').textContent = lad.last ? `Last week: ${lad.last.pts} point${lad.last.pts === 1 ? '' : 's'}` : 'A fresh survey starts each week.';
+  }
+  $('btnSurvey').onclick = () => { renderSurvey(); $('surveyModal').hidden = false; };
+  $('btnSurveyClose').onclick = () => { $('surveyModal').hidden = true; };
   $('btnStreakRepair').onclick = () => {
     if (streakModal.hidden || GE.adUp) return;
     GE.rewarded('streak', () => {
@@ -2153,7 +2624,11 @@ requestAnimationFrame(frame);
   show('menu');
   checkStreak(); // the repair offer rides over the title block on launch (and only then)
   window.GE_MENU = { show, get prog() { return prog; }, setSkin, CHEST_STARS, CHEST_SKINS,
-    get streak() { return streak; }, checkStreak, refreshDaily, DAILY_GOAL };
+    get streak() { return streak; }, checkStreak, refreshDaily,
+    get quests() { return questsToday(); }, get ladder() { ladderWeek(); return lad; },
+    questInfo: () => questsToday().ids.map(id => ({ id, label: QUEST_TEMPLATES[id].label, target: QUEST_TEMPLATES[id].target,
+      prog: Math.min(QUEST_TEMPLATES[id].target, quests.prog[id] || 0), done: quests.done.includes(id) })),
+    QUEST_TEMPLATES, MILESTONES };
 })();
 
 'use strict';

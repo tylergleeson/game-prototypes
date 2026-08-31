@@ -19,17 +19,35 @@ const NATIVE = (() => {
       ? window.Capacitor.Plugins : null;
   } catch (e) { return null; }
 })();
-// subtle taptic feedback on the four beats that matter; never load-bearing (sound/visuals
-// already carry each of these), fire-and-forget, and silent wherever haptics don't exist
+// ---------- haptics ----------
+// The native shell (AppDelegate's HapticsDriver) owns prepared, reused UIKit feedback
+// generators per the design playbook: selection ticks for pickup and cell steps, impact
+// light/medium for settles and gate exits, notification success/warning/error for
+// win/low-moves/fail — plus ONE Core Haptics signature pattern (the exit whoosh, with a
+// medium-impact fallback). This side only posts beat names, never per animation frame
+// (cell steps are rate-limited). In a plain browser — or before the driver attaches —
+// there is no message handler and every call is a no-op, so the web build's behaviour is
+// untouched. Toggle: GE.hapticsOn (independent of sound), persisted by menu.js
+// (ge_haptics); the toggle buttons only appear in the native app.
+let hapticsOn = true;
+let hapticStepT = 0;
 function haptic(kind) {
-  if (!NATIVE || !NATIVE.Haptics) return;
+  if (!hapticsOn) return;
   try {
-    if (kind === 'pick') NATIVE.Haptics.impact({ style: 'LIGHT' }).catch(() => {});
-    else if (kind === 'exit') NATIVE.Haptics.impact({ style: 'MEDIUM' }).catch(() => {});
-    else if (kind === 'win') NATIVE.Haptics.notification({ type: 'SUCCESS' }).catch(() => {});
-    else if (kind === 'fail') NATIVE.Haptics.notification({ type: 'WARNING' }).catch(() => {});
+    const port = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.haptics;
+    if (port) port.postMessage(kind);
   } catch (e) { /* haptics are garnish */ }
 }
+
+// ---------- reduced motion ----------
+// The OS setting already gates the CSS animations via the media query; the canvas renderer
+// honours it here too: no screen shake, half the particles, static dashes instead of marching
+// or pulsing ghost routes, and no press/settle scale beats. The pause card's Motion toggle
+// (menu.js, ge_motion) forces the same path when off via body.reduce-motion.
+const SYS_REDUCED = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+let motionOn = true;
+const reducedMotion = () => !motionOn || !!(SYS_REDUCED && SYS_REDUCED.matches);
+function setMotion(on) { motionOn = !!on; try { document.body.classList.toggle('reduce-motion', !on); } catch (e) {} }
 
 // ---------- paper skins (cosmetic, chest rewards) ----------
 // A skin changes ONLY the drafting sheet: page gradient, ink, rules, card tints, the canvas
@@ -150,6 +168,120 @@ function track(ev, data) {
   } catch (e) { /* storage may be unavailable; play on */ }
 }
 
+// ---------- lives (flag-gated, default ON) ----------
+// Five hearts. Levels 1–5 are the onboarding runway and never cost anything; from L6 on, a
+// failed attempt that ends in RETRY costs one life — the rescue SAVES the attempt (no life),
+// Restart mid-level costs nothing, winning costs nothing. Refill: one life per 25 minutes,
+// derived from a single anchor timestamp (never five timers); conservative under clock changes
+// (a backwards jump only re-anchors — the player is never accused, and a forward jump can at
+// most fill to 5). Out of lives: a calm card — timer, one rewarded +1 per appearance, back to
+// menu — that never blocks the menu or level browsing. Flag: LIVES_ENABLED below, overridable
+// via localStorage ge_flags {"lives":0}, the ?lives=0 URL param, or GE.livesEnabled (bots).
+const LIVES_ENABLED = true, LIVES_MAX = 5, LIFE_MS = 25 * 60 * 1000, LIVES_FREE_LEVELS = 5;
+let livesOn = (() => {
+  let on = LIVES_ENABLED;
+  try { const f = JSON.parse(localStorage.getItem('ge_flags') || '{}'); if ('lives' in f) on = !!+f.lives; } catch (e) {}
+  try { const q = new URLSearchParams(location.search).get('lives'); if (q !== null) on = q !== '0'; } catch (e) {}
+  return on;
+})();
+let lives = { n: LIVES_MAX, anchor: null };
+try {
+  const l = JSON.parse(localStorage.getItem('ge_lives') || 'null');
+  if (l && Number.isInteger(l.n)) lives = { n: Math.max(0, Math.min(LIVES_MAX, l.n)), anchor: typeof l.anchor === 'number' ? l.anchor : null };
+} catch (e) {}
+const saveLives = () => { try { localStorage.setItem('ge_lives', JSON.stringify(lives)); } catch (e) {} };
+function syncLives() { // derive the current count from the one anchor; monotonic and forgiving
+  if (lives.n >= LIVES_MAX) { lives.anchor = null; return; }
+  const now = GE.now();
+  if (lives.anchor == null) { lives.anchor = now; saveLives(); return; }
+  if (now < lives.anchor) { lives.anchor = now; saveLives(); return; } // clock went backwards: keep waiting from here
+  const gained = Math.floor((now - lives.anchor) / LIFE_MS);
+  if (gained > 0) {
+    lives.n = Math.min(LIVES_MAX, lives.n + gained);
+    lives.anchor = lives.n >= LIVES_MAX ? null : lives.anchor + gained * LIFE_MS;
+    saveLives();
+  }
+}
+function livesNow() { if (!livesOn) return LIVES_MAX; syncLives(); return lives.n; }
+function spendLife() {
+  syncLives();
+  if (lives.n < 1) return;
+  lives.n--;
+  if (lives.anchor == null) lives.anchor = GE.now();
+  saveLives(); track('life_lost', li + 1); livesChanged();
+}
+function grantLife() { // rewarded refill: +1, ceiling LIVES_MAX
+  syncLives();
+  lives.n = Math.min(LIVES_MAX, lives.n + 1);
+  if (lives.n >= LIVES_MAX) lives.anchor = null;
+  saveLives(); track('life_ad_refill', li + 1); livesChanged();
+}
+const fmtDur = ms => { const m = Math.max(1, Math.ceil(ms / 60000)); return m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}m`; };
+function livesInfo() {
+  const n = livesNow();
+  const wait = livesOn && n < LIVES_MAX && lives.anchor != null;
+  return {
+    n, max: LIVES_MAX,
+    nextIn: wait ? fmtDur(Math.max(0, lives.anchor + LIFE_MS - GE.now())) : '',
+    fullIn: wait ? fmtDur(Math.max(0, lives.anchor + (LIVES_MAX - n) * LIFE_MS - GE.now())) : '',
+  };
+}
+const heartsRow = (n, max) => '♥'.repeat(n) + `<span class="off">${'♡'.repeat(max - n)}</span>`;
+let livesAdUsed = false; // one rewarded refill per appearance of the empty-state card
+function updateLivesUI() {
+  const info = livesInfo();
+  const hud = document.getElementById('hudLives');
+  hud.hidden = !livesOn;
+  document.body.classList.toggle('lives-on', livesOn);
+  if (livesOn) hud.innerHTML = heartsRow(info.n, info.max);
+  const modal = document.getElementById('livesModal');
+  if (!modal.hidden) {
+    if (info.n > 0 || !livesOn) modal.hidden = true; // a life is in the bank again: the card has no job
+    else {
+      document.getElementById('livesCardHearts').innerHTML = heartsRow(info.n, info.max);
+      document.getElementById('livesSub').textContent = info.nextIn ? `Next life in ${info.nextIn} · full in ${info.fullIn}` : 'Lives refill over time.';
+      document.getElementById('btnLifeRefill').hidden = livesAdUsed;
+    }
+  }
+}
+function livesChanged() { updateLivesUI(); window.dispatchEvent(new CustomEvent('ge:lives', { detail: livesInfo() })); }
+function showLivesCard() {
+  syncLives();
+  livesAdUsed = false;
+  track('lives_empty', li + 1);
+  document.getElementById('livesModal').hidden = false;
+  updateLivesUI();
+}
+// entry gate: entering L6+ needs a life in the bank (entry itself costs nothing); L1–5 always open
+function livesGate(target) {
+  if (!livesOn || target < LIVES_FREE_LEVELS) return true;
+  if (livesNow() > 0) return true;
+  showLivesCard();
+  return false;
+}
+function setLivesEnabled(v) {
+  livesOn = !!v;
+  if (!livesOn) document.getElementById('livesModal').hidden = true;
+  livesChanged();
+}
+document.getElementById('btnLifeRefill').onclick = () => {
+  if (document.getElementById('livesModal').hidden || livesAdUsed || adCb) return;
+  if (livesNow() >= LIVES_MAX) return;
+  livesAdUsed = true;
+  rewarded('life', () => { grantLife(); document.getElementById('livesModal').hidden = true; });
+};
+let livesTickAcc = 0;
+function livesTick(dt) { // 1 s cadence: the empty-card timer stays live, refills land as they mature
+  if (!livesOn) return;
+  livesTickAcc += dt;
+  if (livesTickAcc < 1) return;
+  livesTickAcc = 0;
+  const before = lives.n;
+  syncLives();
+  if (lives.n !== before) livesChanged();
+  else if (!document.getElementById('livesModal').hidden) updateLivesUI();
+}
+
 // ---------- state ----------
 let li = 0;
 try { li = Math.min(parseInt(localStorage.getItem('ge_level') || '0', 10) || 0, LEVELS.length - 1); } catch (e) {}
@@ -170,7 +302,9 @@ let gateFlash = [];    // per-color: seconds since that color's gate closed (or 
 let failRoute = null;  // ghost route shown behind the fail card
 let hint = null;       // {bi, path, side, to} — the reference next move, shown until the board changes
 let idleT = 0;         // seconds since the last input (nudges the hint button)
-let exited = 0;        // blocks out this level (escape pitch rises with it)
+let exitChain = 0, lastExitAt = 0; // consecutive-exit pitch chain (resets after ~4 s without an exit)
+let settleT = [];      // per-block seconds since a released drag settled (overshoot beat)
+let attemptUndos = 0, attemptHints = 0; // per-attempt counters, ride on ge:win (daily quests)
 let winTimers = [];
 let toastTimer = 0;
 let adTimer = 0, adCb = null;
@@ -190,8 +324,10 @@ function loadLevel(i) {
   pos = L.blocks.map(b => [b.x, b.y]);
   disp = L.blocks.map(b => [b.x, b.y]);
   exitAnim = L.blocks.map(() => null);
+  settleT = L.blocks.map(() => 0);
   moves = 0; movesLeft = L.moves; rescued = false; over = false;
-  drag = null; particles = []; hintT = 0; idleT = 0; exited = 0;
+  attemptUndos = 0; attemptHints = 0;
+  drag = null; particles = []; hintT = 0; idleT = 0; exitChain = 0; lastExitAt = 0;
   undoSnap = null; pendingSnap = null; failRoute = null; hint = null;
   gateFlash = COLORS.map(() => -1);
   for (const t of winTimers) clearTimeout(t);
@@ -245,7 +381,7 @@ function updateHud() {
   // amber: the 3-star pace is gone. red: point of no return — every remaining move must be an exit.
   const low = left > 0 && movesLeft <= left;
   const warn = !low && left > 0 && now < 3;
-  if (low && !hudBox.classList.contains('low')) { hudBox.classList.add('shake'); setTimeout(() => hudBox.classList.remove('shake'), 400); }
+  if (low && !hudBox.classList.contains('low')) { hudBox.classList.add('shake'); setTimeout(() => hudBox.classList.remove('shake'), 400); haptic('low'); }
   hudBox.classList.toggle('low', low);
   hudBox.classList.toggle('warn', warn);
   // the HUD goes inert the instant the round is decided (`over` flips before any card
@@ -448,7 +584,8 @@ function snapshot() {
   return { pos: pos.map(p => (p ? [p[0], p[1]] : null)), moves, movesLeft };
 }
 function beginDrag(bi, gx, gy, pid = -1) {
-  drag = { bi, pid, gx, gy, sx: pos[bi][0], sy: pos[bi][1], moved: false, counted: false };
+  // t0 drives the pickup press beat: a 70 ms dip before the lift reads as started (render)
+  drag = { bi, pid, gx, gy, sx: pos[bi][0], sy: pos[bi][1], moved: false, counted: false, t0: performance.now() };
   pendingSnap = snapshot();
 }
 
@@ -463,7 +600,13 @@ function stepToward(bi, wantX, wantY) {
     for (const [sx, sy, mag] of tryOrder) {
       if (mag < 0.51 || (sx === 0 && sy === 0)) continue;
       const nx = pos[bi][0] + sx, ny = pos[bi][1] + sy;
-      if (fits(bi, nx, ny)) { pos[bi] = [nx, ny]; drag.moved = true; stepped = true; break; }
+      if (fits(bi, nx, ny)) {
+        pos[bi] = [nx, ny]; drag.moved = true; stepped = true;
+        // picker-style selection tick as the block walks cells under the finger (rate-limited)
+        const tn = performance.now();
+        if (tn - hapticStepT > 70) { hapticStepT = tn; haptic('step'); }
+        break;
+      }
       // blocked by the board edge? if a matching gate covers us, that's an exit.
       if (mag > 0.62 && wouldLeaveBoard(bi, sx, sy)) {
         const side = sx === 1 ? 'right' : sx === -1 ? 'left' : sy === 1 ? 'bottom' : 'top';
@@ -487,7 +630,8 @@ function startExit(bi, side) {
   exitAnim[bi] = { dx, dy, t: 0 };
   const b = L.blocks[bi];
   const cen = blockCenterPx(bi);
-  for (let i = 0; i < 22; i++) {
+  const NP = reducedMotion() ? 11 : 22; // reduced motion: half the burst
+  for (let i = 0; i < NP; i++) {
     particles.push({
       x: cen[0], y: cen[1],
       vx: (Math.random() - 0.5) * 7 + dx * 4, vy: (Math.random() - 0.5) * 7 + dy * 4 - 2,
@@ -495,12 +639,17 @@ function startExit(bi, side) {
       r: 2 + Math.random() * 3.4,
     });
   }
-  shakeT = 0.16;
+  shakeT = reducedMotion() ? 0 : 0.16;
   pos[bi] = null;
   // last block of its color gone? the gate closes with a flash
   if (!L.blocks.some((o, i) => pos[i] && o.color === b.color)) { gateFlash[b.color] = 0; sound('gate'); }
   countMove();
-  sound('exit', exited++); // each escape in a level rings a step higher
+  // each escape rings a step higher while the chain is alive; ~4 s without an exit resets the
+  // pitch (a slow, thoughtful clear starts each escape fresh instead of climbing forever)
+  const tex = performance.now();
+  if (tex - lastExitAt > 4000) exitChain = 0;
+  lastExitAt = tex;
+  sound('exit', exitChain++);
   haptic('exit');
   track('block_exit', li + 1);
   // lock the board while the last block flies out; the pending win dies with the level
@@ -527,7 +676,9 @@ function undo() {
   moves = s.moves; movesLeft = s.movesLeft;
   exitAnim = L.blocks.map(() => null);
   gateFlash = COLORS.map(() => -1);
-  exited = pos.filter(p => !p).length;
+  settleT = L.blocks.map(() => 0);
+  exitChain = 0; // an undone exit ends the pitch chain
+  attemptUndos++;
   hint = null;
   for (let i = 0; i < pos.length; i++) if (pos[i]) disp[i] = [pos[i][0], pos[i][1]];
   updateHud();
@@ -594,6 +745,7 @@ function win() {
   updateHud();
   const stars = starsFor(moves);
   const last = li === LEVELS.length - 1;
+  const winUndos = attemptUndos, winHints = attemptHints;
   document.getElementById('winTitle').textContent = winTitleFor(stars);
   btnNext.textContent = last ? 'Back to menu' : 'Next level';
   // par is the target, never "best"; the player's own best is a separate fact once one exists
@@ -606,7 +758,7 @@ function win() {
   // on this card must not send the player back into a level they just cleared
   if (!last) { try { localStorage.setItem('ge_level', String(li + 1)); } catch (e) {} }
   // stars drop in one at a time; a burst on the third; buttons go live once the reward has landed
-  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduced = reducedMotion();
   const delays = reduced ? [0, 0, 0] : [80, 260, 440];
   winStars.innerHTML = '';
   for (let i = 0; i < 3; i++) {
@@ -622,7 +774,7 @@ function win() {
   btnNext.disabled = btnReplay.disabled = !reduced;
   winTimers.push(setTimeout(() => { btnNext.disabled = btnReplay.disabled = false; }, delays[2] + 400 + 400));
   winModal.hidden = false;
-  window.dispatchEvent(new CustomEvent('ge:win', { detail: { lvl: li, stars, moves, last } }));
+  window.dispatchEvent(new CustomEvent('ge:win', { detail: { lvl: li, stars, moves, last, par: L.par, undos: winUndos, hints: winHints } }));
   sound('win');
   haptic('win');
   track('win', { lvl: li + 1, moves, stars });
@@ -630,7 +782,7 @@ function win() {
 
 // DOM spark burst from an element's centre (win card, third star)
 function burst(el) {
-  if (!el || !el.animate) return;
+  if (!el || !el.animate || reducedMotion()) return;
   const host = el.parentElement;
   const r = el.getBoundingClientRect(), hr = host.getBoundingClientRect();
   const cx = r.left + r.width / 2 - hr.left, cy = r.top + r.height / 2 - hr.top;
@@ -705,8 +857,10 @@ function endDrag(count = true) {
   const d = drag; drag = null;
   if (!count) return;
   if (!pos[d.bi]) { pendingSnap = null; return; }
+  if (pos[d.bi][0] !== d.sx || pos[d.bi][1] !== d.sy) settleT[d.bi] = 0.0001; // settle overshoot beat (render)
   if ((pos[d.bi][0] !== d.sx || pos[d.bi][1] !== d.sy) && !d.counted) {
     countMove();
+    haptic('settle'); // the block snaps into its new cell
     maybeFail();
   } else pendingSnap = null;
 }
@@ -733,7 +887,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) cance
 const AD_MS = 1200;
 function rewarded(kind, grant) {
   adClose();
-  adModal.querySelector('h2').textContent = { hint: 'Hint', streak: 'Streak repair' }[kind] || 'Rescue';
+  adModal.querySelector('h2').textContent = { hint: 'Hint', streak: 'Streak repair', life: '+1 life' }[kind] || 'Rescue';
   adBar.style.transition = 'none'; adBar.style.width = '0%'; void adBar.offsetWidth;
   adBar.style.transition = `width ${AD_MS}ms linear`; adBar.style.width = '100%';
   adModal.hidden = false;
@@ -747,11 +901,21 @@ function adClose() { clearTimeout(adTimer); adTimer = 0; adCb = null; adModal.hi
 btnRestart.onclick = () => { if (over || paused) return; track('restart', li + 1); loadLevel(li); };
 btnUndo.onclick = () => { audioInit(); undo(); };
 btnNext.onclick = () => {
-  if (li === LEVELS.length - 1) window.dispatchEvent(new CustomEvent('ge:finished'));
-  else loadLevel(li + 1);
+  if (li === LEVELS.length - 1) { window.dispatchEvent(new CustomEvent('ge:finished')); return; }
+  if (!livesGate(li + 1)) return;
+  loadLevel(li + 1);
 };
-btnReplay.onclick = () => { track('replay', li + 1); loadLevel(li); };
-document.getElementById('btnRetry').onclick = () => { track('retry', li + 1); loadLevel(li); };
+btnReplay.onclick = () => { if (!livesGate(li)) return; track('replay', li + 1); loadLevel(li); };
+// Retry after a loss is the ONE thing that costs a life (from L6 on): the rescue saves the
+// attempt instead (no life), Restart mid-level is free, winning is free. At zero lives the
+// calm empty-state card takes over (timer + one rewarded refill + back to menu).
+document.getElementById('btnRetry').onclick = () => {
+  if (livesOn && li >= LIVES_FREE_LEVELS) {
+    if (livesNow() < 1) { showLivesCard(); return; }
+    spendLife();
+  }
+  track('retry', li + 1); loadLevel(li);
+};
 function grantRescue() {
   rescued = true; over = false; movesLeft += 3; failModal.hidden = true; failRoute = null;
   document.body.classList.remove('fail-up'); cv.style.transform = '';
@@ -778,6 +942,7 @@ function showHint() {
   const mv = solveFrom(pos);
   if (!mv) { toast('No way out from here — try Undo or Restart.'); track('hint_none', li + 1); return; }
   hint = mv;
+  attemptHints++;
   updateHud();
   sound('hint');
   track('hint', li + 1);
@@ -939,17 +1104,18 @@ function drawRoute(bi, route, strength) {
     // ghost outline of the block at its parking spot
     const [tx, ty] = route.to || route.path[route.path.length - 1];
     ctx.save();
-    ctx.setLineDash([6, 5]); ctx.lineDashOffset = -hintT * 30;
+    ctx.setLineDash([6, 5]); ctx.lineDashOffset = reducedMotion() ? 0 : -hintT * 30;
     ctx.strokeStyle = `rgba(${THEME.route},${strength * 0.85})`; ctx.lineWidth = 2.5;
     for (const [cx, cy] of b.cells) ctx.strokeRect(bx + (tx + cx) * cell + 5, by + (ty + cy) * cell + 5, cell - 10, cell - 10);
     ctx.restore();
   }
-  const pulse = (Math.sin(hintT * 5) + 1) / 2;
+  // reduced motion: the route is a static dash at steady alpha — no march, no pulse, no pip
+  const pulse = reducedMotion() ? 0.5 : (Math.sin(hintT * 5) + 1) / 2;
   const a = strength * (0.45 + pulse * 0.4);
   ctx.save();
   ctx.strokeStyle = `rgba(${THEME.route},${a})`;
   ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  ctx.setLineDash([9, 9]); ctx.lineDashOffset = -hintT * 40;
+  ctx.setLineDash([9, 9]); ctx.lineDashOffset = reducedMotion() ? 0 : -hintT * 40;
   ctx.beginPath();
   pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
   ctx.stroke();
@@ -966,7 +1132,7 @@ function drawRoute(bi, route, strength) {
   let total = 0; const seg = [];
   for (let i = 1; i < pts.length; i++) { const l = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); seg.push(l); total += l; }
   let t = ((hintT * cell * 2.2) % (total + cell)) ;
-  if (t < total) {
+  if (!reducedMotion() && t < total) {
     for (let i = 0; i < seg.length; i++) {
       if (t <= seg[i]) {
         const u = seg[i] ? t / seg[i] : 0;
@@ -996,6 +1162,8 @@ function frame(t) {
   particles = particles.filter(p => p.life > 0);
   if (shakeT > 0) shakeT -= dt;
   for (let c = 0; c < gateFlash.length; c++) if (gateFlash[c] >= 0) gateFlash[c] += dt;
+  for (let i = 0; i < settleT.length; i++) if (settleT[i] > 0) { settleT[i] += dt; if (settleT[i] > 0.4) settleT[i] = 0; }
+  livesTick(dt);
   hintT += dt;
   // a player who has done nothing for 20 s is stuck: the hint button beckons (the hint
   // itself is never shown unasked — that would give the level away)
@@ -1121,7 +1289,7 @@ function render() {
 
   // blocks
   const failUp = over && !failModal.hidden;
-  const pulse = (Math.sin(hintT * 6) + 1) / 2;
+  const pulse = reducedMotion() ? 0.5 : (Math.sin(hintT * 6) + 1) / 2; // static breath under reduced motion
   // every block is inset from its cells so a gutter of paper always separates neighbours —
   // two red blocks side by side must never read as one slab (3-second rule)
   const inset = Math.max(4, Math.round(cell * 0.1));
@@ -1139,6 +1307,18 @@ function render() {
     ctx.globalAlpha = alpha;
     const px = bx + disp[i][0] * cell + ox, py = by + disp[i][1] * cell + oy;
     const stranded = failUp && pos[i];
+    // feel beats: a 70 ms press dip on pickup that recovers as the lift lands, and a damped
+    // ~5% overshoot when a released block settles into its cell — both off under reduced motion
+    let bscale = 1;
+    if (!reducedMotion()) {
+      if (dragging && drag.t0) {
+        const bt = (performance.now() - drag.t0) / 1000;
+        bscale = bt < 0.07 ? 1 - 0.035 * (bt / 0.07) : 0.965 + 0.035 * Math.min(1, (bt - 0.07) / 0.08);
+      } else if (settleT[i] > 0) {
+        bscale = 1 + 0.05 * Math.exp(-settleT[i] * 9) * Math.sin(settleT[i] * 26);
+      }
+    }
+    if (bscale !== 1) { const [bcx, bcy] = blockCenterPx(i); ctx.translate(bcx, bcy); ctx.scale(bscale, bscale); ctx.translate(-bcx, -bcy); }
     drawBlockShape(b, px, py, inset, {
       main: c.main, dark: c.dark, lite: c.lite, glyph: c.glyph,
       shadow: dragging ? 12 : 6, lift: dragging ? 5 : 3,
@@ -1189,17 +1369,27 @@ function blip(freq, dur, type, vol, when = 0, slide = 0) {
   o.connect(g); g.connect(actx.destination);
   o.start(t0); o.stop(t0 + dur + 0.02);
 }
-// every sound is additive: nothing here carries information the board doesn't show
+// every sound is additive: nothing here carries information the board doesn't show.
+// Repeated sounds (tap / exit / star) drift ±2–4% in pitch so chains never machine-gun.
+const jitter = () => 1 + (Math.random() * 0.06 - 0.03);
 function sound(kind, n = 0) {
   if (!actx || !soundOn) return;
-  if (kind === 'tap') blip(300, 0.06, 'sine', 0.12);
-  // escapes climb a step each time within a level — the reward sound rises with the streak
-  else if (kind === 'exit') { const k = Math.pow(1.122, Math.min(n, 7)); blip(420 * k, 0.16, 'sine', 0.22, 0, 460 * k); blip(880 * k, 0.1, 'triangle', 0.1, 0.05); }
+  const j = jitter();
+  if (kind === 'tap') blip(300 * j, 0.06, 'sine', 0.12);
+  // escapes climb a step while the chain is alive (reset after ~4 s idle, see startExit); three
+  // synth variants rotate underneath so a fast clear reads as a phrase, not a repeated sample
+  else if (kind === 'exit') {
+    const k = Math.pow(1.122, Math.min(n, 7)) * j;
+    const v = n % 3;
+    if (v === 0) { blip(420 * k, 0.16, 'sine', 0.22, 0, 460 * k); blip(880 * k, 0.1, 'triangle', 0.1, 0.05); }
+    else if (v === 1) { blip(400 * k, 0.15, 'triangle', 0.2, 0, 540 * k); blip(940 * k, 0.11, 'sine', 0.09, 0.04); }
+    else { blip(445 * k, 0.17, 'sine', 0.21, 0, 400 * k); blip(668 * k, 0.09, 'triangle', 0.08, 0.02); blip(1100 * k, 0.09, 'sine', 0.06, 0.07); }
+  }
   else if (kind === 'hint') { blip(660, 0.1, 'sine', 0.12); blip(990, 0.14, 'sine', 0.1, 0.08); }
   // chest: a latch click, then a rising three-note chime
   else if (kind === 'chest') { blip(240, 0.05, 'square', 0.08); blip(784, 0.16, 'triangle', 0.16, 0.12); blip(1046, 0.16, 'triangle', 0.16, 0.24); blip(1568, 0.3, 'sine', 0.18, 0.36, 120); }
   else if (kind === 'gate') { blip(1046, 0.18, 'triangle', 0.14, 0.08); blip(1568, 0.22, 'sine', 0.1, 0.14); }
-  else if (kind === 'star') blip(880 * Math.pow(1.25, n), 0.16, 'triangle', 0.18, 0, 200);
+  else if (kind === 'star') blip(880 * Math.pow(1.25, n) * j, 0.16, 'triangle', 0.18, 0, 200);
   else if (kind === 'undo') blip(520, 0.12, 'sine', 0.14, 0, -220);
   else if (kind === 'win') { blip(523, 0.14, 'triangle', 0.2); blip(659, 0.14, 'triangle', 0.2, 0.09); blip(784, 0.22, 'triangle', 0.22, 0.18); }
   else if (kind === 'fail') { blip(220, 0.25, 'sawtooth', 0.12, 0, -80); blip(160, 0.3, 'sawtooth', 0.1, 0.12, -60); }
@@ -1216,6 +1406,16 @@ window.GE = {
   get over() { return over; },
   get paused() { return paused; }, set paused(v) { paused = !!v; if (paused) cancelDrag(); updateHud(); },
   get soundOn() { return soundOn; }, set soundOn(v) { soundOn = !!v; },
+  get hapticsOn() { return hapticsOn; }, set hapticsOn(v) { hapticsOn = !!v; },
+  // reduced motion: the OS preference OR the pause card's Motion toggle (menu.js persists it)
+  get motionOn() { return motionOn; }, set motionOn(v) { setMotion(v); },
+  get reduced() { return reducedMotion(); },
+  // lives: derived from the anchor on every read; the setter is the bot/flag override
+  get livesEnabled() { return livesOn; }, set livesEnabled(v) { setLivesEnabled(v); },
+  get lives() { return livesNow(); }, get livesMax() { return LIVES_MAX; },
+  get livesInfo() { return livesInfo(); },
+  livesGate, // menu.js runs Play / level-tile entries through the same gate as Next/Replay/Retry
+  haptic, // fire one beat directly (menu.js confirms the toggle with a sample tick; testing)
   get canUndo() { return !!undoSnap && !over && !paused; },
   get hint() { return hint; },          // the reference move currently ghosted (null if none)
   get best() { return best[li] || 0; }, // personal best moves on this level (0 = never cleared)
@@ -1265,5 +1465,6 @@ window.GE = {
 };
 
 // ---------- go ----------
+updateLivesUI();
 loadLevel(li);
 requestAnimationFrame(frame);

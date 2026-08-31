@@ -29,10 +29,20 @@ Stars have a cosmetic sink: each sheet of ten levels on the level select has a c
 (Sepia draft / Night vellum / Whiteprint; Cyanotype is the default). Skins change only the drafting sheet (page, ink, grid, cards) — never block,
 gate or HUD state colours — and nothing is gated on a chest. The "Paper" picker on the main menu and the pause card lists the skins; a locked swatch
 shows the chest it comes from. A win that opens a chest adds a "Chest opened — <paper>" row with a "Try it" button to the win card.
-Daily goal + streak (title block "Today"/"Streak" row): the goal is 3 level clears today (replays count); the streak is consecutive calendar days
-with ≥1 clear — decoupled from the goal. The third clear of the day stamps a quiet "Daily goal met" row on the win card; a new best streak (≥2 days)
-gets a one-time "New best streak" row. Missing exactly one day offers ONE streak repair per streak at launch (rewarded-ad placeholder, free);
-declining or Escape starts fresh. Nothing is gated on either. Dates come from GE.now (overridable for testing).
+Daily quests + streak (title block): THREE quests roll each local day, deterministically from the date (all players share the day's set), from safe
+telemetry templates (clear N levels / earn N stars / clear N at par / clear without undo / without hints / clear N blocks — never ad views or spending).
+Each shows a progress bar and a ✓ stamp on the title block; a quest completion adds a quiet stamped row to the win card. Completing ALL 3 banks one
+STREAK FREEZE (max 2 held, shown on the streak row). The streak is consecutive calendar days with ≥1 clear; the row also shows "N of last 7 days".
+A missed day consumes a banked freeze automatically (calm "Freeze used — streak safe" notice at next launch); with no freeze, missing exactly one day
+offers ONE streak repair per streak at launch (rewarded-ad placeholder, free); declining or Escape starts fresh. Nothing is gated on any of it.
+Field Survey (weekly ladder, "Field survey" row on the title block opens the log card): 1 point per level clear, +1 bonus at par; milestone stamps at
+3/7/12/20 points; the 20-point stamp is a surveyor's mark (⌖) shown next to the streak row for the rest of that week. Resets each ISO week; no
+leaderboard, only last week's result is kept. Dates all come from GE.now (overridable for testing).
+Lives (default ON, flag-gated via ?lives=0 / ge_flags / GE.livesEnabled): five hearts, HUD top-left and title block. Levels 1–5 NEVER cost a life.
+From L6 on, a failed attempt that ends in Retry costs one life; taking the rescue does NOT (it saves the attempt); Restart mid-level and winning cost
+nothing. Refill one life per 25 minutes (single anchor timestamp, GE.now-based); at zero lives, entering L6+ shows a calm card (refill timer + one
+rewarded +1 per appearance + Back to menu) — the menu and level browsing are never blocked, and L1–5 stay playable.
+Motion toggle (pause card): forces the reduced-motion path (no shake, half particles, static ghost dashes) when off; the OS setting always wins.
 Coordinates: (x,y) cells, x to the right, y downward, origin top-left. A block's position is its
 top-left origin; its cells are listed absolute.`,
   buttons: {
@@ -46,8 +56,15 @@ top-left origin; its cells are listed absolute.`,
     btnTrySkin: 'win card: Try it — apply the paper skin the chest just opened (only shown on a win that opened a chest)',
     btnPaperCyan: 'main menu: Paper → Cyanotype (default)', btnPaperSepia: 'main menu: Paper → Sepia draft (Sheet 1 chest)', btnPaperNight: 'main menu: Paper → Night vellum (Sheet 2 chest)', btnPaperWhite: 'main menu: Paper → Whiteprint (Sheet 3 chest)',
     btnPausePaperCyan: 'pause: Paper → Cyanotype', btnPausePaperSepia: 'pause: Paper → Sepia draft', btnPausePaperNight: 'pause: Paper → Night vellum', btnPausePaperWhite: 'pause: Paper → Whiteprint',
+    btnHaptics: 'main menu: toggle haptics (native app only — hidden in a browser)', btnPauseHaptics: 'pause: toggle haptics (native app only)',
     btnStreakRepair: 'streak-repair card: repair the streak (rewarded-ad placeholder, ~1.2 s; shown at launch only when exactly one day was missed, once per streak)',
     btnStreakDecline: 'streak-repair card: Start fresh — decline the repair; today\'s first clear starts a new streak at 1 (Escape does the same)',
+    btnPauseMotion: 'pause: toggle Motion on/off — off forces the reduced-motion rendering path (persisted)',
+    btnFreezeOk: 'freeze-notice card: Continue — dismiss the "Freeze used — streak safe" notice',
+    btnSurvey: 'main menu: Field survey row — open the weekly log card (points + milestone stamps)',
+    btnSurveyClose: 'survey card: Close',
+    btnLifeRefill: 'out-of-lives card: +1 life (rewarded-ad placeholder; offered once per appearance of the card, never past 5)',
+    btnLivesHome: 'out-of-lives card: Back to menu (Escape does the same; browsing is never blocked)',
   },
 
   async ready(page) {
@@ -83,10 +100,14 @@ top-left origin; its cells are listed absolute.`,
       return {
         level: GE.level, L: GE.L, pos: GE.pos, moves: GE.moves, movesLeft: GE.movesLeft,
         over: GE.over, paused: GE.paused, metrics: GE.metrics, rect: { left: r.left, top: r.top },
-        screens: { menu: vis('menu'), levels: vis('levels'), legend: vis('legend'), pause: vis('pauseModal'), win: vis('winModal'), fail: vis('failModal'), ad: vis('adModal'), streak: vis('streakModal') },
+        screens: { menu: vis('menu'), levels: vis('levels'), legend: vis('legend'), pause: vis('pauseModal'), win: vis('winModal'), fail: vis('failModal'), ad: vis('adModal'), streak: vis('streakModal'), freeze: vis('freezeModal'), lives: vis('livesModal'), survey: vis('surveyModal') },
         streak: (window.GE_MENU && window.GE_MENU.streak) || null,
+        quests: window.GE_MENU ? window.GE_MENU.questInfo() : null,
+        ladder: window.GE_MENU ? { ...window.GE_MENU.ladder } : null,
+        lives: { enabled: GE.livesEnabled, ...GE.livesInfo },
         winDaily: vis('winDaily') ? document.getElementById('winDaily').innerText.replace(/\s+/g, ' ').trim() : null,
-        menuDaily: vis('menu') ? (document.getElementById('fToday').textContent + ' · ' + document.getElementById('fStreak').textContent).trim() : null,
+        menuDaily: vis('menu') ? (document.getElementById('fStreak').innerText + ' · survey ' + document.getElementById('fSurvey').textContent).replace(/\s+/g, ' ').trim() : null,
+        menuQuests: vis('menu') ? [...document.querySelectorAll('#menuQuests .q')].map(r => r.innerText.replace(/\s+/g, ' ').trim()) : null,
         hint: GE.hint ? { block: GE.hint.bi, path: GE.hint.path, exit: GE.hint.side || null } : null,
         paper: GE.theme, skins: (window.GE_MENU && window.GE_MENU.prog.skins) || [],
         chestRow: vis('winChest') ? document.querySelector('#winChest').innerText.replace(/\s+/g, ' ').trim() : null,
@@ -111,8 +132,9 @@ top-left origin; its cells are listed absolute.`,
       gates: L.gates.map(g => ({ color: COLOR[g.color], side: g.side, lanes: `${g.start}..${g.start + g.len - 1}` })),
       winCard: raw.winText, failCard: raw.failText, rescueAvailable: raw.screens.fail && !raw.rescueHidden, hintShown: raw.hint,
       paper: raw.paper, skinsUnlocked: raw.skins, chestOpened: raw.chestRow,
-      daily: raw.streak ? { todayCount: raw.streak.todayCount, goal: 3, streakDays: raw.streak.len, bestStreak: raw.streak.best } : null,
-      winBeat: raw.winDaily, menuDailyRow: raw.menuDaily,
+      daily: raw.streak ? { streakDays: raw.streak.len, bestStreak: raw.streak.best, weekMarks: (raw.streak.marks || []).length, freezes: raw.streak.freezes || 0 } : null,
+      quests: raw.quests, ladder: raw.ladder, lives: raw.lives,
+      winBeat: raw.winDaily, menuDailyRow: raw.menuDaily, menuQuests: raw.menuQuests,
       hud: raw.hud, jsErrors: raw.errors.length, recentErrors: raw.errors.slice(-5),
     };
   },

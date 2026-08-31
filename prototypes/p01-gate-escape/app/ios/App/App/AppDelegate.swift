@@ -1,6 +1,7 @@
 import UIKit
 import WebKit
 import Capacitor
+import CoreHaptics
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -34,6 +35,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if let i = args.firstIndex(of: "-studio"), i + 1 < args.count, let url = URL(string: args[i + 1]) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in self?.startStudio(url) }
         }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in self?.attachHaptics() }
         return true
     }
 
@@ -90,6 +92,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 self.botTimer = nil
             }
         }
+    }
+
+    // MARK: - Haptics bridge
+    //
+    // game.js posts beat names ('pick', 'step', 'settle', 'exit', 'win', 'low', 'fail') to
+    // window.webkit.messageHandlers.haptics; HapticsDriver below plays them on prepared,
+    // reused UIKit feedback generators. Registered unconditionally: with no handler (web,
+    // or before attach) the JS side is a silent no-op.
+    private let haptics = HapticsDriver()
+    private func attachHaptics() {
+        guard let wv = webView else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in self?.attachHaptics() }
+            return
+        }
+        wv.configuration.userContentController.add(haptics, name: "haptics")
+        NSLog("HAPTICS bridge attached")
     }
 
     // MARK: - Studio bridge (launch with `-studio http://127.0.0.1:7411`)
@@ -150,5 +168,85 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool {
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
+    }
+}
+
+// MARK: - Haptics driver
+//
+// UIKit feedback generators as the default (selection < impact < notification), instances
+// reused and prepare()d around predictable follow-ups, per the hybrid-casual design playbook.
+// Core Haptics is reserved for the ONE signature material pattern — the gate-exit "whoosh"
+// (a soft transient into a short decaying slide); anywhere it is unsupported or fails, the
+// exit falls back to the plain medium impact forever. Simulators and non-haptic devices
+// no-op safely at the UIKit layer.
+final class HapticsDriver: NSObject, WKScriptMessageHandler {
+    private let selection = UISelectionFeedbackGenerator()
+    private let impactLight = UIImpactFeedbackGenerator(style: .light)
+    private let impactMedium = UIImpactFeedbackGenerator(style: .medium)
+    private let notification = UINotificationFeedbackGenerator()
+    private var engine: CHHapticEngine?
+    private var engineFailed = false
+
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        guard let kind = message.body as? String else { return }
+        DispatchQueue.main.async { [weak self] in self?.play(kind) }
+    }
+
+    private func play(_ kind: String) {
+        switch kind {
+        case "pick":
+            selection.selectionChanged()
+            selection.prepare()      // cell steps usually follow immediately
+            impactMedium.prepare()   // and an exit may end this very drag
+        case "step":
+            selection.selectionChanged()
+            selection.prepare()
+        case "settle":
+            impactLight.impactOccurred()
+            impactLight.prepare()
+        case "exit":
+            if !playWhoosh() { impactMedium.impactOccurred() }
+            impactMedium.prepare()
+            notification.prepare()   // a win or the fail sheet may be next
+        case "win":
+            notification.notificationOccurred(.success)
+        case "low":
+            notification.notificationOccurred(.warning)
+            notification.prepare()
+        case "fail":
+            notification.notificationOccurred(.error)
+        default:
+            break
+        }
+    }
+
+    private func playWhoosh() -> Bool {
+        guard !engineFailed, CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return false }
+        do {
+            if engine == nil {
+                let e = try CHHapticEngine()
+                e.resetHandler = { [weak self] in try? self?.engine?.start() }
+                e.stoppedHandler = { _ in }
+                engine = e
+            }
+            guard let engine = engine else { return false }
+            try engine.start()
+            let events = [
+                CHHapticEvent(eventType: .hapticTransient, parameters: [
+                    CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.7),
+                    CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.55),
+                ], relativeTime: 0),
+                CHHapticEvent(eventType: .hapticContinuous, parameters: [
+                    CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.3),
+                    CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.25),
+                ], relativeTime: 0.012, duration: 0.16),
+            ]
+            let player = try engine.makePlayer(with: CHHapticPattern(events: events, parameters: []))
+            try player.start(atTime: 0)
+            return true
+        } catch {
+            engineFailed = true
+            return false
+        }
     }
 }

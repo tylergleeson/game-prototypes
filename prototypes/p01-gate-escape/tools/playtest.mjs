@@ -83,6 +83,13 @@ for (let i = 0; i < solutions.length; i++) {
   }
 }
 
+// lives: default ON, and the 30-level par run consumes nothing (wins are free)
+{
+  const l = await page.evaluate(() => ({ on: window.GE.livesEnabled, n: window.GE.lives, cls: document.body.classList.contains('lives-on'), hud: document.getElementById('hudLives').hidden ? null : document.getElementById('hudLives').textContent }));
+  if (l.on && l.n === 5 && l.cls && l.hud === '♥♥♥♥♥') console.log('lives ok: default ON, HUD hearts 5/5 — the 30-level par run loses no lives');
+  else { failures++; console.error('lives par-run FAIL:', JSON.stringify(l)); }
+}
+
 // chests + paper skins (2026-08-31): 90/90 stars opens all three chests and unlocks every skin;
 // picking a paper swaps the CSS tokens and the canvas paper instantly; the default paper is the
 // build-before-skins pixel (rgba(255,255,255,.045) over the page → [255,255,255,11])
@@ -657,100 +664,382 @@ const burnLevel = () => page.evaluate(() => {
   else { failures++; console.error('chest open FAIL:', JSON.stringify({ c0, c1, c2, c3, c4 })); }
 }
 
-// ---------- streaks + daily goal (2026-08-31) ----------
-// same-day clears count today only; a next-day clear extends the streak; a 2-day gap breaks it
-// and offers ONE repair per streak; repair restores the streak (today's clear = len+1); decline
-// starts fresh at 1; the goal beat fires once per day; the menu row renders both states
+// haptics (native-only surface): in a browser both toggles stay hidden and every beat is a
+// silent no-op — the web build's behaviour is untouched
 {
-  await page.evaluate(() => { localStorage.removeItem('ge_streak'); localStorage.setItem('ge_stats', '{}'); });
-  await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L);
-  await page.evaluate(() => { window.__day = 0; const real = Date.now.bind(Date); window.GE.now = () => real() + window.__day * 864e5; });
-  const setDay = d => page.evaluate(d => { window.__day = d; }, d);
-  const winOnce = async () => {
-    await page.evaluate(() => window.GE.load(0));
-    await page.waitForTimeout(60);
-    await page.evaluate(sol => { for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side); }, solutions[0]);
-    await page.waitForSelector('#winModal:not([hidden])', { timeout: 2500 });
-  };
-  const S = () => page.evaluate(() => ({ ...window.GE_MENU.streak, stats: JSON.parse(localStorage.getItem('ge_stats') || '{}') }));
-  const dailyRow = () => page.evaluate(() => ({ hidden: document.getElementById('winDaily').hidden, stamp: document.getElementById('winDailyStamp').textContent, k: document.getElementById('winDailyK').textContent, v: document.getElementById('winDailyV').textContent }));
-  const menuRow = () => page.evaluate(() => ({ today: document.getElementById('fToday').textContent.trim(), streak: document.getElementById('fStreak').textContent }));
-  await winOnce(); const d1 = await S();
-  await winOnce(); const d2 = await S();
-  await winOnce(); await page.waitForTimeout(1400);
-  const d3 = await S(), d3row = await dailyRow();
-  await page.screenshot({ path: `${shotDir}/win-daily-goal.png` });
-  await winOnce(); await page.waitForTimeout(1400);
-  const d4 = await S(), d4row = await dailyRow();
-  const sameDay = d1.todayCount === 1 && d1.len === 1 && d2.todayCount === 2 && d2.len === 1 && d2.stats.streak_day === 1
-    && d3.todayCount === 3 && d3.len === 1 && d3.stats.daily_goal_met === 1 && !d3row.hidden && d3row.stamp === 'GOAL' && /^3 levels cleared today/.test(d3row.v)
-    && d4.todayCount === 4 && d4.stats.daily_goal_met === 1 && d4row.hidden;
-  if (sameDay) console.log('daily goal ok: clears count 1→4 today, streak stays 1; the GOAL beat fires once, on the 3rd clear');
-  else { failures++; console.error('daily goal FAIL:', JSON.stringify({ d1, d2, d3, d3row, d4, d4row })); }
-  await page.evaluate(() => window.GE_MENU.show('menu')); await page.waitForTimeout(80);
-  const row0 = await menuRow();
-  // next day: streak extends to 2 (its first BEST beat), the day counter resets
-  await setDay(1);
-  await winOnce(); await page.waitForTimeout(1400);
-  const n1 = await S(), n1row = await dailyRow();
-  const nextDay = n1.len === 2 && n1.best === 2 && n1.todayCount === 1 && n1.stats.streak_day === 2
-    && !n1row.hidden && n1row.stamp === 'BEST' && /2 days/.test(n1row.v)
-    && row0.today === '▮▮▮3/3' && row0.streak === '1 day';
-  if (nextDay) console.log('streak ok: next-day clear extends to 2 with the BEST beat; menu row was "▮▮▮3/3 · 1 day"');
-  else { failures++; console.error('streak next-day FAIL:', JSON.stringify({ n1, n1row, row0 })); }
-  // +2 days: exactly one day missed → the repair card, once; ad → repair; today's clear = len+1
-  // (dismiss the win card first: the offer only ever fires at launch, over the title block)
-  await page.click('#btnNext'); await page.waitForTimeout(80);
-  await page.evaluate(() => window.GE_MENU.show('menu')); await page.waitForTimeout(80);
-  await setDay(3);
+  const h = await page.evaluate(() => {
+    const r = { menuHidden: document.getElementById('btnHaptics').hidden, pauseHidden: document.getElementById('btnPauseHaptics').hidden, on: window.GE.hapticsOn };
+    for (const k of ['pick', 'step', 'settle', 'exit', 'win', 'low', 'fail']) window.GE.haptic(k); // must not throw
+    r.stillOn = window.GE.hapticsOn;
+    return r;
+  });
+  if (h.menuHidden && h.pauseHidden && h.on && h.stillOn) console.log('haptics ok: toggles hidden on web, all seven beats no-op, default on');
+  else { failures++; console.error('haptics FAIL:', JSON.stringify(h)); }
+}
+
+// ---------- design pass 2026-08-31: quests, streak freezes, ladder, motion, lives ----------
+// Shared helpers: an overridable clock (GE.now) and a fast L1 win. Motion goes off through the
+// same GE hook the pause card uses, which (a) exercises the reduced path everywhere and
+// (b) lands the win-card quiet rows at 0 ms so day simulation stays fast.
+const installClock = () => page.evaluate(() => {
+  window.__day = 0; const real = Date.now.bind(Date);
+  window.GE.now = () => real() + window.__day * 864e5;
+  window.GE.motionOn = false;
+});
+const setDay = d => page.evaluate(d => { window.__day = d; }, d);
+const readyAgain = async () => { await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L); await installClock(); };
+const winL1 = async (waste = 0) => {
+  await page.evaluate(() => window.GE.load(0));
+  await page.waitForTimeout(40);
+  await page.evaluate(n => { for (let i = 0; i < n; i++) { const p = window.GE.pos[0]; window.GE.dragVia(0, [[p[0] === 1 ? 0 : 1, p[1]]], null); } }, waste);
+  await page.evaluate(sol => { for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side); }, solutions[0]);
+  await page.waitForSelector('#winModal:not([hidden])', { timeout: 2500 });
+  await page.waitForTimeout(80); // reduced motion: the quiet row lands immediately
+};
+const S = () => page.evaluate(() => ({ ...window.GE_MENU.streak, stats: JSON.parse(localStorage.getItem('ge_stats') || '{}') }));
+const Q = () => page.evaluate(() => ({ info: window.GE_MENU.questInfo(), all: window.GE_MENU.quests.all }));
+const beatRow = () => page.evaluate(() => (document.getElementById('winDaily').hidden ? null
+  : { stamp: document.getElementById('winDailyStamp').textContent, k: document.getElementById('winDailyK').textContent, v: document.getElementById('winDailyV').textContent }));
+
+// quests: three roll deterministically from the local date; progress follows the win facts;
+// all three done banks a streak freeze (the win-card rows are quiet play beats)
+{
+  await page.evaluate(() => { for (const k of ['ge_streak', 'ge_quests', 'ge_ladder']) localStorage.removeItem(k); localStorage.setItem('ge_stats', '{}'); });
+  await readyAgain();
+  const ids0 = (await Q()).info.map(q => q.id);
+  await readyAgain();
+  const ids1 = (await Q()).info.map(q => q.id);
+  if (ids0.length === 3 && new Set(ids0).size === 3 && JSON.stringify(ids0) === JSON.stringify(ids1))
+    console.log(`quests ok: 3 distinct quests roll deterministically from the date (${ids0.join(', ')})`);
+  else { failures++; console.error('quests roll FAIL:', JSON.stringify({ ids0, ids1 })); }
+  // an L1 par win advances every template by a known amount — drive to all-done against the model
+  const GAIN = { clear3: 1, clear5: 1, stars6: 3, stars9: 3, par2: 1, noundo1: 1, nohint2: 1, blocks12: 1 };
+  const target = Object.fromEntries((await Q()).info.map(q => [q.id, q.target]));
+  const model = Object.fromEntries(ids0.map(id => [id, 0]));
+  let wins = 0, modelOk = true, rowsOk = true, allDoneRow = null, sawQuestRow = false;
+  for (let i = 0; i < 30; i++) {
+    const doneBefore = ids0.filter(id => model[id] >= target[id]);
+    await winL1(); wins++;
+    for (const id of ids0) model[id] = Math.min(target[id], model[id] + GAIN[id]);
+    const justDone = ids0.filter(id => model[id] >= target[id] && !doneBefore.includes(id));
+    const allNow = ids0.every(id => model[id] >= target[id]);
+    const expectStamp = allNow && justDone.length ? 'DONE' : justDone.length ? 'QUEST' : null;
+    const q = await Q();
+    for (const { id, prog, done } of q.info) if (prog !== model[id] || done !== (model[id] >= target[id])) modelOk = false;
+    const row = await beatRow();
+    if ((row ? row.stamp : null) !== expectStamp) rowsOk = false;
+    if (row && row.stamp === 'QUEST') sawQuestRow = true;
+    if (row && row.stamp === 'DONE') allDoneRow = row;
+    if (q.all) break;
+  }
+  const st1 = await S();
+  const menuQ = await page.evaluate(() => {
+    window.GE_MENU.show('menu');
+    return { rows: [...document.querySelectorAll('#menuQuests .q')].map(r => ({ done: r.classList.contains('done'), stamp: !!r.querySelector('.qstamp') })),
+      all: (document.querySelector('#menuQuests .qh b') || {}).textContent || null,
+      streakCell: document.getElementById('fStreak').innerText.replace(/\s+/g, ' ').trim() };
+  });
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: `${shotDir}/menu-quests-alldone.png` });
+  const ok = modelOk && rowsOk && allDoneRow && /Streak freeze banked · 1 held/.test(allDoneRow.v)
+    && st1.freezes === 1 && st1.stats.quest_done === 3 && st1.stats.quests_all_done === 1
+    && menuQ.rows.length === 3 && menuQ.rows.every(r => r.done && r.stamp) && menuQ.all === 'ALL DONE' && /1 freeze held/.test(menuQ.streakCell);
+  if (ok) console.log(`quests ok: progress matches the model across ${wins} par wins${sawQuestRow ? ' (QUEST row on completions)' : ''}; DONE row banks freeze #1; quest_done ×3, quests_all_done ×1; menu stamps + ALL DONE + freeze shown on the streak row`);
+  else { failures++; console.error('quests progress FAIL:', JSON.stringify({ modelOk, rowsOk, wins, allDoneRow, freezes: st1.freezes, qd: st1.stats.quest_done, qad: st1.stats.quests_all_done, menuQ })); }
+}
+
+// a missed day consumes a banked freeze automatically: calm notice at launch, streak intact
+{
+  await page.evaluate(() => document.getElementById('btnNext').click());
+  await page.waitForTimeout(80);
+  await setDay(2); // day 1 had no clear
+  const fr = await page.evaluate(() => ({ r: window.GE_MENU.checkStreak(), up: !document.getElementById('freezeModal').hidden, sub: document.getElementById('freezeSub').textContent }));
+  await page.waitForTimeout(350);
+  await page.screenshot({ path: `${shotDir}/freeze-used-notice.png` });
+  await page.click('#btnFreezeOk');
+  const st2 = await S();
+  await winL1();
+  const st3 = await S();
+  if (fr.r === 'freeze' && fr.up && fr.sub === 'Freeze used — streak safe · 0 left' && st2.freezes === 0 && st2.stats.streak_freeze_used === 1 && st3.len === 2)
+    console.log(`streak freeze ok: a missed day auto-consumed the banked freeze ("${fr.sub}"); today's clear lands len 2`);
+  else { failures++; console.error('streak freeze FAIL:', JSON.stringify({ fr, f: st2.freezes, used: st2.stats.streak_freeze_used, len3: st3.len })); }
+}
+
+// the freeze bank caps at 2 held: all-done with a full bank banks nothing (and says so honestly)
+{
+  await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('ge_streak')); s.freezes = 2; localStorage.setItem('ge_streak', JSON.stringify(s)); });
+  await readyAgain(); await setDay(3);
+  let capRow = null;
+  for (let i = 0; i < 30; i++) {
+    await winL1();
+    const row = await beatRow();
+    if (row && row.stamp === 'DONE') capRow = row;
+    if ((await Q()).all) break;
+  }
+  const st4 = await S();
+  if (st4.freezes === 2 && capRow && /All 3 daily quests done/.test(capRow.v) && st4.stats.quests_all_done === 2)
+    console.log('freeze cap ok: with 2 freezes held, all-done banks nothing ("All 3 daily quests done")');
+  else { failures++; console.error('freeze cap FAIL:', JSON.stringify({ f: st4.freezes, capRow, qad: st4.stats.quests_all_done })); }
+}
+
+// the ad repair remains the fallback when no freeze is held — once per streak, decline = fresh
+{
+  await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('ge_streak')); s.freezes = 0; localStorage.setItem('ge_streak', JSON.stringify(s)); });
+  await readyAgain(); await setDay(5);
   const off1 = await page.evaluate(() => window.GE_MENU.checkStreak());
   const card = await page.evaluate(() => ({ up: !document.getElementById('streakModal').hidden, sub: document.getElementById('streakSub').textContent }));
-  await page.waitForTimeout(450); // card entrance + menu fade settle before the shot
+  await page.waitForTimeout(450);
   await page.screenshot({ path: `${shotDir}/streak-repair-card.png` });
   await page.click('#btnStreakRepair');
   const adUp = await page.evaluate(() => window.GE.adUp);
   await page.waitForFunction(() => !window.GE.adUp && document.getElementById('streakModal').hidden, null, { timeout: 4000 });
   const rep = await S();
   const reOffer = await page.evaluate(() => window.GE_MENU.checkStreak()); // gap is 1 now: no card
-  await winOnce(); const rep2 = await S();
-  const repairOk = off1 === true && card.up && /^Your 2-day streak — repair it\?$/.test(card.sub) && adUp
-    && rep.len === 2 && !!rep.repairUsedFor && rep.stats.streak_repair_offered === 1 && rep.stats.streak_repair_taken === 1
-    && reOffer === false && rep2.len === 3 && rep2.stats.streak_day === 3;
-  if (repairOk) console.log('streak repair ok: one missed day offers the card once; ad → repaired; today\'s clear lands len 3 (= len+1)');
-  else { failures++; console.error('streak repair FAIL:', JSON.stringify({ off1, card, adUp, rep, reOffer, rep2 })); }
-  // a second miss on the SAME streak gets no second repair; then a NEW streak earns its own
-  // offer, and declining starts fresh at 1 with today's clear
-  await setDay(5);
+  await winL1(); const rep2 = await S();
+  const repairOk = off1 === true && card.up && /^Your 3-day streak — repair it\?$/.test(card.sub) && adUp
+    && rep.len === 3 && !!rep.repairUsedFor && rep.stats.streak_repair_offered === 1 && rep.stats.streak_repair_taken === 1
+    && reOffer === false && rep2.len === 4;
+  if (repairOk) console.log('streak repair ok: no freeze → one missed day offers the card once; ad → repaired; today\'s clear lands len 4 (= len+1)');
+  else { failures++; console.error('streak repair FAIL:', JSON.stringify({ off1, card, adUp, repLen: rep.len, used: rep.repairUsedFor, offered: rep.stats.streak_repair_offered, taken: rep.stats.streak_repair_taken, reOffer, rep2len: rep2.len })); }
+  // a second miss on the SAME streak gets no second repair; a NEW streak earns its own; decline = fresh
+  await setDay(7);
   const off2 = await page.evaluate(() => window.GE_MENU.checkStreak());
-  await winOnce(); const fresh = await S();
-  await setDay(6); await winOnce(); const s6 = await S();
-  await setDay(8);
+  await winL1(); const fresh = await S();
+  await setDay(8); await winL1(); const s8 = await S();
+  await setDay(10);
   const off3 = await page.evaluate(() => window.GE_MENU.checkStreak());
   await page.click('#btnStreakDecline');
   const dec = await S();
-  await winOnce(); const s8 = await S();
-  const onceOk = off2 === false && fresh.len === 1 && !fresh.repairUsedFor && s6.len === 2
+  await winL1(); const s10 = await S();
+  const onceOk = off2 === false && fresh.len === 1 && !fresh.repairUsedFor && s8.len === 2
     && off3 === true && dec.len === 0 && dec.lastDate === null && dec.stats.streak_repair_declined === 1
-    && s8.len === 1 && s8.stats.streak_repair_offered === 2 && s8.best === 3;
+    && s10.len === 1 && s10.stats.streak_repair_offered === 2;
   if (onceOk) console.log('streak repair ok: once per streak (2nd miss → no offer, fresh at 1); a new streak is offered its own; decline → fresh at 1');
-  else { failures++; console.error('streak once/decline FAIL:', JSON.stringify({ off2, fresh, s6, off3, dec, s8 })); }
-  // menu row renders both persisted states across a real reload (real clock)
-  await page.evaluate(() => { localStorage.removeItem('ge_streak'); });
+  else { failures++; console.error('streak once/decline FAIL:', JSON.stringify({ off2, freshLen: fresh.len, s8len: s8.len, off3, decLen: dec.len, decLast: dec.lastDate, declined: dec.stats.streak_repair_declined, s10len: s10.len, offered: s10.stats.streak_repair_offered })); }
+}
+
+// menu rows: quests fresh, streak "n of last 7 days" + freezes held, persisted across a real reload
+{
+  await page.evaluate(() => { for (const k of ['ge_streak', 'ge_quests']) localStorage.removeItem(k); });
   await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L);
   await page.waitForTimeout(400);
-  const rowFresh = await menuRow();
-  await page.screenshot({ path: `${shotDir}/menu-daily-fresh.png` });
+  const rowFresh = await page.evaluate(() => ({ streak: document.getElementById('fStreak').innerText.replace(/\s+/g, ' ').trim(), rows: document.querySelectorAll('#menuQuests .q').length, done: document.querySelectorAll('#menuQuests .q.done').length, bars: [...document.querySelectorAll('#menuQuests .qbar i')].map(b => b.style.width) }));
+  await page.screenshot({ path: `${shotDir}/menu-quests-fresh.png` });
   await page.evaluate(() => {
-    const day = t => { const x = new Date(t); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
-    localStorage.setItem('ge_streak', JSON.stringify({ len: 4, best: 4, lastDate: day(Date.now()), todayCount: 2, todayDate: day(Date.now()), repairUsedFor: null }));
+    const day = o => { const x = new Date(Date.now() - o * 864e5); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
+    localStorage.setItem('ge_streak', JSON.stringify({ len: 4, best: 4, lastDate: day(0), repairUsedFor: null, freezes: 1, marks: [day(0), day(1), day(2), day(4)] }));
   });
   await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L);
   await page.waitForTimeout(400);
-  const row4 = await menuRow();
-  await page.screenshot({ path: `${shotDir}/menu-daily-streak4.png` });
-  if (rowFresh.today === '▯▯▯0/3' && rowFresh.streak === '—' && row4.today === '▮▮▯2/3' && row4.streak === '4 days')
-    console.log('menu daily row ok: fresh "▯▯▯0/3 · —", live "▮▮▯2/3 · 4 days" (persisted across reload)');
-  else { failures++; console.error('menu daily row FAIL:', JSON.stringify({ rowFresh, row4 })); }
+  const row4 = await page.evaluate(() => document.getElementById('fStreak').innerText.replace(/\s+/g, ' ').trim());
+  await page.screenshot({ path: `${shotDir}/menu-quests-live.png` });
+  if (rowFresh.rows === 3 && rowFresh.done === 0 && /^—/.test(rowFresh.streak) && /0 of last 7 days/.test(rowFresh.streak) && rowFresh.bars.every(w => w === '0%')
+    && /^4 days/.test(row4) && /4 of last 7 days/.test(row4) && /1 freeze held/.test(row4))
+    console.log(`menu rows ok: fresh "${rowFresh.streak}" with 3 empty quests; live "${row4}" (persisted across reload)`);
+  else { failures++; console.error('menu rows FAIL:', JSON.stringify({ rowFresh, row4 })); }
+}
+
+// ---------- Field Survey (weekly personal ladder) ----------
+// 1 point per clear, +1 at par; stamps at 3/7/12/20; the 20-pointer is a surveyor's mark on the
+// streak row for the rest of the week; a new ISO week resets and keeps last week's line only
+{
+  await page.evaluate(() => { localStorage.removeItem('ge_ladder'); localStorage.setItem('ge_stats', '{}'); });
+  await readyAgain();
+  await winL1();  // par: 1 + 1 bonus
+  const l1 = await page.evaluate(() => ({ ...window.GE_MENU.ladder }));
+  await winL1(2); // 3 moves: sub-par, +1 → 3 → first milestone
+  const l2 = await page.evaluate(() => ({ ...window.GE_MENU.ladder, stats: JSON.parse(localStorage.getItem('ge_stats')) }));
+  await page.evaluate(() => window.GE_MENU.show('menu'));
+  await page.waitForTimeout(300);
+  const mid = await page.evaluate(() => {
+    document.getElementById('btnSurvey').click();
+    return { pts: document.getElementById('fSurvey').textContent, sub: document.getElementById('surveySub').textContent,
+      got: [...document.querySelectorAll('#surveyTrack .ms.got')].map(m => m.dataset.ms), last: document.getElementById('surveyLast').textContent };
+  });
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: `${shotDir}/survey-card-midweek.png` });
+  await page.click('#btnSurveyClose');
+  const midOk = l1.pts === 2 && l1.ms.length === 0 && l2.pts === 3 && JSON.stringify(l2.ms) === '[3]' && l2.stats.ladder_point === 2 && l2.stats.ladder_milestone === 1
+    && mid.pts === '3 pts' && /^3 points this week/.test(mid.sub) && JSON.stringify(mid.got) === '["3"]' && /A fresh survey/.test(mid.last);
+  if (midOk) console.log('ladder ok: par win +2, sub-par +1; milestone 3 stamped; the survey card renders points + stamps');
+  else { failures++; console.error('ladder mid FAIL:', JSON.stringify({ l1, l2pts: l2.pts, l2ms: l2.ms, lp: l2.stats.ladder_point, lm: l2.stats.ladder_milestone, mid })); }
+  for (let i = 0; i < 12; i++) { const pts = await page.evaluate(() => window.GE_MENU.ladder.pts); if (pts >= 20) break; await winL1(); }
+  const l3 = await page.evaluate(() => ({ ...window.GE_MENU.ladder, stats: JSON.parse(localStorage.getItem('ge_stats')) }));
+  const top = await page.evaluate(() => {
+    window.GE_MENU.show('menu');
+    document.getElementById('btnSurvey').click();
+    return { mark: !!document.querySelector('#fStreak .mark'), got: [...document.querySelectorAll('#surveyTrack .ms.got')].map(m => m.dataset.ms),
+      m20: !!document.querySelector('#surveyTrack .ms.got[data-ms="20"] .mark') };
+  });
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: `${shotDir}/survey-card-20.png` });
+  await page.click('#btnSurveyClose');
+  const topOk = l3.pts >= 20 && JSON.stringify(l3.ms) === '[3,7,12,20]' && l3.stats.ladder_milestone === 4 && top.mark && top.got.length === 4 && top.m20;
+  if (topOk) console.log(`ladder ok: ${l3.pts} points → all four milestones stamped; the 20-point surveyor's mark (⌖) sits on the streak row`);
+  else { failures++; console.error('ladder top FAIL:', JSON.stringify({ pts: l3.pts, ms: l3.ms, lm: l3.stats.ladder_milestone, top })); }
+  await setDay(7);
+  const wk = await page.evaluate(() => {
+    const l = { ...window.GE_MENU.ladder }; // the getter rolls the week
+    window.GE_MENU.refreshDaily();
+    document.getElementById('btnSurvey').click();
+    return { pts: l.pts, ms: l.ms, last: l.last, line: document.getElementById('surveyLast').textContent, mark: !!document.querySelector('#fStreak .mark') };
+  });
+  await page.click('#btnSurveyClose');
+  if (wk.pts === 0 && wk.ms.length === 0 && wk.last && wk.last.pts === l3.pts && wk.line === `Last week: ${l3.pts} points` && !wk.mark)
+    console.log(`ladder ok: week rollover resets to 0 and keeps "Last week: ${l3.pts} points"; the mark comes off the streak row`);
+  else { failures++; console.error('ladder week FAIL:', JSON.stringify(wk)); }
+}
+
+// ---------- Motion toggle (pause card) ----------
+// off forces the reduced path: body class + GE.reduced + win-card buttons live immediately;
+// persisted in ge_motion; default on (the OS preference is honoured separately via matchMedia)
+{
+  await page.evaluate(() => localStorage.removeItem('ge_motion'));
+  await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L);
+  const m0 = await page.evaluate(() => ({ on: window.GE.motionOn, reduced: window.GE.reduced }));
+  await page.evaluate(() => window.GE.load(0)); await page.waitForTimeout(60);
+  await page.click('#btnMenu');
+  await page.click('#btnPauseMotion');
+  const m1 = await page.evaluate(() => ({ label: document.getElementById('btnPauseMotion').textContent, cls: document.body.classList.contains('reduce-motion'), reduced: window.GE.reduced, ls: localStorage.getItem('ge_motion') }));
+  await page.screenshot({ path: `${shotDir}/pause-motion-off.png` });
+  await page.click('#btnResume');
+  await page.evaluate(sol => { for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side); }, solutions[0]);
+  await page.waitForSelector('#winModal:not([hidden])', { timeout: 2500 });
+  const m2 = await page.evaluate(() => ({ nextLive: !document.getElementById('btnNext').disabled })); // reduced: stars land at once, buttons live immediately
+  await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L);
+  const m3 = await page.evaluate(() => ({ on: window.GE.motionOn, cls: document.body.classList.contains('reduce-motion') }));
+  await page.evaluate(() => { window.GE.motionOn = true; localStorage.setItem('ge_motion', '1'); });
+  if (m0.on && !m0.reduced && m1.label === 'Motion: off' && m1.cls && m1.reduced && m1.ls === '0' && m2.nextLive && !m3.on && m3.cls)
+    console.log('motion ok: pause toggle forces the reduced path (body class + GE.reduced + instant win-card buttons) and persists; default on');
+  else { failures++; console.error('motion FAIL:', JSON.stringify({ m0, m1, m2, m3 })); }
+}
+
+// ---------- lives (flag-gated, default ON) ----------
+// L1–5 never cost; from L6 a fail ending in Retry costs one; the rescue saves the attempt;
+// Restart mid-level and wins are free; refill is one life / 25 min off a single anchor
+// (clock-change-safe); the empty state is a calm card that never blocks browsing; ?lives=0
+// removes everything and GE.livesEnabled restores it live
+{
+  const lctx = await browser.newContext({ viewport: { width: 420, height: 780 } });
+  const lp = await lctx.newPage();
+  const lReady = async () => { await lp.waitForFunction(() => window.GE && window.GE.L); await lp.evaluate(() => { window.__min = 0; const real = Date.now.bind(Date); window.GE.now = () => real() + window.__min * 60000; window.GE.motionOn = false; }); };
+  const setMin = m => lp.evaluate(m => { window.__min = m; }, m);
+  const burnOn = p => p.evaluate(() => {
+    const L = window.GE.L;
+    for (let m = 0; m < L.moves + 2 && window.GE.movesLeft > 0; m++) {
+      let done = false;
+      for (let bi = 0; bi < L.blocks.length && !done; bi++) {
+        const p2 = window.GE.pos[bi]; if (!p2) continue;
+        for (const [tx, ty] of [[p2[0] + 1, p2[1]], [p2[0] - 1, p2[1]], [p2[0], p2[1] + 1], [p2[0], p2[1] - 1]]) {
+          const b = JSON.stringify(window.GE.pos[bi]); window.GE.dragVia(bi, [[tx, ty]], null);
+          if (JSON.stringify(window.GE.pos[bi]) !== b) { done = true; break; }
+        }
+      }
+      if (!done) break;
+    }
+  });
+  const failNow = async () => { await burnOn(lp); await lp.waitForSelector('#failModal:not([hidden])', { timeout: 3000 }); };
+  const LV = () => lp.evaluate(() => ({ n: window.GE.lives, info: window.GE.livesInfo, ls: JSON.parse(localStorage.getItem('ge_lives') || 'null'), stats: JSON.parse(localStorage.getItem('ge_stats') || '{}'), hud: document.getElementById('hudLives').textContent }));
+  await lp.goto('file://' + root + 'index.html');
+  await lReady();
+  // L1–5 are the runway: fail L3 and Retry — nothing is charged
+  await lp.evaluate(() => { localStorage.setItem('ge_stats', '{}'); window.GE.load(2); });
+  await lp.waitForTimeout(60);
+  await failNow();
+  await lp.click('#btnRetry'); await lp.waitForTimeout(80);
+  const free = await LV();
+  if (free.n === 5 && !free.stats.life_lost && !free.ls) console.log('lives ok: L3 fail + Retry costs nothing (levels 1–5 are the runway)');
+  else { failures++; console.error('lives free-zone FAIL:', JSON.stringify(free)); }
+  // L6 fail + Retry costs one; the retry itself proceeds
+  await lp.evaluate(() => window.GE.load(5)); await lp.waitForTimeout(60);
+  await failNow();
+  await lp.click('#btnRetry'); await lp.waitForTimeout(120);
+  const spent = await LV();
+  const reloaded = await lp.evaluate(() => ({ lvl: window.GE.level, moves: window.GE.moves, over: window.GE.over }));
+  await lp.screenshot({ path: `${shotDir}/lives-hud.png` });
+  if (spent.n === 4 && spent.stats.life_lost === 1 && spent.ls && spent.ls.n === 4 && typeof spent.ls.anchor === 'number' && spent.hud === '♥♥♥♥♡' && reloaded.lvl === 5 && reloaded.moves === 0 && !reloaded.over)
+    console.log('lives ok: L6 fail + Retry costs one (4/5, single anchor set, life_lost tracked); the retry proceeds');
+  else { failures++; console.error('lives retry FAIL:', JSON.stringify({ spent, reloaded })); }
+  // the rescue saves the attempt (no life); Restart mid-level is free too
+  await failNow();
+  await lp.click('#btnRescue');
+  await lp.waitForFunction(() => !window.GE.adUp, null, { timeout: 4000 });
+  const resc = await LV();
+  const rescState = await lp.evaluate(() => ({ left: window.GE.movesLeft, over: window.GE.over }));
+  await lp.evaluate(() => document.getElementById('btnRestart').click()); await lp.waitForTimeout(80);
+  const rest = await LV();
+  if (resc.n === 4 && rescState.left === 3 && !rescState.over && rest.n === 4 && rest.stats.life_lost === 1)
+    console.log('lives ok: the rescue preserves the life (+3 moves, still 4/5); Restart mid-level costs nothing');
+  else { failures++; console.error('lives rescue/restart FAIL:', JSON.stringify({ rescN: resc.n, rescState, restN: rest.n })); }
+  // anchor refill: 1 / 25 min from a single anchor; clamps at 5 (anchor cleared); label format;
+  // a backwards clock never accuses (count kept, anchor re-based)
+  await lp.evaluate(() => localStorage.setItem('ge_lives', JSON.stringify({ n: 1, anchor: Date.now() })));
+  await lp.reload(); await lReady();
+  const r0 = await lp.evaluate(() => window.GE.lives);
+  await setMin(26); const r1 = await LV();
+  await setMin(51); const r2 = await LV();
+  await setMin(500); const r3 = await LV();
+  const label = r1.info.fullIn;
+  await lp.evaluate(() => localStorage.setItem('ge_lives', JSON.stringify({ n: 2, anchor: Date.now() + 3600000 })));
+  await lp.reload(); await lReady();
+  const back = await lp.evaluate(() => ({ n: window.GE.lives, anchorPast: JSON.parse(localStorage.getItem('ge_lives')).anchor <= Date.now() }));
+  const refillOk = r0 === 1 && r1.n === 2 && r2.n === 3 && r3.n === 5 && r3.ls.anchor === null
+    && /^(\d+m|\d+h \d+m)$/.test(label) && back.n === 2 && back.anchorPast;
+  if (refillOk) console.log(`lives ok: anchor refill 1→2→3 at 25-minute steps, clamps at 5/5 (anchor cleared); "full in" label "${label}"; a backwards clock keeps the 2 and re-bases the anchor`);
+  else { failures++; console.error('lives refill FAIL:', JSON.stringify({ r0, r1n: r1.n, r2n: r2.n, r3n: r3.n, r3anchor: r3.ls.anchor, label, back })); }
+  // empty state: calm card; the menu, level browsing and L1–5 stay open
+  await lp.evaluate(() => { localStorage.setItem('ge_lives', JSON.stringify({ n: 0, anchor: Date.now() })); localStorage.setItem('ge_level', '5'); localStorage.setItem('ge_prog', JSON.stringify({ u: 5, s: [3, 3, 3, 3, 3] })); localStorage.setItem('ge_stats', '{}'); });
+  await lp.reload(); await lReady();
+  await lp.click('#btnPlay');
+  const e0 = await lp.evaluate(() => ({ card: !document.getElementById('livesModal').hidden, sub: document.getElementById('livesSub').textContent, refill: !document.getElementById('btnLifeRefill').hidden, stats: JSON.parse(localStorage.getItem('ge_stats')) }));
+  await lp.waitForTimeout(350);
+  await lp.screenshot({ path: `${shotDir}/lives-empty-card.png` });
+  await lp.click('#btnLivesHome');
+  const b0 = await lp.evaluate(() => ({ menu: !document.getElementById('menu').hidden, card: !document.getElementById('livesModal').hidden }));
+  await lp.click('#btnLevels');
+  await lp.click('#levelGrid .tile[data-level="3"]'); await lp.waitForTimeout(60);
+  const b1 = await lp.evaluate(() => ({ lvl: window.GE.level, card: !document.getElementById('livesModal').hidden }));
+  const emptyOk = e0.card && /^Next life in \d+m · full in (\d+m|\d+h \d+m)$/.test(e0.sub) && e0.refill && e0.stats.lives_empty === 1
+    && b0.menu && !b0.card && b1.lvl === 2 && !b1.card;
+  if (emptyOk) console.log(`lives ok: out-of-lives card is calm and informational ("${e0.sub}"); menu, levels and L1–5 stay open`);
+  else { failures++; console.error('lives empty FAIL:', JSON.stringify({ e0, b0, b1 })); }
+  // rewarded refill: +1 once per card appearance (re-offered on the next), entry consumes
+  // nothing, Retry spends the granted life, the next empty state offers a refill again
+  await lp.evaluate(() => window.GE_MENU.show('levels'));
+  await lp.click('#levelGrid .tile[data-level="6"]'); // gated entry at 0 lives → the card again (appearance #2)
+  await lp.click('#btnLifeRefill');
+  const adDuring = await lp.evaluate(() => ({ ad: window.GE.adUp, n: window.GE.lives }));
+  await lp.waitForFunction(() => !window.GE.adUp, null, { timeout: 4000 });
+  const g1 = await LV();
+  const cardGone = await lp.evaluate(() => document.getElementById('livesModal').hidden);
+  await lp.click('#levelGrid .tile[data-level="6"]'); await lp.waitForTimeout(60); // enter L6 with the granted life
+  const entered = await lp.evaluate(() => ({ lvl: window.GE.level, menu: !document.getElementById('menu').hidden }));
+  await failNow();
+  await lp.click('#btnRetry'); await lp.waitForTimeout(80); // spends the granted life (1 → 0), retry proceeds
+  await failNow();
+  await lp.click('#btnRetry'); await lp.waitForTimeout(80); // at 0: the card again (appearance #3)
+  const again = await lp.evaluate(() => ({ card: !document.getElementById('livesModal').hidden, refill: !document.getElementById('btnLifeRefill').hidden, n: window.GE.lives, stats: JSON.parse(localStorage.getItem('ge_stats')) }));
+  const grantOk = adDuring.ad && adDuring.n === 0 && g1.n === 1 && cardGone && g1.stats.life_ad_refill === 1
+    && entered.lvl === 5 && !entered.menu && again.card && again.refill && again.n === 0 && again.stats.lives_empty === 3 && again.stats.life_lost === 1;
+  if (grantOk) console.log('lives ok: rewarded +1 lands after the ad, once per card appearance (re-offered on the next); entry is free, Retry spends the granted life');
+  else { failures++; console.error('lives ad-refill FAIL:', JSON.stringify({ adDuring, g1n: g1.n, cardGone, refills: g1.stats.life_ad_refill, entered, again })); }
+  // flag off: ?lives=0 removes every surface and consumes nothing; the GE setter restores live
+  const fp = await lctx.newPage();
+  await fp.goto('file://' + root + 'index.html?lives=0');
+  await fp.waitForFunction(() => window.GE && window.GE.L);
+  const f0 = await fp.evaluate(() => ({ on: window.GE.livesEnabled, cls: document.body.classList.contains('lives-on'), hud: document.getElementById('hudLives').hidden, menuBox: document.getElementById('menuLivesBox').hidden }));
+  await fp.evaluate(() => { localStorage.setItem('ge_stats', '{}'); window.GE.load(5); });
+  await fp.waitForTimeout(60);
+  await burnOn(fp);
+  await fp.waitForSelector('#failModal:not([hidden])', { timeout: 3000 });
+  await fp.click('#btnRetry'); await fp.waitForTimeout(80);
+  const f1 = await fp.evaluate(() => ({ stats: JSON.parse(localStorage.getItem('ge_stats')), lvl: window.GE.level, moves: window.GE.moves, card: !document.getElementById('livesModal').hidden }));
+  await fp.evaluate(() => { window.GE.livesEnabled = true; });
+  const f2 = await fp.evaluate(() => ({ on: window.GE.livesEnabled, hud: document.getElementById('hudLives').hidden, n: window.GE.lives }));
+  const flagOk = !f0.on && !f0.cls && f0.hud && f0.menuBox && !f1.stats.life_lost && f1.lvl === 5 && f1.moves === 0 && !f1.card && f2.on && !f2.hud && f2.n === 0;
+  if (flagOk) console.log('lives ok: ?lives=0 removes every lives surface and consumes nothing (Retry free at "0"); GE.livesEnabled=true restores them live');
+  else { failures++; console.error('lives flag FAIL:', JSON.stringify({ f0, f1lost: f1.stats.life_lost, f1lvl: f1.lvl, f1moves: f1.moves, f1card: f1.card, f2 })); }
+  await lctx.close();
 }
 
 // ---------- beacon (2026-08-31) ----------

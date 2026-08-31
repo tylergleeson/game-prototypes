@@ -87,6 +87,43 @@
     $('btnPauseSound').textContent = 'Sound: ' + (GE.soundOn ? 'on' : 'off');
   }
 
+  // ---------- haptics (native shell only) ----------
+  // an independent toggle beside Sound. In a plain browser the buttons stay hidden and the
+  // engine's haptic() is a no-op, so the web build is behaviourally untouched. Persisted like
+  // sound; turning it on plays one sample tick so the setting confirms itself on hardware.
+  const canHaptics = (() => {
+    try { return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }
+    catch (e) { return false; }
+  })();
+  try { GE.hapticsOn = localStorage.getItem('ge_haptics') !== '0'; } catch (e) {}
+  function refreshHaptics() {
+    $('btnHaptics').hidden = $('btnPauseHaptics').hidden = !canHaptics;
+    $('fHaptics').textContent = GE.hapticsOn ? 'on' : 'off';
+    $('btnPauseHaptics').textContent = 'Haptics: ' + (GE.hapticsOn ? 'on' : 'off');
+  }
+  function setHaptics(on) {
+    GE.hapticsOn = on;
+    try { localStorage.setItem('ge_haptics', on ? '1' : '0'); } catch (e) {}
+    refreshHaptics();
+    if (on) GE.haptic('pick');
+  }
+  $('btnHaptics').onclick = () => setHaptics(!GE.hapticsOn);
+  $('btnPauseHaptics').onclick = () => setHaptics(!GE.hapticsOn);
+  refreshHaptics();
+
+  // ---------- motion ----------
+  // The OS "reduce motion" preference always wins (CSS media query + the canvas checks); this
+  // toggle forces the same calm path when the OS setting is off. Persisted like sound.
+  try { GE.motionOn = localStorage.getItem('ge_motion') !== '0'; } catch (e) {}
+  function refreshMotion() { $('btnPauseMotion').textContent = 'Motion: ' + (GE.motionOn ? 'on' : 'off'); }
+  function setMotionPref(on) {
+    GE.motionOn = on;
+    try { localStorage.setItem('ge_motion', on ? '1' : '0'); } catch (e) {}
+    refreshMotion();
+  }
+  $('btnPauseMotion').onclick = () => setMotionPref(!GE.motionOn);
+  refreshMotion();
+
   // ---------- screens ----------
   let legendAnim = false, demoT0 = 0;
   function show(name) {
@@ -136,7 +173,7 @@
       b.dataset.level = i + 1; // tiles are addressed by level, not by grid position (headers are children too)
       b.disabled = locked;
       b.innerHTML = `<span>${String(i + 1).padStart(2, '0')}</span><span class="st">${prog.s[i] ? '★'.repeat(prog.s[i]) : ''}</span>`;
-      if (!locked) b.onclick = () => GE.load(i);
+      if (!locked) b.onclick = () => { if (GE.livesGate(i)) GE.load(i); };
       g.appendChild(b);
     }
     $('levelsNote').textContent = `${prog.s.filter(Boolean).length} of ${N} cleared · ${starsTotal()} stars`;
@@ -165,6 +202,8 @@
     GE.paused = true;
     $('pauseSub').textContent = `Level ${GE.level + 1} · ${GE.movesLeft} moves left`;
     refreshSound();
+    refreshMotion();
+    refreshHaptics();
     refreshPapers();
     pauseModal.hidden = false;
   }
@@ -178,6 +217,9 @@
   $('btnPauseHome').onclick = () => { pauseModal.hidden = true; show('menu'); };
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
+    if (!$('surveyModal').hidden) { $('btnSurveyClose').click(); return; }
+    if (!$('freezeModal').hidden) { $('btnFreezeOk').click(); return; }
+    if (!$('livesModal').hidden) { $('btnLivesHome').click(); return; }
     if (!$('streakModal').hidden) { $('btnStreakDecline').click(); return; } // dismiss = decline (fresh streak)
     if (!screens.legend.hidden) $('btnLegendBack').click();
     else if (!screens.levels.hidden) $('btnLevelsBack').click();
@@ -185,7 +227,12 @@
   });
 
   // ---------- title block buttons ----------
-  $('btnPlay').onclick = () => { if (resumable()) { show(null); resume(); } else GE.load(GE.level); };
+  $('btnPlay').onclick = () => {
+    if (resumable()) { show(null); resume(); return; }
+    if (!GE.livesGate(GE.level)) return; // out of lives on L6+: the calm card, browsing never blocked
+    GE.load(GE.level);
+  };
+  $('btnLivesHome').onclick = () => { $('livesModal').hidden = true; show('menu'); };
   $('btnLevels').onclick = () => { levelsFrom = 'menu'; show('levels'); };
   $('btnLegend').onclick = () => { legendFrom = 'menu'; show('legend'); };
   $('btnSound').onclick = () => setSound(!GE.soundOn);
@@ -215,23 +262,76 @@
   }
   btnTry.onclick = () => { if (chestSkin && setSkin(chestSkin, 'win')) { btnTry.disabled = true; btnTry.textContent = 'On'; } };
 
-  // ---------- daily goal + streak (decoupled; one repair per streak) ----------
-  // Goal: clear DAILY_GOAL levels today — replays count, resets at local midnight. Streak:
-  // consecutive local calendar days with ≥1 clear — deliberately decoupled from the goal.
-  // Missing exactly one day offers ONE repair per streak (the same free rewarded flow as
-  // rescue/hint); declining just starts fresh. Nothing is gated on either. The date comes
-  // from GE.now() so bots simulate day changes without touching the system clock.
-  const DAILY_GOAL = 3;
-  let streak = { len: 0, best: 0, lastDate: null, todayCount: 0, todayDate: null, repairUsedFor: null };
+  // ---------- daily quests + streak (freezes, week marks) + weekly ladder ----------
+  // Three quests roll each local day, deterministically from the date (every player shares the
+  // day's set); the templates are safe telemetry facts — never ad views, boosters or spending,
+  // and nothing a content change could make impossible. Completing all three banks ONE streak
+  // freeze (max 2 held). The streak day-mark stays "≥1 level cleared"; a missed day consumes a
+  // banked freeze automatically (calm notice at next launch); the once-per-streak ad repair
+  // remains the fallback and declining still just starts fresh. The Field Survey is a weekly
+  // personal ladder: 1 point per clear, +1 at par, stamps at 3/7/12/20 — no leaderboard, no
+  // comparison, everyone can finish. All dates flow through GE.now() so bots simulate days;
+  // state lives in separate keys: ge_streak / ge_quests / ge_ladder.
+  const QUEST_TEMPLATES = {
+    clear3:   { label: 'Clear 3 levels',               target: 3,  gain: d => 1 },
+    clear5:   { label: 'Clear 5 levels',               target: 5,  gain: d => 1 },
+    stars6:   { label: 'Earn 6 stars',                 target: 6,  gain: d => d.stars },
+    stars9:   { label: 'Earn 9 stars',                 target: 9,  gain: d => d.stars },
+    par2:     { label: 'Clear 2 levels at par',        target: 2,  gain: d => (d.moves <= d.par ? 1 : 0) },
+    noundo1:  { label: 'Clear a level without undo',   target: 1,  gain: d => (d.undos === 0 ? 1 : 0) },
+    nohint2:  { label: 'Clear 2 levels without hints', target: 2,  gain: d => (d.hints === 0 ? 1 : 0) },
+    blocks12: { label: 'Clear 12 blocks',              target: 12, gain: d => d.blocks },
+  };
+  const FREEZE_MAX = 2, MILESTONES = [3, 7, 12, 20];
+  let streak = { len: 0, best: 0, lastDate: null, repairUsedFor: null, freezes: 0, marks: [] };
   try { const s = JSON.parse(localStorage.getItem('ge_streak') || 'null'); if (s && typeof s.len === 'number') streak = { ...streak, ...s }; } catch (e) {}
+  if (!Array.isArray(streak.marks)) streak.marks = [];
+  if (!Number.isInteger(streak.freezes)) streak.freezes = 0;
   const saveStreak = () => { try { localStorage.setItem('ge_streak', JSON.stringify(streak)); } catch (e) {} };
+  let quests = { date: null, ids: [], prog: {}, done: [], all: false };
+  try { const q = JSON.parse(localStorage.getItem('ge_quests') || 'null'); if (q && Array.isArray(q.ids)) quests = { ...quests, ...q }; } catch (e) {}
+  const saveQuests = () => { try { localStorage.setItem('ge_quests', JSON.stringify(quests)); } catch (e) {} };
+  let lad = { week: null, pts: 0, ms: [], last: null };
+  try { const l = JSON.parse(localStorage.getItem('ge_ladder') || 'null'); if (l && typeof l.pts === 'number') lad = { ...lad, ...l }; } catch (e) {}
+  const saveLadder = () => { try { localStorage.setItem('ge_ladder', JSON.stringify(lad)); } catch (e) {} };
   const dayStr = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
   const dayGap = (a, b) => Math.round((new Date(b + 'T12:00') - new Date(a + 'T12:00')) / 864e5); // noon-anchored: DST-safe
-  function onClear(lvl) {
+  // deterministic roll: FNV-1a of the local date seeds a tiny PRNG — every player, same three
+  const seedOf = s => { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+  const prng = seed => () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  function rollQuests(date) {
+    const r = prng(seedOf('ge-quests-' + date)), pool = Object.keys(QUEST_TEMPLATES), ids = [];
+    while (ids.length < 3) { const id = pool[Math.floor(r() * pool.length)]; if (!ids.includes(id)) ids.push(id); }
+    return ids;
+  }
+  function questsToday() {
     const today = dayStr(GE.now());
-    if (streak.todayDate !== today) { streak.todayDate = today; streak.todayCount = 0; }
-    streak.todayCount++;
-    const goalMet = streak.todayCount === DAILY_GOAL; // exactly once per day: the count is monotonic within a day
+    if (quests.date !== today) { quests = { date: today, ids: rollQuests(today), prog: {}, done: [], all: false }; saveQuests(); }
+    return quests;
+  }
+  function onWinQuests(d) {
+    const q = questsToday(), justDone = [];
+    for (const id of q.ids) {
+      if (q.done.includes(id)) continue;
+      const t = QUEST_TEMPLATES[id];
+      if (!t) continue;
+      q.prog[id] = Math.min(t.target, (q.prog[id] || 0) + t.gain(d));
+      if (q.prog[id] >= t.target) { q.done.push(id); justDone.push(id); track('quest_done', { id }); }
+    }
+    let allJustDone = false, freezeBanked = false;
+    if (!q.all && q.ids.length === 3 && q.done.length === 3) {
+      q.all = true; allJustDone = true;
+      track('quests_all_done', { date: q.date });
+      if (streak.freezes < FREEZE_MAX) { streak.freezes++; freezeBanked = true; saveStreak(); }
+    }
+    saveQuests();
+    return { justDone, allJustDone, freezeBanked };
+  }
+  // streak day-mark (unchanged: ≥1 clear marks the day) + the rolling last-7-days marks
+  function onClear() {
+    const today = dayStr(GE.now());
+    if (!streak.marks.includes(today)) streak.marks.push(today);
+    streak.marks = streak.marks.filter(m => { const g = dayGap(m, today); return g >= 0 && g < 7; });
     let newBest = false;
     if (streak.lastDate !== today) {
       const gap = streak.lastDate ? dayGap(streak.lastDate, today) : 99;
@@ -241,48 +341,124 @@
       if (streak.len > streak.best) { newBest = streak.len >= 2; streak.best = streak.len; } // day one is not an announcement
       track('streak_day', { len: streak.len });
     }
-    if (goalMet) track('daily_goal_met', { lvl });
     saveStreak();
-    return { goalMet, newBest };
+    return { newBest };
   }
+  // weekly ladder (ISO week via GE.now); history keeps just last week's result line
+  function isoWeek(t) {
+    const d = new Date(t), th = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    th.setDate(th.getDate() + 3 - ((th.getDay() + 6) % 7)); // the week's Thursday decides the ISO year
+    const wk1 = new Date(th.getFullYear(), 0, 4);
+    const w = 1 + Math.round(((th - wk1) / 864e5 - 3 + ((wk1.getDay() + 6) % 7)) / 7);
+    return th.getFullYear() + '-W' + String(w).padStart(2, '0');
+  }
+  function ladderWeek() {
+    const w = isoWeek(GE.now());
+    if (lad.week !== w) { if (lad.week) lad.last = { week: lad.week, pts: lad.pts }; lad.week = w; lad.pts = 0; lad.ms = []; saveLadder(); }
+    return lad;
+  }
+  function onWinLadder(d) {
+    ladderWeek();
+    const gain = 1 + (d.moves <= d.par ? 1 : 0);
+    lad.pts += gain;
+    track('ladder_point', { pts: lad.pts, gain });
+    const hit = MILESTONES.filter(n => lad.pts >= n && !lad.ms.includes(n));
+    for (const n of hit) { lad.ms.push(n); track('ladder_milestone', { n }); }
+    saveLadder();
+    return { gain, hit };
+  }
+  const surveyorMark = () => { ladderWeek(); return lad.ms.includes(20); }; // the 20-point mark, rest of the week
+  // title-block rendering: quest list, streak/lives row, survey row
   function refreshDaily() {
     const today = dayStr(GE.now());
-    const n = streak.todayDate === today ? Math.min(streak.todayCount, DAILY_GOAL) : 0;
-    $('fToday').innerHTML = `<span class="boxes">${'▮'.repeat(n)}<span class="off">${'▯'.repeat(DAILY_GOAL - n)}</span></span>${n}/${DAILY_GOAL}`;
+    const q = questsToday();
+    const rows = q.ids.map(id => {
+      const t = QUEST_TEMPLATES[id] || { label: id, target: 1 };
+      const p = Math.min(t.target, q.prog[id] || 0), done = q.done.includes(id);
+      return `<div class="q${done ? ' done' : ''}" data-quest="${id}"><span class="ql">${t.label}</span>`
+        + `<span class="qbar"><i style="width:${Math.round((p / t.target) * 100)}%"></i></span>`
+        + `<span class="qv">${p}/${t.target}</span>${done ? '<span class="qstamp">✓</span>' : ''}</div>`;
+    }).join('');
+    $('menuQuests').innerHTML = `<div class="qh"><span>Daily quests</span>${q.all ? '<b>ALL DONE</b>' : ''}</div>` + rows;
     const live = streak.lastDate && streak.len > 0 && dayGap(streak.lastDate, today) <= 1 ? streak.len : 0;
-    $('fStreak').textContent = live ? `${live} day${live === 1 ? '' : 's'}` : '—';
+    const wk = streak.marks.filter(m => { const g = dayGap(m, today); return g >= 0 && g < 7; }).length;
+    $('fStreak').innerHTML = (live ? `${live} day${live === 1 ? '' : 's'}` : '—')
+      + (surveyorMark() ? '<span class="mark" title="Field Survey complete this week">⌖</span>' : '')
+      + `<small>${wk} of last 7 days${streak.freezes ? ` · ${streak.freezes} freeze${streak.freezes > 1 ? 's' : ''} held` : ''}</small>`;
+    $('fSurvey').textContent = `${lad.pts} pt${lad.pts === 1 ? '' : 's'}`;
+    refreshLives();
   }
-  // win-card beat: the moment the third clear of the day lands (or a new best streak) — a small
-  // stamped row after the stars, with a quiet chime. A play beat, never a purchase event.
+  function refreshLives() {
+    const on = GE.livesEnabled;
+    $('menuLivesBox').hidden = !on;
+    if (!on) return;
+    const i = GE.livesInfo;
+    $('fLives').innerHTML = `<span class="hearts">${'♥'.repeat(i.n)}<span class="off">${'♡'.repeat(i.max - i.n)}</span></span>`
+      + (i.fullIn ? `<small>full in ${i.fullIn}</small>` : '');
+  }
+  window.addEventListener('ge:lives', () => { if (!screens.menu.hidden) refreshLives(); });
+  // win-card beat: ONE quiet stamped row after the stars — all-quests-done (banks the freeze)
+  // over a single quest, over a new best streak. A play beat, never a purchase event.
   let dailyTimer = 0;
   const winDaily = $('winDaily');
   window.addEventListener('ge:win', e => {
-    const r = onClear(e.detail.lvl + 1);
+    const d = e.detail, lvl = d.lvl;
+    const info = { stars: d.stars, moves: d.moves, par: d.par != null ? d.par : LEVELS[lvl].par, undos: d.undos || 0, hints: d.hints || 0, blocks: LEVELS[lvl].blocks.length };
+    const sr = onClear();
+    const qr = onWinQuests(info);
+    onWinLadder(info);
     clearTimeout(dailyTimer); winDaily.hidden = true;
-    if (!r.goalMet && !r.newBest) return;
-    const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let row = null;
+    if (qr.allJustDone) row = { stamp: 'DONE', k: 'All quests complete', v: qr.freezeBanked ? `Streak freeze banked · ${streak.freezes} held` : 'All 3 daily quests done' };
+    else if (qr.justDone.length) row = { stamp: 'QUEST', k: 'Quest complete', v: QUEST_TEMPLATES[qr.justDone[0]].label };
+    else if (sr.newBest) row = { stamp: 'BEST', k: 'New best streak', v: `${streak.len} days in a row` };
+    if (!row) return;
     dailyTimer = setTimeout(() => {
-      if (r.goalMet) {
-        $('winDailyStamp').textContent = 'GOAL'; $('winDailyK').textContent = 'Daily goal met';
-        $('winDailyV').textContent = `${DAILY_GOAL} levels cleared today` + (r.newBest ? ` · best streak ${streak.len}` : '');
-      } else {
-        $('winDailyStamp').textContent = 'BEST'; $('winDailyK').textContent = 'New best streak';
-        $('winDailyV').textContent = `${streak.len} days in a row`;
-      }
+      $('winDailyStamp').textContent = row.stamp; $('winDailyK').textContent = row.k; $('winDailyV').textContent = row.v;
       winDaily.hidden = false;
       GE.sound('gate');
-    }, reduced ? 0 : 1150);
+    }, GE.reduced ? 0 : 1150);
   });
-  // launch check: exactly one missed day on a ≥2-day streak, and this streak's repair unused
+  // launch check: banked freezes cover the missed day(s) automatically (calm notice, nothing to
+  // buy); otherwise exactly one missed day on a ≥2-day streak gets the once-per-streak ad repair
   const streakModal = $('streakModal');
   function checkStreak() {
     const today = dayStr(GE.now());
-    if (!(streak.len >= 2 && streak.lastDate && dayGap(streak.lastDate, today) === 2 && !streak.repairUsedFor)) return false;
-    $('streakSub').textContent = `Your ${streak.len}-day streak — repair it?`;
-    streakModal.hidden = false;
-    track('streak_repair_offered', { len: streak.len });
-    return true;
+    if (!streak.lastDate || streak.len < 1) return false;
+    const gap = dayGap(streak.lastDate, today);
+    if (gap <= 1) return false;
+    const missed = gap - 1;
+    if (streak.freezes >= missed) {
+      streak.freezes -= missed;
+      streak.lastDate = dayStr(GE.now() - 864e5); // yesterday: today's first clear extends the streak
+      saveStreak();
+      track('streak_freeze_used', { missed, left: streak.freezes });
+      $('freezeSub').textContent = `Freeze used — streak safe · ${streak.freezes} left`;
+      $('freezeModal').hidden = false;
+      refreshDaily();
+      return 'freeze';
+    }
+    if (streak.len >= 2 && gap === 2 && !streak.repairUsedFor) {
+      $('streakSub').textContent = `Your ${streak.len}-day streak — repair it?`;
+      streakModal.hidden = false;
+      track('streak_repair_offered', { len: streak.len });
+      return true;
+    }
+    return false;
   }
+  $('btnFreezeOk').onclick = () => { $('freezeModal').hidden = true; };
+  // Field Survey card (weekly log): milestone stamps, points line, last week's result
+  function renderSurvey() {
+    ladderWeek();
+    $('surveySub').textContent = `${lad.pts} point${lad.pts === 1 ? '' : 's'} this week · 1 per clear · +1 at par`;
+    $('surveyTrack').innerHTML = MILESTONES.map(n => {
+      const got = lad.ms.includes(n);
+      return `<div class="ms${got ? ' got' : ''}" data-ms="${n}">${n === 20 ? '<span class="mark">⌖</span>' : ''}<b>${n}</b><span>${got ? 'stamped' : 'points'}</span></div>`;
+    }).join('');
+    $('surveyLast').textContent = lad.last ? `Last week: ${lad.last.pts} point${lad.last.pts === 1 ? '' : 's'}` : 'A fresh survey starts each week.';
+  }
+  $('btnSurvey').onclick = () => { renderSurvey(); $('surveyModal').hidden = false; };
+  $('btnSurveyClose').onclick = () => { $('surveyModal').hidden = true; };
   $('btnStreakRepair').onclick = () => {
     if (streakModal.hidden || GE.adUp) return;
     GE.rewarded('streak', () => {
@@ -467,5 +643,9 @@
   show('menu');
   checkStreak(); // the repair offer rides over the title block on launch (and only then)
   window.GE_MENU = { show, get prog() { return prog; }, setSkin, CHEST_STARS, CHEST_SKINS,
-    get streak() { return streak; }, checkStreak, refreshDaily, DAILY_GOAL };
+    get streak() { return streak; }, checkStreak, refreshDaily,
+    get quests() { return questsToday(); }, get ladder() { ladderWeek(); return lad; },
+    questInfo: () => questsToday().ids.map(id => ({ id, label: QUEST_TEMPLATES[id].label, target: QUEST_TEMPLATES[id].target,
+      prog: Math.min(QUEST_TEMPLATES[id].target, quests.prog[id] || 0), done: quests.done.includes(id) })),
+    QUEST_TEMPLATES, MILESTONES };
 })();

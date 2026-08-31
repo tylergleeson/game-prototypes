@@ -82,15 +82,34 @@ Built to the hybrid-casual grammar:
   amber/red/green *text* inks darken on the two light papers so they still clear
   4.5:1. Persisted in `ge_prog` (`skin`, `skins`, `seen`); `chest_open` /
   `skin_select` tracked.
-- **Daily goal + streak** (the evidenced retention pair, deliberately decoupled): the
-  title block carries a drafting-log row — `TODAY ▮▮▯ 2/3` (3 clears a day, replays
-  count) and `STREAK 4 days` (calendar days with ≥1 clear). The third clear of the day
-  stamps a quiet `GOAL` row on the win card; a new best streak (≥2 days) stamps `BEST`
-  once. Missing exactly **one** day offers a single repair per streak on the next launch
-  (`rewarded('streak', …)`, same free placeholder flow as rescue/hint); declining or
-  Escape starts fresh — no guilt copy, no timer, nothing gated. State in `ge_streak`;
-  all dates flow through the overridable `GE.now` so bots simulate day changes.
-  Tracked: `daily_goal_met`, `streak_day`, `streak_repair_offered/taken/declined`.
+- **Daily quests + streak with freezes** (the retention pair, upgraded to the playbook):
+  the title block carries a drafting-log **quest list** — three quests roll each local day,
+  deterministically from the date (every player shares the set), from safe telemetry
+  templates (clear N / earn N stars / N at par / no-undo / no-hint / N blocks — never ad
+  views, boosters or spending; `QUEST_TEMPLATES` in `menu.js`). Each has a progress bar and
+  a ✓ stamp; a completion adds a quiet stamped `QUEST` row to the win card, and all three
+  bank ONE **streak freeze** (max 2 held, `DONE` row). The streak day-mark stays "≥1 clear";
+  the row shows `4 days · 3 of last 7 days · 1 freeze held`. A missed day consumes a banked
+  freeze automatically with a calm `Freeze used — streak safe` notice at next launch; with
+  no freeze, missing exactly **one** day still offers the once-per-streak ad repair
+  (decline/Escape = fresh start, no guilt copy, nothing gated). State in `ge_streak` /
+  `ge_quests`; every date flows through the overridable `GE.now`. Tracked: `quest_done`,
+  `quests_all_done`, `streak_day`, `streak_freeze_used`, `streak_repair_offered/taken/declined`.
+- **Field Survey** (weekly personal ladder, `ge_ladder`): 1 point per clear, +1 bonus at
+  par; milestone stamps at 3/7/12/20 on a weekly log card (the `FIELD SURVEY` row on the
+  title block opens it); the 20-point stamp is a surveyor's mark (⌖) shown beside the
+  streak row for the rest of that week. Resets each ISO week; only last week's result line
+  is kept. No leaderboard, no comparison — every participant can finish. Tracked:
+  `ladder_point`, `ladder_milestone`.
+- **Lives** (flag-gated, default ON — `LIVES_ENABLED` in `game.js`, overridable via
+  `ge_flags {"lives":0}`, `?lives=0`, or `GE.livesEnabled`): five hearts in the HUD and on
+  the title block. **L1–5 never cost a life** (the onboarding runway); from L6, a failed
+  attempt that ends in Retry costs one — the rescue SAVES the attempt (no life), Restart
+  mid-level and winning are free. Refill one life per 25 minutes derived from a **single
+  anchor timestamp** (never five timers; a backwards clock only re-anchors — the player is
+  never accused). Out of lives: a calm card (`Next life in 24m · full in 1h 38m`, one
+  rewarded +1 per appearance, Back to menu) that never blocks the menu or level browsing.
+  State in `ge_lives`; tracked: `life_lost`, `lives_empty`, `life_ad_refill`.
 - **Analytics beacon** (`beacon.js`, loaded last): wraps `track()` so every event also
   batches to `BEACON_URL` (one line in `index.html`; empty = fully disabled, zero
   network — bot-asserted). Anonymous `ge_iid`/session UUIDs, seq numbers, build tag; a
@@ -102,8 +121,15 @@ Built to the hybrid-casual grammar:
 - **Navigation**: Levels opened from pause returns to pause; "Main menu"
   keeps the paused attempt on the board and Play becomes "Resume level N".
   The resume pointer advances on the win itself, not on the Next tap.
-- **Juice as polish**: exit particles, screen shake, eased movement,
-  generated audio (no asset files). Colorblind-safe: every color has a glyph.
+- **Juice as polish**: exit particles, screen shake, eased movement, generated audio (no
+  asset files) — plus the feel beats: a 70 ms press dip on block pickup that recovers as
+  the lift lands, a damped ~5% settle overshoot on release, unified press-depth on every
+  button, ±2–4% pitch drift on repeated sounds and three rotating exit-synth variants (the
+  rising escape chain resets after ~4 s idle). `prefers-reduced-motion` is honoured in the
+  CANVAS renderer too (no shake, half particles, static ghost dashes, no scale beats), and
+  a **Motion** toggle on the pause card (`ge_motion`) forces the same path. Colorblind-safe:
+  every color has a glyph; verification stills (grayscale + deuteranopia) in
+  `marketing/accessibility/` via `tools/capture-accessibility.mjs` (repo root).
 
 ## Toolchain (the moat)
 
@@ -133,7 +159,8 @@ Built to the hybrid-casual grammar:
 - [x] Analytics beacon: `beacon.js` (anonymous install/session ids, batched, fail-safe, disabled while `BEACON_URL` is empty — zero network, bot-verified) + Cloudflare Worker/D1 collector and retention/funnel report in `tools/beacon/` (repo root; not deployed yet)
 - [x] Ad-moment capture (`tools/showcase.json` + `tools/capture.mjs` at the repo root): four real-gameplay moments filmed at iPhone size into `marketing/` (stills + webm), plus the itch cover
 - [x] itch.io bundle (`tools/build-itch.mjs` → `dist/itch/gate-escape-itch.zip`, index.html at the zip root) and page copy in `marketing/itch-page.md`; embed verified at 412×732 and 960×720
-- [x] Native pass (`reviews/p01-par-20260831-0056-s1/native-report.md`): Capacitor Haptics (pickup/exit/win/fail, no-op on web) + StatusBar tint and runtime `theme-color` meta following the paper skins (bot-asserted); blueprint launch screen (`tools/make-splash.mjs`); `PrivacyInfo.xcprivacy` in the app target; App Store metadata + 6.9" iPhone and 13" iPad store-size screenshots in `marketing/appstore/`
+- [x] Native pass (`reviews/p01-par-20260831-0056-s1/native-report.md`): haptics via a native UIKit-generator driver (prepared/reused; selection ticks on pickup + rate-limited cell steps, light impact on settle, medium on gate exit with one Core Haptics signature whoosh, success/warning/error on win/low/fail; independent persisted Haptics toggle, native-only, web build byte-identical in behavior) + StatusBar tint and runtime `theme-color` meta following the paper skins (bot-asserted); blueprint launch screen (`tools/make-splash.mjs`); `PrivacyInfo.xcprivacy` in the app target; App Store metadata + 6.9" iPhone and 13" iPad store-size screenshots in `marketing/appstore/`
+- [x] Design-playbook pass (`reviews/p01-par-20260831-0056-s1/design-report.md`): feel beats (press dip / settle overshoot / unified button depth / audio pitch drift + 3 exit variants), canvas `prefers-reduced-motion` + pause-card Motion toggle, three deterministic daily quests replacing the single daily goal, streak freezes (banked by all-quests-done, auto-consumed with a calm notice) + "N of last 7 days" marks, Field Survey weekly ladder (3/7/12/20 stamps, surveyor's mark), lives system (default ON, flag-gated: L1–5 free, Retry-after-fail costs one from L6, rescue preserves, 25-min anchor refill, calm empty-state card), colorblind/grayscale verification stills (`tools/capture-accessibility.mjs`)
 - [ ] Web-portal upload (itch.io first — zip + copy ready, needs the account)
 - [ ] Beacon deployment (Cloudflare account; commands in `tools/beacon/README.md`), then paste the worker URL into `index.html`
 - [ ] Publisher packet (gameplay capture + KPI sheet)

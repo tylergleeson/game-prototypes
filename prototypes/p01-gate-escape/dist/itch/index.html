@@ -275,13 +275,62 @@
   .legend .li canvas { width:64px; height:44px; flex:none; }
   .legend .li b { display:block; font-size:15px; }
   .legend .li span { color:var(--dim); font-size:13px; }
+  /* press-depth beat, unified: every tappable control dips on :active (cards already translateY(3)) */
+  #hud button:not(:disabled):active { transform:translateY(2px); }
+  .ghostbtn:active { transform:translateY(2px); background:var(--fill2); }
+  .shead .back:active, .tblock button.no:active { transform:translateY(2px); }
+  .papers .paper:not(.locked):active { transform:scale(.9); }
+  /* lives: hearts are the one non-drafting glyph — filled vs hollow is the shape cue, red-ink vs
+     dim the colour cue. HUD top band + title block + the out-of-lives card share the row. */
+  .hearts { font-family:system-ui; color:var(--red-ink); letter-spacing:2px; }
+  .hearts .off { color:var(--star-off); }
+  #hudLives { font-size:11px; letter-spacing:1.5px; line-height:1.2; font-weight:400; }
+  #livesModal { z-index:25; }
+  #livesModal .hearts { display:block; font-size:26px; letter-spacing:7px; margin-bottom:8px; }
+  #freezeModal { z-index:25; }
+  /* daily quests: a drafting-log list on the title block — label, progress bar, count, ✓ stamp */
+  .quests { border:1px solid var(--line2); margin-top:8px; text-align:left; }
+  .quests .qh { display:flex; justify-content:space-between; padding:6px 10px 4px; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); text-transform:uppercase; }
+  .quests .qh b { color:var(--green-ink); letter-spacing:.06em; }
+  .quests .q { display:flex; align-items:center; gap:8px; padding:5px 10px 6px; border-top:1px solid var(--line2); }
+  .quests .q .ql { flex:1; font-size:12.5px; font-weight:700; }
+  .quests .q .qbar { width:52px; height:5px; border:1px solid var(--line2); border-radius:2px; overflow:hidden; flex:none; }
+  .quests .q .qbar i { display:block; height:100%; background:var(--amber-ink); }
+  .quests .q .qv { font:700 11px var(--mono); color:var(--dim); min-width:28px; text-align:right; font-variant-numeric:tabular-nums; }
+  .quests .q .qstamp { flex:none; font:800 10px/1 var(--mono); color:var(--green-ink); border:1.5px solid var(--green-ink); border-radius:3px; padding:2px 3px; transform:rotate(-7deg); }
+  .quests .q.done .ql { color:var(--dim); }
+  .quests .q.done .qbar i { background:var(--green-ink); }
+  /* streak / lives row under the quests; small sub-lines for "n of last 7" and the refill label */
+  .fields.daily .v small { display:block; font:600 10px/1.3 var(--mono); letter-spacing:.04em; color:var(--dim); margin-top:3px; }
+  .fields.daily:has(#menuLivesBox[hidden]) { grid-template-columns:1fr; }
+  .fields.daily .v .mark { color:var(--amber-ink); font-weight:800; margin-left:4px; }
+  /* Field Survey: the weekly log row (opens the survey card) + its milestone stamps */
+  .surveyrow { display:flex; align-items:center; gap:8px; width:100%; border:1px solid var(--line2); margin-top:8px; padding:8px 10px; background:none; color:var(--ink); cursor:pointer; font-family:inherit; }
+  .surveyrow .k { font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); text-transform:uppercase; }
+  .surveyrow .v { flex:1; text-align:right; font-weight:800; font-size:14px; font-variant-numeric:tabular-nums; }
+  .surveyrow .chev { color:var(--dim); font-size:16px; line-height:1; }
+  .surveyrow:active { transform:translateY(2px); }
+  .mstones { display:flex; justify-content:center; gap:9px; margin:4px 0 12px; }
+  .mstones .ms { width:58px; border:1px solid var(--line2); padding:8px 4px 7px; text-align:center; }
+  .mstones .ms b { display:block; font:800 17px var(--mono); color:var(--dim); }
+  .mstones .ms span { font:600 8.5px/1 var(--mono); letter-spacing:.1em; color:var(--dim); text-transform:uppercase; }
+  .mstones .ms.got { border-color:var(--green-ink); }
+  .mstones .ms.got b { color:var(--green-ink); }
+  .mstones .ms .mark { display:block; font-size:15px; line-height:1; color:var(--amber-ink); margin-bottom:1px; }
+  #surveyLast { font:600 11px var(--mono); color:var(--dim); margin-bottom:12px; }
+  #surveyModal { z-index:25; } /* the survey card opens over the title block (screens are z-20) */
   @media (prefers-reduced-motion: reduce) { .gatebtn, .gatebtn .blk, .tblock, .card, .card .stars span, #toast, #btnHint.nudge, .chest-ico, .card .chest-row, .card .daily-row, .card .daily-row .stamp { animation:none; } .chest-ico .lid { transition:none; } }
+  /* the Motion toggle (pause card) forces the same reduced path via body.reduce-motion */
+  body.reduce-motion .gatebtn, body.reduce-motion .gatebtn .blk, body.reduce-motion .tblock, body.reduce-motion .card, body.reduce-motion .card .stars span, body.reduce-motion #toast, body.reduce-motion #btnHint.nudge, body.reduce-motion .chest-ico, body.reduce-motion .card .chest-row, body.reduce-motion .card .daily-row, body.reduce-motion .card .daily-row .stamp { animation:none; }
+  body.reduce-motion .chest-ico .lid { transition:none; }
+  body.reduce-motion #hud .moves.low { animation:none; }
+  body.reduce-motion #hud .moves.shake, body.reduce-motion #hud .moves.boost { animation:none; }
   [hidden] { display:none !important; }
 </style>
 </head>
 <body>
   <div id="hud">
-    <div class="lvl" id="hudLevel">Level 1</div>
+    <div class="lvl"><div id="hudLevel">Level 1</div><div class="hearts" id="hudLives" hidden aria-label="Lives"></div></div>
     <div class="moves" id="hudMovesBox"><span id="hudMoves">0</span> <span id="hudUnit">moves</span><span class="meter" aria-label="Stars at this pace"><span id="hudMeter"><span>★</span><span>★</span><span>★</span></span><em id="hudPar">par 1</em></span></div>
     <div class="right">
       <button id="btnHint" aria-label="Hint: show the next move (rewarded ad)" disabled><span class="ad">AD</span>?</button>
@@ -348,6 +397,8 @@
       <button class="ghost" id="btnPauseLevels">Levels</button>
       <button class="ghost" id="btnPauseLegend">How to play</button>
       <button class="ghost" id="btnPauseSound">Sound: on</button>
+      <button class="ghost" id="btnPauseMotion">Motion: on</button>
+      <button class="ghost" id="btnPauseHaptics" hidden>Haptics: on</button>
       <div class="papers" id="pausePapers" aria-label="Paper"><span class="k">Paper</span><div class="sw"></div><span class="cap"></span></div>
       <button class="ghost" id="btnPauseHome">Main menu</button>
     </div>
@@ -366,19 +417,62 @@
     </div>
   </div>
 
+  <!-- streak freeze notice: an earned freeze (all 3 daily quests) was consumed automatically for a
+       missed day. Informational only — one calm line, one button, nothing to buy. -->
+  <div class="modal" id="freezeModal" hidden>
+    <div class="card">
+      <span class="no">FIELD LOG</span>
+      <h2>Streak safe</h2>
+      <p id="freezeSub"></p>
+      <button class="primary" id="btnFreezeOk">Continue</button>
+    </div>
+  </div>
+
+  <!-- out of lives: a calm card — refill timer, one rewarded refill, back to menu. It never blocks
+       the menu or level browsing, and levels 1–5 never cost a life at all. -->
+  <div class="modal" id="livesModal" hidden>
+    <div class="card">
+      <span class="no">FIELD LOG</span>
+      <div class="hearts" id="livesCardHearts" aria-hidden="true"></div>
+      <h2>Out of lives</h2>
+      <p id="livesSub"></p>
+      <button class="rescue" id="btnLifeRefill"><span class="ad">AD</span> +1 life <small>· watch to refill</small></button>
+      <button class="ghost" id="btnLivesHome">Back to menu</button>
+    </div>
+  </div>
+
+  <!-- Field Survey: the weekly personal ladder. 1 point per clear, +1 at par; milestone stamps at
+       3 / 7 / 12 / 20. No leaderboard, no comparison — every participant can finish. -->
+  <div class="modal" id="surveyModal" hidden>
+    <div class="card">
+      <span class="no">FIELD SURVEY</span>
+      <h2>Weekly log</h2>
+      <p id="surveySub"></p>
+      <div class="mstones" id="surveyTrack"></div>
+      <p id="surveyLast"></p>
+      <button class="ghost" id="btnSurveyClose">Close</button>
+    </div>
+  </div>
+
   <!-- title block: the main menu -->
   <div class="screen" id="menu" hidden>
     <div class="tblock">
-      <span class="no">NO. GE-01</span><button class="no r" id="btnSound" aria-label="Toggle sound">SOUND <b id="fSound">on</b></button>
+      <span class="no">NO. GE-01</span><button class="no r" id="btnHaptics" style="right:104px" aria-label="Toggle haptics" hidden>HAPTICS <b id="fHaptics">on</b></button><button class="no r" id="btnSound" aria-label="Toggle sound">SOUND <b id="fSound">on</b></button>
       <div class="title">Gate Escape</div>
       <div class="sub">Drag every block out through the gate of its color.</div>
       <div class="fields">
         <div><span class="k">Level</span><span class="v" id="fLevel">1 / 30</span></div>
         <div><span class="k">Stars</span><span class="v" id="fStars">0 / 90</span></div>
       </div>
-      <div class="fields daily" id="menuDaily">
-        <div><span class="k">Today</span><span class="v" id="fToday"></span></div>
-        <div><span class="k">Streak</span><span class="v" id="fStreak">—</span></div>
+      <div id="menuDaily">
+        <div class="quests" id="menuQuests" aria-label="Daily quests"></div>
+        <div class="fields daily">
+          <div><span class="k">Streak</span><span class="v" id="fStreak">—</span></div>
+          <div id="menuLivesBox" hidden><span class="k">Lives</span><span class="v" id="fLives"></span></div>
+        </div>
+        <button class="surveyrow" id="btnSurvey" aria-label="Field Survey — open the weekly log">
+          <span class="k">Field survey</span><span class="v" id="fSurvey">0 pts</span><span class="chev">›</span>
+        </button>
       </div>
       <button class="gatebtn" id="btnPlay">
         <svg class="blk" viewBox="0 0 22 22" aria-hidden="true"><defs><pattern id="h" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#ff8078"/><rect width="1.4" height="4" fill="#c24d46" opacity=".55"/></pattern></defs><rect x="1.5" y="1.5" width="19" height="19" fill="url(#h)" stroke="#c24d46" stroke-width="2"/><circle cx="11" cy="11" r="3" fill="#fff" opacity=".9"/></svg>

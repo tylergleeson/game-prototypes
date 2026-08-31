@@ -5,18 +5,37 @@ enrollment is purchased and pending, the TestFlight upload is staged in develope
 session, the store name candidate is decided elsewhere, itch stays in the plan).
 Nothing committed; base was clean at 53d0a62.
 
-## 1. Native haptics (Capacitor Haptics)
+## 1. Native haptics (UIKit feedback generators, per the design playbook)
 
-- `@capacitor/haptics@6.0.3` + `@capacitor/status-bar@6.0.3` installed in `app/`
-  (pinned to ^6 — latest majors need Capacitor 7) and registered by `cap sync`
-  (SPM: both appear in `ios/App/CapApp-SPM/Package.swift`).
-- `game.js` gains a `NATIVE` probe (Capacitor bridge + `isNativePlatform()`, in
-  try/catch) and a `haptic(kind)` helper: **pickup** → impact LIGHT, **exit** →
-  impact MEDIUM, **win** → notification SUCCESS, **fail** → notification WARNING.
-  Deliberately subtle, one per beat, never load-bearing (sound + visuals already
-  carry each), fire-and-forget with `.catch`. In a plain browser `NATIVE` is null
-  and every call is a no-op — the shipped game keeps zero dependencies.
-- Call sites: `pointerdown` (block picked), `startExit`, `win()`, the fail sheet.
+Built to the playbook's iOS pattern exactly (revised mid-pass to the lead's spec —
+an earlier Capacitor-Haptics-plugin version was replaced and the plugin removed):
+
+- **Native driver** — `HapticsDriver` in `AppDelegate.swift`, a
+  `WKScriptMessageHandler` on `window.webkit.messageHandlers.haptics`, owning
+  **reused instances** of `UISelectionFeedbackGenerator`,
+  `UIImpactFeedbackGenerator` (.light / .medium) and
+  `UINotificationFeedbackGenerator`, with `prepare()` called around predictable
+  follow-ups (pick → steps/exit likely; exit → win/fail likely; low → fail likely).
+- **Beat map** (selection ≪ impact ≪ notification; no buzz on ordinary taps):
+  block pickup → selection tick · cell steps under the finger → selection ticks,
+  **rate-limited to ≥70 ms** (never per animation frame) · block settle (a counted
+  move released) → impact light · gate exit → impact medium · win → notification
+  success · entering low-moves (the point of no return, with the counter shake) →
+  notification warning · fail sheet → notification error.
+- **One Core Haptics signature**: the gate-exit "whoosh" — a soft transient into a
+  0.16 s decaying continuous — via a lazily started `CHHapticEngine`; on any
+  failure or unsupported hardware (simulators, no-haptics devices) it falls back
+  to the plain medium impact permanently. Everything else stays UIKit.
+- **JS side** (`game.js`): `haptic(kind)` posts the beat name; with no message
+  handler (any browser, or before the driver attaches) it is a silent no-op — the
+  Chromium bot's behaviour is untouched and the shipped game keeps zero deps.
+- **Toggle**: independent `HAPTICS on/off` beside the Sound toggle on the title
+  block plus `Haptics: on/off` on the pause card — persisted (`ge_haptics`,
+  default on), engine-side gate `GE.hapticsOn`, sample tick on enable. The
+  buttons are **hidden outside the native app**, so the web UI is unchanged.
+  Adapter ids `btnHaptics` / `btnPauseHaptics` added.
+- `@capacitor/haptics` was **uninstalled** (no unused native code ships);
+  `@capacitor/status-bar@6.0.3` remains for item 2.
 
 ## 2. Launch screen + status-bar tint per paper skin
 
@@ -62,20 +81,30 @@ Nothing committed; base was clean at 53d0a62.
 
 ## Files touched
 
-- `prototypes/p01-gate-escape/game.js` — `NATIVE` probe, `haptic()` + 4 call
-  sites, `THEMES.barStyle` ×4, `setTheme` theme-color meta + StatusBar call.
-  All existing `GE.*` hooks and `ge:*` events unchanged.
-- `app/package.json` / `package-lock.json` — the two plugins (^6).
-- `app/ios/App/CapApp-SPM/Package.swift` — via `cap sync` (generated).
-- `app/ios/App/App/AppDelegate.swift` — bot-strip hide during staged shots only;
-  bot and studio-bridge flows otherwise untouched.
+- `prototypes/p01-gate-escape/game.js` — `NATIVE` probe (StatusBar), `haptic()`
+  poster + seven call sites (pick / rate-limited step / settle / exit / win /
+  low / fail), `hapticsOn` gate, `THEMES.barStyle` ×4, `setTheme` theme-color
+  meta + StatusBar call; hooks added: `GE.hapticsOn`, `GE.haptic`. All existing
+  `GE.*` hooks and `ge:*` events unchanged.
+- `index.html` — hidden-by-default `btnHaptics` (title block) + `btnPauseHaptics`
+  (pause card). `menu.js` — haptics toggle wiring/persistence (`ge_haptics`),
+  shown only when `Capacitor.isNativePlatform()`.
+- `app/package.json` / `package-lock.json` — `@capacitor/status-bar@6.0.3` added;
+  `@capacitor/haptics` added then removed in the rework.
+- `app/ios/App/CapApp-SPM/Package.swift` — via `cap sync` (generated;
+  StatusBar only).
+- `app/ios/App/App/AppDelegate.swift` — `HapticsDriver` (UIKit generators +
+  Core Haptics whoosh) and its bridge attach; bot-strip hide during staged
+  shots; bot and studio-bridge flows otherwise untouched.
 - `app/ios/App/App/PrivacyInfo.xcprivacy` — new; `App.xcodeproj/project.pbxproj`
   — 4-line registration.
 - `app/ios/App/App/Assets.xcassets/Splash.imageset/*` — regenerated blueprint art.
 - `tools/splash.html`, `tools/make-splash.mjs` — new.
-- `tools/playtest.mjs` — theme-color assertions in the `skins` check.
+- `tools/playtest.mjs` — theme-color assertions in the `skins` check + a
+  `haptics` check (toggles hidden on web, all seven beats no-op, default on).
+- `tools/reviewer-adapter.mjs` — `btnHaptics` / `btnPauseHaptics` button ids.
 - `marketing/appstore/` — metadata.md + 12 screenshots. `README.md` — status.
-- Rebuilt: `dist/gate-escape.html` (137 544 B), `dist/itch/gate-escape-itch.zip`,
+- Rebuilt: `dist/gate-escape.html` (139 856 B), `dist/itch/gate-escape-itch.zip`,
   `app/www` (via the iOS runs).
 
 Not touched: Info.plist, levels/generator/solutions, menu.js, beacon.js, other
@@ -87,15 +116,19 @@ Web (`node prototypes/p01-gate-escape/tools/playtest.mjs`, exit 0, run after all
 changes): 30/30 at par and every check green, including
 ```
 skins ok: sepia/night/white swap --bg1 + ink + paper pixel (…) and persist; default paper back to [255,255,255,11]; theme-color meta follows the paper
+haptics ok: toggles hidden on web, all seven beats no-op, default on
 beacon off ok: BEACON_URL empty → zero network requests across the whole run
 All levels playtested clean through the real engine.
 ```
-(the haptics guard adds no page errors and no network; `NATIVE` is null in Chromium).
 
-iOS (`tools/playtest-ios.sh`, plugins + manifest + splash in the build) — three
-devices, all green, `xcrun simctl shutdown all` afterwards:
+iOS (`tools/playtest-ios.sh`, manifest + splash in every build) — three devices,
+all green, `xcrun simctl shutdown all` afterwards. The iPhone 17 line is the
+final build with the UIKit `HapticsDriver` compiled in (the driver fires
+throughout the autoplay run — sim no-ops at the UIKit layer, Core Haptics
+reports unsupported and falls back, no crashes); the Pro Max / iPad runs
+produced the store screenshots:
 ```
-iPhone 17:            BOT> BOT PASS 30/30 rescue:ok · passed (35.750 s) · ** TEST SUCCEEDED **
+iPhone 17 (final):    BOT> BOT PASS 30/30 rescue:ok · passed (34.133 s) · ** TEST SUCCEEDED **
 iPhone 17 Pro Max:    BOT> BOT PASS 30/30 rescue:ok · passed (34.720 s) · ** TEST SUCCEEDED **
 iPad Pro 13-inch M5:  BOT> BOT PASS 30/30 rescue:ok · passed (37.236 s) · ** TEST SUCCEEDED **
 ```
