@@ -1,0 +1,26 @@
+[
+  {
+    "turn": 15,
+    "level": 1,
+    "persona": "breaker",
+    "area": "controls",
+    "severity": "minor",
+    "text": "REPRO: L1, raw_drag from [0.5,0.5] path [[0.5,1.5]] cancel:true (block at origin 0,0) · EXPECTED: OS pointercancel reverts the block to its pre-drag cell, no move charged · ACTUAL: move committed, movesUsed 1->2, block left at (0,1) · EVIDENCE: turn ~t010 result \"raw gesture cancelled: moves 2, left 3, positions [[0,1]]\""
+  },
+  {
+    "turn": 21,
+    "level": 1,
+    "persona": "breaker",
+    "area": "ui",
+    "severity": "minor",
+    "text": "REPRO: L1, win the level (win card showing), then {\"type\":\"tap\",\"button\":\"btnRestart\"} · EXPECTED: HUD controls inert while the win card modal is up (or Restart should be treated as Replay) · ACTUAL: win card is dismissed, level restarts to playing state; btnNext then reports not on screen · EVIDENCE: sequence result \"tapped HUD: restart level\" followed by screen=playing, moves 0"
+  },
+  {
+    "turn": 27,
+    "level": 1,
+    "persona": "breaker",
+    "area": "monetization",
+    "severity": "major",
+    "text": "REPRO: L1, burn 5 moves with 1-cell shuffles (raw_drag [1.5,2.5]->[0.5,2.5] and back) until over=true, wait 1.2s, then {\"type\":\"tap\",\"button\":\"btnUndo\"} · EXPECTED: fail state is terminal; only Retry or Rescue (+3, once) leave it · ACTUAL: Undo reverts the losing move, over flips to false, level continues with 1 move left and no rescue consumed; Rescue button was reported not on screen 1.2s after the loss · EVIDENCE: sequence result moves 5 left 0 over=true, then inspect engine.moves 4 movesLeft 1 over=false"
+  }
+]

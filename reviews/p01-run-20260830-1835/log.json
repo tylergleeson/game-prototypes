@@ -1,0 +1,1375 @@
+{
+  "game": "p01",
+  "device": "iphone-17",
+  "minutes": 10,
+  "start": null,
+  "turns": 73,
+  "levelsWon": 10,
+  "log": [
+    {
+      "turn": 0,
+      "level": 1,
+      "say": "Studio check: panel floats over the bottom, timer armed, notes button live.",
+      "thought": "harness smoke test",
+      "note": {
+        "turn": 0,
+        "level": 1,
+        "area": "other",
+        "severity": "nit",
+        "text": "Smoke-test note — the notes log opens from the button on the right."
+      }
+    },
+    {
+      "turn": 2,
+      "level": 1,
+      "say": "Blueprint menu, one-line pitch, and the Play button already shows a red circle block. Clean. Blurred board behind it is a nice tease. Bit dark and text-heavy for a casual title, though. Checking How to play first.",
+      "thought": "Menu communicates the verb in one sentence; hierarchy is right.",
+      "note": {
+        "turn": 2,
+        "level": 1,
+        "area": "ui",
+        "severity": "minor",
+        "text": "Main menu is a dark navy blueprint card with three text-only stats (Level, Stars, Sound). Reads as a technical spec sheet rather than a toy. Hybrid-casual menus convert better with a live, colorful, un-blurred board peeking through and the Play button pulsing; consider dropping the Sound stat cell for a corner icon and letting the board show through crisply."
+      }
+    },
+    {
+      "turn": 2,
+      "action": {
+        "type": "tap",
+        "button": "btnLegend"
+      },
+      "result": "tapped main menu: How to play"
+    },
+    {
+      "turn": 3,
+      "level": 1,
+      "say": "Good legend. The diagram sells the one thing that matters: one drag, around the corner, out. Four rows, all short. I would still rather learn this by doing, but I have no questions leaving here. Back and Play.",
+      "thought": "The corner-route diagram is the key onboarding asset; the move-count rule is the trap.",
+      "note": {
+        "turn": 3,
+        "level": 1,
+        "area": "onboarding",
+        "severity": "minor",
+        "text": "How-to-play is clear and short, but it is opt-in. A first-time player who taps Play will never see the one-drag-around-corners rule, and that rule is what makes par achievable. Level 1 or 2 should teach it in-board with a ghost path/finger animation, not rely on the legend."
+      }
+    },
+    {
+      "turn": 3,
+      "action": {
+        "type": "tap",
+        "button": "btnLegendBack"
+      },
+      "result": "tapped how-to-play: Back"
+    },
+    {
+      "turn": 4,
+      "level": 1,
+      "say": "Back on the menu. Tapping Play level 1. Timer in my head starts now: can I read the board with sound off in three seconds?",
+      "thought": "Testing the 3-second legibility bar on the opener.",
+      "note": null
+    },
+    {
+      "turn": 4,
+      "action": {
+        "type": "tap",
+        "button": "btnPlay"
+      },
+      "result": "tapped main menu: Play"
+    },
+    {
+      "turn": 5,
+      "level": 1,
+      "say": "One red block, one red gate, a big white arrow saying go right. Read it in under a second. That is a proper no-fail opener. Seven moves for a one-move level is generous. Dragging it out the right side.",
+      "thought": "Passes 3-second legibility; the arrow is a good hand-hold.",
+      "note": {
+        "turn": 5,
+        "level": 1,
+        "area": "ui",
+        "severity": "nit",
+        "text": "Level 1 HUD says 7 moves for a par-1 level with no par shown. Showing the star thresholds (e.g. 3 stars at 1 move) from level 1 teaches that moves are the score, not just a limit; without it players learn moves-as-budget and only discover the star rule on the win card."
+      }
+    },
+    {
+      "turn": 5,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": null,
+        "exit": "right"
+      },
+      "result": "block #0 escaped through the right gate. 6 moves left."
+    },
+    {
+      "turn": 6,
+      "level": 1,
+      "say": "Three stars, clean card, one button. It says perfect and I believe it. But the stars are already white and static; I want them to drop in one by one with a pop. That is where the dopamine lives. Next.",
+      "thought": "Win card is functional but flat; juice is the gap.",
+      "note": {
+        "turn": 6,
+        "level": 1,
+        "area": "feedback",
+        "severity": "major",
+        "text": "Win card appears with all three stars already lit and no staggered star animation, no confetti or particles, no score count-up. In this genre the win beat is the retention loop; add sequential star pops with scale/overshoot, a burst on the third star, and a short delay before the Next button is tappable so the reward lands. Also fix copy: Solved in 1 moves should read 1 move."
+      }
+    },
+    {
+      "turn": 6,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 7,
+      "level": 2,
+      "say": "Two colors, two gates, and the gates carry the shape too: circle for red, triangle for cyan. Colorblind-safe from level two, love that. Nothing blocks anything. Red is already touching its gate, so out it goes.",
+      "thought": "Second no-fail level; introduces multiple colors without any interaction.",
+      "note": null
+    },
+    {
+      "turn": 7,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": null,
+        "exit": "right"
+      },
+      "result": "block #0 escaped through the right gate. 7 moves left."
+    },
+    {
+      "turn": 8,
+      "level": 2,
+      "say": "Red left and the gate stayed on the wall, still red. Small thing: the used gate should dim or close so the board tells me what is left. Cyan square straight up through the triangle gate.",
+      "thought": "Cleared gates persisting adds visual noise on bigger boards.",
+      "note": {
+        "turn": 8,
+        "level": 2,
+        "area": "feedback",
+        "severity": "minor",
+        "text": "After the red block escaped, its gate stayed fully lit on the wall. Once every block of a color is gone, fade or close that gate (and celebrate it with a small flash). On dense later boards, live-looking dead gates cost reading time and make remaining goals harder to count."
+      }
+    },
+    {
+      "turn": 8,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": null,
+        "exit": "top"
+      },
+      "result": "block #1 escaped through the top gate. 6 moves left."
+    },
+    {
+      "turn": 9,
+      "level": 2,
+      "say": "Two for two, both perfect. So far this is a tutorial that respects me. Now I want the first real obstacle. Next level.",
+      "thought": "Curve is textbook so far; waiting for the first new idea.",
+      "note": null
+    },
+    {
+      "turn": 9,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 10,
+      "level": 3,
+      "say": "Three reds, one gate at the bottom left, and the gate is exactly three wide. This is the lesson: line up, then go around. If one drag really counts as one move, this is three moves. Long bar first: slide left, then straight down and out.",
+      "thought": "Tests whether the corner-drag actually works and reads as one move.",
+      "note": null
+    },
+    {
+      "turn": 10,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": [
+          0,
+          2
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #1 escaped through the bottom gate. 8 moves left."
+    },
+    {
+      "turn": 11,
+      "level": 3,
+      "say": "It worked: left, corner, down, out, one move. That is the hook and it feels slick. The board is very empty now, though. Two boards in and the whole bottom half has never been used. Tall block next: left then down.",
+      "thought": "Board space is over-provisioned for these early counts, which makes the levels feel thin.",
+      "note": {
+        "turn": 11,
+        "level": 3,
+        "area": "difficulty",
+        "severity": "minor",
+        "text": "Levels 1-3 use 5x7 and 6x8 boards with one to three blocks; most of the grid is dead space. Empty cells read as no puzzle. Tighten early boards to the content (4x5, 5x5) so the space itself teaches that positioning matters, and grow the grid as a visible progression signal."
+      }
+    },
+    {
+      "turn": 11,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          2,
+          2
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #2 escaped through the bottom gate. 7 moves left."
+    },
+    {
+      "turn": 12,
+      "level": 3,
+      "say": "Last little square, top right corner, all the way down and across. Long drag for one move, and I like that the game is not punishing distance. Should be another perfect.",
+      "thought": "Third level at par; still no failure pressure.",
+      "note": null
+    },
+    {
+      "turn": 12,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          2,
+          0
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #0 escaped through the bottom gate. 6 moves left."
+    },
+    {
+      "turn": 13,
+      "level": 3,
+      "say": "Three perfects, and the win card is identical every time: same stars, same copy. If I always get three stars, stars stop meaning anything. I need something to fail at. Next.",
+      "thought": "Need to see where the curve first bites.",
+      "note": null
+    },
+    {
+      "turn": 13,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 14,
+      "level": 4,
+      "say": "First real board. Red gate on the left only covers the middle rows, so the tall red and the little red down there have to come up before they go out. And the cyan bar is blocked by the red bar. Order matters now. Red bar out first.",
+      "thought": "First level with ordering dependency; a real, small puzzle.",
+      "note": null
+    },
+    {
+      "turn": 14,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": null,
+        "exit": "left"
+      },
+      "result": "block #0 escaped through the left gate. 9 moves left."
+    },
+    {
+      "turn": 15,
+      "level": 4,
+      "say": "Now the cyan bar can slide left under its gate and pop up. Gate is four wide, bar is three, so there is slack. Going left two and up.",
+      "thought": "Corner route for the cyan bar.",
+      "note": null
+    },
+    {
+      "turn": 15,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": [
+          1,
+          3
+        ],
+        "exit": "top"
+      },
+      "result": "block #1 escaped through the top gate. 8 moves left."
+    },
+    {
+      "turn": 16,
+      "level": 4,
+      "say": "Tall red: up two rows so all three cells sit inside the gate lanes, then left and out. Then the little one does the same. I have not needed to look at the move counter yet, which is fine at level four.",
+      "thought": "Vertical block needs rows 3-5 to fit the gate lanes 2-5.",
+      "note": null
+    },
+    {
+      "turn": 16,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          2,
+          3
+        ],
+        "exit": "left"
+      },
+      "result": "block #2 escaped through the left gate. 7 moves left."
+    },
+    {
+      "turn": 17,
+      "level": 4,
+      "say": "Last square: up one, then all the way left. Four moves, par four. This level was the first one that made me think for a second, and it was a good second.",
+      "thought": "Level 4 is the right first bite of actual planning.",
+      "note": null
+    },
+    {
+      "turn": 17,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          3,
+          5
+        ],
+        "exit": "left"
+      },
+      "result": "block #3 escaped through the left gate. 6 moves left."
+    },
+    {
+      "turn": 18,
+      "level": 4,
+      "say": "Perfect again. Note the move limit is always par plus six. That is a lot of rope; a player who ignores corners can still clear these. Next, and I am going to check the pause menu on this one.",
+      "thought": "Limit = par+6 means the fail surface will almost never trigger early; that hurts monetization pacing.",
+      "note": {
+        "turn": 18,
+        "level": 4,
+        "area": "monetization",
+        "severity": "major",
+        "text": "Move limit is consistently par+6 on L1-L4 (7/1, 8/2, 9/3, 10/4). With that much slack a player who never learns corner-drags still clears every early level, so the fail/rescue surface never appears before L10+ and there is no early tension. Consider par+2 or par+3 from L5 onward, with the star thresholds visible, so the first near-miss teaches move economy and the rescue offer appears while the player still cares."
+      }
+    },
+    {
+      "turn": 18,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 19,
+      "level": 5,
+      "say": "A red arch and a cyan bar already parked on its gate. Hmm, reds all need to drop a row into the gate lanes. Let me hit pause first and see what the menu gives me.",
+      "thought": "Checking the pause surface before playing this one.",
+      "note": null
+    },
+    {
+      "turn": 19,
+      "action": {
+        "type": "tap",
+        "button": "btnMenu"
+      },
+      "result": "tapped HUD: pause / unpause"
+    },
+    {
+      "turn": 20,
+      "level": 5,
+      "say": "Pause is clean: Resume on top, restart, help, sound, home. Exactly the five things. Shows level and moves left. Nothing to complain about except it blurs the board, so I cannot plan while paused. Resume.",
+      "thought": "Pause menu is competent and complete; blur prevents thinking-while-paused, minor.",
+      "note": {
+        "turn": 20,
+        "level": 5,
+        "area": "ui",
+        "severity": "nit",
+        "text": "Pause overlay fully blurs the board. Players often open pause to think without the counter breathing down their neck; keep the board legible (dim, not blur) behind the card, and consider a Levels shortcut here since the level list is otherwise only reachable via Main menu."
+      }
+    },
+    {
+      "turn": 20,
+      "action": {
+        "type": "tap",
+        "button": "btnResume"
+      },
+      "result": "tapped pause: Resume"
+    },
+    {
+      "turn": 21,
+      "level": 5,
+      "say": "Cyan bar is a freebie, straight down. Then the left leg of the arch drops one row and slides out, the right leg follows, and the lintel comes down last. Four.",
+      "thought": "Planned the whole level; par should be reachable.",
+      "note": null
+    },
+    {
+      "turn": 21,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": null,
+        "exit": "bottom"
+      },
+      "result": "block #1 escaped through the bottom gate. 9 moves left."
+    },
+    {
+      "turn": 22,
+      "level": 5,
+      "say": "Left leg: down one, then out the gate.",
+      "thought": "Rows 3-5 fit the gate.",
+      "note": null
+    },
+    {
+      "turn": 22,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          3
+        ],
+        "exit": "left"
+      },
+      "result": "block #0 escaped through the left gate. 8 moves left."
+    },
+    {
+      "turn": 23,
+      "level": 5,
+      "say": "Right leg: down one, then a long slide across the whole row and out. I do like how far a single drag can carry.",
+      "thought": "Same pattern; the level is a rhythm exercise.",
+      "note": null
+    },
+    {
+      "turn": 23,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          4,
+          3
+        ],
+        "exit": "left"
+      },
+      "result": "block #3 escaped through the left gate. 7 moves left."
+    },
+    {
+      "turn": 24,
+      "level": 5,
+      "say": "Lintel drops two rows and out. Five levels, five perfects, and I still have not touched the counter. Next level I am going to waste moves on purpose, because I need to see what losing looks like here.",
+      "thought": "Time to test the fail/rescue surface deliberately.",
+      "note": null
+    },
+    {
+      "turn": 24,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          1,
+          3
+        ],
+        "exit": "left"
+      },
+      "result": "block #2 escaped through the left gate. 6 moves left."
+    },
+    {
+      "turn": 25,
+      "level": 5,
+      "say": "Perfect. Next level, and this time I play badly on purpose.",
+      "thought": "Need the fail card and rescue offer for the review.",
+      "note": null
+    },
+    {
+      "turn": 25,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 26,
+      "level": 6,
+      "say": "Both gates on the left now, stacked, cyan up top and red below. The colored gate strips and shapes make that instantly readable. Five blocks, eleven moves. I am going to fidget the top-right cyan back and forth like a nervous player and watch the counter.",
+      "thought": "Burning moves to reach the fail card; also checks whether wasted moves get any warning.",
+      "note": null
+    },
+    {
+      "turn": 26,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          5,
+          1
+        ],
+        "exit": null
+      },
+      "result": "block #3 now at (5,1). 10 moves left."
+    },
+    {
+      "turn": 27,
+      "level": 6,
+      "say": "Ten. The counter just ticks down with no color change. Back the other way.",
+      "thought": "No warning color yet on wasted moves.",
+      "note": null
+    },
+    {
+      "turn": 27,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          4,
+          1
+        ],
+        "exit": null
+      },
+      "result": "block #3 now at (4,1). 9 moves left."
+    },
+    {
+      "turn": 28,
+      "level": 6,
+      "say": "Nine. Still no undo button anywhere, I notice. In a move-limited game that is the first thing a player reaches for after a misdrag.",
+      "thought": "Undo absence is a real controls gap for a move-budget game.",
+      "note": {
+        "turn": 28,
+        "level": 6,
+        "area": "controls",
+        "severity": "major",
+        "text": "There is no undo. With a hard move limit, a single accidental drag (dropped a cell short, wrong block) costs a move with no recourse except a full restart. Add a one-step undo on the HUD (free, or limited to one per level if you want it monetizable); it cuts frustration churn at the exact moment the fail card would otherwise appear for the wrong reason."
+      }
+    },
+    {
+      "turn": 28,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          5,
+          1
+        ],
+        "exit": null
+      },
+      "result": "block #3 now at (5,1). 8 moves left."
+    },
+    {
+      "turn": 29,
+      "level": 6,
+      "say": "Eight. The drag itself feels good, by the way: the block snaps to cells and never fights me. Fidgeting again.",
+      "thought": "Controls are solid; keep burning.",
+      "note": null
+    },
+    {
+      "turn": 29,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          4,
+          1
+        ],
+        "exit": null
+      },
+      "result": "block #3 now at (4,1). 7 moves left."
+    },
+    {
+      "turn": 30,
+      "level": 6,
+      "say": "Seven. Three more wasted, then I will play it properly and run out one move short.",
+      "thought": "Need 7 wasted before the 4 escapes.",
+      "note": null
+    },
+    {
+      "turn": 30,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          5,
+          1
+        ],
+        "exit": null
+      },
+      "result": "block #3 now at (5,1). 6 moves left."
+    },
+    {
+      "turn": 31,
+      "level": 6,
+      "say": "Six. Two more.",
+      "thought": "Burning.",
+      "note": null
+    },
+    {
+      "turn": 31,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          4,
+          1
+        ],
+        "exit": null
+      },
+      "result": "block #3 now at (4,1). 5 moves left."
+    },
+    {
+      "turn": 32,
+      "level": 6,
+      "say": "Five moves left, five blocks left. A real player at this point is in trouble and does not know it: the counter is still plain white. One more waste and then I play for real.",
+      "thought": "HUD never signals danger.",
+      "note": {
+        "turn": 32,
+        "level": 6,
+        "area": "feedback",
+        "severity": "minor",
+        "text": "Move counter stays plain white all the way down. When movesLeft drops below the number of blocks remaining the level is mathematically lost and the HUD says nothing. Turn the counter amber at par+1 and red when moves left < blocks left, with a small shake; players should feel the squeeze before the fail card, not be ambushed by it."
+      }
+    },
+    {
+      "turn": 32,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          5,
+          1
+        ],
+        "exit": null
+      },
+      "result": "block #3 now at (5,1). 4 moves left."
+    },
+    {
+      "turn": 33,
+      "level": 6,
+      "say": "Okay, playing properly now. Bottom red out the red gate.",
+      "thought": "Four escapes, then fail.",
+      "note": null
+    },
+    {
+      "turn": 33,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": null,
+        "exit": "left"
+      },
+      "result": "block #0 escaped through the left gate. 3 moves left."
+    },
+    {
+      "turn": 34,
+      "level": 6,
+      "say": "Tall cyan on the left is already in its lanes. Out.",
+      "thought": "Escape 2 of 4.",
+      "note": null
+    },
+    {
+      "turn": 34,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "to": null,
+        "exit": "left"
+      },
+      "result": "block #4 escaped through the left gate. 2 moves left."
+    },
+    {
+      "turn": 35,
+      "level": 6,
+      "say": "Small cyan slides all the way across the top rows and out.",
+      "thought": "Escape 3 of 4.",
+      "note": null
+    },
+    {
+      "turn": 35,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": null,
+        "exit": "left"
+      },
+      "result": "block #3 escaped through the left gate. 1 moves left."
+    },
+    {
+      "turn": 36,
+      "level": 6,
+      "say": "Correction: the counter does go red, but only at one move left. That is a fire alarm that rings after the house is gone. Red bar down into its lanes and out, and then I am stuck with a cyan and nothing to spend.",
+      "thought": "Warning exists but triggers far too late; adjusting my earlier note.",
+      "note": {
+        "turn": 36,
+        "level": 6,
+        "area": "feedback",
+        "severity": "minor",
+        "text": "Update to the counter note: it does turn red, but only at exactly 1 move left. By then the level is usually lost. Trigger the warning state when movesLeft <= blocksLeft (the point of no return) and a softer amber state at par, so the color carries information rather than a eulogy."
+      }
+    },
+    {
+      "turn": 36,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          1,
+          4
+        ],
+        "exit": "left"
+      },
+      "result": "block #2 escaped through the left gate. 0 moves left."
+    },
+    {
+      "turn": 37,
+      "level": 6,
+      "say": "There it is. So close, four of five, big green plus three moves. The copy is right, the button is right, the color is right. But the card sits over a blurred board: I cannot see the one cyan I need. Show me what I am buying. Taking the rescue.",
+      "thought": "The rescue surface is well-shaped but hides the very thing that would sell it.",
+      "note": {
+        "turn": 37,
+        "level": 6,
+        "area": "monetization",
+        "severity": "major",
+        "text": "Fail card: So close! 4 of 5 blocks escaped, green +3 moves as primary CTA, Retry secondary. Good structure. But the board behind it is blurred, so the player cannot see that one block is a single drag from freedom. Keep the board sharp with the remaining block(s) pulsing and a ghost route to the gate; that visible one-move-away is what converts the rescue. Also there is no price, ad icon, or coin balance on the button, so the offer reads as free; decide (rewarded ad vs coins) and label it, and consider showing the +3 as a small burst on the counter when accepted."
+      }
+    },
+    {
+      "turn": 37,
+      "action": {
+        "type": "tap",
+        "button": "btnRescue"
+      },
+      "result": "tapped fail card: +3 moves rescue"
+    },
+    {
+      "turn": 38,
+      "level": 6,
+      "say": "Three moves, one block, no fanfare on the counter, it just says three. Cyan up the column into the top lanes and out. Curious what the win card says after a rescue.",
+      "thought": "Rescue works; want to see the low-star win card.",
+      "note": null
+    },
+    {
+      "turn": 38,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": [
+          3,
+          2
+        ],
+        "exit": "left"
+      },
+      "result": "block #1 escaped through the left gate. 2 moves left."
+    },
+    {
+      "turn": 39,
+      "level": 6,
+      "say": "One star, twelve moves, best five. Honest, and the hollow stars sting in the right way. But the only button is Next level. Where is Replay? The one-star card is exactly where a player wants to try again for three.",
+      "thought": "Missing replay CTA on low-star wins is a retention gap.",
+      "note": {
+        "turn": 39,
+        "level": 6,
+        "area": "retention",
+        "severity": "major",
+        "text": "One-star win card shows Solved in 12 moves (best: 5) with only a Next level button. Add a Replay for 3 stars secondary button on any sub-3-star win; that loop (retry immediately while the solution is fresh) is the cheapest retention hook in the genre, and it also drives the star total that the main menu advertises (0/90)."
+      }
+    },
+    {
+      "turn": 39,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 40,
+      "level": 7,
+      "say": "Level seven. Before I dig in, I want to see the level select, because that is where my one star should be nagging me. Pause, main menu.",
+      "thought": "Checking whether stars persist into level select.",
+      "note": null
+    },
+    {
+      "turn": 40,
+      "action": {
+        "type": "tap",
+        "button": "btnMenu"
+      },
+      "result": "tapped HUD: pause / unpause"
+    },
+    {
+      "turn": 41,
+      "level": 7,
+      "say": "Main menu from here.",
+      "thought": "Navigating out.",
+      "note": null
+    },
+    {
+      "turn": 41,
+      "action": {
+        "type": "tap",
+        "button": "btnPauseHome"
+      },
+      "result": "tapped pause: Main menu"
+    },
+    {
+      "turn": 42,
+      "level": 7,
+      "say": "Menu now reads Level 7 of 30 and 16 of 90 stars, so progress persists. Opening Levels.",
+      "thought": "Stats persisted correctly; checking the grid.",
+      "note": null
+    },
+    {
+      "turn": 42,
+      "action": {
+        "type": "tap",
+        "button": "btnLevels"
+      },
+      "result": "tapped main menu: Levels"
+    },
+    {
+      "turn": 43,
+      "level": 7,
+      "say": "Level grid is proper: stars on every tile, my lonely one star on six is right there taunting me, locked levels hatched, current one ringed in gold. That is the retention hook working. Reset progress as a bare link worries me a bit. Back into seven.",
+      "thought": "Level select is well done; the star gap is visible, which is exactly the point.",
+      "note": {
+        "turn": 43,
+        "level": 7,
+        "area": "ui",
+        "severity": "nit",
+        "text": "Levels screen: Reset progress is a plain one-tap link at the bottom of the grid. If it has no confirmation step, that is a catastrophic mis-tap for a player with 20 levels of stars. Put it behind a confirm dialog or move it to a settings screen."
+      }
+    },
+    {
+      "turn": 43,
+      "action": {
+        "type": "tap",
+        "button": "level:7"
+      },
+      "result": "tapped level tile 7"
+    },
+    {
+      "turn": 44,
+      "level": 7,
+      "say": "Seven is the first board that looks like a puzzle: five pieces interleaved, red gate on the right only covers the top half, cyan gate on the floor. The long red bar is the key: it is too low, and it blocks the cyan bar from dropping. Two free reds first. Top-left square out right.",
+      "thought": "Order: reds 0 and 2, then red bar up and right, then cyans down.",
+      "note": null
+    },
+    {
+      "turn": 44,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": null,
+        "exit": "right"
+      },
+      "result": "block #0 escaped through the right gate. 10 moves left."
+    },
+    {
+      "turn": 45,
+      "level": 7,
+      "say": "Small red under the cyan bar, one cell from the gate. Out.",
+      "thought": "Clearing the red that blocks row 3.",
+      "note": null
+    },
+    {
+      "turn": 45,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": null,
+        "exit": "right"
+      },
+      "result": "block #2 escaped through the right gate. 9 moves left."
+    },
+    {
+      "turn": 46,
+      "level": 7,
+      "say": "Now the long red bar: up two rows into the gate lanes, then slide right under the cyan bar and out. One drag.",
+      "thought": "This is the corner-drag payoff move.",
+      "note": null
+    },
+    {
+      "turn": 46,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          1,
+          3
+        ],
+        "exit": "right"
+      },
+      "result": "block #3 escaped through the right gate. 8 moves left."
+    },
+    {
+      "turn": 47,
+      "level": 7,
+      "say": "Reds gone. Cyan bar slides left one so it sits inside the floor gate, then drops all the way down and out.",
+      "thought": "Cols 2-4 fit gate lanes 1-4.",
+      "note": null
+    },
+    {
+      "turn": 47,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": [
+          2,
+          2
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #1 escaped through the bottom gate. 7 moves left."
+    },
+    {
+      "turn": 48,
+      "level": 7,
+      "say": "Last cyan square: one step left, then down and out. Five moves, par five. This was the best level so far; it needed a real read of the board.",
+      "thought": "Level 7 at par.",
+      "note": null
+    },
+    {
+      "turn": 48,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "to": [
+          4,
+          4
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #4 escaped through the bottom gate. 6 moves left."
+    },
+    {
+      "turn": 49,
+      "level": 7,
+      "say": "Three stars back. Still no stones anywhere, seven levels in. Let us see if eight finally introduces one.",
+      "thought": "Waiting for the next new mechanic.",
+      "note": null
+    },
+    {
+      "turn": 49,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 50,
+      "level": 8,
+      "say": "Third color: green diamond, gate on top. Six blocks, three gates, still readable at a glance because every gate is a colored strip with a shape. The tall cyan on the right is corking the red. Cyan down and out first.",
+      "thought": "New color introduced cleanly with no other new idea; good pacing.",
+      "note": null
+    },
+    {
+      "turn": 50,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": null,
+        "exit": "bottom"
+      },
+      "result": "block #1 escaped through the bottom gate. 11 moves left."
+    },
+    {
+      "turn": 51,
+      "level": 8,
+      "say": "Red bar uncorked, straight out the right.",
+      "thought": "Escape 2 of 6.",
+      "note": null
+    },
+    {
+      "turn": 51,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": null,
+        "exit": "right"
+      },
+      "result": "block #0 escaped through the right gate. 10 moves left."
+    },
+    {
+      "turn": 52,
+      "level": 8,
+      "say": "Green slides one right so it sits under its gate, then up and out. Small note: the green block reads as a square on the legend but a diamond on the board; pick one.",
+      "thought": "Shape naming inconsistency between legend copy and rendered icon.",
+      "note": {
+        "turn": 52,
+        "level": 8,
+        "area": "legibility",
+        "severity": "nit",
+        "text": "Green blocks show a diamond glyph on the board and gate, but the state/legend names the shape square. The glyph itself is fine (distinct from circle and triangle); just make sure any text, accessibility label, or tutorial copy calls it a diamond so players and VoiceOver users hear the same word they see."
+      }
+    },
+    {
+      "turn": 52,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          3,
+          1
+        ],
+        "exit": "top"
+      },
+      "result": "block #2 escaped through the top gate. 9 moves left."
+    },
+    {
+      "turn": 53,
+      "level": 8,
+      "say": "Three cyans left, all for the floor gate. The little horizontal one is already in the lanes: down and out.",
+      "thought": "Escape 4 of 6.",
+      "note": null
+    },
+    {
+      "turn": 53,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "to": null,
+        "exit": "bottom"
+      },
+      "result": "block #5 escaped through the bottom gate. 8 moves left."
+    },
+    {
+      "turn": 54,
+      "level": 8,
+      "say": "Tall cyan on the left steps one column right into the lanes, then drops out.",
+      "thought": "Escape 5 of 6.",
+      "note": null
+    },
+    {
+      "turn": 54,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          2,
+          4
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #3 escaped through the bottom gate. 7 moves left."
+    },
+    {
+      "turn": 55,
+      "level": 8,
+      "say": "Last one: right a column, all the way down. Six for six on par if this lands. Eight levels, one deliberate fail, and I never once needed a hint.",
+      "thought": "Level 8 at par; difficulty still gentle for a puzzle veteran.",
+      "note": {
+        "turn": 55,
+        "level": 8,
+        "area": "difficulty",
+        "severity": "minor",
+        "text": "Through L8 every level solved at par on first sight with no hints, and stones (the one advertised obstacle) have not appeared yet. For a hybrid-casual funnel that is acceptable through L5, but by L6-8 a veteran should feel at least one deliberate trap (a block that looks free but must wait). Consider bringing the first stone in around L5 and the first order-dependency trap by L7."
+      }
+    },
+    {
+      "turn": 55,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "to": [
+          2,
+          2
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #4 escaped through the bottom gate. 6 moves left."
+    },
+    {
+      "turn": 56,
+      "level": 8,
+      "say": "Perfect. A couple of minutes left; one more board.",
+      "thought": "Last level before time is up.",
+      "note": null
+    },
+    {
+      "turn": 56,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 57,
+      "level": 9,
+      "say": "Nine is dense: four greens stacked on the left, all needing the right-side gate, red corked in the middle. The top green goes up a row to dodge the red bar, then right and out.",
+      "thought": "Greens first; the red bar blocks row 2.",
+      "note": null
+    },
+    {
+      "turn": 57,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          1,
+          0
+        ],
+        "exit": "right"
+      },
+      "result": "block #3 escaped through the right gate. 11 moves left."
+    },
+    {
+      "turn": 58,
+      "level": 9,
+      "say": "Second green follows the same lane: up to the top, then right.",
+      "thought": "Same route.",
+      "note": null
+    },
+    {
+      "turn": 58,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "to": [
+          1,
+          0
+        ],
+        "exit": "right"
+      },
+      "result": "block #5 escaped through the right gate. 10 moves left."
+    },
+    {
+      "turn": 59,
+      "level": 9,
+      "say": "Wide green climbs the whole left column to row one, then out right above the red. Long route, one move, and it feels great when it works.",
+      "thought": "Corner route through freed column.",
+      "note": null
+    },
+    {
+      "turn": 59,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "to": [
+          1,
+          1
+        ],
+        "exit": "right"
+      },
+      "result": "block #4 escaped through the right gate. 9 moves left."
+    },
+    {
+      "turn": 60,
+      "level": 9,
+      "say": "Corner green: up the edge to the top, then across and out.",
+      "thought": "Fourth green.",
+      "note": null
+    },
+    {
+      "turn": 60,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          0,
+          0
+        ],
+        "exit": "right"
+      },
+      "result": "block #2 escaped through the right gate. 8 moves left."
+    },
+    {
+      "turn": 61,
+      "level": 9,
+      "say": "Cyan climbs its column to the top rows, then slides left through the cyan gate.",
+      "thought": "Fifth escape.",
+      "note": null
+    },
+    {
+      "turn": 61,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": [
+          2,
+          0
+        ],
+        "exit": "left"
+      },
+      "result": "block #1 escaped through the left gate. 7 moves left."
+    },
+    {
+      "turn": 62,
+      "level": 9,
+      "say": "And the red: down one row, then all the way left and out. Should be six for six.",
+      "thought": "Level 9 at par if this works.",
+      "note": null
+    },
+    {
+      "turn": 62,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          4,
+          3
+        ],
+        "exit": "left"
+      },
+      "result": "block #0 escaped through the left gate. 6 moves left."
+    },
+    {
+      "turn": 63,
+      "level": 9,
+      "say": "Nine levels, eight perfects, one self-inflicted one-star. Peeking at ten before my time is up.",
+      "thought": "Last look for the review.",
+      "note": null
+    },
+    {
+      "turn": 63,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 64,
+      "level": 10,
+      "say": "Ten is the first real lock: six blocks, par seven, and nothing can leave right now. Everything is corked by something. The bottom red has to park out of the way first. That is a proper puzzle beat, and it arrives at exactly the right level.",
+      "thought": "First level where par exceeds block count; the curve finally bites.",
+      "note": {
+        "turn": 64,
+        "level": 10,
+        "area": "difficulty",
+        "severity": "nit",
+        "text": "Level 10 is the first board where no block can escape on move one and par exceeds block count (7 for 6). This is the right moment for that beat and it reads well; make sure the reveal is celebrated (e.g. a one-time hint tooltip: Sometimes a block has to move twice) so players who have only ever done one-move escapes understand why the counter is bigger."
+      }
+    },
+    {
+      "turn": 64,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          0,
+          6
+        ],
+        "exit": null
+      },
+      "result": "block #3 now at (0,6). 12 moves left."
+    },
+    {
+      "turn": 65,
+      "level": 10,
+      "say": "Red parked bottom left. Now the little cyan slides right into the floor lanes and drops out.",
+      "thought": "Chain begins.",
+      "note": null
+    },
+    {
+      "turn": 65,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "to": [
+          2,
+          7
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #5 escaped through the bottom gate. 11 moves left."
+    },
+    {
+      "turn": 66,
+      "level": 10,
+      "say": "Middle cyan straight down the column and out.",
+      "thought": "Continuing the chain.",
+      "note": null
+    },
+    {
+      "turn": 66,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": null,
+        "exit": "bottom"
+      },
+      "result": "block #1 escaped through the bottom gate. 10 moves left."
+    },
+    {
+      "turn": 67,
+      "level": 10,
+      "say": "Tall cyan on the right rides down the edge and out; that uncorks the red bar.",
+      "thought": "Fourth move.",
+      "note": null
+    },
+    {
+      "turn": 67,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "to": null,
+        "exit": "bottom"
+      },
+      "result": "block #4 escaped through the bottom gate. 9 moves left."
+    },
+    {
+      "turn": 68,
+      "level": 10,
+      "say": "Red bar out the right.",
+      "thought": "Fifth move.",
+      "note": null
+    },
+    {
+      "turn": 68,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": null,
+        "exit": "right"
+      },
+      "result": "block #0 escaped through the right gate. 8 moves left."
+    },
+    {
+      "turn": 69,
+      "level": 10,
+      "say": "Green up one row into its narrow gate and out left.",
+      "thought": "Sixth move.",
+      "note": null
+    },
+    {
+      "turn": 69,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          2,
+          2
+        ],
+        "exit": "left"
+      },
+      "result": "block #2 escaped through the left gate. 7 moves left."
+    },
+    {
+      "turn": 70,
+      "level": 10,
+      "say": "Parked red climbs one row into the lanes and slides right and out. Seven for par.",
+      "thought": "Should be seventh and final.",
+      "note": null
+    },
+    {
+      "turn": 70,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          0,
+          5
+        ],
+        "exit": "right"
+      },
+      "result": "block #3 escaped through the right gate. 6 moves left."
+    },
+    {
+      "turn": 71,
+      "level": 10,
+      "say": "Ten levels, nine perfects, one one-star I earned on purpose. Ten was the first board that made me hold the phone still and think. Time is nearly up; I am going to stop here and write this up.",
+      "thought": "Session complete; wrapping up.",
+      "note": {
+        "turn": 71,
+        "level": 10,
+        "area": "audio",
+        "severity": "minor",
+        "text": "Could not judge audio in this harness, but the game passed every sound-off test: I never needed sound to know what happened. Make sure the eventual SFX layer is additive (escape whoosh, gate chime, star pops) and never carries information the visuals do not."
+      }
+    }
+  ]
+}

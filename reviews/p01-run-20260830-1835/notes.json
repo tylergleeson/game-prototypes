@@ -1,0 +1,135 @@
+[
+  {
+    "turn": 0,
+    "level": 1,
+    "area": "other",
+    "severity": "nit",
+    "text": "Smoke-test note — the notes log opens from the button on the right."
+  },
+  {
+    "turn": 2,
+    "level": 1,
+    "area": "ui",
+    "severity": "minor",
+    "text": "Main menu is a dark navy blueprint card with three text-only stats (Level, Stars, Sound). Reads as a technical spec sheet rather than a toy. Hybrid-casual menus convert better with a live, colorful, un-blurred board peeking through and the Play button pulsing; consider dropping the Sound stat cell for a corner icon and letting the board show through crisply."
+  },
+  {
+    "turn": 3,
+    "level": 1,
+    "area": "onboarding",
+    "severity": "minor",
+    "text": "How-to-play is clear and short, but it is opt-in. A first-time player who taps Play will never see the one-drag-around-corners rule, and that rule is what makes par achievable. Level 1 or 2 should teach it in-board with a ghost path/finger animation, not rely on the legend."
+  },
+  {
+    "turn": 5,
+    "level": 1,
+    "area": "ui",
+    "severity": "nit",
+    "text": "Level 1 HUD says 7 moves for a par-1 level with no par shown. Showing the star thresholds (e.g. 3 stars at 1 move) from level 1 teaches that moves are the score, not just a limit; without it players learn moves-as-budget and only discover the star rule on the win card."
+  },
+  {
+    "turn": 6,
+    "level": 1,
+    "area": "feedback",
+    "severity": "major",
+    "text": "Win card appears with all three stars already lit and no staggered star animation, no confetti or particles, no score count-up. In this genre the win beat is the retention loop; add sequential star pops with scale/overshoot, a burst on the third star, and a short delay before the Next button is tappable so the reward lands. Also fix copy: Solved in 1 moves should read 1 move."
+  },
+  {
+    "turn": 8,
+    "level": 2,
+    "area": "feedback",
+    "severity": "minor",
+    "text": "After the red block escaped, its gate stayed fully lit on the wall. Once every block of a color is gone, fade or close that gate (and celebrate it with a small flash). On dense later boards, live-looking dead gates cost reading time and make remaining goals harder to count."
+  },
+  {
+    "turn": 11,
+    "level": 3,
+    "area": "difficulty",
+    "severity": "minor",
+    "text": "Levels 1-3 use 5x7 and 6x8 boards with one to three blocks; most of the grid is dead space. Empty cells read as no puzzle. Tighten early boards to the content (4x5, 5x5) so the space itself teaches that positioning matters, and grow the grid as a visible progression signal."
+  },
+  {
+    "turn": 18,
+    "level": 4,
+    "area": "monetization",
+    "severity": "major",
+    "text": "Move limit is consistently par+6 on L1-L4 (7/1, 8/2, 9/3, 10/4). With that much slack a player who never learns corner-drags still clears every early level, so the fail/rescue surface never appears before L10+ and there is no early tension. Consider par+2 or par+3 from L5 onward, with the star thresholds visible, so the first near-miss teaches move economy and the rescue offer appears while the player still cares."
+  },
+  {
+    "turn": 20,
+    "level": 5,
+    "area": "ui",
+    "severity": "nit",
+    "text": "Pause overlay fully blurs the board. Players often open pause to think without the counter breathing down their neck; keep the board legible (dim, not blur) behind the card, and consider a Levels shortcut here since the level list is otherwise only reachable via Main menu."
+  },
+  {
+    "turn": 28,
+    "level": 6,
+    "area": "controls",
+    "severity": "major",
+    "text": "There is no undo. With a hard move limit, a single accidental drag (dropped a cell short, wrong block) costs a move with no recourse except a full restart. Add a one-step undo on the HUD (free, or limited to one per level if you want it monetizable); it cuts frustration churn at the exact moment the fail card would otherwise appear for the wrong reason."
+  },
+  {
+    "turn": 32,
+    "level": 6,
+    "area": "feedback",
+    "severity": "minor",
+    "text": "Move counter stays plain white all the way down. When movesLeft drops below the number of blocks remaining the level is mathematically lost and the HUD says nothing. Turn the counter amber at par+1 and red when moves left < blocks left, with a small shake; players should feel the squeeze before the fail card, not be ambushed by it."
+  },
+  {
+    "turn": 36,
+    "level": 6,
+    "area": "feedback",
+    "severity": "minor",
+    "text": "Update to the counter note: it does turn red, but only at exactly 1 move left. By then the level is usually lost. Trigger the warning state when movesLeft <= blocksLeft (the point of no return) and a softer amber state at par, so the color carries information rather than a eulogy."
+  },
+  {
+    "turn": 37,
+    "level": 6,
+    "area": "monetization",
+    "severity": "major",
+    "text": "Fail card: So close! 4 of 5 blocks escaped, green +3 moves as primary CTA, Retry secondary. Good structure. But the board behind it is blurred, so the player cannot see that one block is a single drag from freedom. Keep the board sharp with the remaining block(s) pulsing and a ghost route to the gate; that visible one-move-away is what converts the rescue. Also there is no price, ad icon, or coin balance on the button, so the offer reads as free; decide (rewarded ad vs coins) and label it, and consider showing the +3 as a small burst on the counter when accepted."
+  },
+  {
+    "turn": 39,
+    "level": 6,
+    "area": "retention",
+    "severity": "major",
+    "text": "One-star win card shows Solved in 12 moves (best: 5) with only a Next level button. Add a Replay for 3 stars secondary button on any sub-3-star win; that loop (retry immediately while the solution is fresh) is the cheapest retention hook in the genre, and it also drives the star total that the main menu advertises (0/90)."
+  },
+  {
+    "turn": 43,
+    "level": 7,
+    "area": "ui",
+    "severity": "nit",
+    "text": "Levels screen: Reset progress is a plain one-tap link at the bottom of the grid. If it has no confirmation step, that is a catastrophic mis-tap for a player with 20 levels of stars. Put it behind a confirm dialog or move it to a settings screen."
+  },
+  {
+    "turn": 52,
+    "level": 8,
+    "area": "legibility",
+    "severity": "nit",
+    "text": "Green blocks show a diamond glyph on the board and gate, but the state/legend names the shape square. The glyph itself is fine (distinct from circle and triangle); just make sure any text, accessibility label, or tutorial copy calls it a diamond so players and VoiceOver users hear the same word they see."
+  },
+  {
+    "turn": 55,
+    "level": 8,
+    "area": "difficulty",
+    "severity": "minor",
+    "text": "Through L8 every level solved at par on first sight with no hints, and stones (the one advertised obstacle) have not appeared yet. For a hybrid-casual funnel that is acceptable through L5, but by L6-8 a veteran should feel at least one deliberate trap (a block that looks free but must wait). Consider bringing the first stone in around L5 and the first order-dependency trap by L7."
+  },
+  {
+    "turn": 64,
+    "level": 10,
+    "area": "difficulty",
+    "severity": "nit",
+    "text": "Level 10 is the first board where no block can escape on move one and par exceeds block count (7 for 6). This is the right moment for that beat and it reads well; make sure the reveal is celebrated (e.g. a one-time hint tooltip: Sometimes a block has to move twice) so players who have only ever done one-move escapes understand why the counter is bigger."
+  },
+  {
+    "turn": 71,
+    "level": 10,
+    "area": "audio",
+    "severity": "minor",
+    "text": "Could not judge audio in this harness, but the game passed every sound-off test: I never needed sound to know what happened. Make sure the eventual SFX layer is additive (escape whoosh, gate chime, star pops) and never carries information the visuals do not."
+  }
+]

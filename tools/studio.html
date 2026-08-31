@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Reviewer studio</title>
+<style>
+  :root { --ink:#eaf4ff; --dim:#9dbbdd; --amber:#ffd04d; --line:rgba(214,238,255,.4); }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; background:#0b0f1a; color:var(--ink); font-family:system-ui,-apple-system,sans-serif; overflow:hidden; }
+  #stage { display:flex; flex-direction:column; align-items:center; padding:14px 0 0; }
+  #phone { position:relative; background:#000; border:9px solid #16181f; border-radius:44px; box-shadow:0 20px 60px rgba(0,0,0,.6), inset 0 0 0 1px #2a2d38; overflow:hidden; flex:none; }
+  #phone iframe { display:block; border:0; background:#0e2c58; }
+  #panel {
+    position:fixed; left:50%; bottom:12px; transform:translateX(-50%); width:min(96vw, 460px); z-index:5;
+    background:rgba(8,14,30,.93); border:1px solid var(--line); border-radius:14px; padding:10px 14px 12px;
+    backdrop-filter:blur(8px); box-shadow:0 12px 40px rgba(0,0,0,.55);
+  }
+  #hdr { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  #hdr .who { font:600 10px/1 ui-monospace,Menlo,monospace; letter-spacing:.18em; color:var(--dim); }
+  #hdr .who b { color:var(--ink); }
+  #timer { margin-left:auto; font:700 13px/1 ui-monospace,Menlo,monospace; color:var(--amber); font-variant-numeric:tabular-nums; }
+  #timer.over { color:#ff8078; }
+  #busy { margin-left:auto; font:600 10px/1 ui-monospace,Menlo,monospace; letter-spacing:.12em; color:#5fe89b; animation:blink 1s infinite; }
+  #busy + #timer { margin-left:10px; }
+  @keyframes blink { 50% { opacity:.35; } }
+  #notesBtn { background:rgba(255,255,255,.08); border:1px solid var(--line); color:var(--ink); border-radius:8px; padding:5px 9px; font:700 11px system-ui; cursor:pointer; }
+  #notesBtn.on { background:var(--amber); color:#1a2a44; border-color:var(--amber); }
+  #say { font-size:15px; line-height:1.35; min-height:20px; }
+  #say.think { color:var(--dim); font-style:italic; }
+  #thought { color:var(--dim); font-size:12px; margin-top:4px; }
+  #note { color:var(--amber); font-size:12.5px; margin-top:6px; }
+  #note:empty, #thought:empty { display:none; }
+  #notes { display:none; margin-top:8px; max-height:38vh; overflow:auto; border-top:1px solid var(--line); padding-top:8px; }
+  #notes.open { display:block; }
+  #notes .n { font-size:12.5px; line-height:1.35; padding:5px 0; border-bottom:1px dashed rgba(214,238,255,.15); }
+  #notes .n .m { font:600 10px/1 ui-monospace,Menlo,monospace; letter-spacing:.1em; color:var(--dim); margin-right:6px; }
+  #notes .n .s { font-weight:700; text-transform:uppercase; font-size:10px; letter-spacing:.08em; margin-right:6px; }
+  .critical { color:#ff8078; } .major { color:var(--amber); } .minor { color:#72d8ff; } .nit { color:var(--dim); }
+  #notes .empty { color:var(--dim); font-size:12px; }
+  body.side #stage { align-items:flex-start; padding-left:14px; }
+  body.side #panel { left:auto; right:12px; top:14px; bottom:auto; transform:none; width:440px; }
+  body.side #notes { max-height:60vh; }
+  #panel.breaker { border-color:#ff8078; box-shadow:0 12px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(255,128,120,.35); }
+  #panel.breaker #hdr .who b { color:#ff8078; }
+  #badge { display:none; margin:-2px 0 8px; padding:6px 9px; border-radius:7px; background:rgba(255,128,120,.14); border:1px dashed rgba(255,128,120,.6); color:#ffb3ac; font:700 11px/1.3 system-ui; letter-spacing:.04em; }
+  #panel.breaker #badge { display:block; }
+</style>
+</head>
+<body>
+  <div id="stage">
+    <div id="phone"><iframe id="game" name="phone" title="game"></iframe></div>
+  </div>
+  <div id="panel">
+    <div id="hdr">
+      <span class="who">REVIEWER · <b id="who">—</b></span>
+      <span id="busy" hidden>● playing</span>
+      <span id="timer">--:--</span>
+      <button id="notesBtn">Notes (0)</button>
+    </div>
+    <div id="badge">⚠ ADVERSARIAL QA — this tester is deliberately trying to break the game and document bugs. Not a normal play-through.</div>
+    <div id="say" class="think">Reviewer is settling in — first words appear after the first look.</div>
+    <div id="thought"></div>
+    <div id="note"></div>
+    <div id="notes"><div class="empty">No notes yet.</div></div>
+  </div>
+<script>
+  const q = new URLSearchParams(location.search);
+  if (q.get('side')) document.body.classList.add('side');
+  if (q.get('panel')) { // panel-only window (the phone is the iOS Simulator)
+    document.getElementById('stage').style.display = 'none';
+    const p = document.getElementById('panel'); p.style.position = 'static'; p.style.transform = 'none'; p.style.width = 'auto'; p.style.margin = '10px';
+    document.body.style.overflow = 'auto';
+  }
+  const W = +q.get('w') || 402, H = +q.get('h') || 874;
+  const f = document.getElementById('game'); f.width = W; f.height = H; f.style.width = W + 'px'; f.style.height = H + 'px';
+  if (q.get('src')) f.src = q.get('src');
+  document.getElementById('who').textContent = q.get('who') || 'Reviewer';
+  const $ = id => document.getElementById(id);
+  const notes = [];
+  let deadline = null, over = false;
+  const fmt = s => { s = Math.max(0, Math.round(s)); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+  setInterval(() => {
+    if (!deadline) return;
+    const left = (deadline - Date.now()) / 1000;
+    $('timer').textContent = left > 0 ? fmt(left) + ' left' : (over ? 'writing review' : "time's up");
+    $('timer').className = left > 0 ? '' : 'over';
+  }, 250);
+  $('notesBtn').onclick = () => { $('notes').classList.toggle('open'); $('notesBtn').classList.toggle('on'); };
+  window.studio = {
+    setDeadline(ms) { deadline = ms; },
+    setPhase(p) { over = p === 'review'; },
+    say({ say = '', thought = '', note = null, thinking = false }) {
+      $('say').textContent = say; $('say').className = thinking ? 'think' : '';
+      $('thought').textContent = thought ? 'thinks: ' + thought : '';
+      $('note').textContent = note ? '📝 ' + note.text : '';
+      if (note) {
+        notes.push(note);
+        const list = $('notes'); if (notes.length === 1) list.innerHTML = '';
+        const d = document.createElement('div'); d.className = 'n';
+        d.innerHTML = `<span class="m">t${note.turn} · L${note.level}</span><span class="s ${note.severity}">${note.severity} · ${note.area}</span>${note.text.replace(/</g, '&lt;')}`;
+        list.prepend(d);
+        $('notesBtn').textContent = `Notes (${notes.length})`;
+      }
+    },
+    busy(b) { $('busy').hidden = !b; },
+    mode({ persona, label, who }) {
+      $('panel').classList.toggle('breaker', persona === 'breaker');
+      document.querySelector('#hdr .who').innerHTML = (label || 'REVIEWER') + ' · <b>' + who.replace(/</g, '&lt;') + '</b>';
+    },
+    hidePanel(h) { $('panel').style.visibility = h ? 'hidden' : 'visible'; },
+  };
+</script>
+</body>
+</html>

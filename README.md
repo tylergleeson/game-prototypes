@@ -29,6 +29,11 @@ signal to mobile publishers (submissions are non-exclusive and keep all IP).
 - **Headless-Chromium playtest bots** beat every level through the real engine
   before anything ships.
 
+Run the bots locally with `npm install` once, then `npm run playtest` (all five)
+or `npm run playtest:p01`. Playwright's bundled Chromium is used unless
+`PW_CHROMIUM` or `/opt/pw-browsers/chromium` exists. Gate Escape also has a
+native iOS build with its own simulator bot: `prototypes/p01-gate-escape/tools/playtest-ios.sh`.
+
 ## Per-prototype layout
 
 ```
@@ -39,3 +44,29 @@ prototypes/pNN-name/
   tools/build-single.mjs           # one-file bundle for artifacts/portals
   shots/                           # store screenshots from the bot
 ```
+
+## Reviewer sessions (watch an AI critic play, then let a dev action the notes)
+
+Two ways to have a Claude-driven persona — a veteran iOS puzzle-game critic —
+play a prototype in a **visible** window, narrate live, log improvement notes,
+and write a formal review:
+
+**A. Inside Claude Code, no API key (recommended):** `/review-session --start 12 --minutes 10`
+(or just ask: "run a review session from level 20 for 8 minutes"). This starts
+the **studio console** — `tools/reviewer-server.mjs` opens Chromium with the
+game in an exact-size iPhone frame (`--device iphone-17 | iphone-17-pro-max |
+iphone-16e | iphone-se`) and a floating panel over the bottom of the window:
+persona name, countdown, live commentary, latest note, and a **Notes (N)**
+button that expands the full log. Nothing the panel does changes the game's
+dimensions. A reviewer subagent plays through the console's localhost API with
+real pointer gestures; when the timer runs out it files the review. A second
+**developer subagent** then reads `review.md` + `notes.json`, actions the
+notes, re-runs the playtest bots, rebuilds, and writes `dev-report.md`.
+By default the session runs the **real Capacitor app in the Xcode iOS Simulator** (`--target chrome` falls back to a browser studio): the app (launched with `-studio`) polls the console and runs its state reads and synthetic pointer gestures inside the real WKWebView, screenshots come from `simctl` at true 3×, and the commentary panel opens in its own small window beside the Simulator. Everything lands in `reviews/<game>-run-<stamp>/`.
+
+Add `--persona breaker` for the **adversarial QA persona**: a QA lead whose only goal is to break the game — raw un-planned gestures (off-board, through walls, held pointers, pointercancel), rapid-fire tap sequences, keyboard events, reloads for persistence checks, and an `inspect` action that cross-checks HUD text against engine state, storage, button states and captured JS errors. The panel, `live.md` and `review.md` are all flagged as an adversarial session, notes are REPRO/EXPECTED/ACTUAL bug reports, and the developer pass reproduces each bug and adds a regression check to the playtest bot.
+
+**B. Standalone with the Claude API:** `export ANTHROPIC_API_KEY=…` then
+`npm run review:p01 -- --levels 5` (or `--minutes 10`, `--start 20`). Same
+persona via `tools/reviewer.mjs`; `--dry` runs the harness with solver moves
+and no API. Per-game adapters live in `prototypes/<game>/tools/reviewer-adapter.mjs`.
