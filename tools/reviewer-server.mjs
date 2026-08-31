@@ -4,7 +4,9 @@
 // expandable notes log), and serves a tiny localhost API that a Claude Code subagent
 // drives: look, say, act, and finally file the review.
 //
-//   node tools/reviewer-server.mjs --game p01 --out reviews/p01-run-1 --minutes 10 [--start 12] [--device iphone-17] [--persona critic|breaker] [--port 7411]
+//   node tools/reviewer-server.mjs --game p01 --out reviews/p01-run-1 (--levels 11-20 | --minutes 10) [--start 12] [--device iphone-17] [--persona critic|breaker] [--slot N --of 3] [--port 7411]
+//   --levels A-B runs until level B is cleared (no clock); --minutes M is a time box; both may be combined. --of N lays the
+//   N parallel sessions out in columns (Simulator on top, its log panel beneath).
 //   Default target is the Xcode iOS Simulator (real app, real WKWebView; pass --install after rebuilding the app,
 //   --fresh to uninstall/reinstall so there is no saved progress). --slot N (port defaults to 7410+N) runs the
 //   session on an identical copy of the same iPhone model so several sessions can run at once.
@@ -27,7 +29,13 @@ const args = Object.fromEntries(process.argv.slice(2).map((a, i, all) => {
 }).filter(e => e.length));
 const SLOT = parseInt(args.slot || '1', 10);          // parallel sessions: slot N runs on an identical copy of the device
 const PORT = parseInt(args.port || String(7410 + SLOT), 10);
-const MINUTES = parseFloat(args.minutes || '10');
+// budget: --levels A-B (run until level B is cleared; --start defaults to A) and/or --minutes M; default 10 min
+const LEVELS = args.levels ? String(args.levels).split('-').map(n => parseInt(n, 10)) : null;
+if (LEVELS && (LEVELS.length !== 2 || !(LEVELS[0] >= 1) || !(LEVELS[1] >= LEVELS[0]))) { console.error('--levels needs A-B, e.g. 11-20'); process.exit(2); }
+if (LEVELS && !args.start) args.start = String(LEVELS[0]);
+const MINUTES = args.minutes ? parseFloat(args.minutes) : (LEVELS ? null : 10);
+const MAX_TURNS = parseInt(args['max-turns'] || '600', 10);
+const OF = parseInt(args.of || '1', 10);
 const DEVICE = args.device || 'iphone-17';
 const PERSONA = args.persona || 'critic';           // critic | breaker
 const PERSONAS = { critic: { who: 'Juno Adler', label: 'REVIEWER' }, breaker: { who: 'Mara Voss', label: 'BREAKER · adversarial QA' } };
@@ -38,7 +46,8 @@ const game = await loadGame(args.game || 'p01');
 const outDir = path.resolve(root, args.out || `reviews/${args.game || 'p01'}-run-${Date.now()}`);
 fs.mkdirSync(path.join(outDir, 'shots'), { recursive: true });
 const liveMd = path.join(outDir, 'live.md');
-fs.writeFileSync(liveMd, (MODE_LINE ? MODE_LINE + '\n\n' : '') + `# ${game.name} — live ${PERSONA} session (${DEVICES[DEVICE]?.label || DEVICE}${(args.target||"sim")==="sim" ? " Simulator" : ""}, ${MINUTES} min${args.start ? ', from level ' + args.start : ''})\n\n`);
+const BUDGET_LABEL = [LEVELS ? `levels ${LEVELS[0]}–${LEVELS[1]}` : null, MINUTES ? `${MINUTES} min` : null].filter(Boolean).join(', ') + (!LEVELS && args.start ? ', from level ' + args.start : '');
+fs.writeFileSync(liveMd, (MODE_LINE ? MODE_LINE + '\n\n' : '') + `# ${game.name} — live ${PERSONA} session (${DEVICES[DEVICE]?.label || DEVICE}${(args.target||"sim")==="sim" ? " Simulator" : ""}, ${BUDGET_LABEL})\n\n`);
 
 // ---- bridge (simulator target): the app polls /bridge/next for JS and posts /bridge/result ----
 const pending = [], inflight = new Map();
@@ -57,24 +66,33 @@ const ready = new Promise(r => (resolveReady = r));
 const TARGET = args.target || 'sim';   // sim = real app in the Xcode iOS Simulator (default); chrome = browser studio fallback
 let deadline = null;               // starts on the reviewer's first look
 let turn = 0, levelsWon = 0, prevScreen = null, lastResult = null, phase = 'play';
+const wonLevels = new Set();
 const log = [], notes = [];
 let queue = Promise.resolve();
 const serial = fn => (queue = queue.then(fn, fn));
-const minutesLeft = () => (deadline ? Math.max(0, (deadline - Date.now()) / 60000) : MINUTES);
+const minutesLeft = () => (MINUTES ? (deadline ? Math.max(0, (deadline - Date.now()) / 60000) : MINUTES) : null);
+const cleared = () => (LEVELS ? [...wonLevels].filter(n => n >= LEVELS[0] && n <= LEVELS[1]).length : wonLevels.size);
+function doneState() {
+  if (MINUTES && minutesLeft() <= 0) return { done: true, reason: 'time box ended' };
+  if (LEVELS && [...wonLevels].some(n => n >= LEVELS[1])) return { done: true, reason: `level goal complete: ${LEVELS[0]}–${LEVELS[1]} cleared` };
+  if (turn >= MAX_TURNS) return { done: true, reason: 'turn cap reached' };
+  return { done: false, reason: null };
+}
 
 async function snapshot() {
-  if (!deadline) { deadline = Date.now() + MINUTES * 60000; await view.studio('setDeadline', deadline); }
+  if (MINUTES && !deadline) { deadline = Date.now() + MINUTES * 60000; await view.studio('setDeadline', deadline); }
   const raw = await game.raw(view);
   const summary = game.summarize(raw);
-  if (summary.screen === 'win' && prevScreen !== 'win') levelsWon++;
+  if (summary.screen === 'win' && prevScreen !== 'win') { levelsWon++; wonLevels.add(summary.level); }
   prevScreen = summary.screen;
   turn++;
+  if (LEVELS) await view.studio('progress', { from: LEVELS[0], to: LEVELS[1], cleared: cleared(), highest: Math.max(0, ...wonLevels) });
   const shot = path.join(outDir, 'shots', `t${String(turn).padStart(3, '0')}.png`);
   await view.screenshot({ path: shot });
-  const timeUp = minutesLeft() <= 0;
-  if (timeUp && phase === 'play') { phase = 'review'; await view.studio('setPhase', 'review'); }
+  const { done, reason } = doneState();
+  if (done && phase === 'play') { phase = 'review'; await view.studio('setPhase', 'review'); }
   return { raw, state: {
-    turn, budget: { minutesLeft: +minutesLeft().toFixed(2), timeUp, levelsWon, device: view.device.label },
+    turn, budget: { done, reason, timeUp: done, minutesLeft: MINUTES ? +minutesLeft().toFixed(2) : null, levels: LEVELS ? `${LEVELS[0]}-${LEVELS[1]}` : null, levelsCleared: cleared(), levelsWon, highestWon: Math.max(0, ...wonLevels), device: view.device.label },
     screen: summary.screen, summary, lastResult, screenshot: shot,
   } };
 }
@@ -160,11 +178,11 @@ const server = http.createServer((req, res) => {
     if (req.method === 'POST' && req.url === '/end') {
       const { review = '' } = await body(req);
       await view.studio('say', { say: 'Review filed. Thanks for watching.' });
-      const md = (MODE_LINE ? '> ' + MODE_LINE + '\n\n' : '') + `# ${game.name} — ${PERSONA === 'breaker' ? 'adversarial QA' : 'reviewer'} session\n\n${view.device.label} · ${MINUTES} min · turns: ${turn} · levels won: ${levelsWon}${args.start ? ' · started at level ' + args.start : ''}\n\n## Review\n\n${review}\n\n## Improvement notes (as they happened)\n\n` +
+      const md = (MODE_LINE ? '> ' + MODE_LINE + '\n\n' : '') + `# ${game.name} — ${PERSONA === 'breaker' ? 'adversarial QA' : 'reviewer'} session\n\n${view.device.label} · ${BUDGET_LABEL} · turns: ${turn} · levels won: ${levelsWon}${args.start ? ' · started at level ' + args.start : ''}\n\n## Review\n\n${review}\n\n## Improvement notes (as they happened)\n\n` +
         (notes.length ? notes.map(n => `- **t${n.turn} · L${n.level} · ${n.severity} · ${n.area}** — ${n.text}`).join('\n') : '_none_') + `\n\n## Play-by-play\n\nSee live.md (commentary) and log.json (every action and result).\n`;
       fs.writeFileSync(path.join(outDir, 'review.md'), md);
       fs.writeFileSync(path.join(outDir, 'notes.json'), JSON.stringify(notes, null, 2));
-      fs.writeFileSync(path.join(outDir, 'log.json'), JSON.stringify({ game: game.id, device: DEVICE, minutes: MINUTES, start: args.start || null, turns: turn, levelsWon, log }, null, 2));
+      fs.writeFileSync(path.join(outDir, 'log.json'), JSON.stringify({ game: game.id, device: DEVICE, minutes: MINUTES, levels: LEVELS, start: args.start || null, turns: turn, levelsWon, wonLevels: [...wonLevels], log }, null, 2));
       send(res, 200, { ok: true, review: path.join(outDir, 'review.md'), notes: path.join(outDir, 'notes.json') });
       setTimeout(async () => { if (view.close) await view.close(); else await browser.close(); server.close(); process.exit(0); }, 2500);
       return;
@@ -175,10 +193,10 @@ const server = http.createServer((req, res) => {
 });
 server.listen(PORT, '127.0.0.1', async () => {
   try {
-    if (TARGET === 'sim') ({ browser, view } = await openSimulator(game, { device: DEVICE, start: args.start ? parseInt(args.start, 10) : null, who: WHO, bridgeEval, port: PORT, install: !!args.install, fresh: !!args.fresh, slot: SLOT }));
+    if (TARGET === 'sim') ({ browser, view } = await openSimulator(game, { device: DEVICE, start: args.start ? parseInt(args.start, 10) : null, who: WHO, bridgeEval, port: PORT, install: !!args.install, fresh: !!args.fresh, slot: SLOT, of: OF }));
     else ({ browser, view } = await openStudio(game, { device: DEVICE, start: args.start ? parseInt(args.start, 10) : null, who: WHO }));
   } catch (e) { console.error('failed to open the game:', e.message); process.exit(1); }
-  await view.studio('mode', { persona: PERSONA, label: PERSONAS[PERSONA].label, who: WHO });
+  await view.studio('mode', { persona: PERSONA, label: PERSONAS[PERSONA].label, who: WHO, slot: SLOT, device: view.device.label, levels: LEVELS ? `${LEVELS[0]}–${LEVELS[1]}` : null });
   resolveReady();
-  console.log(`${game.name} studio on http://127.0.0.1:${PORT} · ${view.device.label} · ${MINUTES} min${args.start ? ' · from level ' + args.start : ''} → ${path.relative(root, outDir)}`);
+  console.log(`${game.name} studio on http://127.0.0.1:${PORT} · ${view.device.label} · ${BUDGET_LABEL} → ${path.relative(root, outDir)}`);
 });

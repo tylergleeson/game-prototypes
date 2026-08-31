@@ -20,6 +20,7 @@
   #hdr .who b { color:var(--ink); }
   #timer { margin-left:auto; font:700 13px/1 ui-monospace,Menlo,monospace; color:var(--amber); font-variant-numeric:tabular-nums; }
   #timer.over { color:#ff8078; }
+  #chip { font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:.1em; color:#0b0f1a; background:#72d8ff; border-radius:5px; padding:4px 7px; white-space:nowrap; }
   #busy { margin-left:auto; font:600 10px/1 ui-monospace,Menlo,monospace; letter-spacing:.12em; color:#5fe89b; animation:blink 1s infinite; }
   #busy + #timer { margin-left:10px; }
   @keyframes blink { 50% { opacity:.35; } }
@@ -53,6 +54,7 @@
   <div id="panel">
     <div id="hdr">
       <span class="who">REVIEWER · <b id="who">—</b></span>
+      <span id="chip" hidden></span>
       <span id="busy" hidden>● playing</span>
       <span id="timer">--:--</span>
       <button id="notesBtn">Notes (0)</button>
@@ -66,7 +68,8 @@
 <script>
   const q = new URLSearchParams(location.search);
   if (q.get('side')) document.body.classList.add('side');
-  if (q.get('panel')) { // panel-only window (the phone is the iOS Simulator)
+  if (q.get('opener')) { document.body.innerHTML = '<p style="color:#9dbbdd;font:13px system-ui;padding:14px">Studio panel opener — minimized; the log panel is the small window under the Simulator.</p>'; }
+  else if (q.get('panel')) { // panel-only window (the phone is the iOS Simulator)
     document.getElementById('stage').style.display = 'none';
     const p = document.getElementById('panel'); p.style.position = 'static'; p.style.transform = 'none'; p.style.width = 'auto'; p.style.margin = '10px';
     document.body.style.overflow = 'auto';
@@ -77,18 +80,21 @@
   document.getElementById('who').textContent = q.get('who') || 'Reviewer';
   const $ = id => document.getElementById(id);
   const notes = [];
-  let deadline = null, over = false;
+  let deadline = null, over = false, prog = null;
   const fmt = s => { s = Math.max(0, Math.round(s)); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
   setInterval(() => {
-    if (!deadline) return;
-    const left = (deadline - Date.now()) / 1000;
-    $('timer').textContent = left > 0 ? fmt(left) + ' left' : (over ? 'writing review' : "time's up");
-    $('timer').className = left > 0 ? '' : 'over';
+    if (over) { $('timer').textContent = 'writing report'; $('timer').className = 'over'; return; }
+    const parts = [];
+    if (prog) parts.push(`L${prog.from}–${prog.to} · ${prog.cleared}/${prog.to - prog.from + 1} cleared`);
+    if (deadline) { const left = (deadline - Date.now()) / 1000; parts.push(left > 0 ? fmt(left) + ' left' : "time's up"); }
+    $('timer').textContent = parts.join(' · ') || '--:--';
+    $('timer').className = (deadline && deadline - Date.now() <= 0) ? 'over' : '';
   }, 250);
   $('notesBtn').onclick = () => { $('notes').classList.toggle('open'); $('notesBtn').classList.toggle('on'); };
   window.studio = {
     setDeadline(ms) { deadline = ms; },
     setPhase(p) { over = p === 'review'; },
+    progress(p) { prog = p; },
     say({ say = '', thought = '', note = null, thinking = false }) {
       $('say').textContent = say; $('say').className = thinking ? 'think' : '';
       $('thought').textContent = thought ? 'thinks: ' + thought : '';
@@ -103,9 +109,12 @@
       }
     },
     busy(b) { $('busy').hidden = !b; },
-    mode({ persona, label, who }) {
+    mode({ persona, label, who, slot, device, levels }) {
       $('panel').classList.toggle('breaker', persona === 'breaker');
       document.querySelector('#hdr .who').innerHTML = (label || 'REVIEWER') + ' · <b>' + who.replace(/</g, '&lt;') + '</b>';
+      const chip = [slot ? 'SLOT ' + slot : null, device || null, levels ? 'L' + levels : null].filter(Boolean).join(' · ');
+      $('chip').textContent = chip; $('chip').hidden = !chip;
+      document.title = (device || 'Reviewer studio') + (levels ? ' · L' + levels : '');
     },
     hidePanel(h) { $('panel').style.visibility = h ? 'hidden' : 'visible'; },
   };

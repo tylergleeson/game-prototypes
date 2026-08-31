@@ -2,6 +2,7 @@
 // install and update the on-screen commentary caption.
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { createRequire } from 'module';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
@@ -145,7 +146,92 @@ export async function findSimulator(device, slot = 1) {
 // A Playwright-Page-like view over the app running in the Simulator. `bridgeEval(js)`
 // is supplied by the console server: it hands `js` to the app (which polls for it),
 // the app runs it in the WKWebView and posts the result back.
-export async function openSimulator(game, { device = 'iphone-17', start = null, who = 'Reviewer', bridgeEval, port, install = false, fresh = false, slot = 1 }) {
+async function screenSize() {
+  try {
+    const { stdout } = await run('osascript', ['-e', 'tell application "Finder" to get bounds of window of desktop']);
+    const [, , w, h] = stdout.trim().split(',').map(Number);
+    if (w && h) return { w, h };
+  } catch (e) {}
+  return { w: 1470, h: 956 };
+}
+// column layout: session <slot> of <of> gets one column; Simulator on top, its log panel directly beneath
+export function columnLayout(slot, of, scr, dev) {
+  const colW = Math.floor((scr.w - 16) / of);
+  const simY = 32, titleBar = 30, panelMin = 180, gap = 10, bottom = 16;
+  // width from the column, height from what leaves room for the panel — whichever is tighter
+  const maxSimH = scr.h - simY - gap - panelMin - bottom;
+  const simW = Math.max(220, Math.min(colW - 16, 380, Math.floor((maxSimH - titleBar) * dev.w / dev.h)));
+  const simH = Math.round(simW * (dev.h / dev.w)) + titleBar;
+  const x = 8 + (slot - 1) * colW;
+  const panelY = simY + simH + gap;
+  const panelW = Math.max(340, colW - 16), panelH = Math.max(panelMin, Math.min(320, scr.h - panelY - bottom));
+  return { x, simY, simW, simH, panelY, panelW, panelH };
+}
+// Simulator ignores programmatic resizes but honours its own Window ▸ Physical Size, so: raise the
+// window, pick Physical Size, then move it into its column. Returns the window's actual bounds.
+const LOCK = path.join(os.tmpdir(), 'studio-place.lock');
+async function withPlacementLock(fn) {
+  for (let i = 0; i < 600; i++) { // wait up to ~60s for the lock
+    try { fs.mkdirSync(LOCK); break; } catch (e) {
+      try { if (Date.now() - fs.statSync(LOCK).mtimeMs > 90000) fs.rmdirSync(LOCK); } catch (e2) {}
+      await new Promise(r => setTimeout(r, 100));
+    }
+  }
+  try { return await fn(); } finally { try { fs.rmdirSync(LOCK); } catch (e) {} }
+}
+export async function readSimulatorWindow(simName) {
+  try {
+    const { stdout } = await run('osascript', ['-e', `tell application "System Events" to tell process "Simulator"
+  set ws to (every window whose name starts with "${simName} –")
+  if (count of ws) is 0 then error "no window"
+  set w to item 1 of ws
+  set p to position of w
+  set s to size of w
+  return (item 1 of p as text) & "," & (item 2 of p as text) & "," & (item 1 of s as text) & "," & (item 2 of s as text)
+end tell`]);
+    const [x, y, w, h] = stdout.trim().split(',').map(Number);
+    return { x, y, w, h };
+  } catch (e) { return null; }
+}
+export async function placeSimulatorWindow(simName, x, y) {
+  const script = `tell application "System Events"
+  tell process "Simulator"
+    set ws to (every window whose name starts with "${simName} –")
+    if (count of ws) is 0 then error "no window"
+    set w to item 1 of ws
+    perform action "AXRaise" of w
+    set frontmost to true
+    delay 0.3
+    try
+      click menu item "Physical Size" of menu "Window" of menu bar 1
+    end try
+    delay 0.6
+    set position of w to {${x}, ${y}}
+    delay 0.3
+    set p to position of w
+    set s to size of w
+    return (item 1 of p as text) & "," & (item 2 of p as text) & "," & (item 1 of s as text) & "," & (item 2 of s as text)
+  end tell
+end tell`;
+  for (let i = 0; i < 10; i++) {
+    try {
+      const { stdout } = await run('osascript', ['-e', script]);
+      const [px, py, w, h] = stdout.trim().split(',').map(Number);
+      if (Math.abs(px - x) <= 2 && Math.abs(py - y) <= 2) return { x: px, y: py, w, h };
+      // Simulator re-cascaded it (window restoration on launch) — try again
+    } catch (e) {
+      if (/not allowed assistive|assistive access|-1719|-25211/.test(e.message)) {
+        console.warn('warning: cannot arrange the Simulator window — grant Accessibility access to your terminal (System Settings → Privacy & Security → Accessibility) and rerun.');
+        return null;
+      }
+    }
+    await new Promise(r => setTimeout(r, 1000));
+  }
+  console.warn('warning: could not place the Simulator window "' + simName + '"');
+  return null;
+}
+
+export async function openSimulator(game, { device = 'iphone-17', start = null, who = 'Reviewer', bridgeEval, port, install = false, fresh = false, slot = 1, of = 1 }) {
   const sim = await findSimulator(device, slot);
   await run('xcrun', ['simctl', 'boot', sim.udid]).catch(() => {});
   await run('xcrun', ['simctl', 'bootstatus', sim.udid, '-b']).catch(() => {});
@@ -175,11 +261,32 @@ export async function openSimulator(game, { device = 'iphone-17', start = null, 
   let last = { x: 0, y: 0 };
   const dispatch = (events) => bridgeEval(`(function(evs){ const cv = document.getElementById('cv'); for (const [type, x, y] of evs) { cv.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerId: 1, pointerType: 'touch', isPrimary: true, buttons: type === 'pointerup' ? 0 : 1, pressure: type === 'pointerup' ? 0 : 0.5 })); } return 'ok'; })(${JSON.stringify(events)})`);
 
-  // the commentary panel: its own small Chromium window next to the Simulator
-  const b = await chromium.launch({ headless: false, args: ['--window-position=' + (40 + (slot - 1) * 500) + ',40'] });
-  const pctx = await b.newContext({ viewport: { width: 470, height: 300 }, deviceScaleFactor: 2 });
-  const panel = await pctx.newPage();
-  await panel.goto('file://' + path.join(root, 'tools', 'studio.html') + '?panel=1&who=' + encodeURIComponent(who));
+  // layout: this session's column — Simulator window on top, its log panel directly beneath it
+  const scr = await screenSize();
+  const colW = Math.floor((scr.w - 16) / of), colX = 8 + (slot - 1) * colW, simY = 32;
+  const placed = await withPlacementLock(() => placeSimulatorWindow(sim.name, colX, simY));
+  // the log panel is a toolbar-less popup window (Chrome's normal windows cannot go below 500×375),
+  // placed right under the phone; on a short screen it overlaps the phone's bottom bezel a little
+  const panelW = Math.max(340, Math.min(colW - 16, 482));
+  const below = placed ? placed.y + placed.h + 10 : simY + 830;
+  const panelH = Math.max(150, Math.min(260, scr.h - below - 16));
+  const panelY = Math.min(below, scr.h - 16 - panelH);
+  const panelUrl = 'file://' + path.join(root, 'tools', 'studio.html') + '?panel=1&who=' + encodeURIComponent(who) + '&slot=' + slot + '&device=' + encodeURIComponent(sim.name);
+  const b = await chromium.launch({ headless: false });
+  const pctx = await b.newContext({ viewport: null });
+  const opener = await pctx.newPage();
+  await opener.goto(panelUrl + '&opener=1');
+  const popupP = pctx.waitForEvent('page', { timeout: 10000 });
+  await opener.evaluate(([u, f]) => { window.open(u, 'studio-panel', f); }, [panelUrl, `popup=yes,width=${panelW},height=${panelH},left=${colX},top=${panelY}`]);
+  const panel = await popupP;
+  await panel.waitForLoadState().catch(() => {});
+  try {
+    const cdp = await pctx.newCDPSession(panel);
+    const { windowId } = await cdp.send('Browser.getWindowForTarget');
+    await cdp.send('Browser.setWindowBounds', { windowId, bounds: { left: colX, top: panelY, width: panelW, height: panelH, windowState: 'normal' } });
+    await cdp.detach();
+  } catch (e) { console.warn('warning: could not place the panel window: ' + e.message); }
+  await opener.close(); // the popup outlives its opener; only the small panel window remains
 
   const view = {
     sim, page: panel, device: { width: 0, height: 0, label: sim.name + ' (Simulator)' },
