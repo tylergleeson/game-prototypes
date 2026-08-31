@@ -2,9 +2,9 @@
 // Promo trailers for Gate Escape (p01) — THREE narrated 402×874 portrait cuts from one
 // filming pass (H.264 + AAC, 30 fps):
 //
-//   marketing/promo-30s.mp4   ~30 s teaser — hook, plan, chest, flourish, end card
-//   marketing/promo.mp4       ~55 s main cut — + hint, rescue, papers, meta montage
-//   marketing/promo-2min.mp4  ~1:55 extended — + legend, L2, meter/undo, stones→hint
+//   marketing/videos/promo-30s.mp4   ~30 s teaser — hook, plan, chest, flourish, end card
+//   marketing/videos/promo.mp4       ~55 s main cut — + hint, rescue, papers, meta montage
+//   marketing/videos/promo-2min.mp4  ~1:55 extended — + legend, L2, meter/undo, stones→hint
 //                             continuity, longer holds, Field Survey, lives card
 //
 // READABILITY IS A HARD RULE on every cut: any shot bearing text the viewer should read
@@ -23,7 +23,7 @@
 // delete its mp3 and export ELEVENLABS_API_KEY (the key is never written anywhere).
 //
 //   node prototypes/p01-gate-escape/tools/promo-video.mjs     (repo root; playwright
-//   installed there) → marketing/promo-30s.mp4 + promo.mp4 + promo-2min.mp4 + promo-stills/
+//   installed there) → marketing/videos/promo-30s.mp4 + promo.mp4 + promo-2min.mp4 + promo-stills/
 import fs from 'fs';
 import os from 'os';
 import { execFileSync } from 'child_process';

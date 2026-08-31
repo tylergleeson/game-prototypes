@@ -10,7 +10,7 @@
 // Every staged save is a state a real player can reach (see the chapter notes inline).
 //
 //   node prototypes/p01-gate-escape/tools/feature-tour.mjs     (from the repo root, where
-//   playwright is installed) → marketing/feature-tour.webm + feature-tour.mp4 + tour-stills/
+//   playwright is installed) → marketing/videos/feature-tour.webm + feature-tour.mp4 + tour-stills/
 import fs from 'fs';
 import os from 'os';
 import { execFileSync } from 'child_process';

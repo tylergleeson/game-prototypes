@@ -48,31 +48,31 @@ key line + CTA); where the full surface copy is larger it's noted.
 
 Text-bearing shots, all three cuts (words → floor vs. readable hold):
 
-| shot | words | floor | 30 s | main | 2 min |
-|---|---|---|---|---|---|
-| hook caption (spans hook beats) | 6 | 2.1 s | 9.5 s | 9.5 s | 11.4 s |
-| hook win card "Cleared to par! Solved in 3 moves — perfect!" | 8 | 2.8 s | 3.1 s | 3.1 s | 3.6 s |
-| L1 win card + caption (7 w, spans beat) | 8 | 2.8 s | 3.1 s* | 3.1 s* | 3.6 s* |
-| L2 "Sheet approved!" card (2-min only) | 8 | 2.8 s | — | — | 2.8 s |
-| legend: rules rows (essential labels) | 10 | 3.5 s | — | — | 3.9 s |
-| legend: around-the-game (5 row titles) | 5 | 2.0 s | — | — | 3.7 s |
-| meter/undo (caption restates the 8-word tip verbatim, spans beat) | 8 | 2.8 s | — | — | 6.5 s |
-| stone tip strip "Stones never move. Route around them." (+ same 6-w caption, spans beat) | 6 | 2.1 s | — | — | 5.7 s |
-| hint caption (spans beat) | 7 | 2.5 s | — | 3.8 s | 4.8 s |
-| fail sheet (headline+CTA 12 w; full copy 19 w; lead floor 2.5–3 s) | 12 | 4.2 s | — | 4.3 s | 8.1 s† |
-| rescue "+3 moves" chip | 2 | 2.0 s | — | 2.5 s | 5.0 s |
-| rescue win card "Level clear! Solved in 10 moves" | 6 | 2.1 s | — | 3.0 s | 3.3 s |
-| chest reveal "Cleared to par! … Chest opened · Sepia draft · Try it" (floor 3 s) | 14 | 4.9 s | 5.4 s | 5.4 s | 5.8 s |
-| paper swaps (pause row, 2–3 w each) | 3 | 2.0 s | — | 2.2 s | 2.1–2.3 s |
-| quest rows (3 quest labels) | 9 | 3.15 s | — | 3.2 s | 3.5 s |
-| quests DONE "All quests complete · Streak freeze banked · 1 held" | 9 | 3.15 s | — | 3.2 s | 3.6 s |
-| ALL DONE + streak (2-min only) | 8 | 2.8 s | — | — | 3.0 s |
-| field survey "Weekly log · 12 points this week…" | 8 | 2.8 s | — | 3.0 s | 3.7 s |
-| level select headers | 7 | 2.45 s | — | 2.8 s | 3.5 s |
-| out-of-lives card (essential 10 w; full 15 w) | 10 | 3.5 s | — | — | 5.1 s |
-| refill +1 heart | 2 | 2.0 s | — | — | 2.0 s |
-| flourish caption "PURE ROUTING" | 2 | 2.0 s | 2.6 s | 2.3 s | 2.9 s |
-| end card (13 w incl. tagline + PLAY) | 13 | 4.55 s | 5.8 s | 5.6 s | 6.8 s |
+| shot | words | floor | 30 s | main | 2 min | floor met |
+|---|---|---|---|---|---|---|
+| hook caption (spans hook beats) | 6 | 2.1 s | 9.5 s | 9.5 s | 11.4 s | ✓ all |
+| hook win card "Cleared to par! Solved in 3 moves — perfect!" | 8 | 2.8 s | 3.1 s | 3.1 s | 3.6 s | ✓ all |
+| L1 win card + caption (7 w, spans beat) | 8 | 2.8 s | 3.1 s* | 3.1 s* | 3.6 s* | ✓ all |
+| L2 "Sheet approved!" card (2-min only) | 8 | 2.8 s | — | — | 2.8 s | ✓ |
+| legend: rules rows (essential labels) | 10 | 3.5 s | — | — | 3.9 s | ✓ |
+| legend: around-the-game (5 row titles) | 5 | 2.0 s | — | — | 3.7 s | ✓ |
+| meter/undo (caption restates the 8-word tip verbatim, spans beat) | 8 | 2.8 s | — | — | 6.5 s | ✓ |
+| stone tip strip "Stones never move. Route around them." (+ same 6-w caption, spans beat) | 6 | 2.1 s | — | — | 5.7 s | ✓ |
+| hint caption (spans beat) | 7 | 2.5 s | — | 3.8 s | 4.8 s | ✓ both |
+| fail sheet (headline+CTA 12 w; full copy 19 w; lead floor 2.5–3 s) | 12 | 4.2 s | — | 4.3 s | 8.1 s† | ✓ both |
+| rescue "+3 moves" chip | 2 | 2.0 s | — | 2.5 s | 5.0 s | ✓ both |
+| rescue win card "Level clear! Solved in 10 moves" | 6 | 2.1 s | — | 3.0 s | 3.3 s | ✓ both |
+| chest reveal "Cleared to par! … Chest opened · Sepia draft · Try it" (floor 3 s) | 14 | 4.9 s | 5.4 s | 5.4 s | 5.8 s | ✓ all |
+| paper swaps (pause row, 2–3 w each) | 3 | 2.0 s | — | 2.2 s | 2.1–2.3 s | ✓ both |
+| quest rows (3 quest labels) | 9 | 3.15 s | — | 3.2 s | 3.5 s | ✓ both |
+| quests DONE "All quests complete · Streak freeze banked · 1 held" | 9 | 3.15 s | — | 3.2 s | 3.6 s | ✓ both |
+| ALL DONE + streak (2-min only) | 8 | 2.8 s | — | — | 3.0 s | ✓ |
+| field survey "Weekly log · 12 points this week…" | 8 | 2.8 s | — | 3.0 s | 3.7 s | ✓ both |
+| level select headers | 7 | 2.45 s | — | 2.8 s | 3.5 s | ✓ both |
+| out-of-lives card (essential 10 w; full 15 w) | 10 | 3.5 s | — | — | 5.1 s | ✓ |
+| refill +1 heart | 2 | 2.0 s | — | — | 2.0 s | ✓ |
+| flourish caption "PURE ROUTING" | 2 | 2.0 s | 2.6 s | 2.3 s | 2.9 s | ✓ all |
+| end card (13 w incl. tagline + PLAY) | 13 | 4.55 s | 5.8 s | 5.6 s | 6.8 s | ✓ all |
 
 \* the L1 beat's card lands mid-beat and holds ≥3.1 s before the outgoing fade.
 † the 2-min fail sheet's 8.1 s also clears the FULL 19-word copy (19 × 0.35 = 6.65 s);
