@@ -140,6 +140,10 @@ Built to the hybrid-casual grammar:
   sequence (`tools/solutions.json`).
 - `tools/playtest-ios.sh` — builds the iOS app, runs the in-app bot (`tools/bot-runtime.js`)
   through XCUITest on a simulator, exports screenshots to `shots/ios/`.
+- `tools/feature-tour.mjs` — the feature-tour video (`tour`): from the repo root run
+  `node prototypes/p01-gate-escape/tools/feature-tour.mjs` to re-render
+  `marketing/feature-tour.webm` + `.mp4` (one continuous ~2:40 scripted tour of every
+  feature at iPhone size, chaptered captions) and `marketing/tour-stills/`.
 - `tools/playtest.mjs` — headless-Chromium bot that beats every level through
   the real game engine using player-identical physics, verifies move limits
   and the fail/rescue flow, and captures store screenshots into `shots/`.
