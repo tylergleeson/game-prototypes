@@ -115,26 +115,44 @@ export async function openStudio(game, { device = 'iphone-17', start = null, who
 // ---------- simulator target: the phone IS the Xcode iOS Simulator ----------
 export const SIM_NAMES = { 'iphone-17': 'iPhone 17', 'iphone-17-pro-max': 'iPhone 17 Pro Max', 'iphone-16e': 'iPhone 16e' };
 
-export async function findSimulator(device) {
+// slot 1 = the stock device; slot N>1 = an identical copy named "<model> · studio N" (same device
+// type + runtime, created on first use) so several sessions can run the same iPhone at once.
+export async function findSimulator(device, slot = 1) {
   const name = SIM_NAMES[device];
   if (!name) throw new Error(`no simulator mapping for --device ${device}; use one of ${Object.keys(SIM_NAMES).join(', ')}`);
-  const { stdout } = await run('xcrun', ['simctl', 'list', 'devices', 'available', '-j']);
-  const all = Object.values(JSON.parse(stdout).devices).flat();
-  const d = all.find(x => x.name === name && x.isAvailable);
-  if (!d) throw new Error(`simulator "${name}" not available (xcrun simctl list devices)`);
-  return { udid: d.udid, name, state: d.state };
+  const list = async () => {
+    const { stdout } = await run('xcrun', ['simctl', 'list', 'devices', 'available', '-j']);
+    const devices = JSON.parse(stdout).devices;
+    return Object.entries(devices).flatMap(([runtime, ds]) => ds.map(d => ({ ...d, runtime })));
+  };
+  let all = await list();
+  const base = all.find(d => d.name === name && d.isAvailable);
+  if (!base) throw new Error(`simulator "${name}" not available (xcrun simctl list devices)`);
+  if (slot <= 1) return { udid: base.udid, name, state: base.state, created: false };
+  const cloneName = `${name} · studio ${slot}`;
+  let d = all.find(x => x.name === cloneName && x.isAvailable);
+  let created = false;
+  if (!d) {
+    await run('xcrun', ['simctl', 'create', cloneName, base.deviceTypeIdentifier, base.runtime]);
+    all = await list();
+    d = all.find(x => x.name === cloneName);
+    created = true;
+    if (!d) throw new Error('could not create ' + cloneName);
+  }
+  return { udid: d.udid, name: cloneName, state: d.state, created };
 }
 
 // A Playwright-Page-like view over the app running in the Simulator. `bridgeEval(js)`
 // is supplied by the console server: it hands `js` to the app (which polls for it),
 // the app runs it in the WKWebView and posts the result back.
-export async function openSimulator(game, { device = 'iphone-17', start = null, who = 'Reviewer', bridgeEval, port, install = false, fresh = false }) {
-  const sim = await findSimulator(device);
+export async function openSimulator(game, { device = 'iphone-17', start = null, who = 'Reviewer', bridgeEval, port, install = false, fresh = false, slot = 1 }) {
+  const sim = await findSimulator(device, slot);
   await run('xcrun', ['simctl', 'boot', sim.udid]).catch(() => {});
   await run('xcrun', ['simctl', 'bootstatus', sim.udid, '-b']).catch(() => {});
   await run('open', ['-a', 'Simulator']).catch(() => {});
   if (fresh) { await run('xcrun', ['simctl', 'uninstall', sim.udid, game.ios.bundleId]).catch(() => {}); install = true; } // clean slate: no saved progress
-  if (install) await run('xcrun', ['simctl', 'install', sim.udid, game.ios.appPath]);
+  const installed = await run('xcrun', ['simctl', 'get_app_container', sim.udid, game.ios.bundleId]).then(() => true, () => false);
+  if (install || sim.created || !installed) await run('xcrun', ['simctl', 'install', sim.udid, game.ios.appPath]);
   await run('xcrun', ['simctl', 'terminate', sim.udid, game.ios.bundleId]).catch(() => {});
   await run('xcrun', ['simctl', 'launch', sim.udid, game.ios.bundleId, '-studio', `http://127.0.0.1:${port}`]);
 
@@ -158,7 +176,7 @@ export async function openSimulator(game, { device = 'iphone-17', start = null, 
   const dispatch = (events) => bridgeEval(`(function(evs){ const cv = document.getElementById('cv'); for (const [type, x, y] of evs) { cv.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerId: 1, pointerType: 'touch', isPrimary: true, buttons: type === 'pointerup' ? 0 : 1, pressure: type === 'pointerup' ? 0 : 0.5 })); } return 'ok'; })(${JSON.stringify(events)})`);
 
   // the commentary panel: its own small Chromium window next to the Simulator
-  const b = await chromium.launch({ headless: false, args: ['--window-position=40,40'] });
+  const b = await chromium.launch({ headless: false, args: ['--window-position=' + (40 + (slot - 1) * 500) + ',40'] });
   const pctx = await b.newContext({ viewport: { width: 470, height: 300 }, deviceScaleFactor: 2 });
   const panel = await pctx.newPage();
   await panel.goto('file://' + path.join(root, 'tools', 'studio.html') + '?panel=1&who=' + encodeURIComponent(who));

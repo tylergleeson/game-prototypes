@@ -6,7 +6,8 @@
 //
 //   node tools/reviewer-server.mjs --game p01 --out reviews/p01-run-1 --minutes 10 [--start 12] [--device iphone-17] [--persona critic|breaker] [--port 7411]
 //   Default target is the Xcode iOS Simulator (real app, real WKWebView; pass --install after rebuilding the app,
-//   --fresh to uninstall/reinstall so there is no saved progress);
+//   --fresh to uninstall/reinstall so there is no saved progress). --slot N (port defaults to 7410+N) runs the
+//   session on an identical copy of the same iPhone model so several sessions can run at once.
 //   --target chrome uses the browser studio instead.
 //
 //   GET  /window  -> full studio window screenshot (phone + panel)
@@ -24,7 +25,8 @@ const args = Object.fromEntries(process.argv.slice(2).map((a, i, all) => {
   const k = a.slice(2), v = all[i + 1] && !all[i + 1].startsWith('--') ? all[i + 1] : true;
   return [k, v];
 }).filter(e => e.length));
-const PORT = parseInt(args.port || '7411', 10);
+const SLOT = parseInt(args.slot || '1', 10);          // parallel sessions: slot N runs on an identical copy of the device
+const PORT = parseInt(args.port || String(7410 + SLOT), 10);
 const MINUTES = parseFloat(args.minutes || '10');
 const DEVICE = args.device || 'iphone-17';
 const PERSONA = args.persona || 'critic';           // critic | breaker
@@ -173,7 +175,7 @@ const server = http.createServer((req, res) => {
 });
 server.listen(PORT, '127.0.0.1', async () => {
   try {
-    if (TARGET === 'sim') ({ browser, view } = await openSimulator(game, { device: DEVICE, start: args.start ? parseInt(args.start, 10) : null, who: WHO, bridgeEval, port: PORT, install: !!args.install, fresh: !!args.fresh }));
+    if (TARGET === 'sim') ({ browser, view } = await openSimulator(game, { device: DEVICE, start: args.start ? parseInt(args.start, 10) : null, who: WHO, bridgeEval, port: PORT, install: !!args.install, fresh: !!args.fresh, slot: SLOT }));
     else ({ browser, view } = await openStudio(game, { device: DEVICE, start: args.start ? parseInt(args.start, 10) : null, who: WHO }));
   } catch (e) { console.error('failed to open the game:', e.message); process.exit(1); }
   await view.studio('mode', { persona: PERSONA, label: PERSONAS[PERSONA].label, who: WHO });
