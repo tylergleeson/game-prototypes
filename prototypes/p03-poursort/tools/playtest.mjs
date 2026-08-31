@@ -9,7 +9,9 @@ const solutions = JSON.parse(fs.readFileSync(root + 'tools/solutions.json', 'utf
 const shotDir = root + 'shots';
 fs.mkdirSync(shotDir, { recursive: true });
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+// Chromium: $PW_CHROMIUM, else the cloud runner's system binary, else Playwright's bundled one.
+const executablePath = process.env.PW_CHROMIUM || (fs.existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined);
+const browser = await chromium.launch({ executablePath });
 const page = await browser.newPage({ viewport: { width: 420, height: 780 } });
 page.on('pageerror', e => { console.error('PAGE ERROR:', e.message); process.exitCode = 1; });
 await page.goto('file://' + root + 'index.html');

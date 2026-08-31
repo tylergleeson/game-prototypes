@@ -7,7 +7,9 @@ const { chromium } = createRequire(process.cwd() + '/')('playwright');
 const root = new URL('..', import.meta.url).pathname;
 fs.mkdirSync(root + 'icons', { recursive: true });
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+// Chromium: $PW_CHROMIUM, else the cloud runner's system binary, else Playwright's bundled one.
+const executablePath = process.env.PW_CHROMIUM || (fs.existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined);
+const browser = await chromium.launch({ executablePath });
 const page = await browser.newPage({ viewport: { width: 1024, height: 1024 } });
 await page.goto('file://' + root + 'tools/icon.html');
 await page.waitForTimeout(200);

@@ -1,0 +1,18 @@
+{
+  "name": "game-prototypes",
+  "private": true,
+  "description": "Dev tooling for the prototype playtest bots (headless Chromium via Playwright)",
+  "scripts": {
+    "playtest:p01": "node prototypes/p01-gate-escape/tools/playtest.mjs",
+    "playtest:p02": "node prototypes/p02-unpark/tools/playtest.mjs",
+    "playtest:p03": "node prototypes/p03-poursort/tools/playtest.mjs",
+    "playtest:p04": "node prototypes/p04-blockfall/tools/playtest.mjs",
+    "playtest:p05": "node prototypes/p05-boltout/tools/playtest.mjs",
+    "playtest": "npm run playtest:p01 && npm run playtest:p02 && npm run playtest:p03 && npm run playtest:p04 && npm run playtest:p05",
+    "review:p01": "node tools/reviewer.mjs --game p01"
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.122.0",
+    "playwright": "^1.47.0"
+  }
+}
