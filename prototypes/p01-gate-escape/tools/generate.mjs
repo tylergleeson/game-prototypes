@@ -219,6 +219,10 @@ function meetsShape(level, spec) {
   if (spec.straight && n('straight') !== kinds.length) return false; // no-fail opener: every block pushes straight out
   if (spec.turns && n('turn') < spec.turns) return false;            // corner lesson: blocks that must route around a corner
   if (spec.blocked && n('blocked') < spec.blocked) return false;     // ordering lesson: something must wait its turn
+  if (spec.sharedSide) {                                             // lane lesson: two gates share one edge with split lanes
+    const sides = level.gates.map(g => g.side);
+    if (!SIDES.some(s => sides.filter(x => x === s).length >= 2)) return false;
+  }
   return true;
 }
 
@@ -228,6 +232,7 @@ function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 
 function ri(n) { return Math.floor(rnd() * n); }
 function pick(a) { return a[ri(a.length)]; }
 
+const L_SHAPES = ['l1', 'l2', 'l3', 'l4'];
 function genLevel(spec) {
   const { w, h, colors, shapes, blockCount, stoneCount, gateSlack } = spec;
   for (let attempt = 0; attempt < 400; attempt++) {
@@ -236,7 +241,10 @@ function genLevel(spec) {
     const occ = Array.from({ length: h }, () => Array(w).fill(-1));
     let ok = true;
     for (let i = 0; i < blockCount; i++) {
-      const cells = SHAPES[pick(shapes)];
+      // `fixed`: the first blocks take prescribed shapes ('L' = any L-tromino) so a new
+      // shape can debut exactly once on a board of plain bars (one new obstacle at a time)
+      const fx = spec.fixed && spec.fixed[i];
+      const cells = SHAPES[fx === 'L' ? pick(L_SHAPES) : fx || pick(shapes)];
       const color = i < colors ? i : ri(colors); // ensure every color used
       const { w: bw, h: bh } = shapeSize(cells);
       let placed = false;
@@ -305,11 +313,13 @@ CURVE.push({ w: 4, h: 5, colors: 2, shapes: ['h2', 'v2', 's1'], blockCount: 2, s
 CURVE.push({ w: 5, h: 6, colors: 1, shapes: ['h2', 'v2', 'h3', 'v3', 's1'], blockCount: 3, stoneCount: 0, gateSlack: 0.7, minExcess: 0, maxExcess: 0, turns: 2 });
 // L4: the ordering lesson — at least one block is corked until another leaves.
 CURVE.push({ w: 5, h: 7, colors: 2, shapes: ['h2', 'v2', 'h3', 'v3', 's1'], blockCount: 4, stoneCount: 0, gateSlack: 0.7, minExcess: 0, maxExcess: 0, blocked: 1 });
-// L5-6: the first stone (one new obstacle at a time; the legend advertises it).
+// L5: the first stone (one new obstacle at a time; a tip names it).
 CURVE.push({ w: 5, h: 7, colors: 2, shapes: ['h2', 'v2', 'h3', 'v3', 's1'], blockCount: 4, stoneCount: 1, gateSlack: 0.7, minExcess: 0, maxExcess: 0 });
-CURVE.push({ w: 6, h: 8, colors: 2, shapes: ['h2', 'v2', 'h3', 'v3', 's1'], blockCount: 5, stoneCount: 1, gateSlack: 0.7, minExcess: 0, maxExcess: 0 });
+// L6: the first deadlock — par exceeds the block count, so one block must park and come back
+// (the "move twice" tip lands here). Two gates share an edge: the lane rule shows early.
+CURVE.push({ w: 6, h: 8, colors: 2, shapes: ['h2', 'v2', 'h3', 'v3', 's1'], blockCount: 5, stoneCount: 1, gateSlack: 0.7, minExcess: 1, maxExcess: 1, sharedSide: true });
 // L7-10: momentum. growing count/colors, still mostly direct (third color at L8,
-// first par > block count at L10).
+// a second deadlock at L10). Boards frozen since the first review.
 for (let i = 7; i <= 10; i++) {
   CURVE.push({
     w: 6, h: 8, colors: Math.min(3, 1 + (i >> 2)), shapes: ['h2', 'v2', 'h3', 'v3', 's1'],
@@ -317,10 +327,19 @@ for (let i = 7; i <= 10; i++) {
     minExcess: 0, maxExcess: i < 8 ? 0 : 1,
   });
 }
-// L11-13: introduce stones.
-for (let i = 11; i <= 13; i++) CURVE.push({ w: 6, h: 8, colors: 3, shapes: ['h2', 'v2', 'h3', 'v3', 's1'], blockCount: 6, stoneCount: 2, gateSlack: 0.5, minExcess: 0, maxExcess: 1 });
-// L14-16: introduce L-shapes and squares.
-for (let i = 14; i <= 16; i++) CURVE.push({ w: 6, h: 8, colors: 3, shapes: ['h2', 'v2', 'l1', 'l2', 'l3', 'l4', 'sq'], blockCount: 6, stoneCount: 1, gateSlack: 0.5, minExcess: 0, maxExcess: 1 });
+// L11-13: two stones. Ordering and deadlock boards alternate through the teens so no single
+// heuristic ("every block leaves in one drag") ever settles: 11 ordering, 12-13 deadlocks.
+CURVE.push({ w: 6, h: 8, colors: 3, shapes: ['h2', 'v2', 'h3', 'v3', 's1'], blockCount: 6, stoneCount: 2, gateSlack: 0.5, minExcess: 0, maxExcess: 0 });
+CURVE.push({ w: 6, h: 8, colors: 3, shapes: ['h2', 'v2', 'h3', 'v3', 's1'], blockCount: 6, stoneCount: 2, gateSlack: 0.5, minExcess: 1, maxExcess: 1 });
+// (seedBump: L13's inherited seed is the RNG state after the ORIGINAL L12 run, and the retuned L12
+// now walks forward into that same stream — without a bump the two boards come out identical)
+CURVE.push({ w: 6, h: 8, colors: 3, shapes: ['h2', 'v2', 'h3', 'v3', 's1'], blockCount: 6, stoneCount: 2, gateSlack: 0.5, minExcess: 1, maxExcess: 2, seedBump: 104729 });
+// L14-16: new shapes, one at a time. 14: a single L-tromino among bars on a sparse board
+// (the shape rule is discovered safely, par == blocks); 15: two Ls plus a deadlock;
+// 16: the 2x2 square debuts alone (no Ls), with a deadlock. They combine from L17.
+CURVE.push({ w: 6, h: 8, colors: 3, shapes: ['h2', 'v2', 'h3', 's1'], fixed: ['L'], blockCount: 5, stoneCount: 1, gateSlack: 0.6, minExcess: 0, maxExcess: 0 });
+CURVE.push({ w: 6, h: 8, colors: 3, shapes: ['h2', 'v2', 'h3', 'v3', 's1'], fixed: ['L', 'L'], blockCount: 6, stoneCount: 1, gateSlack: 0.5, minExcess: 1, maxExcess: 1 });
+CURVE.push({ w: 6, h: 8, colors: 3, shapes: ['h2', 'v2', 'h3', 'v3', 's1'], fixed: ['sq'], blockCount: 6, stoneCount: 1, gateSlack: 0.5, minExcess: 1, maxExcess: 2 });
 // L17-19: four colors, denser.
 for (let i = 17; i <= 19; i++) CURVE.push({ w: 7, h: 9, colors: 4, shapes: ['h2', 'v2', 'h3', 'v3', 'l1', 'l2', 'sq'], blockCount: 7, stoneCount: 2, gateSlack: 0.4, minExcess: 1, maxExcess: 2 });
 // L20-25: THE SPIKE. dense boards, real puzzles, tight gates.
@@ -345,7 +364,7 @@ function slackFor(idx) { return idx <= 4 ? 4 : idx <= 19 ? 3 : idx <= 25 ? 2 : 3
 const levels = [];
 for (let i = 0; i < CURVE.length; i++) {
   let lv = null;
-  seed = LEVEL_SEEDS[i];
+  seed = (LEVEL_SEEDS[i] + (CURVE[i].seedBump || 0)) & 0x7fffffff;
   for (let s = 0; s < 20 && !lv; s++) {
     lv = genLevel(CURVE[i]);
     if (!lv) seed = (seed + 7919) & 0x7fffffff;

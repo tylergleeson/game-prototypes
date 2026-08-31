@@ -1,0 +1,154 @@
+[
+  {
+    "turn": 2,
+    "level": 1,
+    "persona": "critic",
+    "area": "ui",
+    "severity": "nit",
+    "text": "On the main menu the live in-game HUD ('Level 1 / 5 moves / ★★★ par 1' plus undo/restart/pause buttons) is visible ghosted behind the title card. It reads as dead UI a player can't touch and muddies the menu's hierarchy · first impression is the single highest-leverage screen for install-to-play conversion · either fade the HUD fully to zero on the menu or replace the demo header with a title-only banner."
+  },
+  {
+    "turn": 3,
+    "level": 1,
+    "persona": "critic",
+    "area": "onboarding",
+    "severity": "minor",
+    "text": "How to play is a static four-item text panel (~60 words). Hybrid-casual players skim or skip walls of text; the genre standard is a hand-guided forced first drag on L1 with everything else taught by level design · reading dropout here costs you the tutorial completion rate, the metric that gates D1 · keep the animated 'one drag around a corner' loop as the whole legend, cut the Block/Gate/Stone/Moves prose to one line each or move it behind an optional 'more' tap."
+  },
+  {
+    "turn": 6,
+    "level": 1,
+    "persona": "critic",
+    "area": "feedback",
+    "severity": "major",
+    "text": "The Level clear card is visually flat and off-style: a generic rounded blue panel with three stars that appear at once, no sequential star pop, no escaped-block confetti, no running total ('47/90 stars'), no next-level teaser. Everything else on screen is a crisp dashed-line blueprint; this looks like a different game · the win card is the single most-repeated screen in the game and the one that converts a clear into another attempt — flat reward moments are where session length dies · restyle it as a blueprint 'stamp/approved' card, pop the stars one at a time with an ascending chime, and show cumulative stars plus what the next level unlocks."
+  },
+  {
+    "turn": 7,
+    "level": 2,
+    "persona": "critic",
+    "area": "ui",
+    "severity": "minor",
+    "text": "The playfield uses only about 40% of the screen height and 72% of the width on a 6.9-inch iPhone, with large empty bands above and below and a 4x5 grid drawn at modest cell size · a bigger board reads faster at arm's length and makes drags feel more physical, and dead space on a premium-size phone reads as an unfinished port · scale the board to fill the available area between HUD and the bottom safe area (cap cell size so tiny boards don't get grotesque, but 4x5 has room to grow ~30%)."
+  },
+  {
+    "turn": 13,
+    "level": 3,
+    "persona": "critic",
+    "area": "retention",
+    "severity": "minor",
+    "text": "Win-card copy is a single fixed template repeated every level ('Level clear! Solved in N moves - perfect!'). No variation, no milestone callouts, no streak language · repeated identical reward text stops registering after ~5 clears and flattens the completion loop that drives session depth · rotate 6-8 blueprint-flavored strings, add milestone beats at levels 5/10/20 and a 'third perfect in a row' streak line."
+  },
+  {
+    "turn": 14,
+    "level": 4,
+    "persona": "critic",
+    "area": "legibility",
+    "severity": "minor",
+    "text": "Gate symbols appear to rotate to face the exit direction: the cyan block is stamped with an up-triangle but its bottom-edge gate shows a down-triangle (top-edge gate in L2 showed up). For a colorblind player the symbol IS the match cue, and a mirrored glyph is a different glyph · shape-matching is the stated accessibility guarantee, and it silently fails on any non-rotation-invariant symbol · keep the block's glyph un-rotated inside the gate and use a separate small chevron/arrow for the exit direction (the gates already have one)."
+  },
+  {
+    "turn": 20,
+    "level": 5,
+    "persona": "critic",
+    "area": "art",
+    "severity": "minor",
+    "text": "All three modals (pause, win, and presumably fail) use the same generic iOS-ish rounded blue card with soft-gradient pill buttons, which reads as a different product from the crisp dashed-line blueprint board and the dashed-outline yellow menu buttons · inconsistent modal styling is the tell that separates a prototype from a shipped game in store screenshots · restyle modals as blueprint annotation cards: hairline double border, dashed rules, mono caption type, the same yellow accent used on the menu CTA."
+  },
+  {
+    "turn": 21,
+    "level": 5,
+    "persona": "critic",
+    "area": "legibility",
+    "severity": "major",
+    "text": "Two same-color blocks sitting edge-to-edge merge into one shape: on L5 the red 1x3 at column 1 and the red 1x3 at column 2 read as a single 2x3 slab, separated only by a 1px seam, and the red 3x1 at the top row visually fuses with them too · misreading block boundaries makes players plan impossible routes and blame the game when the drag 'doesn't work' - this is the fastest route to a 1-star 'controls are broken' review · widen the inter-block gap (inset each block ~4-6% of a cell so there is always background between neighbours), or give each block a stronger outline with a subtle drop shadow so edges separate at a glance."
+  },
+  {
+    "turn": 23,
+    "level": 5,
+    "persona": "critic",
+    "area": "onboarding",
+    "severity": "minor",
+    "text": "Stones make their first appearance on L5 with no just-in-time tip banner, unlike 'one drag turns corners' on L3, and the stone's dark cross-hatch fill reads as board decoration rather than a solid obstacle · a new mechanic that isn't announced gets discovered by failing, and L5 is inside the window where churn is highest · add a one-line tip on the level a mechanic debuts ('Stones never move - go around'), and lift the stone's contrast so it is unmistakably an object sitting ON the grid (heavier outline, slight shadow)."
+  },
+  {
+    "turn": 34,
+    "level": 6,
+    "persona": "critic",
+    "area": "monetization",
+    "severity": "major",
+    "text": "The fail card is bottom-anchored and covers the lower third of the board, including the one remaining block its own copy points at ('the last block is one drag from its gate') · rescue conversion is driven by the player SEEING how nearly they made it - hiding the near-miss state removes the reason to watch the ad, and there is no countdown timer to create decision pressure · shrink/raise the card so the full board stays visible, spotlight the remaining block(s) with a pulse and a drawn route to its gate behind the card, and add a 5-second countdown ring on the +3 button."
+  },
+  {
+    "turn": 35,
+    "level": 6,
+    "persona": "critic",
+    "area": "monetization",
+    "severity": "minor",
+    "text": "Tapping the AD-badged rescue grants +3 instantly with no ad, no load spinner, and no failure path · in production a rewarded video takes 5-30s, sometimes has no fill, and the state machine around it (player backgrounds the app, ad errors, reward not granted) is where real revenue leaks · stub the flow now - a fake 3-second 'loading ad' overlay plus a 'no ads available, have the moves anyway' branch - so the surrounding UX is designed rather than bolted on at integration."
+  },
+  {
+    "turn": 36,
+    "level": 6,
+    "persona": "critic",
+    "area": "ui",
+    "severity": "minor",
+    "text": "Sub-3-star win card reads 'Solved in 9 moves (best: 5)' where 5 is the level's par, not the player's personal best - I had never cleared it in 5 · players read 'best' as their own record and will be confused about what number they are chasing, which blunts the replay-for-stars hook · label it 'par: 5' or 'three stars: 5 moves', and show the player's actual best separately once they have one."
+  },
+  {
+    "turn": 43,
+    "level": 7,
+    "persona": "critic",
+    "area": "difficulty",
+    "severity": "major",
+    "text": "Through L1-L7 par is always exactly the block count (1/1, 2/2, 3/3, 4/4, 4/4, 5/5, 5/5), so the only puzzle content is choosing an escape ORDER. No level yet requires a setup move - shoving a blocker aside and coming back for it - which is the depth the genre lives on · a single-axis puzzle stops surprising players around L10-12 and that is exactly where mid-funnel churn spikes; it also makes par trivially inferable, killing the star chase · introduce levels where par exceeds block count, i.e. at least one block must be repositioned without escaping, from roughly L8 onward, and make the move limit tight enough that a wasted reposition costs a star."
+  },
+  {
+    "turn": 51,
+    "level": 8,
+    "persona": "critic",
+    "area": "retention",
+    "severity": "major",
+    "text": "Stars are collected (21 so far, 90 total) but have no sink: no unlocks, no chapters, no gate on progression, no cosmetic or hint currency · a vanity counter gives players no reason to replay a 1-star level or to come back tomorrow, and star-chase replays are one of the cheapest sources of session depth in this genre · spend them - group the 30 levels into 3 chapters of 10 with a star gate on each, and let stars buy hints or a board/blueprint skin; surface 'X stars to unlock Chapter 2' on the level select."
+  },
+  {
+    "turn": 52,
+    "level": 8,
+    "persona": "critic",
+    "area": "ui",
+    "severity": "minor",
+    "text": "Entering Levels from the in-game pause menu and tapping Back lands on the MAIN MENU, not back in the paused level - the level you were mid-way through is abandoned with no warning · players browse the level map mid-level to check star counts and expect to return; being ejected to the title screen costs an extra two taps every time and feels like a crash · make Back return to the screen it was opened from (pause overlay if entered from pause, main menu if entered from the title)."
+  },
+  {
+    "turn": 59,
+    "level": 8,
+    "persona": "critic",
+    "area": "audio",
+    "severity": "minor",
+    "text": "Sound is toggleable from the menu and the pause screen but there is no audio design to speak of behind it - no distinct escape 'thunk', no ascending pitch on consecutive escapes, no low tone when a drag is blocked · in this genre the escape sound IS the reward, and a rising pitch per consecutive clear is the cheapest satisfaction multiplier there is · give escapes a per-color pitched sample that rises with each escape in a level, a dull thud on an illegal drag, and a three-note sting on the star card."
+  },
+  {
+    "turn": 66,
+    "level": 9,
+    "persona": "critic",
+    "area": "originality",
+    "severity": "minor",
+    "text": "Two same-color gates on different edges, and two different-color gates sharing one edge with split lane ranges (L9: cyan rows 0-2, red rows 3-6 on the left), is the most distinctive idea in the build and it arrives at L9 · lane-restricted gates are what separates this from Color Block Jam's 'drag to the matching hole' - it turns every long block into an alignment problem, which is real, teachable depth · lead with it: bring split-edge gates forward to ~L6, and build the mid-game around lane geometry rather than adding more colors."
+  },
+  {
+    "turn": 67,
+    "level": 10,
+    "persona": "critic",
+    "area": "difficulty",
+    "severity": "minor",
+    "text": "Correction/refinement of the earlier par-equals-block-count note: the setup-move mechanic DOES exist and is introduced properly at L10 with a tip banner ('sometimes a block has to move twice', par 7 for 6 blocks) · nine levels of pure ordering before the first real deadlock is a long flat runway - by then a player has formed the belief that every block leaves in one drag, and levels 1-9 are all solvable on sight without touching the board · move the first deadlock level to ~L5-6 and alternate ordering-only and deadlock levels through the teens so the player never settles into one heuristic."
+  },
+  {
+    "turn": 74,
+    "level": 10,
+    "persona": "critic",
+    "area": "monetization",
+    "severity": "major",
+    "text": "There is no player-facing hint anywhere: the in-game HUD is undo / restart / pause only, and help exists only at the moment of failure (+3 moves) · a stuck player mid-level has exactly two options - restart or quit - and the rewarded-video hint is the single highest-volume ad surface in this genre, typically 2-4x the impressions of a fail rescue · add a hint button to the HUD that plays the next correct drag as a ghost route, free for the first 2-3 uses then rewarded-video-gated, and surface it automatically after ~20 seconds of no input."
+  }
+]

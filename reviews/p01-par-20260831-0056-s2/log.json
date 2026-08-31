@@ -1,0 +1,1730 @@
+{
+  "game": "p01",
+  "device": "iphone-17",
+  "minutes": null,
+  "levels": [
+    11,
+    20
+  ],
+  "start": "11",
+  "turns": 92,
+  "levelsWon": 10,
+  "wonLevels": [
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "log": [
+    {
+      "turn": 2,
+      "level": 11,
+      "say": "Blueprint-drafting look, and I like that the menu shows the live level 11 board behind the card instead of a stock hero image. 30 of 30 stars banked. Let me peek at the level map first.",
+      "thought": "Preview-behind-menu is a smart, cheap retention cue — the next puzzle is literally staring at you.",
+      "note": null
+    },
+    {
+      "turn": 2,
+      "action": {
+        "type": "tap",
+        "button": "btnLevels"
+      },
+      "result": "tapped main menu: Levels"
+    },
+    {
+      "turn": 3,
+      "level": 11,
+      "say": "Perfect 30 stars, 11 lit up gold, the rest dashed ghosts. Legible map. But I can see the whole game from here — thirty tiles, one flat run, no chapters. Feels finite in a way F2P shouldn't.",
+      "thought": "A flat 30-tile grid with no chapter breaks reads as a demo, not a live-ops product.",
+      "note": {
+        "turn": 3,
+        "level": 11,
+        "persona": "critic",
+        "area": "retention",
+        "severity": "minor",
+        "text": "The level map shows all 30 levels as one flat grid with no chapter/world breaks, no themed sections, and no end-of-chapter reward beat. Players can see the entire game from the map screen, which reads as 'demo' and removes any mid-run goal to chase; hybrid-casual retention leans hard on 'clear the chapter, get the chest' loops (D1/D7 both track to visible near-term goals). I'd group levels into worlds of 10 with a header, a progress bar toward the next chest, and lock future chapters behind a card so the map implies more game beyond what's drawn."
+      }
+    },
+    {
+      "turn": 3,
+      "action": {
+        "type": "tap",
+        "button": "level:11"
+      },
+      "result": "tapped level tile 11"
+    },
+    {
+      "turn": 4,
+      "level": 11,
+      "say": "Three seconds, sound off: crosshatched squares are walls, hatched blocks with a shape stamp are mine, arrows on the rim are the exits. I read that instantly. Red circle up and out first.",
+      "thought": "Shape stamps plus crosshatch stones make the whole board parse without a single word of text — that is the bar being met.",
+      "note": null
+    },
+    {
+      "turn": 4,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "exit": "top"
+      },
+      "result": "block #0 escaped through the top gate. 8 moves left."
+    },
+    {
+      "turn": 5,
+      "level": 11,
+      "say": "Clean exit. One thing though: the board tells me moves left and stars, never how many blocks are left. Late in a dense level that count is the tension. Second red, straight up.",
+      "thought": "Blocks-remaining is the cheapest tension meter in the genre and it is missing.",
+      "note": null
+    },
+    {
+      "turn": 5,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "exit": "top"
+      },
+      "result": "block #5 escaped through the top gate. 7 moves left."
+    },
+    {
+      "turn": 6,
+      "level": 11,
+      "say": "Look at the top gate — it greyed out the instant the last red circle left. No text, no popup, the board just tells you that lane is finished. That is the kind of detail I mark games up for.",
+      "thought": "Gate desaturation on completion is genuinely elegant state feedback.",
+      "note": null
+    },
+    {
+      "turn": 6,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "exit": "right"
+      },
+      "result": "block #4 escaped through the right gate. 6 moves left."
+    },
+    {
+      "turn": 7,
+      "level": 11,
+      "say": "Three gone, three left, still on par. And now that the board's empty I can see how much dead sky sits between the HUD and the grid — a third of the screen doing nothing.",
+      "thought": "That empty band is exactly where a blocks-left counter and objective row should live.",
+      "note": {
+        "turn": 7,
+        "level": 11,
+        "persona": "critic",
+        "area": "ui",
+        "severity": "minor",
+        "text": "There is a large empty band (roughly the top third of the play area) between the HUD row and the top of the grid, and the HUD never states how many blocks remain — only moves left, stars and par. Blocks-remaining is the cheapest tension meter in the genre and the one number players watch on a dense board; without it the endgame of a level reads flat, and the wasted band makes the screen look like an unfinished layout. I'd float a compact objective row in that gap: one chip per gate colour showing blocks still to clear (e.g. red circle x2, cyan triangle x1), ticking down as they escape."
+      }
+    },
+    {
+      "turn": 7,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": [
+          1,
+          4
+        ],
+        "exit": "right"
+      },
+      "result": "block #1 escaped through the right gate. 5 moves left."
+    },
+    {
+      "turn": 8,
+      "level": 11,
+      "say": "Two diamonds left and one green slot on the left wall, rows three and four. The little one drops down and slides out; the tall one has to land exactly on those two rows. That is a real plan, not a shuffle.",
+      "thought": "The gate lanes are doing genuine puzzle work here — you route to a target row, not just any wall.",
+      "note": null
+    },
+    {
+      "turn": 8,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          1,
+          3
+        ],
+        "exit": "left"
+      },
+      "result": "block #2 escaped through the left gate. 4 moves left."
+    },
+    {
+      "turn": 9,
+      "level": 11,
+      "say": "Last one. Tall diamond drops to rows three-four, then straight out the left. If the routing is as generous as it's been, that is one drag and a three-star finish.",
+      "thought": "Testing whether a single drag really carries a corner turn plus an exit at par.",
+      "note": null
+    },
+    {
+      "turn": 9,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          3,
+          3
+        ],
+        "exit": "left"
+      },
+      "result": "block #3 escaped through the left gate. 3 moves left."
+    },
+    {
+      "turn": 10,
+      "level": 11,
+      "say": "Perfect clear, zero undos, zero doubt — at level eleven that worries me slightly. And look at this win card: three stars, one line, one button. This is the screen players see most in the whole game and it's a receipt.",
+      "thought": "Win card is the prime real estate in hybrid-casual and it is completely undeveloped.",
+      "note": {
+        "turn": 10,
+        "level": 11,
+        "persona": "critic",
+        "area": "monetization",
+        "severity": "major",
+        "text": "The win card is three stars, one line of text and a Next level button — no running star total, no chapter progress bar, no 'beat par by 2' flourish, no coin/booster reward, no streak. This is the most-viewed screen in the game and in hybrid-casual it is where the meta and the ad/IAP surface live (rewarded-video 'double your coins' on the win card is the single highest-yield placement in the genre, and progress-toward-chest here is what drives the next-session return). As it stands the card converts nothing and celebrates nothing. I'd add: star total ticking up, a chapter progress bar filling with a chest at the end, a coin drop, and a rewarded-video double-up button — and keep Next level as the big obvious default so the flow stays fast."
+      }
+    },
+    {
+      "turn": 10,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 11,
+      "level": 12,
+      "say": "Twelve gives me gates on three walls — up, down and right — which is genuinely more to hold in your head. The long green bar is already parked at its exit, so that's the free one to start with.",
+      "thought": "Three-wall gating is the real step up from the early levels; the board reads fine even at this density.",
+      "note": null
+    },
+    {
+      "turn": 11,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "exit": "right"
+      },
+      "result": "block #4 escaped through the right gate. 8 moves left."
+    },
+    {
+      "turn": 12,
+      "level": 12,
+      "say": "Red pair drops out the bottom next. I want that lane clear before the tall red tromino comes down column four — it's a queue, and getting the order wrong is what costs you moves here.",
+      "thought": "Ordering-as-puzzle is the core loop and it is working.",
+      "note": null
+    },
+    {
+      "turn": 12,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "exit": "bottom"
+      },
+      "result": "block #3 escaped through the bottom gate. 7 moves left."
+    },
+    {
+      "turn": 13,
+      "level": 12,
+      "say": "Lane's clear, tall red drops the length of the board and out the bottom in one drag. That one-drag-any-distance rule is the best decision in this game — it makes routing feel like drawing, not tapping.",
+      "thought": "The one-drag rule is the genuine differentiator versus tap-to-slide unblock clones.",
+      "note": null
+    },
+    {
+      "turn": 13,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "exit": "bottom"
+      },
+      "result": "block #0 escaped through the bottom gate. 6 moves left."
+    },
+    {
+      "turn": 14,
+      "level": 12,
+      "say": "Now the two loose diamonds. The little one at top drops to row four and runs the whole width to the right gate — around the stone, no problem.",
+      "thought": "Checking the router handles a down-then-right dogleg past a stone as one move.",
+      "note": null
+    },
+    {
+      "turn": 14,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          2,
+          4
+        ],
+        "exit": "right"
+      },
+      "result": "block #2 escaped through the right gate. 5 moves left."
+    },
+    {
+      "turn": 15,
+      "level": 12,
+      "say": "Second diamond runs straight across row six. Then the cyan pair has the interesting move left: it has to climb to the top row and shuffle right three columns before it can leave.",
+      "thought": "The cyan block is the only piece here that needs a real dogleg; everything else was a straight line.",
+      "note": null
+    },
+    {
+      "turn": 15,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "exit": "right"
+      },
+      "result": "block #5 escaped through the right gate. 4 moves left."
+    },
+    {
+      "turn": 16,
+      "level": 12,
+      "say": "Cyan up to the top row, right to column three, and out. One drag, three directions. Par again.",
+      "thought": "Second perfect clear in a row without an undo — the mid-game is not asking enough yet.",
+      "note": null
+    },
+    {
+      "turn": 16,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": [
+          3,
+          0
+        ],
+        "exit": "top"
+      },
+      "result": "block #1 escaped through the top gate. 3 moves left."
+    },
+    {
+      "turn": 17,
+      "level": 12,
+      "say": "Perfect again. Two mid-game levels, twelve moves, zero mistakes — and I've noticed why: every single block has left in exactly one drag. The only puzzle so far is what order to do the obvious in.",
+      "thought": "par == block count on both levels means the 'move twice' idea has not arrived yet.",
+      "note": {
+        "turn": 17,
+        "level": 12,
+        "persona": "critic",
+        "area": "difficulty",
+        "severity": "major",
+        "text": "On levels 11 and 12, par equals the number of blocks exactly (6 blocks, par 6), so every piece exits in one uninterrupted drag and the only decision is sequencing. Two levels into the mid-game I cleared both at par with no undo and no wrong move, which means the difficulty curve has flattened right where a hybrid-casual player should start feeling resistance (L11-15 is where session length and D3 retention are won or lost — a player who is never made to think has no reason to be proud of clearing 12). The fix is not a tighter move cap; it is levels where at least one block must be parked out of the way and retrieved later, so par exceeds block count. Make 'a block has to move twice' arrive by L13 and recur, and let the move limit stay par+3 so the tension comes from the puzzle, not the budget."
+      }
+    },
+    {
+      "turn": 17,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 18,
+      "level": 13,
+      "say": "Thirteen. Six blocks, par six — the same arithmetic a third time. Before I solve it, let me pull up pause and see what the game offers a stuck player.",
+      "thought": "Checking whether pause carries a hint, a skip, or any help surface at all.",
+      "note": null
+    },
+    {
+      "turn": 18,
+      "action": {
+        "type": "tap",
+        "button": "btnMenu"
+      },
+      "result": "tapped HUD: pause / unpause"
+    },
+    {
+      "turn": 19,
+      "level": 13,
+      "say": "Resume, restart, levels, how to play, sound, home. Tidy, properly dimmed, no dead ends. But notice what isn't here, and isn't in the HUD either: a hint. Nowhere in this game can a stuck player ask for help.",
+      "thought": "No hint button anywhere — that is both the missing rewarded-video slot and the missing anti-churn valve.",
+      "note": {
+        "turn": 19,
+        "level": 13,
+        "persona": "critic",
+        "area": "monetization",
+        "severity": "critical",
+        "text": "There is no hint affordance anywhere — not in the HUD, not in pause, not on the fail card. A stuck player's only options are restart or quit. In hybrid-casual, the hint button is simultaneously the primary rewarded-video placement (watch an ad, reveal the next move) and the main churn valve on hard levels; without it, every player who gets genuinely stuck at L20 or L25 either brute-forces or leaves, and there is no data on where they struggle. I'd add a hint button in the HUD next to undo: first two hints per level free while the tutorial curve runs, then ad-gated or coin-priced, showing exactly one next move (highlight the block and ghost its route). It doubles as the telemetry that tells you which levels are miscalibrated."
+      }
+    },
+    {
+      "turn": 19,
+      "action": {
+        "type": "tap",
+        "button": "btnResume"
+      },
+      "result": "tapped pause: Resume"
+    },
+    {
+      "turn": 20,
+      "level": 13,
+      "say": "Right. Cyan bar is sitting on its own gate, straight up and out. Then the red tromino walks out the left wall, which frees the top-right red to follow it across.",
+      "thought": "Solving 13 the same way as 11 and 12 — clear the pieces already aligned, then the ones they unblocked.",
+      "note": null
+    },
+    {
+      "turn": 20,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "exit": "top"
+      },
+      "result": "block #4 escaped through the top gate. 8 moves left."
+    },
+    {
+      "turn": 21,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "exit": "left"
+      },
+      "result": "block #3 escaped through the left gate. 7 moves left."
+    },
+    {
+      "turn": 22,
+      "level": 13,
+      "say": "Now the top-right red slides the full width of the board and out the left gate. Four columns of travel, one move. Still no resistance.",
+      "thought": "Long uninterrupted runs like this look impressive but cost nothing to plan.",
+      "note": null
+    },
+    {
+      "turn": 22,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "exit": "left"
+      },
+      "result": "block #5 escaped through the left gate. 6 moves left."
+    },
+    {
+      "turn": 23,
+      "level": 13,
+      "say": "Halfway through and I'm staring at an almost empty grid with three pieces huddled in one corner. The hardest moment of this level was move one. It's been deflating ever since.",
+      "thought": "Difficulty decays monotonically within every level — the peak is always the opening position.",
+      "note": {
+        "turn": 23,
+        "level": 13,
+        "persona": "critic",
+        "area": "difficulty",
+        "severity": "major",
+        "text": "Every level so far peaks in difficulty at move one and gets easier with each escape, because blocks only ever leave the board and nothing replaces them. By the halfway point of L11-13 I was looking at a near-empty grid with two or three isolated pieces and no decisions left, so each level ends on its dullest moment instead of its tensest. Compare Color Block Jam, where the board stays under pressure to the last piece. Two fixes worth prototyping: (a) design the back half of the level so the final pieces are the tangled ones — put the interlocked cluster on the pieces whose gates unlock last; (b) introduce a mechanic that adds pressure as the board empties, e.g. a gate that closes after N moves, or a block that must be escorted out last. Ending each level on its flattest beat is why the perfect clears feel unearned."
+      }
+    },
+    {
+      "turn": 23,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          2,
+          2
+        ],
+        "exit": "right"
+      },
+      "result": "block #2 escaped through the right gate. 5 moves left."
+    },
+    {
+      "turn": 24,
+      "level": 13,
+      "say": "Cyan pair shifts right a column and climbs out the top. Then the last red circle goes up and out the left. Par again, I'd bet.",
+      "thought": "Third consecutive par with no undo.",
+      "note": null
+    },
+    {
+      "turn": 24,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": [
+          2,
+          5
+        ],
+        "exit": "top"
+      },
+      "result": "block #1 escaped through the top gate. 4 moves left."
+    },
+    {
+      "turn": 25,
+      "level": 13,
+      "say": "Last circle, up three and out the left wall. Thirteen down, still perfect, still untroubled.",
+      "thought": "Three levels, eighteen moves, three stars each, no undo used.",
+      "note": null
+    },
+    {
+      "turn": 25,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          4,
+          3
+        ],
+        "exit": "left"
+      },
+      "result": "block #0 escaped through the left gate. 3 moves left."
+    },
+    {
+      "turn": 26,
+      "level": 13,
+      "say": "Three perfect clears, eighteen moves, no undos. Fourteen is meant to bring L-shaped blocks. I want to see whether the board teaches me that on its own or just drops it in.",
+      "thought": "New-obstacle introduction is the thing CrazyLabs-style curves live or die on.",
+      "note": null
+    },
+    {
+      "turn": 26,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 27,
+      "level": 14,
+      "say": "Whoa. Fourteen doesn't introduce the L-shape — it introduces three L-shapes and a two-by-two square, all at once, on the densest board I've seen. That's not one new idea, that's four.",
+      "thought": "Classic one-new-thing-at-a-time violation right at the point the curve should be teaching.",
+      "note": {
+        "turn": 27,
+        "level": 14,
+        "persona": "critic",
+        "area": "onboarding",
+        "severity": "major",
+        "text": "L14 introduces L-trominoes and a 2x2 square simultaneously — three separate L pieces plus the square land on the same board, which is also the densest so far. The house rule is one new obstacle at a time, and this breaks it at exactly the moment the mid-game should be teaching: a player has to work out that an L needs every one of its columns inside the gate lanes, and that a 2x2 needs two lanes, in the same puzzle. That is where mid-funnel drop-off comes from — the level after the one that confused them is the one they don't open. I'd split it: L14 gets exactly one L-shaped block on an otherwise sparse, forgiving board so the shape rule is discovered safely; L15 adds a second L; the 2x2 square waits until L16 and arrives alone. Then let them combine from L17."
+      }
+    },
+    {
+      "turn": 27,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "exit": "left"
+      },
+      "result": "block #0 escaped through the left gate. 8 moves left."
+    },
+    {
+      "turn": 28,
+      "level": 14,
+      "say": "Good — the L slid out sideways without me having to think about which cell leads. That's forgiving in the right way. One thing bugs me visually though: the circle stamp on that big two-by-two is the same tiny dot as on a single cell.",
+      "thought": "Fixed-size glyph on variable-size blocks makes the biggest pieces the least identifiable.",
+      "note": {
+        "turn": 28,
+        "level": 14,
+        "persona": "critic",
+        "area": "legibility",
+        "severity": "minor",
+        "text": "The colour-identity symbol (circle/triangle/diamond) is drawn at a fixed pixel size regardless of block area, so on the 2x2 square at L14 it is a small dot floating in a large field while on a single cell it nearly fills the tile. That inverts the intent: the biggest, most board-dominating pieces get the weakest shape cue, which hurts exactly the colour-blind and glance-play cases the shape cue exists for. There is also a faint pale square artifact showing inside the circle on the 2x2. I'd scale the glyph with the block's shorter dimension (or repeat it once per 2 cells) and check the artifact."
+      }
+    },
+    {
+      "turn": 28,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "exit": "left"
+      },
+      "result": "block #4 escaped through the left gate. 7 moves left."
+    },
+    {
+      "turn": 29,
+      "level": 14,
+      "say": "Now the two-by-two. It has to drop to rows five and six — the only two lanes its gate offers — then run the whole width. If the router handles a fat block turning a corner cleanly, this is one move.",
+      "thought": "The 2x2 needing both gate lanes exactly is the most interesting constraint in the level.",
+      "note": null
+    },
+    {
+      "turn": 29,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          4,
+          5
+        ],
+        "exit": "left"
+      },
+      "result": "block #3 escaped through the left gate. 6 moves left."
+    },
+    {
+      "turn": 30,
+      "level": 14,
+      "say": "The square's gone and the whole right half opened up, so cyan just walks out sideways. Honestly the two-by-two was the best puzzle beat in this level — it had exactly one landing row and I had to earn it.",
+      "thought": "The 2x2's two-lane constraint is the strongest single idea I have seen in the mid-game.",
+      "note": null
+    },
+    {
+      "turn": 30,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "exit": "right"
+      },
+      "result": "block #1 escaped through the right gate. 5 moves left."
+    },
+    {
+      "turn": 31,
+      "level": 14,
+      "say": "Both diamonds are Ls and the green gate is only two columns wide, so each one has to shuffle sideways until every column it occupies sits under that gate. That's a genuinely new rule — and the game never says it out loud.",
+      "thought": "The L-plus-narrow-gate rule is taught only by failure, and there is no failure here to teach it.",
+      "note": null
+    },
+    {
+      "turn": 31,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          1,
+          0
+        ],
+        "exit": "top"
+      },
+      "result": "block #2 escaped through the top gate. 4 moves left."
+    },
+    {
+      "turn": 32,
+      "level": 14,
+      "say": "Last L: one column left, then straight up and out. Par six again — fourth in a row.",
+      "thought": "Four consecutive perfect clears with no undo at levels 11-14.",
+      "note": null
+    },
+    {
+      "turn": 32,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "to": [
+          1,
+          3
+        ],
+        "exit": "top"
+      },
+      "result": "block #5 escaped through the top gate. 3 moves left."
+    },
+    {
+      "turn": 33,
+      "level": 14,
+      "say": "Four levels, four perfect clears, twenty-four moves, and I have never once used the undo button. I'm going to play fifteen sloppily on purpose — I need to see the fail screen, because that moment is where this genre makes its money.",
+      "thought": "Deliberately burning moves to reach the rescue surface, since natural failure is not happening.",
+      "note": null
+    },
+    {
+      "turn": 33,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 34,
+      "level": 15,
+      "say": "Five Ls and a domino — the densest board yet, and to its credit I can still read every piece in a glance. Now, sloppy player mode: I'll shuffle pieces around like someone who hasn't planned, and see what the game does when I run dry.",
+      "thought": "Board legibility genuinely holds up at five L-shapes, which is the hardest test so far.",
+      "note": null
+    },
+    {
+      "turn": 34,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          4,
+          4
+        ]
+      },
+      "result": "block #0 now at (4,4). 8 moves left."
+    },
+    {
+      "turn": 35,
+      "level": 15,
+      "say": "That did nothing useful and the star meter still says three. It only turns amber once you cross par, so it never warns you that you're about to lose a star — it tells you after.",
+      "thought": "The star meter is a lagging indicator; it should show the stars still achievable, not the stars used so far.",
+      "note": null
+    },
+    {
+      "turn": 35,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          4,
+          3
+        ]
+      },
+      "result": "block #0 now at (4,3). 7 moves left."
+    },
+    {
+      "turn": 36,
+      "level": 15,
+      "say": "Two moves burned putting a block back exactly where it started. Notice the undo button would have refunded that — but a player who doesn't realise undo is free will just eat the loss.",
+      "thought": "Undo appears to cost nothing; worth checking whether that is signposted anywhere.",
+      "note": null
+    },
+    {
+      "turn": 36,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          1,
+          2
+        ]
+      },
+      "result": "block #2 now at (1,2). 6 moves left."
+    },
+    {
+      "turn": 37,
+      "level": 15,
+      "say": "Here's the question that matters: if I undo, do I get the move back or just the position? Because if undo doesn't refund the move, it's decoration.",
+      "thought": "Undo's move-economy behaviour decides whether the move limit is fair or punitive.",
+      "note": null
+    },
+    {
+      "turn": 37,
+      "action": {
+        "type": "tap",
+        "button": "btnUndo"
+      },
+      "result": "tapped HUD: undo last move (one step)"
+    },
+    {
+      "turn": 38,
+      "level": 15,
+      "say": "Undo gave me the move back, not just the position. That's genuinely generous design and it means the move limit is a puzzle, not a tax. Nobody tells you that, though — it's the kind of thing a first-timer never discovers.",
+      "thought": "Free undo is a real strength but it is completely unadvertised.",
+      "note": {
+        "turn": 38,
+        "level": 15,
+        "persona": "critic",
+        "area": "feedback",
+        "severity": "minor",
+        "text": "Undo refunds the spent move as well as reverting the position, which makes the tight par+3 limit fair rather than punitive — but this is never communicated. Nothing in the how-to-play, the HUD, or the first use of undo says the move comes back, so cautious players will avoid experimenting and treat every drag as irreversible; that is the behaviour that makes a move-limited puzzle feel stressful instead of thoughtful. I'd surface it once: the first time a player crosses par on any level, flash a one-line coach tip on the undo button ('Undo is free - it gives the move back too'), and put the same line in How to play."
+      }
+    },
+    {
+      "turn": 38,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "to": [
+          1,
+          5
+        ]
+      },
+      "result": "block #4 now at (1,5). 6 moves left."
+    },
+    {
+      "turn": 39,
+      "level": 15,
+      "say": "And back again. Four moves spent achieving precisely nothing — which is exactly what a distracted player on a bus does. Now let's see if the game catches me.",
+      "thought": "Four wasted moves against a nine cap with six blocks left guarantees the fail state.",
+      "note": null
+    },
+    {
+      "turn": 39,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "to": [
+          0,
+          5
+        ]
+      },
+      "result": "block #4 now at (0,5). 5 moves left."
+    },
+    {
+      "turn": 40,
+      "level": 15,
+      "say": "Five moves, six blocks. It's already unwinnable and the game hasn't said a word — no colour change, no warning, nothing. I'll play it out and let it end.",
+      "thought": "The game does not detect or signal an unwinnable state; the player only finds out at zero.",
+      "note": null
+    },
+    {
+      "turn": 40,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": [
+          2,
+          6
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #1 escaped through the bottom gate. 4 moves left."
+    },
+    {
+      "turn": 41,
+      "level": 15,
+      "say": "Still three gold stars on the meter with four moves left and five blocks on the board. That number is lying to me — it's counting what I've spent, not what I can still earn.",
+      "thought": "Star meter should be predictive, not retrospective; right now it tells you the good news for as long as possible.",
+      "note": {
+        "turn": 41,
+        "level": 15,
+        "persona": "critic",
+        "area": "feedback",
+        "severity": "minor",
+        "text": "The HUD star meter reflects moves spent so far against par, not the best rating still achievable. Five moves in on L15 with five blocks left and four moves remaining, it still showed three gold stars even though three stars was already impossible. Players read that meter as their live score, so it delivers the bad news only at the moment of failure — which removes the tension that a tightening rating is supposed to create and makes the drop feel arbitrary. I'd compute the meter as 'best rating still reachable' (moves used plus the minimum remaining escapes) so it dims a star the instant that star is gone, and give it a small shudder when it drops."
+      }
+    },
+    {
+      "turn": 41,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          2,
+          3
+        ],
+        "exit": "top"
+      },
+      "result": "block #2 escaped through the top gate. 3 moves left."
+    },
+    {
+      "turn": 42,
+      "level": 15,
+      "say": "Three moves, four blocks. Cyan L shuffles left under its gate and drops out the bottom. Two to go and I know I can't make it.",
+      "thought": "Running the level out to force the fail card.",
+      "note": null
+    },
+    {
+      "turn": 42,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          2,
+          0
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #3 escaped through the bottom gate. 2 moves left."
+    },
+    {
+      "turn": 44,
+      "level": 15,
+      "say": "Correction, and it's mine to own: I zoomed the HUD and the meter has dropped to one gold star and turned the move count red. It is live and it does warn you. I called that wrong a minute ago.",
+      "thought": "My previous star-meter note was based on a text readout, not the rendered UI; retract it.",
+      "note": {
+        "turn": 44,
+        "level": 15,
+        "persona": "critic",
+        "area": "feedback",
+        "severity": "nit",
+        "text": "RETRACTION of my earlier star-meter note: on zooming the rendered HUD, the star meter IS live — at 7 moves used against par 6 it had already dropped to one gold star and the move counter had turned red. My earlier claim that it only reports spent moves was read off a text readout, not the screen, and is wrong. The meter works. The one thing still worth a look is the band width: going from three stars at par straight to one star at par+1 is a steep cliff, and if that is the intent it should at least be stated on the how-to-play screen so players know what a star costs."
+      }
+    },
+    {
+      "turn": 44,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "to": [
+          2,
+          5
+        ],
+        "exit": "top"
+      },
+      "result": "block #4 escaped through the top gate. 1 moves left."
+    },
+    {
+      "turn": 45,
+      "level": 15,
+      "say": "One move, two blocks. This is the moment — let's see what the game shows me when I lose.",
+      "thought": "About to hit the fail card and the rescue offer.",
+      "note": null
+    },
+    {
+      "turn": 45,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "to": [
+          3,
+          6
+        ],
+        "exit": "right"
+      },
+      "result": "block #5 escaped through the right gate. 0 moves left."
+    },
+    {
+      "turn": 46,
+      "level": 15,
+      "say": "Now THAT is a fail screen. Not 'you lose' — 'five of six escaped, the last block is one drag from its gate', with a dashed ghost line drawn to the exit. It makes me want the three moves. That's the craft.",
+      "thought": "Near-miss framing plus a visible route to the answer is textbook rescue-offer design and it lands.",
+      "note": null
+    },
+    {
+      "turn": 46,
+      "level": 15,
+      "say": "Two gripes though. The card sits on top of the very gate it's pointing at, so the ghost route vanishes under it. And the button says AD and free rescue in the same breath — which is it?",
+      "thought": "The card occludes its own evidence, and the reward copy is self-contradictory.",
+      "note": {
+        "turn": 46,
+        "level": 15,
+        "persona": "critic",
+        "area": "monetization",
+        "severity": "minor",
+        "text": "The fail card is the strongest screen in the build - 'So close! 5 of 6 blocks escaped', with the stranded block highlighted and a dashed ghost route drawn to its gate - but two things undercut it. (1) The card is anchored to the bottom of the screen and covers the lower rows of the board, so on L15 the ghost route ran straight underneath the card and the destination gate was hidden; the player cannot verify the promise the card is making. Anchor the card to whichever half of the board is empty, or shrink and raise it so the highlighted block and its gate stay visible. (2) The button reads 'AD | +3 moves - free rescue', which says paid and free simultaneously; players learn to distrust that. Pick one contract per state: 'Watch ad for +3 moves' when it costs a view, 'Free rescue - +3 moves' for the once-per-level freebie, and consider making the first rescue of a session free and ad-gating the rest."
+      }
+    },
+    {
+      "turn": 46,
+      "action": {
+        "type": "tap",
+        "button": "btnRescue"
+      },
+      "result": "tapped fail card: +3 moves rescue"
+    },
+    {
+      "turn": 48,
+      "level": 15,
+      "say": "Rescue taken, three moves back on the clock, board exactly as I left it — no reset, no punishment. Last red L drops two rows and slides out the right. Level fifteen, saved.",
+      "thought": "Rescue preserves board state, which is the difference between a rescue and a restart.",
+      "note": null
+    },
+    {
+      "turn": 48,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          4,
+          5
+        ],
+        "exit": "right"
+      },
+      "result": "block #0 escaped through the right gate. 2 moves left."
+    },
+    {
+      "turn": 49,
+      "level": 15,
+      "say": "One star, and it immediately offers me Replay for three stars. That's the right instinct — it turns my failure into a reason to come back. Though 'best: 6' reads like my personal best when it's actually par.",
+      "thought": "Replay-for-three-stars is a real retention hook; the copy on it is muddled.",
+      "note": {
+        "turn": 49,
+        "level": 15,
+        "persona": "critic",
+        "area": "ui",
+        "severity": "nit",
+        "text": "On a sub-3-star win the card reads 'Solved in 10 moves (best: 6)' - but 6 is par, not the player's own best, and 'best' overwhelmingly reads as a personal record. On a level a player has genuinely beaten before this becomes actively wrong. Say 'Solved in 10 moves - par 6' and, once a personal best exists, add it as a separate line ('your best: 8'). The 'Replay for three stars' button underneath is a strong hook and deserves clearer numbers next to it."
+      }
+    },
+    {
+      "turn": 49,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 50,
+      "level": 16,
+      "say": "Two red L-blocks sit shoulder to shoulder at the top and read as one giant red mass. Zoomed in there's a hairline seam. At phone size, held at arm's length, I genuinely could not tell it was two pieces.",
+      "thought": "Adjacent same-colour blocks fail the three-second legibility rule — this is their own non-negotiable being broken.",
+      "note": {
+        "turn": 50,
+        "level": 16,
+        "persona": "critic",
+        "area": "legibility",
+        "severity": "major",
+        "text": "When two blocks of the same colour sit edge to edge - the two red L-trominoes at the top of L16 - they merge into a single visual mass. The only separator is a hairline double outline plus small corner dots, which at real phone size is two or three pixels and disappears at a glance or at arm's length; I misread the cluster as one piece until I zoomed 3x. This breaks the 3-second sound-off legibility rule directly, and it gets worse from here, because block counts and same-colour pairs both rise through the twenties. Fixes, cheapest first: inset every block by a pixel or two so a dark gutter always separates neighbours; add a subtle drop shadow on each block so edges read as separate objects; or alternate the hatch angle between adjacent blocks of the same colour. The corner dots already there are a good idea - make them bigger and brighter and they'd carry more of the load."
+      }
+    },
+    {
+      "turn": 50,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          2,
+          5
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #0 escaped through the bottom gate. 8 moves left."
+    },
+    {
+      "turn": 51,
+      "level": 16,
+      "say": "That red L had to slide down, cut left two columns, then drop out — down, across, down, out, all in one drag. That is the most satisfying move I've made in this game.",
+      "thought": "Multi-turn routing in a single drag is the mechanic's real pleasure.",
+      "note": null
+    },
+    {
+      "turn": 51,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "exit": "right"
+      },
+      "result": "block #1 escaped through the right gate. 7 moves left."
+    },
+    {
+      "turn": 52,
+      "level": 16,
+      "say": "Now the top-right L takes the long way: all the way down the right wall, left across the bottom into the red gate lanes, and out. Big journey, one move.",
+      "thought": "L16 is finally a level where routing matters more than ordering.",
+      "note": null
+    },
+    {
+      "turn": 52,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "to": [
+          2,
+          6
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #5 escaped through the bottom gate. 6 moves left."
+    },
+    {
+      "turn": 53,
+      "level": 16,
+      "say": "This one's the knot. The last red L is boxed in by the green domino below it, and the green can only leave upward through the exact squares the red is sitting on. Somebody has to go the long way round.",
+      "thought": "First genuine deadlock of the mid-game — this is the kind of shape L11-14 should have had.",
+      "note": null
+    },
+    {
+      "turn": 53,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          2,
+          6
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #3 escaped through the bottom gate. 5 moves left."
+    },
+    {
+      "turn": 54,
+      "level": 16,
+      "say": "It found the whole route — right past its neighbour, down the wall, back across the floor, out. The pathfinder is doing serious work and never once picked a route I didn't intend. Green goes up, square goes down, done.",
+      "thought": "Route-finding quality is a genuine strength; it never surprised me in twenty-plus drags.",
+      "note": null
+    },
+    {
+      "turn": 54,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "exit": "top"
+      },
+      "result": "block #2 escaped through the top gate. 4 moves left."
+    },
+    {
+      "turn": 55,
+      "level": 16,
+      "say": "Big red square slides right into the two gate lanes and drops out. Sixteen at par — and this one I actually had to solve.",
+      "thought": "L16 is the first mid-game level with a real dependency knot; it should be L12.",
+      "note": null
+    },
+    {
+      "turn": 55,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "to": [
+          2,
+          2
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #4 escaped through the bottom gate. 3 moves left."
+    },
+    {
+      "turn": 56,
+      "level": 16,
+      "say": "Sixteen is the best level I've played in this range — a real dependency knot instead of a to-do list. Now seventeen, which adds a fourth colour. That's the legibility stress test.",
+      "thought": "Four colours plus four shapes on a dense board is where the palette either holds or breaks.",
+      "note": null
+    },
+    {
+      "turn": 56,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 57,
+      "level": 17,
+      "say": "Amber with a star, on a bigger seven-by-nine board. Good pick — it's the one hue that can't be confused with red, green or cyan, and the star is unmistakable. And par is eight for seven blocks. Finally, something has to move twice.",
+      "thought": "Fourth colour is well chosen and par finally exceeds block count.",
+      "note": null
+    },
+    {
+      "turn": 57,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "exit": "top"
+      },
+      "result": "block #1 escaped through the top gate. 10 moves left."
+    },
+    {
+      "turn": 58,
+      "level": 17,
+      "say": "Amber's gate is the left wall, rows one to four, so all three star pieces have to climb into that band before they can leave. That's a nice constraint — the gate lane is the puzzle, not the wall.",
+      "thought": "Narrow lane bands on a bigger board are where this design gets interesting.",
+      "note": null
+    },
+    {
+      "turn": 58,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "to": [
+          0,
+          3
+        ],
+        "exit": "left"
+      },
+      "result": "block #5 escaped through the left gate. 9 moves left."
+    },
+    {
+      "turn": 59,
+      "level": 17,
+      "say": "Long amber bar lifts one row into the lane band and runs the full width of the board to the left gate. Six cells of travel, one drag, and it reads perfectly.",
+      "thought": "Wider board makes the long single-drag routes more impressive.",
+      "note": null
+    },
+    {
+      "turn": 59,
+      "action": {
+        "type": "drag",
+        "block": 6,
+        "to": [
+          4,
+          4
+        ],
+        "exit": "left"
+      },
+      "result": "block #6 escaped through the left gate. 8 moves left."
+    },
+    {
+      "turn": 60,
+      "level": 17,
+      "say": "Third star piece climbs up out of the basement into the lane band and slides out. Three amber gone. Now the awkward bit: red wants to go right through row two, and green is parked across it.",
+      "thought": "Setting up the deadlock that forces the double-move.",
+      "note": null
+    },
+    {
+      "turn": 60,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          3,
+          3
+        ],
+        "exit": "left"
+      },
+      "result": "block #3 escaped through the left gate. 7 moves left."
+    },
+    {
+      "turn": 61,
+      "level": 17,
+      "say": "Real deadlock. Red needs to slide out right along rows two to four, but green is sitting in row two. Green needs to drop down columns one to three, and red is standing in column two. Somebody parks. Red goes and waits in column four.",
+      "thought": "This is the first genuine mutual block in the whole range — exactly the idea that should have arrived at L12.",
+      "note": null
+    },
+    {
+      "turn": 61,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          4,
+          3
+        ]
+      },
+      "result": "block #0 now at (4,3). 6 moves left."
+    },
+    {
+      "turn": 62,
+      "level": 17,
+      "say": "Red's parked. Green bar shifts left into its gate columns and drops the whole height of the board and out. That was a proper two-step think — the first one this range has asked of me.",
+      "thought": "The park-and-retrieve move is genuinely satisfying and completely absent from L11-15.",
+      "note": null
+    },
+    {
+      "turn": 62,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          1,
+          2
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #2 escaped through the bottom gate. 5 moves left."
+    },
+    {
+      "turn": 63,
+      "level": 17,
+      "say": "Red comes back off the bench: up one row into the lane band, then straight out the right. Two moves for one block, exactly as the par intended.",
+      "thought": "Par 8 for 7 blocks accounted for precisely this.",
+      "note": null
+    },
+    {
+      "turn": 63,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          4,
+          2
+        ],
+        "exit": "right"
+      },
+      "result": "block #0 escaped through the right gate. 4 moves left."
+    },
+    {
+      "turn": 64,
+      "level": 17,
+      "say": "Last green L shifts two columns left into the bottom gate lanes and drops out. Seventeen at par eight — and this is the first level in the range I'd call a good puzzle.",
+      "thought": "L17 is where the mid-game finally starts working.",
+      "note": null
+    },
+    {
+      "turn": 64,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "to": [
+          2,
+          0
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #4 escaped through the bottom gate. 3 moves left."
+    },
+    {
+      "turn": 65,
+      "level": 17,
+      "say": "Seventeen at par. That's the level I'd put in the App Store video — bigger board, four colours, and one piece that has to give way and come back. Onward to eighteen.",
+      "thought": "Note that L17's design quality is the target the whole range should hit.",
+      "note": null
+    },
+    {
+      "turn": 65,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 66,
+      "level": 18,
+      "say": "Four colours, seven pieces, two stones, par eight again. I can already see the tangle bottom-right: the cyan pair and the amber tower each need the other to move first. Green goes out the left wall to start.",
+      "thought": "Second consecutive level with a mutual dependency — the curve has finally found its shape.",
+      "note": null
+    },
+    {
+      "turn": 66,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "exit": "left"
+      },
+      "result": "block #2 escaped through the left gate. 10 moves left."
+    },
+    {
+      "turn": 67,
+      "level": 18,
+      "say": "Green tower drops into the gate band and follows it out. Now the cyan pair has to vacate the whole lower middle so the amber tower can run left — it'll go and sit up in the top-right corner.",
+      "thought": "Parking a block far from its own gate to unblock a corridor is the good stuff.",
+      "note": null
+    },
+    {
+      "turn": 67,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "to": [
+          1,
+          3
+        ],
+        "exit": "left"
+      },
+      "result": "block #4 escaped through the left gate. 9 moves left."
+    },
+    {
+      "turn": 68,
+      "level": 18,
+      "say": "Cyan pair climbs five rows and tucks into the far right corner. Costs me a move it'll have to pay back later, but nothing else moves until it does.",
+      "thought": "Executing the park; the whole level hinges on it.",
+      "note": null
+    },
+    {
+      "turn": 68,
+      "action": {
+        "type": "drag",
+        "block": 6,
+        "to": [
+          6,
+          1
+        ]
+      },
+      "result": "block #6 now at (6,1). 8 moves left."
+    },
+    {
+      "turn": 69,
+      "level": 18,
+      "say": "Now the amber tower runs four columns left along the basement and climbs the whole board to the top gate. That's an L-shaped journey the length of the grid, and I never doubted it would take the route I meant.",
+      "thought": "Long doglegs remain unambiguous; the routing model is trustworthy.",
+      "note": null
+    },
+    {
+      "turn": 69,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          1,
+          5
+        ],
+        "exit": "top"
+      },
+      "result": "block #3 escaped through the top gate. 7 moves left."
+    },
+    {
+      "turn": 70,
+      "level": 18,
+      "say": "Red L shifts two columns into the bottom gate lanes and drops out. Then cyan comes down off the shelf and leaves through the right. Four to go, seven moves left — comfortable.",
+      "thought": "Cruising; the level is well-shaped but the +3 buffer means no real pressure.",
+      "note": null
+    },
+    {
+      "turn": 70,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "to": [
+          3,
+          3
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #5 escaped through the bottom gate. 6 moves left."
+    },
+    {
+      "turn": 71,
+      "level": 18,
+      "say": "Cyan drops two rows into its lane band and slides straight out the right wall. Debt repaid.",
+      "thought": "The parked block returning is the satisfying beat this design needed all along.",
+      "note": null
+    },
+    {
+      "turn": 71,
+      "action": {
+        "type": "drag",
+        "block": 6,
+        "to": [
+          6,
+          3
+        ],
+        "exit": "right"
+      },
+      "result": "block #6 escaped through the right gate. 5 moves left."
+    },
+    {
+      "turn": 72,
+      "level": 18,
+      "say": "Big red square drops the full height of the board and out the bottom. One cyan tower left.",
+      "thought": "Two moves from par on L18.",
+      "note": null
+    },
+    {
+      "turn": 72,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "exit": "bottom"
+      },
+      "result": "block #0 escaped through the bottom gate. 4 moves left."
+    },
+    {
+      "turn": 73,
+      "level": 18,
+      "say": "Last cyan tower drops three rows into its band and crosses the whole empty board to the right gate. Eighteen at par eight.",
+      "thought": "Again the level ends on an empty board and a trivial move — the deflation problem persists even in the good levels.",
+      "note": null
+    },
+    {
+      "turn": 73,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": [
+          0,
+          3
+        ],
+        "exit": "right"
+      },
+      "result": "block #1 escaped through the right gate. 3 moves left."
+    },
+    {
+      "turn": 74,
+      "level": 18,
+      "say": "Eighteen at par. Two good levels in a row now. On to nineteen.",
+      "thought": "Moving on; the range has clearly split into a weak first half and a strong second half.",
+      "note": null
+    },
+    {
+      "turn": 74,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 75,
+      "level": 19,
+      "say": "Two gates on the same wall — red low, cyan high — and they read cleanly because the colour and the star or triangle do the work, not the position. Almost every piece here is blocked by another. Red tower out first.",
+      "thought": "Two same-wall gates is a good escalation and the legibility holds.",
+      "note": null
+    },
+    {
+      "turn": 75,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "to": [
+          2,
+          5
+        ],
+        "exit": "left"
+      },
+      "result": "block #4 escaped through the left gate. 10 moves left."
+    },
+    {
+      "turn": 76,
+      "level": 19,
+      "say": "Cyan square is the one that has to sacrifice itself: all the way left and down into the bottom-left corner, nowhere near its own gate, purely to open the corridor red needs. That's a real puzzle-solver's move.",
+      "thought": "Parking a block in the opposite corner from its gate is the best design idea in this range.",
+      "note": null
+    },
+    {
+      "turn": 76,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": [
+          0,
+          7
+        ]
+      },
+      "result": "block #1 now at (0,7). 9 moves left."
+    },
+    {
+      "turn": 77,
+      "level": 19,
+      "say": "Red square drops down the right wall into its lane band and runs the entire width of the board out the left. Six columns, one drag, past where the cyan used to be.",
+      "thought": "The payoff move for the park; long and legible.",
+      "note": null
+    },
+    {
+      "turn": 77,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          5,
+          5
+        ],
+        "exit": "left"
+      },
+      "result": "block #0 escaped through the left gate. 8 moves left."
+    },
+    {
+      "turn": 78,
+      "level": 19,
+      "say": "Amber tower can't go straight right — there's a stone sitting in row one. It drops a row first, then runs out. Nice use of a stone: it doesn't block a path, it forces a different one.",
+      "thought": "Stones used to shift a lane rather than to wall something off — that is the good use of them.",
+      "note": null
+    },
+    {
+      "turn": 78,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "to": [
+          3,
+          2
+        ],
+        "exit": "right"
+      },
+      "result": "block #5 escaped through the right gate. 7 moves left."
+    },
+    {
+      "turn": 79,
+      "level": 19,
+      "say": "Second amber square straight out the right, now the lane's clear. Then green shifts into its bottom gate columns and drops out the floor.",
+      "thought": "Cascade phase — the level opens up quickly once the knot is untied.",
+      "note": null
+    },
+    {
+      "turn": 79,
+      "action": {
+        "type": "drag",
+        "block": 6,
+        "exit": "right"
+      },
+      "result": "block #6 escaped through the right gate. 6 moves left."
+    },
+    {
+      "turn": 80,
+      "level": 19,
+      "say": "Green bar slides three columns right into its gate lanes and drops the height of the board. Two left, and both are easy now — which is that deflation problem again, in an otherwise excellent level.",
+      "thought": "Even L19, the best-designed level here, ends on its flattest three moves.",
+      "note": null
+    },
+    {
+      "turn": 80,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          3,
+          2
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #2 escaped through the bottom gate. 5 moves left."
+    },
+    {
+      "turn": 81,
+      "level": 19,
+      "say": "Last amber square drops two rows and exits right. Then cyan climbs back up out of the corner it sacrificed itself to, and leaves through its own gate. Eight moves, par.",
+      "thought": "Finishing L19 at par.",
+      "note": null
+    },
+    {
+      "turn": 81,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          1,
+          2
+        ],
+        "exit": "right"
+      },
+      "result": "block #3 escaped through the right gate. 4 moves left."
+    },
+    {
+      "turn": 82,
+      "level": 19,
+      "say": "And cyan comes home. Nineteen at par eight — the strongest level of the ten, and the only one where I felt like I'd genuinely solved something rather than tidied up.",
+      "thought": "L19 is the design benchmark; L11-14 should be rebuilt to match it.",
+      "note": null
+    },
+    {
+      "turn": 82,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": [
+          0,
+          2
+        ],
+        "exit": "left"
+      },
+      "result": "block #1 escaped through the left gate. 3 moves left."
+    },
+    {
+      "turn": 83,
+      "level": 19,
+      "say": "Level twenty — the last of my range, and the one the difficulty curve says should bite. Let's see it.",
+      "thought": "L20 should be the spike; checking whether the curve delivers one.",
+      "note": null
+    },
+    {
+      "turn": 83,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 84,
+      "level": 20,
+      "say": "Here's the spike — ten moves for a par of eight. Every level before this gave me three spare; now it's two. Narrow gates, two stones, and a green L walled in by a stone on one side and an amber square on the other. I like this.",
+      "thought": "Tightening the buffer rather than the puzzle is a blunt way to spike, but the board is genuinely knotted too.",
+      "note": null
+    },
+    {
+      "turn": 84,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "exit": "left"
+      },
+      "result": "block #1 escaped through the left gate. 9 moves left."
+    },
+    {
+      "turn": 85,
+      "level": 20,
+      "say": "Cyan domino climbs to the top two rows and follows it out the left. Then the red bar shifts two columns and lifts out the top. Clearing the middle so I can get at the real problem.",
+      "thought": "Opening moves are forced; the level's difficulty is concentrated in the green-amber knot.",
+      "note": null
+    },
+    {
+      "turn": 85,
+      "action": {
+        "type": "drag",
+        "block": 6,
+        "to": [
+          2,
+          0
+        ],
+        "exit": "left"
+      },
+      "result": "block #6 escaped through the left gate. 8 moves left."
+    },
+    {
+      "turn": 86,
+      "level": 20,
+      "say": "Red bar left two, then straight up and out. Now the knot: green L can't go left, there's a stone; can't go down, there's the amber square; and the amber square can't rise until the green moves. Green has to take a long walk.",
+      "thought": "Stone-plus-block double constraint is the tightest single position in the range.",
+      "note": null
+    },
+    {
+      "turn": 86,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          2
+        ],
+        "exit": "top"
+      },
+      "result": "block #0 escaped through the top gate. 7 moves left."
+    },
+    {
+      "turn": 87,
+      "level": 20,
+      "say": "Green L goes up two rows and then walks four columns across the ceiling to the far left corner. Completely the wrong end of the board from its gate. That's the move that costs me my spare.",
+      "thought": "The park is long and counter-intuitive — genuinely the hardest thing L11-20 has asked.",
+      "note": null
+    },
+    {
+      "turn": 87,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          0,
+          1
+        ]
+      },
+      "result": "block #2 now at (0,1). 6 moves left."
+    },
+    {
+      "turn": 88,
+      "level": 20,
+      "say": "Amber square rises four rows into its two-row lane band and slides out the right. Four blocks left, six moves — I've got exactly the room I planned for and not a move more.",
+      "thought": "The tighter cap is being felt now, which is precisely what a level-20 spike should do.",
+      "note": null
+    },
+    {
+      "turn": 88,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          4,
+          1
+        ],
+        "exit": "right"
+      },
+      "result": "block #3 escaped through the right gate. 5 moves left."
+    },
+    {
+      "turn": 89,
+      "level": 20,
+      "say": "Now green comes back from exile: right along the top, all the way down the right side, then left into its gate columns and out the floor. Three turns in one drag — the longest route I've drawn in this game.",
+      "thought": "If the router handles this, its route quality is genuinely publisher-grade.",
+      "note": null
+    },
+    {
+      "turn": 89,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          3,
+          6
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #2 escaped through the bottom gate. 4 moves left."
+    },
+    {
+      "turn": 90,
+      "level": 20,
+      "say": "It found every corner of that. Twenty-plus drags now and the pathfinder has never once picked a route I didn't mean — that's not a small thing, it's the difference between this feeling like a puzzle and feeling like a fight. Green square next.",
+      "thought": "Route-finding reliability is the single most underrated strength of this build.",
+      "note": null
+    },
+    {
+      "turn": 90,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "to": [
+          3,
+          6
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #5 escaped through the bottom gate. 3 moves left."
+    },
+    {
+      "turn": 91,
+      "level": 20,
+      "say": "Last red L rises the full height of an empty board and out the top. Twenty, at par eight, with two moves spare.",
+      "thought": "Finishing the range; L20 ends on the same deflated empty board as every other level.",
+      "note": null
+    },
+    {
+      "turn": 91,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "exit": "top"
+      },
+      "result": "block #4 escaped through the top gate. 2 moves left."
+    },
+    {
+      "turn": 92,
+      "level": 20,
+      "say": "Twenty at par, ten for ten. Nine three-star clears and one rescue. Let me write this up.",
+      "thought": "Range done; the story is a flat first half and a genuinely good second half.",
+      "note": {
+        "turn": 92,
+        "level": 20,
+        "persona": "critic",
+        "area": "difficulty",
+        "severity": "minor",
+        "text": "L20's spike is delivered by shrinking the move buffer from par+3 to par+2 rather than by deepening the puzzle. The board is genuinely knotted - the green L walled in by a stone on one side and the amber square on the other is the tightest position in the range - so the tighter cap is not needed to make it hard, and a smaller buffer mostly punishes exploration rather than rewarding insight (players experiment less exactly when the level most wants them to). Keep the cap at par+3 through L20 and let the puzzle carry the spike; if you want a visible escalation, spike the piece count and the number of forced double-moves instead, and save the tighter buffer for a dedicated 'expert' variant."
+      }
+    }
+  ]
+}

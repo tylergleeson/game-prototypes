@@ -8,8 +8,9 @@
   const N = LEVELS.length;
   const screens = { menu: $('menu'), levels: $('levels'), legend: $('legend') };
   const pauseModal = $('pauseModal');
-  let legendFrom = 'menu';
+  let legendFrom = 'menu', levelsFrom = 'menu'; // Back returns to the screen a sheet was opened from
   let resetArmed = false, resetTimer = 0;
+  const CHAPTERS = ['Foundations', 'Corked', 'The spike'];
 
   // ---------- progress: highest unlocked level + best stars per level ----------
   let prog = { u: 0, s: [] };
@@ -42,20 +43,34 @@
     if (name === 'legend') { drawSymbols(); if (!legendAnim) { legendAnim = true; demoT0 = 0; requestAnimationFrame(demoFrame); } }
     else legendAnim = false;
   }
+  // an attempt the player walked away from (pause → Main menu) is still on the board behind
+  // the title block; Play resumes it rather than silently restarting the level
+  const resumable = () => GE.paused && !GE.over && GE.moves > 0;
   function refreshMenu() {
     $('fLevel').textContent = (GE.level + 1) + ' / ' + N;
     $('fStars').textContent = starsTotal() + ' / ' + (N * 3);
-    $('playLabel').textContent = 'Play level ' + (GE.level + 1);
+    $('playLabel').textContent = (resumable() ? 'Resume level ' : 'Play level ') + (GE.level + 1);
     refreshSound();
   }
   function buildGrid() {
     const g = $('levelGrid');
     g.innerHTML = '';
+    const per = Math.ceil(N / CHAPTERS.length);
     for (let i = 0; i < N; i++) {
+      if (i % per === 0) {
+        // chapter rule: a header per sheet of ten with its own star count (no gate — the
+        // funnel test needs every level reachable; the sink is a proposal, see dev report)
+        const c = i / per, got = prog.s.slice(i, i + per).reduce((a, b) => a + (b || 0), 0);
+        const h = document.createElement('div');
+        h.className = 'chap';
+        h.innerHTML = `<span>Sheet ${c + 1} · ${CHAPTERS[c] || ''}</span><b>★ ${got} / ${Math.min(per, N - i) * 3}</b>`;
+        g.appendChild(h);
+      }
       const locked = i > prog.u;
       const b = document.createElement('button');
       b.className = 'tile' + (locked ? ' locked' : '') + (prog.s[i] ? ' done' : '') + (i === GE.level ? ' cur' : '');
       b.setAttribute('aria-label', 'Level ' + (i + 1) + (locked ? ', locked' : ''));
+      b.dataset.level = i + 1; // tiles are addressed by level, not by grid position (headers are children too)
       b.disabled = locked;
       b.innerHTML = `<span>${String(i + 1).padStart(2, '0')}</span><span class="st">${prog.s[i] ? '★'.repeat(prog.s[i]) : ''}</span>`;
       if (!locked) b.onclick = () => GE.load(i);
@@ -94,33 +109,51 @@
   $('btnPauseRestart').onclick = () => { resume(); GE.load(GE.level); };
   $('btnPauseSound').onclick = () => setSound(!GE.soundOn);
   $('btnPauseLegend').onclick = () => { legendFrom = 'pause'; pauseModal.hidden = true; show('legend'); };
-  $('btnPauseLevels').onclick = () => { pauseModal.hidden = true; show('levels'); };
+  $('btnPauseLevels').onclick = () => { levelsFrom = 'pause'; pauseModal.hidden = true; show('levels'); };
   $('btnPauseHome').onclick = () => { pauseModal.hidden = true; show('menu'); };
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     if (!screens.legend.hidden) $('btnLegendBack').click();
-    else if (!screens.levels.hidden) show('menu');
+    else if (!screens.levels.hidden) $('btnLevelsBack').click();
     else if (screens.menu.hidden) $('btnMenu').click();
   });
 
   // ---------- title block buttons ----------
-  $('btnPlay').onclick = () => GE.load(GE.level);
-  $('btnLevels').onclick = () => show('levels');
+  $('btnPlay').onclick = () => { if (resumable()) { show(null); resume(); } else GE.load(GE.level); };
+  $('btnLevels').onclick = () => { levelsFrom = 'menu'; show('levels'); };
   $('btnLegend').onclick = () => { legendFrom = 'menu'; show('legend'); };
   $('btnSound').onclick = () => setSound(!GE.soundOn);
-  $('btnLevelsBack').onclick = () => show('menu');
+  // Back returns to where the sheet was opened from: the pause card (attempt intact) or the title block
+  $('btnLevelsBack').onclick = () => {
+    if (levelsFrom === 'pause' && GE.paused && !GE.over) { show(null); pauseModal.hidden = false; }
+    else show('menu');
+  };
   $('btnLegendBack').onclick = () => {
     if (legendFrom === 'pause') { show(null); pauseModal.hidden = false; }
     else show('menu');
   };
 
   // ---------- engine events ----------
-  window.addEventListener('ge:load', () => { show(null); pauseModal.hidden = true; GE.paused = false; });
+  window.addEventListener('ge:load', () => { show(null); pauseModal.hidden = true; GE.paused = false; levelsFrom = 'menu'; });
   window.addEventListener('ge:win', e => {
-    const { lvl, stars } = e.detail;
+    const { lvl, stars, last } = e.detail;
+    const before = starsTotal();
     prog.s[lvl] = Math.max(prog.s[lvl] || 0, stars);
     prog.u = Math.max(prog.u, Math.min(lvl + 1, N - 1));
     save();
+    // win-card meta: the star total ticks up once the stars have landed; the next sheet is named
+    const after = starsTotal();
+    $('winNo').textContent = 'SHEET ' + String(lvl + 1).padStart(2, '0');
+    const nx = LEVELS[lvl + 1];
+    $('winNext').innerHTML = last ? 'All 30 clear' : `Level ${lvl + 2}<small>${nx.blocks.length} blocks · par ${nx.par}</small>`;
+    const total = $('winTotal');
+    const paint = n => { total.innerHTML = `<b>★</b> ${n} / ${N * 3}`; };
+    paint(before);
+    if (after > before) {
+      const t0 = performance.now() + 700, dur = 420;
+      const tick = t => { const u = Math.min(1, Math.max(0, (t - t0) / dur)); paint(Math.round(before + (after - before) * u)); if (u < 1) requestAnimationFrame(tick); };
+      requestAnimationFrame(tick);
+    }
   });
   window.addEventListener('ge:finished', () => { GE.load(0); show('menu'); });
 
@@ -152,10 +185,12 @@
       c.strokeStyle = 'rgba(10,25,55,.22)'; c.lineWidth = 1.4;
       for (let d = -h; d < w + h; d += 7) { c.beginPath(); c.moveTo(x + d, y + h); c.lineTo(x + d + h, y); c.stroke(); }
       c.restore();
+      // ink halo under the coloured outline, as on the board
+      c.strokeStyle = 'rgba(6,18,40,.85)'; c.lineWidth = 5.5; c.strokeRect(x, y, w, h);
       c.strokeStyle = col.dark; c.lineWidth = 2.6; c.strokeRect(x, y, w, h);
       c.fillStyle = col.lite;
-      for (const [px, py] of [[x, y], [x + w, y], [x, y + h], [x + w, y + h]]) { c.beginPath(); c.arc(px, py, 2.2, 0, Math.PI * 2); c.fill(); }
-      drawGlyph(col.glyph, x + w / 2, y + h / 2, Math.min(w, h) * 0.16, 'rgba(255,255,255,.85)');
+      for (const [px, py] of [[x, y], [x + w, y], [x, y + h], [x + w, y + h]]) { c.beginPath(); c.arc(px, py, 2.8, 0, Math.PI * 2); c.fill(); }
+      drawGlyph(col.glyph, x + w / 2, y + h / 2, Math.min(w, h) * 0.2, 'rgba(255,255,255,.92)');
       c.restore();
     });
   }
@@ -167,8 +202,9 @@
       c.fillStyle = col.main; rr(x + 1.5, y + 1.5, w - 3, h - 3, 3); c.fill();
       c.setLineDash([5, 4]); c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 1.4;
       rr(x + 3.5, y + 3.5, w - 7, h - 7, 2); c.stroke(); c.setLineDash([]);
-      c.translate(x + w / 2, y + h / 2); c.rotate(rot);
-      drawGlyph(col.glyph, 0, 0, Math.min(w, h) * 0.3, 'rgba(255,255,255,.95)');
+      c.translate(x + w / 2, y + h / 2);
+      drawGlyph(col.glyph, 0, 0, Math.min(w, h) * 0.3, 'rgba(255,255,255,.95)'); // upright, like the block's stamp
+      c.rotate(rot);
       c.strokeStyle = 'rgba(255,255,255,.9)'; c.lineWidth = 2.6; c.lineCap = 'round';
       const th = Math.min(w, h), ch = th * 0.24;
       c.beginPath(); c.moveTo(-ch, -th * 0.62 - ch * 0.1); c.lineTo(0, -th * 0.62 - ch * 1.2); c.lineTo(ch, -th * 0.62 - ch * 0.1); c.stroke();

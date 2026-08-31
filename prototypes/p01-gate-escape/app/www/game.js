@@ -20,8 +20,12 @@ const hudMeter = document.getElementById('hudMeter');
 const hudPar = document.getElementById('hudPar');
 const hudUnit = document.getElementById('hudUnit');
 const btnUndo = document.getElementById('btnUndo');
+const btnHint = document.getElementById('btnHint');
 const btnRestart = document.getElementById('btnRestart');
 const btnMenu = document.getElementById('btnMenu');
+const hudGoal = document.getElementById('hudGoal');
+const adModal = document.getElementById('adModal');
+const adBar = document.getElementById('adBar');
 const btnNext = document.getElementById('btnNext');
 const btnReplay = document.getElementById('btnReplay');
 const winModal = document.getElementById('winModal');
@@ -51,7 +55,7 @@ let pos = [];          // [x,y] per block, null = exited
 let disp = [];         // eased display positions
 let exitAnim = [];     // {dx,dy,t} per block or null
 let moves = 0, movesLeft = 0, rescued = false, over = false;
-let drag = null;       // {bi, gx, gy, sx, sy, moved, counted}
+let drag = null;       // {bi, pid, gx, gy, sx, sy, moved, counted} — one finger owns the board at a time
 let particles = [];
 let shakeT = 0;
 let cell = 40, bx = 0, by = 0; // board metrics
@@ -61,11 +65,20 @@ let undoSnap = null;   // state before the last counted move (one-step undo)
 let pendingSnap = null; // state captured when the current drag began
 let gateFlash = [];    // per-color: seconds since that color's gate closed (or -1)
 let failRoute = null;  // ghost route shown behind the fail card
+let hint = null;       // {bi, path, side, to} — the reference next move, shown until the board changes
+let idleT = 0;         // seconds since the last input (nudges the hint button)
+let exited = 0;        // blocks out this level (escape pitch rises with it)
 let winTimers = [];
 let toastTimer = 0;
+let adTimer = 0, adCb = null;
 
 // the first level whose par exceeds its block count: "a block has to move twice"
 const FIRST_TWICE = LEVELS.findIndex(l => l.par > l.blocks.length);
+// the first level with a stone: "stones never move"
+const FIRST_STONE = LEVELS.findIndex(l => l.stones.length > 0);
+// per-level personal best (moves) — the win card never calls par "best"
+let best = {};
+try { best = JSON.parse(localStorage.getItem('ge_best') || '{}') || {}; } catch (e) {}
 
 function loadLevel(i) {
   li = Math.max(0, Math.min(i, LEVELS.length - 1));
@@ -75,23 +88,41 @@ function loadLevel(i) {
   disp = L.blocks.map(b => [b.x, b.y]);
   exitAnim = L.blocks.map(() => null);
   moves = 0; movesLeft = L.moves; rescued = false; over = false;
-  drag = null; particles = []; hintT = 0;
-  undoSnap = null; pendingSnap = null; failRoute = null;
+  drag = null; particles = []; hintT = 0; idleT = 0; exited = 0;
+  undoSnap = null; pendingSnap = null; failRoute = null; hint = null;
   gateFlash = COLORS.map(() => -1);
   for (const t of winTimers) clearTimeout(t);
   winTimers = [];
+  adClose();
   hudLevel.textContent = 'Level ' + (li + 1);
   hudPar.textContent = 'par ' + L.par;
   winModal.hidden = true; failModal.hidden = true;
+  document.body.classList.remove('fail-up'); cv.style.transform = '';
   hudBox.classList.remove('boost');
   toastEl.hidden = true; clearTimeout(toastTimer);
+  buildGoal();
   updateHud();
   layout();
   track('level_start', li + 1);
   window.dispatchEvent(new CustomEvent('ge:load', { detail: { lvl: li } }));
   // one-time tips, shown in the HUD strip (never information the board itself lacks)
   if (li === 2) tip('corner', 'One drag can turn corners. The whole route is one move.');
+  if (li === FIRST_STONE) tip('stone', 'Stones never move. Route around them.');
   if (li === FIRST_TWICE) tip('twice', 'Everything is corked. Sometimes a block has to move twice.');
+}
+
+// objective row: one chip per color — blocks of that color still on the board
+function buildGoal() {
+  hudGoal.innerHTML = '';
+  const CH = { circle: '●', triangle: '▲', diamond: '◆', star: '★' };
+  for (let c = 0; c < COLORS.length; c++) {
+    if (!L.blocks.some(b => b.color === c)) continue;
+    const chip = document.createElement('span');
+    chip.className = 'chip'; chip.dataset.color = c;
+    chip.style.setProperty('--c', COLORS[c].main); chip.style.setProperty('--d', COLORS[c].dark);
+    chip.innerHTML = `<i>${CH[COLORS[c].glyph]}</i><b></b>`;
+    hudGoal.appendChild(chip);
+  }
 }
 
 // ---------- HUD ----------
@@ -119,6 +150,15 @@ function updateHud() {
   btnUndo.disabled = !undoSnap || over || paused;
   btnRestart.disabled = over || paused;
   btnMenu.disabled = over;
+  // one hint per board position: it stays lit until the player acts on it (or undoes)
+  btnHint.disabled = over || paused || !!hint || left === 0;
+  // objective chips: blocks of each color still to clear
+  for (const chip of hudGoal.children) {
+    const c = +chip.dataset.color;
+    const n = L.blocks.filter((b, i) => b.color === c && pos[i]).length;
+    chip.lastChild.textContent = n;
+    chip.classList.toggle('done', n === 0);
+  }
 }
 
 function toast(msg, ms = 2800) {
@@ -220,14 +260,92 @@ function bestRoute() {
   return best;
 }
 
+// ---------- hint solver: the reference next move from the live position ----------
+// Same search as the generator (one move = relocate anywhere reachable, or exit),
+// run over hypothetical positions rather than the live board. Boards are small
+// (≤7 blocks), so a few thousand states cover every level in a few ms.
+function solveFrom(startPos) {
+  const n = L.blocks.length;
+  const grid = (ps, skip) => {
+    const g = Array.from({ length: L.h }, () => Array(L.w).fill(-1));
+    for (const [x, y] of L.stones) g[y][x] = -2;
+    ps.forEach((p, i) => { if (!p || i === skip) return; for (const [cx, cy] of L.blocks[i].cells) g[p[1] + cy][p[0] + cx] = i; });
+    return g;
+  };
+  const fitsG = (g, bi, x, y) => L.blocks[bi].cells.every(([cx, cy]) => x + cx >= 0 && y + cy >= 0 && x + cx < L.w && y + cy < L.h && g[y + cy][x + cx] === -1);
+  const reach = (g, bi, from) => {
+    const key = p => p[0] + ',' + p[1];
+    const par = new Map([[key(from), null]]);
+    const q = [from], order = [from];
+    while (q.length) {
+      const [x, y] = q.shift();
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = x + dx, ny = y + dy;
+        if (par.has(key([nx, ny])) || !fitsG(g, bi, nx, ny)) continue;
+        par.set(key([nx, ny]), [x, y]); q.push([nx, ny]); order.push([nx, ny]);
+      }
+    }
+    return { order, path(t) { const out = []; let c = t; while (c) { out.push(c); c = par.get(key(c)); } return out.reverse(); } };
+  };
+  // exit from (x,y) through `side`: gate covers every lane, and the lane ahead is clear
+  const canExitG = (g, bi, x, y, side) => {
+    if (!exitGateAt(bi, x, y, side)) return false;
+    const [dx, dy] = DIRS[side];
+    for (const [cx, cy] of L.blocks[bi].cells) {
+      let px = x + cx + dx, py = y + cy + dy;
+      while (px >= 0 && py >= 0 && px < L.w && py < L.h) { if (g[py][px] !== -1) return false; px += dx; py += dy; }
+    }
+    return true;
+  };
+  const key = ps => ps.map(p => (p ? p[0] + '.' + p[1] : 'X')).join('|');
+  const start = startPos.map(p => (p ? [p[0], p[1]] : null));
+  const remaining = start.filter(Boolean).length;
+  if (!remaining) return null;
+  for (let cap = remaining; cap <= remaining + 4; cap++) {
+    const nodes = new Map([[key(start), { g: 0, parent: null, action: null, pos: start }]]);
+    const buckets = Array.from({ length: cap + 2 }, () => []);
+    buckets[remaining].push(key(start));
+    let explored = 0;
+    for (let f = remaining; f <= cap;) {
+      const b = buckets[f];
+      if (!b.length) { f++; continue; }
+      const k = b.pop(), node = nodes.get(k);
+      const rem = node.pos.filter(Boolean).length;
+      if (rem === 0) { let c = node, act = null; while (c.action) { act = c.action; c = nodes.get(c.parent); } return act; }
+      if (node.g + rem > cap) continue;
+      if (++explored > 40000) break;
+      for (let bi = 0; bi < n; bi++) {
+        if (!node.pos[bi]) continue;
+        const g = grid(node.pos, bi), R = reach(g, bi, node.pos[bi]);
+        const push = (np, action) => {
+          const nk = key(np), ng = node.g + 1, ex = nodes.get(nk);
+          if (ex && ex.g <= ng) return;
+          nodes.set(nk, { g: ng, parent: k, action, pos: np });
+          const nf = ng + np.filter(Boolean).length;
+          if (nf <= cap) buckets[nf].push(nk);
+        };
+        for (const p of R.order) {
+          const side = ['top', 'bottom', 'left', 'right'].find(s => canExitG(g, bi, p[0], p[1], s));
+          if (side) { const np = node.pos.slice(); np[bi] = null; push(np, { bi, path: R.path(p), side }); break; }
+        }
+        for (const p of R.order) {
+          if (p[0] === node.pos[bi][0] && p[1] === node.pos[bi][1]) continue;
+          const np = node.pos.slice(); np[bi] = p; push(np, { bi, path: R.path(p), side: null, to: p });
+        }
+      }
+    }
+  }
+  return null;
+}
+
 // ---------- drag mechanics ----------
 const DIRS = { top: [0, -1], bottom: [0, 1], left: [-1, 0], right: [1, 0] };
 
 function snapshot() {
   return { pos: pos.map(p => (p ? [p[0], p[1]] : null)), moves, movesLeft };
 }
-function beginDrag(bi, gx, gy) {
-  drag = { bi, gx, gy, sx: pos[bi][0], sy: pos[bi][1], moved: false, counted: false };
+function beginDrag(bi, gx, gy, pid = -1) {
+  drag = { bi, pid, gx, gy, sx: pos[bi][0], sy: pos[bi][1], moved: false, counted: false };
   pendingSnap = snapshot();
 }
 
@@ -279,7 +397,7 @@ function startExit(bi, side) {
   // last block of its color gone? the gate closes with a flash
   if (!L.blocks.some((o, i) => pos[i] && o.color === b.color)) { gateFlash[b.color] = 0; sound('gate'); }
   countMove();
-  sound('exit');
+  sound('exit', exited++); // each escape in a level rings a step higher
   track('block_exit', li + 1);
   // lock the board while the last block flies out; the pending win dies with the level
   // (loadLevel clears winTimers) so a restart or level change in this window can never
@@ -291,8 +409,11 @@ function startExit(bi, side) {
 function countMove() {
   moves++; movesLeft--;
   undoSnap = pendingSnap; pendingSnap = null;
+  hint = null; // the board changed: the hint has been acted on (or ignored)
   updateHud();
   if (drag) drag.counted = true;
+  // the first time a player crosses par with work still to do: undo hands the move back
+  if (moves > L.par && blocksLeft() > 0) tip('undo', 'Undo is free — it gives the move back too.');
 }
 
 function undo() {
@@ -302,6 +423,8 @@ function undo() {
   moves = s.moves; movesLeft = s.movesLeft;
   exitAnim = L.blocks.map(() => null);
   gateFlash = COLORS.map(() => -1);
+  exited = pos.filter(p => !p).length;
+  hint = null;
   for (let i = 0; i < pos.length; i++) if (pos[i]) disp[i] = [pos[i][0], pos[i][1]];
   updateHud();
   sound('undo');
@@ -312,6 +435,7 @@ function maybeFail() {
   if (over) return;
   if (movesLeft <= 0 && pos.some(p => p)) {
     over = true;
+    hint = null;
     updateHud();
     setTimeout(() => {
       const out = pos.filter(p => !p).length, left = pos.length - out;
@@ -322,22 +446,60 @@ function maybeFail() {
         ? (left === 1 ? 'The last block is one drag from its gate.' : `${left} left — one is a single drag from its gate.`)
         : `${left} block${left > 1 ? 's' : ''} left to clear.`;
       document.getElementById('btnRescue').hidden = rescued;
+      // the board rises and shrinks so the sheet never covers the position it asks you to bet on
+      document.body.classList.add('fail-up');
+      toastEl.hidden = true; clearTimeout(toastTimer); // nothing sits over the board the sheet asks you to judge
       failModal.hidden = false;
+      fitBoardAboveSheet();
       sound('fail');
       track('fail', li + 1);
     }, 420);
   }
 }
 
+// win-card titles rotate so the reward line never reads as a receipt; milestones get their own
+const WIN_TITLES = ['Level clear!', 'Sheet approved!', 'Cleared to par!', 'Drawing done!', 'Board cleared!'];
+function winTitleFor(stars) {
+  const n = li + 1;
+  if (n === LEVELS.length) return 'Every level clear!';
+  if (n === 10 || n === 20) return `${n} levels drafted!`;
+  if (n === 5) return 'Five in the drawer!';
+  if (stars < 3) return 'Level clear!';
+  return WIN_TITLES[li % WIN_TITLES.length];
+}
+
+// fit the (transformed) canvas between the HUD and the fail sheet: measured, not guessed,
+// so it holds on every viewport and board size. Inline transform overrides the CSS classes;
+// loadLevel / rescue clear it.
+function fitBoardAboveSheet() {
+  const card = failModal.querySelector('.card');
+  const wrap = document.getElementById('wrap').getBoundingClientRect();
+  const cardTop = failModal.getBoundingClientRect().bottom - card.offsetHeight - 10; // final resting top (entrance animation aside)
+  const cvH = cv.clientHeight || 1;
+  const top = wrap.top + 4;
+  const s = Math.max(0.4, Math.min(1, (cardTop - 6 - top) / cvH));
+  const cvTop = wrap.top + (wrap.height - cvH) / 2; // the canvas sits centred in wrap
+  cv.style.transform = `translateY(${Math.round(top - cvTop)}px) scale(${s.toFixed(3)})`;
+}
+
 function win() {
   if (winModal.hidden === false) return;
   over = true;
+  hint = null;
   updateHud();
   const stars = starsFor(moves);
   const last = li === LEVELS.length - 1;
-  document.getElementById('winTitle').textContent = last ? 'Every level clear!' : 'Level clear!';
+  document.getElementById('winTitle').textContent = winTitleFor(stars);
   btnNext.textContent = last ? 'Back to menu' : 'Next level';
-  winSub.textContent = `Solved in ${moves} move${moves === 1 ? '' : 's'}` + (stars === 3 ? ' — perfect!' : ` (best: ${L.par})`);
+  // par is the target, never "best"; the player's own best is a separate fact once one exists
+  const prev = best[li];
+  winSub.textContent = `Solved in ${moves} move${moves === 1 ? '' : 's'}`
+    + (stars === 3 ? ' — perfect!' : ` · par ${L.par}`)
+    + (prev && prev < moves ? ` · your best ${prev}` : '');
+  if (!prev || moves < prev) { best[li] = moves; try { localStorage.setItem('ge_best', JSON.stringify(best)); } catch (e) {} }
+  // the resume pointer advances on the win itself, not on the Next tap: a reload or app kill
+  // on this card must not send the player back into a level they just cleared
+  if (!last) { try { localStorage.setItem('ge_level', String(li + 1)); } catch (e) {} }
   // stars drop in one at a time; a burst on the third; buttons go live once the reward has landed
   const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const delays = reduced ? [0, 0, 0] : [80, 260, 440];
@@ -392,12 +554,16 @@ function evCell(e) {
 
 cv.addEventListener('pointerdown', (e) => {
   audioInit();
+  idleT = 0;
   if (over || paused) return;
+  // one finger owns the board: a second pointer while a block is held is ignored outright
+  // (it used to re-bind the drag and move a second block — or displace the first — for free)
+  if (drag) return;
   const [fx, fy] = evCell(e);
   let bi = pickBlock(fx, fy);
   if (bi < 0) return;
   try { cv.setPointerCapture(e.pointerId); } catch (err) { /* synthetic pointers (bots) have no capture */ }
-  beginDrag(bi, fx - pos[bi][0], fy - pos[bi][1]);
+  beginDrag(bi, fx - pos[bi][0], fy - pos[bi][1], e.pointerId);
   sound('tap');
 });
 
@@ -417,6 +583,7 @@ function pickBlock(fx, fy) {
 
 cv.addEventListener('pointermove', (e) => {
   if (!drag || over || !pos[drag.bi]) return;
+  if (drag.pid >= 0 && e.pointerId !== drag.pid) return; // only the finger that picked the block moves it
   const [fx, fy] = evCell(e);
   const side = stepToward(drag.bi, fx - drag.gx, fy - drag.gy);
   if (side) {
@@ -445,8 +612,29 @@ function cancelDrag() {
   if (!d.counted && pos[d.bi]) pos[d.bi] = [d.sx, d.sy];
   pendingSnap = null;
 }
-cv.addEventListener('pointerup', () => endDrag(true));
-cv.addEventListener('pointercancel', cancelDrag);
+const ownPointer = e => drag && (drag.pid < 0 || e.pointerId === drag.pid);
+cv.addEventListener('pointerup', e => { if (ownPointer(e)) endDrag(true); });
+cv.addEventListener('pointercancel', e => { if (ownPointer(e)) cancelDrag(); });
+// the finger can vanish without an up (app switch, system sheet): never leave a block welded to it
+window.addEventListener('blur', cancelDrag);
+document.addEventListener('visibilitychange', () => { if (document.hidden) cancelDrag(); });
+
+// ---------- rewarded-ad stub ----------
+// Both paid surfaces (rescue, hint) run through here. In the prototype the "ad" is a
+// short placeholder card so the surrounding state machine exists (nothing is granted
+// until it completes; a level change cancels it); the real SDK slots in behind `rewarded`.
+const AD_MS = 1200;
+function rewarded(kind, grant) {
+  adClose();
+  adModal.querySelector('h2').textContent = kind === 'hint' ? 'Hint' : 'Rescue';
+  adBar.style.transition = 'none'; adBar.style.width = '0%'; void adBar.offsetWidth;
+  adBar.style.transition = `width ${AD_MS}ms linear`; adBar.style.width = '100%';
+  adModal.hidden = false;
+  track('ad_start', { kind, lvl: li + 1 });
+  adCb = grant;
+  adTimer = setTimeout(() => { const g = adCb; adClose(); track('ad_done', { kind, lvl: li + 1 }); g(); }, AD_MS);
+}
+function adClose() { clearTimeout(adTimer); adTimer = 0; adCb = null; adModal.hidden = true; }
 
 // ---------- buttons ----------
 btnRestart.onclick = () => { if (over || paused) return; track('restart', li + 1); loadLevel(li); };
@@ -457,8 +645,9 @@ btnNext.onclick = () => {
 };
 btnReplay.onclick = () => { track('replay', li + 1); loadLevel(li); };
 document.getElementById('btnRetry').onclick = () => { track('retry', li + 1); loadLevel(li); };
-document.getElementById('btnRescue').onclick = () => {
+function grantRescue() {
   rescued = true; over = false; movesLeft += 3; failModal.hidden = true; failRoute = null;
+  document.body.classList.remove('fail-up'); cv.style.transform = '';
   // the losing move stays undoable; undo must hand back the move without taking the rescue away
   if (undoSnap) undoSnap.movesLeft += 3;
   updateHud(); sound('win'); track('rescue_used', li + 1);
@@ -468,6 +657,30 @@ document.getElementById('btnRescue').onclick = () => {
   f.className = 'float'; f.textContent = '+3';
   hudBox.appendChild(f);
   setTimeout(() => f.remove(), 1000);
+}
+document.getElementById('btnRescue').onclick = () => {
+  if (!over || rescued || adCb) return;
+  track('rescue_offer_tap', li + 1);
+  rewarded('rescue', grantRescue);
+};
+// hint: the designer's reference next move from this exact position, drawn as a ghost
+// route (an exit) or a ghost outline where the block should park. One per position;
+// it clears the moment the board changes. Rewarded-ad slot like the rescue.
+function showHint() {
+  if (over || paused || hint || drag) return;
+  const mv = solveFrom(pos);
+  if (!mv) { toast('No way out from here — try Undo or Restart.'); track('hint_none', li + 1); return; }
+  hint = mv;
+  updateHud();
+  sound('hint');
+  track('hint', li + 1);
+}
+btnHint.onclick = () => {
+  audioInit();
+  if (over || paused || hint || adCb || blocksLeft() === 0) return;
+  idleT = 0;
+  btnHint.classList.remove('nudge');
+  rewarded('hint', showHint);
 };
 
 // ---------- layout / render ----------
@@ -526,15 +739,104 @@ function drawGlyph(kind, x, y, s, color) {
   ctx.restore();
 }
 
+// A block as one ink object: the union of its cells (each inset, bridged across
+// internal seams), a dark ink halo outside the coloured outline so two blocks of one
+// colour separate even where they touch, corner registration dots, and the shape glyph
+// scaled with the block so the biggest pieces carry the strongest cue.
+function drawBlockShape(b, px, py, inset, st) {
+  const has = (qx, qy) => b.cells.some(([ax2, ay2]) => ax2 === qx && ay2 === qy);
+  // a cell's edge runs from boundary±inset: inward at a free corner, to the boundary when
+  // the neighbour continues the edge, outward when the shape turns (inner corner of an L)
+  const end = (cx, cy, ex, ey, sx, sy) => (has(cx + ex, cy + ey) ? (has(cx + ex + sx, cy + ey + sy) ? -inset : 0) : inset);
+  // union of the inset cells, bridged across internal seams (and the crossing of a 2×2,
+  // which used to be a hole showing through the glyph)
+  const shape = () => {
+    ctx.beginPath();
+    for (const [cx, cy] of b.cells) {
+      const x = px + cx * cell, y = py + cy * cell;
+      ctx.rect(x + inset, y + inset, cell - inset * 2, cell - inset * 2);
+      if (has(cx + 1, cy)) ctx.rect(x + cell - inset - 1, y + inset, inset * 2 + 2, cell - inset * 2);
+      if (has(cx, cy + 1)) ctx.rect(x + inset, y + cell - inset - 1, cell - inset * 2, inset * 2 + 2);
+      if (has(cx + 1, cy) && has(cx, cy + 1) && has(cx + 1, cy + 1)) ctx.rect(x + cell - inset - 1, y + cell - inset - 1, inset * 2 + 2, inset * 2 + 2);
+    }
+  };
+  const edges = () => {
+    ctx.beginPath();
+    for (const [cx, cy] of b.cells) {
+      const x = px + cx * cell, y = py + cy * cell;
+      if (!has(cx, cy - 1)) { ctx.moveTo(x + end(cx, cy, -1, 0, 0, -1), y + inset); ctx.lineTo(x + cell - end(cx, cy, 1, 0, 0, -1), y + inset); }
+      if (!has(cx, cy + 1)) { ctx.moveTo(x + end(cx, cy, -1, 0, 0, 1), y + cell - inset); ctx.lineTo(x + cell - end(cx, cy, 1, 0, 0, 1), y + cell - inset); }
+      if (!has(cx - 1, cy)) { ctx.moveTo(x + inset, y + end(cx, cy, 0, -1, -1, 0)); ctx.lineTo(x + inset, y + cell - end(cx, cy, 0, 1, -1, 0)); }
+      if (!has(cx + 1, cy)) { ctx.moveTo(x + cell - inset, y + end(cx, cy, 0, -1, 1, 0)); ctx.lineTo(x + cell - inset, y + cell - end(cx, cy, 0, 1, 1, 0)); }
+    }
+  };
+  // shadowed base + opaque fill + hatch texture, all inside the union shape
+  ctx.save();
+  ctx.shadowColor = 'rgba(4,14,34,.55)'; ctx.shadowBlur = st.shadow; ctx.shadowOffsetY = st.lift;
+  ctx.fillStyle = st.dark;
+  shape(); ctx.fill();
+  ctx.restore();
+  ctx.save();
+  shape(); ctx.clip();
+  ctx.fillStyle = st.main;
+  ctx.fillRect(px - cell, py - cell, cell * 6, cell * 6);
+  ctx.strokeStyle = 'rgba(10,25,55,.22)';
+  ctx.lineWidth = 1.4;
+  const span = cell * 6;
+  for (let d = -span; d < span; d += 7) {
+    ctx.beginPath(); ctx.moveTo(px + d, py + span); ctx.lineTo(px + d + span, py); ctx.stroke();
+  }
+  ctx.restore();
+  // ink halo (dark, outside) then the coloured outline on top: the seam between two
+  // same-colour blocks is now dark-ink / paper gutter / dark-ink, never colour on colour
+  ctx.lineCap = 'square'; ctx.lineJoin = 'miter';
+  ctx.strokeStyle = 'rgba(6,18,40,.85)'; ctx.lineWidth = 5.5;
+  edges(); ctx.stroke();
+  ctx.strokeStyle = st.edge || st.dark; ctx.lineWidth = st.edge ? 3.4 : 2.6;
+  edges(); ctx.stroke();
+  // corner registration dots (bigger and brighter: they carry the "separate object" read)
+  ctx.fillStyle = st.lite;
+  const dot = 2.8;
+  for (const [cx, cy] of b.cells) {
+    const x = px + cx * cell, y = py + cy * cell;
+    if (!has(cx - 1, cy) && !has(cx, cy - 1)) { ctx.beginPath(); ctx.arc(x + inset, y + inset, dot, 0, Math.PI * 2); ctx.fill(); }
+    if (!has(cx + 1, cy) && !has(cx, cy - 1)) { ctx.beginPath(); ctx.arc(x + cell - inset, y + inset, dot, 0, Math.PI * 2); ctx.fill(); }
+    if (!has(cx - 1, cy) && !has(cx, cy + 1)) { ctx.beginPath(); ctx.arc(x + inset, y + cell - inset, dot, 0, Math.PI * 2); ctx.fill(); }
+    if (!has(cx + 1, cy) && !has(cx, cy + 1)) { ctx.beginPath(); ctx.arc(x + cell - inset, y + cell - inset, dot, 0, Math.PI * 2); ctx.fill(); }
+  }
+  // glyph at the centroid (or the first cell when the centroid falls outside an L),
+  // scaled with the block's footprint
+  let [gx2, gy2] = centroidOff(b);
+  if (!has(Math.floor(gx2), Math.floor(gy2))) { const [cx, cy] = b.cells[0]; gx2 = cx + 0.5; gy2 = cy + 0.5; }
+  const gs = cell * Math.min(0.3, 0.16 * Math.sqrt(b.cells.length) * 0.92);
+  drawGlyph(st.glyph, px + gx2 * cell, py + gy2 * cell, gs, 'rgba(255,255,255,.92)');
+}
+
 // ghost route: a marching dashed finger path from the block's centre, around
 // corners, out past the gate, with an arrowhead and a travelling finger pip.
+// Without a side (a hint that parks a block) the path ends at the destination and
+// the block's outline is ghosted there.
 function drawRoute(bi, route, strength) {
   const b = L.blocks[bi];
   const [ox, oy] = centroidOff(b);
   const pts = route.path.map(([x, y]) => [bx + (x + ox) * cell, by + (y + oy) * cell]);
-  const d = DIRS[route.side];
   const last = pts[pts.length - 1];
-  pts.push([last[0] + d[0] * cell * 1.15, last[1] + d[1] * cell * 1.15]);
+  let d;
+  if (route.side) {
+    d = DIRS[route.side];
+    pts.push([last[0] + d[0] * cell * 1.15, last[1] + d[1] * cell * 1.15]);
+  } else {
+    const prev = pts.length > 1 ? pts[pts.length - 2] : last;
+    d = [Math.sign(last[0] - prev[0]), Math.sign(last[1] - prev[1])];
+    if (!d[0] && !d[1]) d = [1, 0];
+    // ghost outline of the block at its parking spot
+    const [tx, ty] = route.to || route.path[route.path.length - 1];
+    ctx.save();
+    ctx.setLineDash([6, 5]); ctx.lineDashOffset = -hintT * 30;
+    ctx.strokeStyle = `rgba(255,255,255,${strength * 0.85})`; ctx.lineWidth = 2.5;
+    for (const [cx, cy] of b.cells) ctx.strokeRect(bx + (tx + cx) * cell + 5, by + (ty + cy) * cell + 5, cell - 10, cell - 10);
+    ctx.restore();
+  }
   const pulse = (Math.sin(hintT * 5) + 1) / 2;
   const a = strength * (0.45 + pulse * 0.4);
   ctx.save();
@@ -588,6 +890,12 @@ function frame(t) {
   if (shakeT > 0) shakeT -= dt;
   for (let c = 0; c < gateFlash.length; c++) if (gateFlash[c] >= 0) gateFlash[c] += dt;
   hintT += dt;
+  // a player who has done nothing for 20 s is stuck: the hint button beckons (the hint
+  // itself is never shown unasked — that would give the level away)
+  if (!over && !paused && !drag && !hint && blocksLeft() > 0) {
+    idleT += dt;
+    if (idleT > 20 && !btnHint.classList.contains('nudge')) { btnHint.classList.add('nudge'); track('hint_nudge', li + 1); }
+  }
   render();
   requestAnimationFrame(frame);
 }
@@ -661,9 +969,12 @@ function render() {
     ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 1.4;
     rr(gx + 3.5, gy + 3.5, w - 7, h - 7, 2); ctx.stroke();
     ctx.setLineDash([]);
-    // match glyph on the tab + outward chevron floating past it (chevron only while the gate is live)
-    ctx.translate(ax, ay); ctx.rotate(rot);
+    // match glyph on the tab — drawn upright, exactly as it is stamped on the block, so the
+    // shape cue survives for colorblind players (a rotated triangle is a different glyph);
+    // the exit direction is the separate outward chevron floating past the tab (live gates only)
+    ctx.translate(ax, ay);
     drawGlyph(c.glyph, 0, 0, Math.min(cell * 0.13, th * 0.3), 'rgba(255,255,255,.95)');
+    ctx.rotate(rot);
     if (!closed) {
       ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
       const ch = cell * 0.1;
@@ -674,27 +985,37 @@ function render() {
     ctx.restore();
   }
 
-  // stones: crosshatched "solid fill" drafting squares
+  // stones: solid drafting squares — a dark filled body under the crosshatch, heavy outline,
+  // a drop shadow like the blocks: an object sitting ON the grid, not a marking on it
   for (const [sx, sy] of L.stones) {
     const x = bx + sx * cell, y = by + sy * cell;
     ctx.save();
-    ctx.strokeStyle = 'rgba(214,238,255,.75)'; ctx.lineWidth = 1.8;
-    ctx.strokeRect(x + 4, y + 4, cell - 8, cell - 8);
+    ctx.shadowColor = 'rgba(4,14,34,.55)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3;
+    ctx.fillStyle = 'rgba(8,22,48,.92)';
+    ctx.fillRect(x + 4, y + 4, cell - 8, cell - 8);
+    ctx.shadowColor = 'transparent';
+    ctx.save();
     ctx.beginPath();
     ctx.rect(x + 4, y + 4, cell - 8, cell - 8);
     ctx.clip();
-    ctx.lineWidth = 1.1;
-    ctx.strokeStyle = 'rgba(214,238,255,.5)';
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = 'rgba(214,238,255,.55)';
     for (let d = -cell; d < cell; d += 6) {
       ctx.beginPath(); ctx.moveTo(x + d, y + cell); ctx.lineTo(x + d + cell, y); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(x + d, y); ctx.lineTo(x + d + cell, y + cell); ctx.stroke();
     }
+    ctx.restore();
+    ctx.strokeStyle = 'rgba(224,242,255,.92)'; ctx.lineWidth = 2.4;
+    ctx.strokeRect(x + 4, y + 4, cell - 8, cell - 8);
     ctx.restore();
   }
 
   // blocks
   const failUp = over && !failModal.hidden;
   const pulse = (Math.sin(hintT * 6) + 1) / 2;
+  // every block is inset from its cells so a gutter of paper always separates neighbours —
+  // two red blocks side by side must never read as one slab (3-second rule)
+  const inset = Math.max(4, Math.round(cell * 0.1));
   for (let i = 0; i < L.blocks.length; i++) {
     if (!pos[i] && !exitAnim[i]) continue;
     const b = L.blocks[i], c = COLORS[b.color];
@@ -707,73 +1028,14 @@ function render() {
     const dragging = drag && drag.bi === i;
     ctx.save();
     ctx.globalAlpha = alpha;
-    if (dragging) { ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 14; ctx.shadowOffsetY = 5; }
     const px = bx + disp[i][0] * cell + ox, py = by + disp[i][1] * cell + oy;
-    const inset = 3;
-    const has = (qx, qy) => b.cells.some(([ax2, ay2]) => ax2 === qx && ay2 === qy);
-    // solid ink block that reads as an OBJECT on the paper: shadowed base,
-    // opaque fill, hatch kept only as a subtle texture
-    ctx.save();
-    ctx.shadowColor = 'rgba(4,14,34,.5)'; ctx.shadowBlur = dragging ? 12 : 6; ctx.shadowOffsetY = dragging ? 5 : 3;
-    ctx.fillStyle = c.dark;
-    for (const [cx, cy] of b.cells) {
-      ctx.fillRect(px + cx * cell + inset, py + cy * cell + inset, cell - inset * 2, cell - inset * 2);
-    }
-    ctx.restore();
-    ctx.save();
-    ctx.beginPath();
-    for (const [cx, cy] of b.cells) {
-      ctx.rect(px + cx * cell + inset, py + cy * cell + inset, cell - inset * 2, cell - inset * 2);
-    }
-    // expand path across internal seams
-    for (const [cx, cy] of b.cells) {
-      if (has(cx + 1, cy)) ctx.rect(px + cx * cell + cell - inset - 2, py + cy * cell + inset, inset * 2 + 4, cell - inset * 2);
-      if (has(cx, cy + 1)) ctx.rect(px + cx * cell + inset, py + cy * cell + cell - inset - 2, cell - inset * 2, inset * 2 + 4);
-    }
-    ctx.clip();
-    ctx.fillStyle = c.main;
-    ctx.fillRect(px - cell, py - cell, cell * 6, cell * 6);
-    ctx.strokeStyle = 'rgba(10,25,55,.22)';
-    ctx.lineWidth = 1.4;
-    const span = cell * 6;
-    for (let d = -span; d < span; d += 7) {
-      ctx.beginPath();
-      ctx.moveTo(px + d, py + span);
-      ctx.lineTo(px + d + span, py);
-      ctx.stroke();
-    }
-    ctx.restore();
-    ctx.shadowColor = 'transparent';
-    // heavy ink outline only on the block's outer edges
-    // (on the fail card the stranded blocks breathe with a white edge so the rescue shows what it buys)
     const stranded = failUp && pos[i];
-    ctx.strokeStyle = stranded ? `rgba(255,255,255,${0.35 + pulse * 0.6})` : c.dark;
-    ctx.lineWidth = stranded ? 3.4 : 2.6; ctx.lineCap = 'square';
-    for (const [cx, cy] of b.cells) {
-      const x = px + cx * cell, y = py + cy * cell;
-      const L2 = x + inset, R2 = x + cell - inset, T2 = y + inset, B2 = y + cell - inset;
-      // horizontal edges stretch across seams into same-block neighbors
-      const lx = has(cx - 1, cy) ? x : L2, rx2 = has(cx + 1, cy) ? x + cell : R2;
-      const ty2 = has(cx, cy - 1) ? y : T2, by2 = has(cx, cy + 1) ? y + cell : B2;
-      if (!has(cx, cy - 1)) { ctx.beginPath(); ctx.moveTo(lx, T2); ctx.lineTo(rx2, T2); ctx.stroke(); }
-      if (!has(cx, cy + 1)) { ctx.beginPath(); ctx.moveTo(lx, B2); ctx.lineTo(rx2, B2); ctx.stroke(); }
-      if (!has(cx - 1, cy)) { ctx.beginPath(); ctx.moveTo(L2, ty2); ctx.lineTo(L2, by2); ctx.stroke(); }
-      if (!has(cx + 1, cy)) { ctx.beginPath(); ctx.moveTo(R2, ty2); ctx.lineTo(R2, by2); ctx.stroke(); }
-    }
-    // corner registration dots
-    ctx.fillStyle = c.lite;
-    for (const [cx, cy] of b.cells) {
-      if (!has(cx - 1, cy) && !has(cx, cy - 1)) { ctx.beginPath(); ctx.arc(px + cx * cell + inset, py + cy * cell + inset, 2.2, 0, Math.PI * 2); ctx.fill(); }
-      if (!has(cx + 1, cy) && !has(cx, cy - 1)) { ctx.beginPath(); ctx.arc(px + cx * cell + cell - inset, py + cy * cell + inset, 2.2, 0, Math.PI * 2); ctx.fill(); }
-      if (!has(cx - 1, cy) && !has(cx, cy + 1)) { ctx.beginPath(); ctx.arc(px + cx * cell + inset, py + cy * cell + cell - inset, 2.2, 0, Math.PI * 2); ctx.fill(); }
-      if (!has(cx + 1, cy) && !has(cx, cy + 1)) { ctx.beginPath(); ctx.arc(px + cx * cell + cell - inset, py + cy * cell + cell - inset, 2.2, 0, Math.PI * 2); ctx.fill(); }
-    }
-    // glyph at block centroid
-    {
-      let [gx2, gy2] = centroidOff(b);
-      if (!has(Math.floor(gx2), Math.floor(gy2))) { const [cx, cy] = b.cells[0]; gx2 = cx + 0.5; gy2 = cy + 0.5; }
-      drawGlyph(c.glyph, px + gx2 * cell, py + gy2 * cell, cell * 0.16, 'rgba(255,255,255,.85)');
-    }
+    drawBlockShape(b, px, py, inset, {
+      main: c.main, dark: c.dark, lite: c.lite, glyph: c.glyph,
+      shadow: dragging ? 12 : 6, lift: dragging ? 5 : 3,
+      // on the fail card the stranded blocks breathe with a white edge so the rescue shows what it buys
+      edge: stranded ? `rgba(255,255,255,${0.35 + pulse * 0.6})` : null,
+    });
     ctx.restore();
   }
 
@@ -788,7 +1050,9 @@ function render() {
   // ghost routes: the opening move on the three teaching levels (L1 straight
   // out, L2 two colors, L3 around the corner), and behind the fail card the
   // block nearest freedom — what the rescue is buying.
-  if (li <= 2 && moves === 0 && !drag && !over) {
+  if (hint && !over && pos[hint.bi]) {
+    drawRoute(hint.bi, hint, 1);
+  } else if (li <= 2 && moves === 0 && !drag && !over) {
     const r = bestRoute();
     if (r) drawRoute(r.bi, r, 1);
   } else if (failUp && failRoute && pos[failRoute.bi]) {
@@ -820,7 +1084,9 @@ function blip(freq, dur, type, vol, when = 0, slide = 0) {
 function sound(kind, n = 0) {
   if (!actx || !soundOn) return;
   if (kind === 'tap') blip(300, 0.06, 'sine', 0.12);
-  else if (kind === 'exit') { blip(420, 0.16, 'sine', 0.22, 0, 460); blip(880, 0.1, 'triangle', 0.1, 0.05); }
+  // escapes climb a step each time within a level — the reward sound rises with the streak
+  else if (kind === 'exit') { const k = Math.pow(1.122, Math.min(n, 7)); blip(420 * k, 0.16, 'sine', 0.22, 0, 460 * k); blip(880 * k, 0.1, 'triangle', 0.1, 0.05); }
+  else if (kind === 'hint') { blip(660, 0.1, 'sine', 0.12); blip(990, 0.14, 'sine', 0.1, 0.08); }
   else if (kind === 'gate') { blip(1046, 0.18, 'triangle', 0.14, 0.08); blip(1568, 0.22, 'sine', 0.1, 0.14); }
   else if (kind === 'star') blip(880 * Math.pow(1.25, n), 0.16, 'triangle', 0.18, 0, 200);
   else if (kind === 'undo') blip(520, 0.12, 'sine', 0.14, 0, -220);
@@ -840,11 +1106,16 @@ window.GE = {
   get paused() { return paused; }, set paused(v) { paused = !!v; if (paused) cancelDrag(); updateHud(); },
   get soundOn() { return soundOn; }, set soundOn(v) { soundOn = !!v; },
   get canUndo() { return !!undoSnap && !over && !paused; },
+  get hint() { return hint; },          // the reference move currently ghosted (null if none)
+  get best() { return best[li] || 0; }, // personal best moves on this level (0 = never cleared)
+  get adUp() { return !adModal.hidden; },
   // drawing helpers shared with menu.js (legend); ctx is swapped for the call
-  draw(c, fn) { const o = ctx; ctx = c; try { fn({ rr, drawGlyph, COLORS }); } finally { ctx = o; } },
+  draw(c, fn) { const o = ctx; ctx = c; try { fn({ rr, drawGlyph, drawBlockShape, COLORS }); } finally { ctx = o; } },
   load: loadLevel,
   undo,
   route: findRoute,
+  solve: solveFrom,   // reference next move from any position (bots / reviewer console)
+  showHint,           // show the hint directly (skips the ad stub; the button never does)
   // programmatic drag: mirrors player physics exactly
   drag(bi, tx, ty) {
     if (over || !pos[bi]) return false;

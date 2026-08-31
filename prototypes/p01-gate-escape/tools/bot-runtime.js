@@ -57,11 +57,14 @@
     }
     const failShown = await waitFor(() => visible('failModal'), 3000);
     if (!failShown) return { failShown, rescued: false, movesLeft: GE.movesLeft };
+    await sleep(400); // the board finishes rising above the sheet before the store shot
     status('BOT SHOT fail-offer');
     await sleep(SHOT_HOLD);
     document.getElementById('btnRescue').click();
-    await sleep(120);
-    return { failShown, rescued: GE.movesLeft === 3 && !visible('failModal'), movesLeft: GE.movesLeft };
+    // the rescue is a rewarded-ad slot: the placeholder ad runs ~1.2 s before the +3 lands
+    const adShown = visible('adModal');
+    await waitFor(() => GE.movesLeft === 3 && !visible('adModal'), 4000);
+    return { failShown, adShown, rescued: GE.movesLeft === 3 && !visible('failModal'), movesLeft: GE.movesLeft };
   }
 
   async function run() {

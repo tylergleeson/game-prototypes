@@ -41,18 +41,29 @@
     pointer-events:none; animation:floatup 1s ease-out forwards;
   }
   #hud button {
-    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:var(--ink);
-    border-radius:10px; padding:6px 12px; font-size:14px; font-weight:700; cursor:pointer; transition:opacity .2s;
+    position:relative; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:var(--ink);
+    border-radius:10px; padding:6px 10px; font-size:14px; font-weight:700; cursor:pointer; transition:opacity .2s;
   }
   #hud button:disabled { opacity:.32; cursor:default; }
-  #hud .right { display:flex; gap:6px; }
+  #hud .right { display:flex; gap:5px; }
+  /* hint: the rewarded slot that lives in the HUD; AD tag like the rescue; beckons after 20 s idle */
+  #btnHint { color:var(--amber); border-color:rgba(255,208,77,.45); }
+  #btnHint .ad { position:absolute; top:-7px; right:-6px; font:800 8px/1 var(--mono); letter-spacing:.1em; padding:2px 3px; border-radius:3px; background:var(--amber); color:#1a2a44; }
+  #btnHint:disabled .ad { display:none; }
+  #btnHint.nudge:not(:disabled) { animation:nudge 1.6s ease-in-out infinite; }
+  @keyframes nudge { 0%,60%,100% { transform:scale(1); box-shadow:none; } 75% { transform:scale(1.12); box-shadow:0 0 0 4px rgba(255,208,77,.25); } }
+  /* objective row: blocks of each colour still on the board (the tension meter on a dense board) */
+  #hudGoal { display:flex; justify-content:center; gap:10px; width:100%; padding:2px 0 0; min-height:22px; transition:opacity .25s; }
+  #hudGoal .chip { display:inline-flex; align-items:center; gap:5px; padding:2px 9px 2px 7px; border-radius:11px; border:1.5px solid var(--d); background:rgba(255,255,255,.06); font:800 13px/1 var(--mono); color:var(--ink); transition:opacity .3s; }
+  #hudGoal .chip i { font-style:normal; font-size:13px; color:var(--c); }
+  #hudGoal .chip.done { opacity:.28; }
   @keyframes pulse { 50% { opacity:.45; } }
   @keyframes shake { 0%,100% { transform:translateX(0); } 20% { transform:translateX(-5px); } 40% { transform:translateX(5px); } 60% { transform:translateX(-3px); } 80% { transform:translateX(3px); } }
   @keyframes boost { 0% { color:#5fe89b; transform:scale(1); } 25% { transform:scale(1.35); } 100% { color:inherit; transform:scale(1); } }
   @keyframes floatup { from { opacity:1; transform:translateY(0); } 30% { opacity:1; } to { opacity:0; transform:translateY(-16px); } }
   /* one-line tip strip under the HUD: reinforces, never replaces, what the board shows */
   #toast {
-    position:fixed; left:50%; top:calc(58px + env(safe-area-inset-top)); transform:translateX(-50%); z-index:5;
+    position:fixed; left:50%; top:calc(86px + env(safe-area-inset-top)); transform:translateX(-50%); z-index:5;
     width:max-content; max-width:min(92vw,400px); padding:9px 14px; border-radius:8px; text-align:center; font-size:14px; font-weight:600;
     color:#1a2a44; background:var(--amber); box-shadow:0 4px 0 var(--amber2); pointer-events:none;
   }
@@ -61,29 +72,33 @@
   #wrap { flex:1; width:100%; display:flex; align-items:center; justify-content:center; }
   canvas { display:block; }
   /* while the title block is up the live board rides above it, smaller and crisp */
-  #cv { transition:transform .25s ease; transform-origin:50% 0; }
+  #cv { transition:transform .3s ease; transform-origin:50% 0; }
   body.menu-up #cv { transform:translateY(-30%) scale(.72); }
+  /* under the fail sheet the board rises and shrinks so the position being bet on stays fully visible
+     (game.js measures and sets the transform inline: fitBoardAboveSheet) */
   #hud { transition:opacity .25s; }
-  body.menu-up #hud { opacity:.2; }
+  body.menu-up #hud, body.menu-up #hudGoal { opacity:0; pointer-events:none; }
   .modal {
     position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
     background:rgba(8,10,24,.5); z-index:10;
   }
   /* fail card sits at the foot of the screen so the stranded block (and its route) stays in view */
   .modal.sheet { align-items:flex-end; background:rgba(8,10,24,.22); }
-  .modal.sheet .card { width:min(94vw,400px); padding:18px 22px calc(16px + env(safe-area-inset-bottom)); margin-bottom:10px; animation:sheetup .3s cubic-bezier(.34,1.4,.64,1); }
+  .modal.sheet .card { width:min(94vw,400px); padding:16px 20px calc(14px + env(safe-area-inset-bottom)); margin-bottom:10px; animation:sheetup .3s cubic-bezier(.34,1.4,.64,1); }
   @keyframes sheetup { from { transform:translateY(60px); opacity:0; } }
   .modal.sheet .card h2 { font-size:24px; }
   .modal.sheet .card p { margin-bottom:6px; }
   .modal.sheet .card p.hint { color:var(--ink); font-weight:600; margin-bottom:12px; }
   .modal.sheet .card button { padding:12px; }
+  /* cards are drawn like the title block: a drafting annotation on the same sheet */
   .card {
-    background:linear-gradient(180deg,#1d4a8a,#143764); border:1px solid rgba(255,255,255,.12);
-    border-radius:20px; padding:26px 30px; text-align:center; width:min(86vw,340px);
+    position:relative; background:rgba(15,44,90,.97); border:1.5px solid var(--line); outline:1px solid var(--line2); outline-offset:5px;
+    border-radius:4px; padding:24px 26px 22px; text-align:center; width:min(86vw,340px);
     box-shadow:0 18px 50px rgba(0,0,0,.5); animation:pop .28s cubic-bezier(.34,1.56,.64,1);
   }
+  .card .no { position:absolute; top:6px; left:10px; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); }
   @keyframes pop { from { transform:scale(.7); opacity:0; } }
-  .card h2 { font-size:26px; margin-bottom:6px; }
+  .card h2 { font-size:26px; margin-bottom:6px; letter-spacing:.02em; }
   .card p { color:var(--dim); font-size:15px; margin-bottom:16px; }
   .card .stars { position:relative; font-size:34px; letter-spacing:6px; margin-bottom:10px; height:44px; line-height:44px; }
   .card .stars span { display:inline-block; }
@@ -92,18 +107,35 @@
   @keyframes starpop { from { transform:scale(0) rotate(-40deg); opacity:0; } 60% { transform:scale(1.35) rotate(6deg); opacity:1; } to { transform:scale(1) rotate(0); opacity:1; } }
   @keyframes starin { from { transform:scale(.6); opacity:0; } }
   .card .stars .spark { position:absolute; width:7px; height:7px; border-radius:50%; pointer-events:none; }
+  /* win-card meta: running star total + what comes next, ruled off like a title-block field row */
+  .card .meta { display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--line2); margin:0 0 14px; }
+  .card .meta > * { padding:7px 6px 8px; border-right:1px solid var(--line2); }
+  .card .meta > :last-child { border-right:0; }
+  .card .meta .k { display:block; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); margin-bottom:4px; }
+  .card .meta .v { font-weight:800; font-size:15px; font-variant-numeric:tabular-nums; }
+  .card .meta .v small { display:block; font:600 11px/1.2 var(--mono); color:var(--dim); margin-top:3px; }
+  .card .meta .v b { color:var(--amber); }
   .card button {
-    width:100%; border:0; border-radius:14px; padding:14px; font-size:17px; font-weight:800;
+    position:relative; width:100%; border:0; border-radius:8px; padding:14px; font-size:17px; font-weight:800;
     cursor:pointer; margin-top:8px; color:#fff;
   }
-  .card button.primary { background:linear-gradient(180deg,#4aa8ff,#2f7fe0); box-shadow:0 6px 0 #1d5eb0; }
-  .card button.rescue  { background:linear-gradient(180deg,#33d17a,#1fae5f); box-shadow:0 6px 0 #12854a; }
-  .card button.ghost   { background:rgba(255,255,255,.09); box-shadow:none; font-weight:600; font-size:15px; }
+  .card button.primary { background:var(--amber); color:#1a2a44; box-shadow:0 5px 0 var(--amber2); }
+  .card button.primary::after { content:''; position:absolute; inset:5px; border:1.5px dashed rgba(26,42,68,.5); border-radius:5px; pointer-events:none; }
+  .card button.rescue  { background:linear-gradient(180deg,#33d17a,#1fae5f); box-shadow:0 5px 0 #12854a; }
+  .card button.ghost   { background:none; border:1.5px dashed var(--line2); box-shadow:none; font-weight:700; font-size:15px; color:var(--ink); }
   .card button:active { transform:translateY(3px); box-shadow:none; }
   .card button:disabled { opacity:.55; transform:none; }
   .card button.rescue { display:flex; align-items:center; justify-content:center; gap:10px; }
   .card button.rescue .ad { font:800 10px/1 var(--mono); letter-spacing:.12em; padding:4px 5px; border:1.5px solid rgba(255,255,255,.85); border-radius:4px; }
   .card button.rescue small { font-size:12px; font-weight:600; opacity:.85; }
+  /* rewarded-ad placeholder: the state machine around the grant exists before an SDK does */
+  #adModal { z-index:30; background:rgba(4,8,20,.72); }
+  #adModal .card { width:min(80vw,300px); padding:22px 24px 20px; }
+  #adModal .tag { display:inline-block; font:800 11px/1 var(--mono); letter-spacing:.14em; padding:5px 7px; border:1.5px solid rgba(255,255,255,.85); border-radius:4px; margin-bottom:12px; }
+  #adModal p { margin-bottom:12px; }
+  #adModal .bar { height:6px; border:1px solid var(--line2); border-radius:3px; overflow:hidden; }
+  #adModal .bar i { display:block; height:100%; width:0; background:var(--amber); }
+  #adModal small { display:block; margin-top:10px; color:var(--dim); font:600 11px/1.3 var(--mono); letter-spacing:.06em; }
 
   /* ---- drafting-sheet screens: title block, sheet index, legend ---- */
   .screen {
@@ -162,6 +194,9 @@
   .shead h2 { font-size:18px; letter-spacing:.12em; text-transform:uppercase; }
   .shead .back { background:none; border:1.5px solid var(--line2); color:var(--ink); border-radius:8px; padding:6px 12px; font:700 14px system-ui; cursor:pointer; }
   .grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+  .grid .chap { grid-column:1 / -1; display:flex; justify-content:space-between; align-items:baseline; margin-top:6px; padding-bottom:3px; border-bottom:1px solid var(--line2); font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); text-transform:uppercase; }
+  .grid .chap:first-child { margin-top:0; }
+  .grid .chap b { color:var(--amber); letter-spacing:.06em; }
   .tile {
     aspect-ratio:1; border:1.5px solid rgba(214,238,255,.5); border-radius:4px; background:rgba(255,255,255,.05);
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; cursor:pointer;
@@ -184,7 +219,7 @@
   .legend .li canvas { width:64px; height:44px; flex:none; }
   .legend .li b { display:block; font-size:15px; }
   .legend .li span { color:var(--dim); font-size:13px; }
-  @media (prefers-reduced-motion: reduce) { .gatebtn, .gatebtn .blk, .tblock, .card, .card .stars span, #toast { animation:none; } }
+  @media (prefers-reduced-motion: reduce) { .gatebtn, .gatebtn .blk, .tblock, .card, .card .stars span, #toast, #btnHint.nudge { animation:none; } }
   [hidden] { display:none !important; }
 </style>
 </head>
@@ -193,19 +228,26 @@
     <div class="lvl" id="hudLevel">Level 1</div>
     <div class="moves" id="hudMovesBox"><span id="hudMoves">0</span> <span id="hudUnit">moves</span><span class="meter" aria-label="Stars at this pace"><span id="hudMeter"><span>★</span><span>★</span><span>★</span></span><em id="hudPar">par 1</em></span></div>
     <div class="right">
+      <button id="btnHint" aria-label="Hint: show the next move (rewarded ad)" disabled><span class="ad">AD</span>?</button>
       <button id="btnUndo" aria-label="Undo last move" disabled>&#8630;</button>
       <button id="btnRestart" aria-label="Restart level">&#8635;</button>
       <button id="btnMenu" aria-label="Pause">&#9776;</button>
     </div>
   </div>
+  <div id="hudGoal" aria-label="Blocks left per color"></div>
   <div id="wrap"><canvas id="cv"></canvas></div>
   <div id="toast" role="status" hidden></div>
 
   <div class="modal" id="winModal" hidden>
     <div class="card">
+      <span class="no" id="winNo">SHEET 01</span>
       <div class="stars" id="winStars" aria-live="polite"></div>
       <h2 id="winTitle">Level clear!</h2>
       <p id="winSub"></p>
+      <div class="meta" id="winMeta">
+        <div><span class="k">Stars</span><span class="v" id="winTotal">0 / 90</span></div>
+        <div><span class="k">Next</span><span class="v" id="winNext">Level 2</span></div>
+      </div>
       <button class="primary" id="btnNext">Next level</button>
       <button class="ghost" id="btnReplay" hidden>Replay for ★★★</button>
     </div>
@@ -216,8 +258,19 @@
       <h2>So close!</h2>
       <p id="failSub"></p>
       <p class="hint" id="failHint"></p>
-      <button class="rescue" id="btnRescue"><span class="ad">AD</span> +3 moves <small>· free rescue</small></button>
+      <button class="rescue" id="btnRescue"><span class="ad">AD</span> +3 moves <small>· watch to continue</small></button>
       <button class="ghost" id="btnRetry">Retry level</button>
+    </div>
+  </div>
+
+  <!-- rewarded-ad placeholder (rescue + hint): nothing is granted until it completes -->
+  <div class="modal" id="adModal" hidden>
+    <div class="card">
+      <span class="tag">AD · REWARDED</span>
+      <h2>Rescue</h2>
+      <p>Ad placeholder — the reward lands when the bar fills.</p>
+      <div class="bar"><i id="adBar"></i></div>
+      <small>PROTOTYPE · NO AD IS SHOWN · FREE</small>
     </div>
   </div>
 
@@ -271,10 +324,10 @@
       <div class="shead"><h2>How to play</h2><button class="back" id="btnLegendBack">Back</button></div>
       <div class="legend">
         <canvas class="demo" id="legendDemo" width="360" height="170"></canvas>
-        <div class="li"><canvas id="symBlock" width="128" height="88"></canvas><div><b>Block</b><span>Drag it anywhere it can slide — around corners too, in one go.</span></div></div>
-        <div class="li"><canvas id="symGate" width="128" height="88"></canvas><div><b>Gate</b><span>Push a block through the gate with its color and symbol — it escapes.</span></div></div>
-        <div class="li"><canvas id="symStone" width="128" height="88"></canvas><div><b>Stone</b><span>Never moves. Go around it.</span></div></div>
-        <div class="li"><canvas id="symMoves" width="128" height="88"></canvas><div><b>Moves</b><span>One drag is one move, however far it goes. Clear the board before they run out.</span></div></div>
+        <div class="li"><canvas id="symBlock" width="128" height="88"></canvas><div><b>Block</b><span>Slides anywhere, corners included.</span></div></div>
+        <div class="li"><canvas id="symGate" width="128" height="88"></canvas><div><b>Gate</b><span>Same color and symbol: push through to escape.</span></div></div>
+        <div class="li"><canvas id="symStone" width="128" height="88"></canvas><div><b>Stone</b><span>Never moves.</span></div></div>
+        <div class="li"><canvas id="symMoves" width="128" height="88"></canvas><div><b>Moves</b><span>One drag = one move. ★★★ at par, ★★ within two over. Undo (↶) gives a move back; ? shows the next move.</span></div></div>
       </div>
     </div>
   </div>

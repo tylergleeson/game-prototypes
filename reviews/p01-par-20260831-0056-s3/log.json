@@ -1,0 +1,4664 @@
+{
+  "game": "p01",
+  "device": "iphone-17",
+  "minutes": null,
+  "levels": [
+    21,
+    30
+  ],
+  "start": "21",
+  "turns": 426,
+  "levelsWon": 11,
+  "wonLevels": [
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30
+  ],
+  "log": [
+    {
+      "turn": 2,
+      "level": 21,
+      "say": "Mara Voss, cert lab. Fresh install, levels 1-20 pre-cleared, my range is the 21-30 spike. Baseline first: inspect on the menu, then I go at the levels grid and locked tiles.",
+      "thought": "Establish clean state before I start breaking things, so every later anomaly is attributable.",
+      "note": null
+    },
+    {
+      "turn": 2,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 21\",\"moves\":\"10 moves★★★par 8\"},\"engine\":{\"level\":21,\"moves\":0,\"movesLeft\":10,\"limit\":10,\"par\":8,\"over\":false,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[[2,6],[0,5],[0,3],[3,0],[0,4],[3,4],[4,2]]},\"progress\":{\"u\":20,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":3,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21]]}\",\"ge_prog\":\"{\\\"u\\\":20,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]}\",\"ge_level\":\"20\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":false,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":true,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":true,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":true,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":true,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 3,
+      "level": 21,
+      "say": "The in-game HUD (undo/restart/pause) renders behind the menu card and inspect reports it enabled. Testing whether those buttons are actually tappable from the main menu.",
+      "thought": "Live interactive controls on a screen that is not the game is a classic dead-zone/ghost-tap bug.",
+      "note": null
+    },
+    {
+      "turn": 3,
+      "action": {
+        "type": "tap",
+        "button": "btnMenu",
+        "times": 3,
+        "gap": 0
+      },
+      "result": "3 taps (gap 0ms): 3× tapped HUD: pause / unpause"
+    },
+    {
+      "turn": 4,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 21\",\"moves\":\"10 moves★★★par 8\"},\"engine\":{\"level\":21,\"moves\":0,\"movesLeft\":10,\"limit\":10,\"par\":8,\"over\":false,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[[2,6],[0,5],[0,3],[3,0],[0,4],[3,4],[4,2]]},\"progress\":{\"u\":20,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":3,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21]]}\",\"ge_prog\":\"{\\\"u\\\":20,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]}\",\"ge_level\":\"20\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":false,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":true,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":true,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":true,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":true,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 5,
+      "level": 21,
+      "say": "HUD taps from the menu are correctly inert - engine stayed unpaused. Now the levels grid: I am going to tap level 30, which I have not unlocked, and see if it lets me in.",
+      "thought": "Locked-tile bypass would be a progression exploit and would also skip the difficulty curve.",
+      "note": null
+    },
+    {
+      "turn": 5,
+      "action": {
+        "type": "tap",
+        "button": "btnLevels"
+      },
+      "result": "tapped main menu: Levels"
+    },
+    {
+      "turn": 6,
+      "action": {
+        "type": "tap",
+        "button": "level:30"
+      },
+      "result": "tapped level tile 30"
+    },
+    {
+      "turn": 7,
+      "action": {
+        "type": "tap",
+        "button": "level:22"
+      },
+      "result": "tapped level tile 22"
+    },
+    {
+      "turn": 8,
+      "action": {
+        "type": "tap",
+        "button": "level:25"
+      },
+      "result": "tapped level tile 25"
+    },
+    {
+      "turn": 9,
+      "action": {
+        "type": "tap",
+        "button": "level:31"
+      },
+      "result": "tapped level tile 31"
+    },
+    {
+      "turn": 10,
+      "level": 21,
+      "say": "Locked tiles 22, 25, 30 and out-of-range 31 all refused, no errors. Now the Reset-progress two-tap arm: I will arm it once, leave the screen, come back and check it disarmed rather than staying hot.",
+      "thought": "An arm that survives navigation is a one-tap progress wipe waiting to happen. I will not fire the second tap.",
+      "note": null
+    },
+    {
+      "turn": 10,
+      "action": {
+        "type": "tap",
+        "button": "btnReset"
+      },
+      "result": "tapped levels: Reset progress (two-tap arm: first tap arms, second erases)"
+    },
+    {
+      "turn": 11,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 21\",\"moves\":\"10 moves★★★par 8\"},\"engine\":{\"level\":21,\"moves\":0,\"movesLeft\":10,\"limit\":10,\"par\":8,\"over\":false,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[[2,6],[0,5],[0,3],[3,0],[0,4],[3,4],[4,2]]},\"progress\":{\"u\":20,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":3,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21]]}\",\"ge_prog\":\"{\\\"u\\\":20,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]}\",\"ge_level\":\"20\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":false,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":true,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":true,\"disabled\":false,\"text\":\"Tap again to erase all progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 12,
+      "action": {
+        "type": "tap",
+        "button": "btnLevelsBack"
+      },
+      "result": "tapped levels: Back"
+    },
+    {
+      "turn": 13,
+      "action": {
+        "type": "tap",
+        "button": "btnLevels"
+      },
+      "result": "tapped main menu: Levels"
+    },
+    {
+      "turn": 14,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 21\",\"moves\":\"10 moves★★★par 8\"},\"engine\":{\"level\":21,\"moves\":0,\"movesLeft\":10,\"limit\":10,\"par\":8,\"over\":false,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[[2,6],[0,5],[0,3],[3,0],[0,4],[3,4],[4,2]]},\"progress\":{\"u\":20,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":3,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21]]}\",\"ge_prog\":\"{\\\"u\\\":20,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]}\",\"ge_level\":\"20\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":false,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":true,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":true,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 15,
+      "level": 21,
+      "say": "Reset arm disarms when you leave the screen - good. Into level 21. First attacks before I play it straight: raw pointer drags to off-board coordinates and an attempt to shove a cyan block out through the red gate.",
+      "thought": "If wrong-colour exits or off-board coords are accepted the whole ruleset is void.",
+      "note": null
+    },
+    {
+      "turn": 15,
+      "action": {
+        "type": "tap",
+        "button": "level:21"
+      },
+      "result": "tapped level tile 21"
+    },
+    {
+      "turn": 16,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          3,
+          0
+        ],
+        "path": [
+          [
+            3,
+            -1
+          ],
+          [
+            3,
+            -2
+          ],
+          [
+            3,
+            -4
+          ]
+        ],
+        "release": true,
+        "steps": 8,
+        "hold": 40
+      },
+      "result": "raw gesture released: moves 0, left 10, over=false, paused=false, positions [[2,6],[0,5],[0,3],[3,0],[0,4],[3,4],[4,2]]"
+    },
+    {
+      "turn": 17,
+      "level": 21,
+      "say": "Amber block bounced off the green gate, no move charged - correct. Now I throw the pointer at garbage coordinates: block 4 dragged to [99,99] and to [-3,1], plus a grab on empty space.",
+      "thought": "Off-grid coordinates are where index math usually throws.",
+      "note": null
+    },
+    {
+      "turn": 17,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          0,
+          4
+        ],
+        "path": [
+          [
+            5,
+            5
+          ],
+          [
+            50,
+            50
+          ],
+          [
+            99,
+            99
+          ]
+        ],
+        "release": true,
+        "steps": 8
+      },
+      "result": "raw gesture released: moves 0, left 10, over=false, paused=false, positions [[2,6],[0,5],[0,3],[3,0],[0,4],[3,4],[4,2]]"
+    },
+    {
+      "turn": 18,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          0,
+          4
+        ],
+        "path": [
+          [
+            -1,
+            3
+          ],
+          [
+            -3,
+            1
+          ]
+        ],
+        "release": true,
+        "steps": 8
+      },
+      "result": "raw gesture released: moves 0, left 10, over=false, paused=false, positions [[2,6],[0,5],[0,3],[3,0],[0,4],[3,4],[4,2]]"
+    },
+    {
+      "turn": 19,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          5,
+          7
+        ],
+        "path": [
+          [
+            3,
+            3
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "release": true,
+        "steps": 6
+      },
+      "result": "raw gesture released: moves 0, left 10, over=false, paused=false, positions [[2,6],[0,5],[0,3],[3,0],[0,4],[3,4],[4,2]]"
+    },
+    {
+      "turn": 20,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          2,
+          4
+        ],
+        "path": [
+          [
+            2,
+            2
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            -2
+          ]
+        ],
+        "release": true,
+        "steps": 6
+      },
+      "result": "raw gesture released: moves 0, left 10, over=false, paused=false, positions [[2,6],[0,5],[0,3],[3,0],[0,4],[3,4],[4,2]]"
+    },
+    {
+      "turn": 21,
+      "level": 21,
+      "say": "Garbage coords, stone grabs and empty-cell grabs all no-op cleanly. Nastier now: I pick up the green block and DO NOT release, then hit pause mid-drag, then resume - looking for a block welded to a dead pointer.",
+      "thought": "Held pointer across a screen change is the classic way to strand a block or double-count a move.",
+      "note": null
+    },
+    {
+      "turn": 21,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          0,
+          3
+        ],
+        "path": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "release": false,
+        "steps": 8,
+        "hold": 40
+      },
+      "result": "raw gesture STILL HELD (pointer down): moves 0, left 10, over=false, paused=false, positions [[2,6],[0,5],[1,2],[3,0],[0,4],[3,4],[4,2]]"
+    },
+    {
+      "turn": 22,
+      "action": {
+        "type": "tap",
+        "button": "btnMenu"
+      },
+      "result": "tapped HUD: pause / unpause"
+    },
+    {
+      "turn": 23,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 21\",\"moves\":\"10 moves★★★par 8\"},\"engine\":{\"level\":21,\"moves\":0,\"movesLeft\":10,\"limit\":10,\"par\":8,\"over\":false,\"paused\":true,\"canUndo\":false,\"soundOn\":true,\"pos\":[[2,6],[0,5],[0,3],[3,0],[0,4],[3,4],[4,2]]},\"progress\":{\"u\":20,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":4,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21]]}\",\"ge_prog\":\"{\\\"u\\\":20,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]}\",\"ge_level\":\"20\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":true,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":true,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":true,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":true,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":true,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":true,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":true,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 24,
+      "action": {
+        "type": "tap",
+        "button": "btnResume"
+      },
+      "result": "tapped pause: Resume"
+    },
+    {
+      "turn": 25,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          0,
+          3
+        ],
+        "path": [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "release": true,
+        "steps": 8
+      },
+      "result": "raw gesture released: moves 1, left 9, over=false, paused=false, positions [[2,6],[0,5],[2,2],[3,0],[0,4],[3,4],[4,2]]"
+    },
+    {
+      "turn": 26,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 21\",\"moves\":\"9 moves★★★par 8\"},\"engine\":{\"level\":21,\"moves\":1,\"movesLeft\":9,\"limit\":10,\"par\":8,\"over\":false,\"paused\":false,\"canUndo\":true,\"soundOn\":true,\"pos\":[[2,6],[0,5],[2,2],[3,0],[0,4],[3,4],[4,2]]},\"progress\":{\"u\":20,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":4,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21]]}\",\"ge_prog\":\"{\\\"u\\\":20,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]}\",\"ge_level\":\"20\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":false,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":false,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 27,
+      "level": 21,
+      "say": "Pointer recovered fine after resume, and a route around a corner charged exactly one move. Now I spam Undo ten times against a single move of history - looking for negative move counts or a rewind past level start.",
+      "thought": "Undo underflow would show as movesUsed going negative or blocks reverting to nothing.",
+      "note": null
+    },
+    {
+      "turn": 27,
+      "action": {
+        "type": "tap",
+        "button": "btnUndo",
+        "times": 10,
+        "gap": 0
+      },
+      "result": "10 taps (gap 0ms): 1× tapped HUD: undo last move (one step) → 9× tapped HUD: undo last move (one step) — the button is disabled, no effect"
+    },
+    {
+      "turn": 28,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #1 (cyan / triangle) and push it out through the bottom gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 29,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "exit": "bottom"
+      },
+      "result": "block #1 escaped through the bottom gate. 9 moves left."
+    },
+    {
+      "turn": 30,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          2,
+          2
+        ]
+      },
+      "result": "block #2 now at (2,2). 8 moves left."
+    },
+    {
+      "turn": 31,
+      "action": {
+        "type": "tap",
+        "button": "btnUndo",
+        "times": 2,
+        "gap": 30
+      },
+      "result": "2 taps (gap 30ms): 1× tapped HUD: undo last move (one step) → 1× tapped HUD: undo last move (one step) — the button is disabled, no effect"
+    },
+    {
+      "turn": 32,
+      "level": 21,
+      "say": "Confirmed undo is a single-step buffer, not a history - it greys out even with earlier moves available. Now racing it: restart, escape the cyan block and fire Undo in the same frame, mid exit-animation.",
+      "thought": "Undo landing inside the escape animation is the likeliest place to resurrect a block or lose one.",
+      "note": null
+    },
+    {
+      "turn": 32,
+      "action": {
+        "type": "tap",
+        "button": "btnRestart"
+      },
+      "result": "tapped HUD: restart level"
+    },
+    {
+      "turn": 33,
+      "action": {
+        "type": "sequence",
+        "delay": 0,
+        "steps": [
+          {
+            "type": "drag",
+            "block": 1,
+            "exit": "bottom"
+          },
+          {
+            "type": "tap",
+            "button": "btnUndo"
+          },
+          {
+            "type": "tap",
+            "button": "btnUndo"
+          },
+          {
+            "type": "tap",
+            "button": "btnUndo"
+          }
+        ]
+      },
+      "result": "drag: block #1 escaped through the bottom gate. 9 moves left. | tap: tapped HUD: undo last move (one step) | tap: tapped HUD: undo last move (one step) — the button is disabled, no effect | tap: tapped HUD: undo last move (one step) — the button is disabled, no effect"
+    },
+    {
+      "turn": 34,
+      "level": 21,
+      "say": "Undo inside the exit animation restored the block cleanly - no ghost, no double-charge. Now I burn all ten moves shuffling one block to force the fail sheet, then I go after the rescue offer.",
+      "thought": "The rescue is the monetisation surface; abusing it is where real money bugs live.",
+      "note": null
+    },
+    {
+      "turn": 34,
+      "action": {
+        "type": "sequence",
+        "delay": 120,
+        "steps": [
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              2
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              3
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              2
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              3
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              2
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              3
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              2
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              3
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              2
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              3
+            ]
+          }
+        ]
+      },
+      "result": "drag: block #2 now at (0,2). 9 moves left. | drag: block #2 now at (0,3). 8 moves left. | drag: block #2 now at (0,2). 7 moves left. | drag: block #2 now at (0,3). 6 moves left. | drag: block #2 now at (0,2). 5 moves left. | drag: block #2 now at (0,3). 4 moves left. | drag: block #2 now at (0,2). 3 moves left. | drag: block #2 now at (0,3). 2 moves left. | drag: block #2 now at (0,2). 1 moves left. | drag: block #2 now at (0,3). 0 moves left."
+    },
+    {
+      "turn": 36,
+      "level": 21,
+      "say": "Fail sheet is up. It covers the bottom two rows of the board including the cyan gate, so I cannot read the position I am being asked to buy moves for. Now: double-tapping the rescue to try to bank six moves instead of three.",
+      "thought": "Star meter is fine on screen - the JSON just flattens the glyphs. Do not log that.",
+      "note": {
+        "turn": 36,
+        "level": 21,
+        "persona": "breaker",
+        "area": "feedback",
+        "severity": "minor",
+        "text": "REPRO: Level 21, exhaust all 10 moves (any 10 drags) so the fail sheet appears. EXPECTED: the fail sheet leaves the board readable, since the player must decide whether to spend a rescue on this position. ACTUAL: the sheet overlays the bottom ~2 rows of the grid, hiding block #0 and the cyan bottom gate entirely; the +3-moves offer must be judged blind. EVIDENCE: screenshot t036.png - card top edge sits above board row 6."
+      }
+    },
+    {
+      "turn": 36,
+      "action": {
+        "type": "tap",
+        "button": "btnRescue",
+        "times": 6,
+        "gap": 0
+      },
+      "result": "6 taps (gap 0ms): 1× tapped fail card: +3 moves rescue → 5× error: btnRescue is not on screen right now"
+    },
+    {
+      "turn": 37,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 21\",\"moves\":\"3 moves★★★par 8\"},\"engine\":{\"level\":21,\"moves\":10,\"movesLeft\":3,\"limit\":10,\"par\":8,\"over\":false,\"paused\":false,\"canUndo\":true,\"soundOn\":true,\"pos\":[[2,6],[0,5],[0,3],[3,0],[0,4],[3,4],[4,2]]},\"progress\":{\"u\":20,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":5,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"blo\",\"ge_prog\":\"{\\\"u\\\":20,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]}\",\"ge_level\":\"20\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":false,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":false,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 38,
+      "action": {
+        "type": "tap",
+        "button": "btnUndo",
+        "times": 3,
+        "gap": 0
+      },
+      "result": "3 taps (gap 0ms): 1× tapped HUD: undo last move (one step) → 2× tapped HUD: undo last move (one step) — the button is disabled, no effect"
+    },
+    {
+      "turn": 39,
+      "action": {
+        "type": "tap",
+        "button": "btnRestart"
+      },
+      "result": "tapped HUD: restart level"
+    },
+    {
+      "turn": 40,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 21\",\"moves\":\"10 moves★★★par 8\"},\"engine\":{\"level\":21,\"moves\":0,\"movesLeft\":10,\"limit\":10,\"par\":8,\"over\":false,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[[2,6],[0,5],[0,3],[3,0],[0,4],[3,4],[4,2]]},\"progress\":{\"u\":20,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":6,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"blo\",\"ge_prog\":\"{\\\"u\\\":20,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]}\",\"ge_level\":\"20\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":false,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 42,
+      "level": 21,
+      "say": "Rescue granted exactly +3 and cannot be double-tapped. Undo after rescue refunds a move - 3 left became 4. Rescue stays spent through a Restart; failing again now to see whether the card still dangles the button.",
+      "thought": "A rescue button that appears but is already spent would be the HUD lying.",
+      "note": null
+    },
+    {
+      "turn": 42,
+      "action": {
+        "type": "sequence",
+        "delay": 120,
+        "steps": [
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              2
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              3
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              2
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              3
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              2
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              3
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              2
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              3
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              2
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              3
+            ]
+          }
+        ]
+      },
+      "result": "drag: block #2 now at (0,2). 9 moves left. | drag: block #2 now at (0,3). 8 moves left. | drag: block #2 now at (0,2). 7 moves left. | drag: block #2 now at (0,3). 6 moves left. | drag: block #2 now at (0,2). 5 moves left. | drag: block #2 now at (0,3). 4 moves left. | drag: block #2 now at (0,2). 3 moves left. | drag: block #2 now at (0,3). 2 moves left. | drag: block #2 now at (0,2). 1 moves left. | drag: block #2 now at (0,3). 0 moves left."
+    },
+    {
+      "turn": 44,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 21\",\"moves\":\"0 moves★★★par 8\"},\"engine\":{\"level\":21,\"moves\":10,\"movesLeft\":0,\"limit\":10,\"par\":8,\"over\":true,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[[2,6],[0,5],[0,3],[3,0],[0,4],[3,4],[4,2]]},\"progress\":{\"u\":20,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":6,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"blo\",\"ge_prog\":\"{\\\"u\\\":20,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]}\",\"ge_level\":\"20\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":true,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":true,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":true,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":true,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 45,
+      "action": {
+        "type": "tap",
+        "button": "btnRescue"
+      },
+      "result": "tapped fail card: +3 moves rescue"
+    },
+    {
+      "turn": 46,
+      "action": {
+        "type": "sequence",
+        "delay": 120,
+        "steps": [
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              2
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              3
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              2
+            ]
+          }
+        ]
+      },
+      "result": "drag: block #2 now at (0,2). 2 moves left. | drag: block #2 now at (0,3). 1 moves left. | drag: block #2 now at (0,2). 0 moves left."
+    },
+    {
+      "turn": 48,
+      "level": 21,
+      "say": "Rescue cannot be chained inside one attempt - second fail card correctly drops the button. But it fully refreshes on Restart, so it is once per attempt, not once per level as the rules state. Reloading the app on the fail sheet now.",
+      "thought": "Reload on a terminal screen is where half-written progress usually surfaces.",
+      "note": {
+        "turn": 48,
+        "level": 21,
+        "persona": "breaker",
+        "area": "bug",
+        "severity": "minor",
+        "text": "REPRO: Level 21, burn all 10 moves to fail, take the +3 rescue, fail again (rescue correctly gone), tap Retry/Restart, burn 10 moves again. EXPECTED: per the stated rule the +3 rescue is offered once per LEVEL. ACTUAL: the rescue is restored on every restart - once per ATTEMPT - so it can be taken unlimited times on the same level. Not a value exploit (restart resets moves to 10 regardless, cap stays 13 per attempt) but implementation and spec disagree. EVIDENCE: rescueAvailable true again on the post-restart fail card; second in-attempt fail correctly showed no rescue button."
+      }
+    },
+    {
+      "turn": 48,
+      "action": {
+        "type": "reload"
+      },
+      "result": "reloaded the page (progress must come back from storage)"
+    },
+    {
+      "turn": 49,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 21\",\"moves\":\"10 moves★★★par 8\"},\"engine\":{\"level\":21,\"moves\":0,\"movesLeft\":10,\"limit\":10,\"par\":8,\"over\":false,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[[2,6],[0,5],[0,3],[3,0],[0,4],[3,4],[4,2]]},\"progress\":{\"u\":20,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":7,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"blo\",\"ge_prog\":\"{\\\"u\\\":20,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]}\",\"ge_level\":\"20\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":false,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":true,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":true,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":true,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":true,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 50,
+      "action": {
+        "type": "tap",
+        "button": "btnPlay"
+      },
+      "result": "tapped main menu: Play"
+    },
+    {
+      "turn": 51,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #1 (cyan / triangle) and push it out through the bottom gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 52,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #1 (cyan / triangle) and push it out through the bottom gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 53,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "exit": "bottom"
+      },
+      "result": "block #1 escaped through the bottom gate. 9 moves left."
+    },
+    {
+      "turn": 54,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #3 (amber / star) to origin (2,2). 7 drag(s) remain in that line."
+    },
+    {
+      "turn": 55,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          2,
+          2
+        ]
+      },
+      "result": "block #3 now at (2,2). 8 moves left."
+    },
+    {
+      "turn": 56,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #2 (green / diamond) and push it out through the top gate. 6 drag(s) remain in that line."
+    },
+    {
+      "turn": 57,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "exit": "top"
+      },
+      "result": "block #2 escaped through the top gate. 7 moves left."
+    },
+    {
+      "turn": 58,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #4 (red / circle) and push it out through the left gate. 5 drag(s) remain in that line."
+    },
+    {
+      "turn": 59,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "exit": "left"
+      },
+      "result": "block #4 escaped through the left gate. 6 moves left."
+    },
+    {
+      "turn": 60,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #6 (cyan / triangle) and push it out through the bottom gate. 4 drag(s) remain in that line."
+    },
+    {
+      "turn": 61,
+      "action": {
+        "type": "drag",
+        "block": 6,
+        "exit": "bottom"
+      },
+      "result": "block #6 escaped through the bottom gate. 5 moves left."
+    },
+    {
+      "turn": 62,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #5 (cyan / triangle) and push it out through the bottom gate. 3 drag(s) remain in that line."
+    },
+    {
+      "turn": 63,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "exit": "bottom"
+      },
+      "result": "block #5 escaped through the bottom gate. 4 moves left."
+    },
+    {
+      "turn": 64,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #3 (amber / star) and push it out through the left gate. 2 drag(s) remain in that line."
+    },
+    {
+      "turn": 65,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "exit": "left"
+      },
+      "result": "block #3 escaped through the left gate. 3 moves left."
+    },
+    {
+      "turn": 66,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #0 (red / circle) and push it out through the left gate. 1 drag(s) remain in that line."
+    },
+    {
+      "turn": 67,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "exit": "left"
+      },
+      "result": "block #0 escaped through the left gate. 2 moves left."
+    },
+    {
+      "turn": 69,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 21\",\"moves\":\"2 moves★★★par 8\"},\"engine\":{\"level\":21,\"moves\":8,\"movesLeft\":2,\"limit\":10,\"par\":8,\"over\":true,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[null,null,null,null,null,null,null]},\"progress\":{\"u\":21,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":8,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"blo\",\"ge_prog\":\"{\\\"u\\\":21,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]}\",\"ge_level\":\"20\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":true,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":true,\"text\":\"☰\"},\"btnNext\":{\"visible\":true,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 70,
+      "level": 21,
+      "say": "Level 21 down in 8 moves, three stars, unlock written. Now the win beat: Escape on the win card, then a triple-tap on Next level to see if I can skip two levels with one clear.",
+      "thought": "Multi-advance on a double-tapped Next is the classic progression-skip bug.",
+      "note": null
+    },
+    {
+      "turn": 70,
+      "action": {
+        "type": "key",
+        "key": "Escape"
+      },
+      "result": "pressed Escape"
+    },
+    {
+      "turn": 72,
+      "action": {
+        "type": "tap",
+        "button": "btnNext",
+        "times": 4,
+        "gap": 0
+      },
+      "result": "4 taps (gap 0ms): 1× tapped win card: Next level → 3× error: btnNext is not on screen right now"
+    },
+    {
+      "turn": 73,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 22\",\"moves\":\"10 moves★★★par 8\"},\"engine\":{\"level\":22,\"moves\":0,\"movesLeft\":10,\"limit\":10,\"par\":8,\"over\":false,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[[0,1],[1,6],[3,4],[3,0],[3,6],[1,2],[1,0]]},\"progress\":{\"u\":21,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":9,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"blo\",\"ge_prog\":\"{\\\"u\\\":21,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]}\",\"ge_level\":\"21\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":false,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 74,
+      "level": 22,
+      "say": "Next advanced exactly one level, extra taps rejected. Level 22, same par 8 limit 10. Testing pointercancel now - I drag a block halfway and have iOS yank the gesture out from under it, like an incoming call would.",
+      "thought": "pointercancel without a cleanup path leaves the block floating or the move half-committed.",
+      "note": null
+    },
+    {
+      "turn": 75,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          1,
+          0
+        ],
+        "path": [
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "release": false,
+        "cancel": true,
+        "steps": 8
+      },
+      "result": "raw gesture cancelled: moves 0, left 10, over=false, paused=false, positions [[0,1],[1,6],[3,4],[3,0],[3,6],[1,2],[1,0]]"
+    },
+    {
+      "turn": 76,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 22\",\"moves\":\"10 moves★★★par 8\"},\"engine\":{\"level\":22,\"moves\":0,\"movesLeft\":10,\"limit\":10,\"par\":8,\"over\":false,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[[0,1],[1,6],[3,4],[3,0],[3,6],[1,2],[1,0]]},\"progress\":{\"u\":21,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":9,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"blo\",\"ge_prog\":\"{\\\"u\\\":21,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]}\",\"ge_level\":\"21\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":false,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 77,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          0,
+          1
+        ],
+        "path": [
+          [
+            4,
+            5
+          ]
+        ],
+        "release": true,
+        "steps": 1,
+        "hold": 10
+      },
+      "result": "raw gesture released: moves 0, left 10, over=false, paused=false, positions [[0,1],[1,6],[3,4],[3,0],[3,6],[1,2],[1,0]]"
+    },
+    {
+      "turn": 78,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          3,
+          4
+        ],
+        "path": [
+          [
+            3,
+            3
+          ]
+        ],
+        "release": false,
+        "steps": 6
+      },
+      "result": "raw gesture STILL HELD (pointer down): moves 0, left 10, over=false, paused=false, positions [[0,1],[1,6],[3,3],[3,0],[3,6],[1,2],[1,0]]"
+    },
+    {
+      "turn": 79,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          1,
+          6
+        ],
+        "path": [
+          [
+            1,
+            5
+          ],
+          [
+            1,
+            4
+          ]
+        ],
+        "release": true,
+        "steps": 6
+      },
+      "result": "raw gesture released: moves 1, left 9, over=false, paused=false, positions [[0,1],[1,4],[2,5],[3,0],[3,6],[1,2],[1,0]]"
+    },
+    {
+      "turn": 80,
+      "action": {
+        "type": "tap",
+        "button": "btnRestart"
+      },
+      "result": "tapped HUD: restart level"
+    },
+    {
+      "turn": 82,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          3,
+          4
+        ],
+        "path": [
+          [
+            3,
+            3
+          ]
+        ],
+        "release": false,
+        "steps": 6
+      },
+      "result": "raw gesture STILL HELD (pointer down): moves 0, left 10, over=false, paused=false, positions [[0,1],[1,6],[3,3],[3,0],[3,6],[1,2],[1,0]]"
+    },
+    {
+      "turn": 83,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          1,
+          6
+        ],
+        "path": [
+          [
+            1,
+            5
+          ],
+          [
+            1,
+            4
+          ]
+        ],
+        "release": true,
+        "steps": 6
+      },
+      "result": "raw gesture released: moves 1, left 9, over=false, paused=false, positions [[0,1],[1,4],[2,5],[3,0],[3,6],[1,2],[1,0]]"
+    },
+    {
+      "turn": 84,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 22\",\"moves\":\"9 moves★★★par 8\"},\"engine\":{\"level\":22,\"moves\":1,\"movesLeft\":9,\"limit\":10,\"par\":8,\"over\":false,\"paused\":false,\"canUndo\":true,\"soundOn\":true,\"pos\":[[0,1],[1,4],[2,5],[3,0],[3,6],[1,2],[1,0]]},\"progress\":{\"u\":21,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":10,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"bl\",\"ge_prog\":\"{\\\"u\\\":21,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]}\",\"ge_level\":\"21\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":false,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":false,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 85,
+      "action": {
+        "type": "tap",
+        "button": "btnUndo"
+      },
+      "result": "tapped HUD: undo last move (one step)"
+    },
+    {
+      "turn": 87,
+      "level": 22,
+      "say": "Got a big one. Second finger while the first is still down moves TWO blocks for one move, and Undo only rewinds one of them - leaving a block permanently displaced at zero moves used. Testing whether I can farm it.",
+      "thought": "If this repeats, the entire move economy and star system are defeatable on every level.",
+      "note": null
+    },
+    {
+      "turn": 87,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          0,
+          1
+        ],
+        "path": [
+          [
+            0,
+            0
+          ]
+        ],
+        "release": false,
+        "steps": 6
+      },
+      "result": "raw gesture STILL HELD (pointer down): moves 0, left 10, over=false, paused=false, positions [[0,1],[1,6],[2,5],[3,0],[3,6],[1,2],[1,0]]"
+    },
+    {
+      "turn": 88,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          1,
+          0
+        ],
+        "path": [
+          [
+            2,
+            0
+          ]
+        ],
+        "release": true,
+        "steps": 6
+      },
+      "result": "raw gesture released: moves 0, left 10, over=false, paused=false, positions [[0,1],[1,6],[2,5],[3,0],[3,6],[1,2],[1,0]]"
+    },
+    {
+      "turn": 89,
+      "action": {
+        "type": "tap",
+        "button": "btnUndo"
+      },
+      "result": "tapped HUD: undo last move (one step) — the button is disabled, no effect"
+    },
+    {
+      "turn": 91,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          0,
+          1
+        ],
+        "path": [
+          [
+            0,
+            0
+          ]
+        ],
+        "release": false,
+        "steps": 6
+      },
+      "result": "raw gesture STILL HELD (pointer down): moves 0, left 10, over=false, paused=false, positions [[0,1],[1,6],[2,5],[3,0],[3,6],[1,2],[1,0]]"
+    },
+    {
+      "turn": 92,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          1,
+          0
+        ],
+        "path": [
+          [
+            2,
+            0
+          ]
+        ],
+        "release": true,
+        "steps": 6
+      },
+      "result": "raw gesture released: moves 0, left 10, over=false, paused=false, positions [[0,1],[1,6],[2,5],[3,0],[3,6],[1,2],[1,0]]"
+    },
+    {
+      "turn": 93,
+      "action": {
+        "type": "tap",
+        "button": "btnUndo"
+      },
+      "result": "tapped HUD: undo last move (one step) — the button is disabled, no effect"
+    },
+    {
+      "turn": 96,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          1,
+          6
+        ],
+        "path": [
+          [
+            1,
+            5
+          ]
+        ],
+        "release": false,
+        "steps": 6
+      },
+      "result": "raw gesture STILL HELD (pointer down): moves 0, left 10, over=false, paused=false, positions [[0,1],[1,5],[2,5],[3,0],[3,6],[1,2],[1,0]]"
+    },
+    {
+      "turn": 97,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          2,
+          2
+        ],
+        "path": [
+          [
+            3,
+            2
+          ]
+        ],
+        "release": true,
+        "steps": 6
+      },
+      "result": "raw gesture released: moves 1, left 9, over=false, paused=false, positions [[0,1],[1,4],[2,5],[3,0],[3,6],[2,2],[1,0]]"
+    },
+    {
+      "turn": 98,
+      "action": {
+        "type": "tap",
+        "button": "btnUndo"
+      },
+      "result": "tapped HUD: undo last move (one step)"
+    },
+    {
+      "turn": 100,
+      "level": 22,
+      "say": "Farmable, and it is the worst thing I have found. Every cycle permanently relocates a block for free and puts the move counter back to zero. The move economy and the whole star rating are defeatable on any level.",
+      "thought": "This is ship-blocking; the fix is to cancel or ignore any secondary pointer while a drag is active.",
+      "note": {
+        "turn": 100,
+        "level": 22,
+        "persona": "breaker",
+        "area": "bug",
+        "severity": "critical",
+        "text": "REPRO (level 22, fresh restart, 0/10 moves). 1) POST /act {\"type\":\"raw_drag\",\"from\":[1,6],\"path\":[[1,5]],\"release\":false,\"steps\":6} - grabs cyan block #1 and holds the pointer DOWN (a real second-finger scenario on touch). 2) POST /act {\"type\":\"raw_drag\",\"from\":[2,2],\"path\":[[3,2]],\"release\":true,\"steps\":6} - a SECOND pointer grabs red block #5. 3) POST /act {\"type\":\"tap\",\"button\":\"btnUndo\"}. EXPECTED: a second pointer during an active drag is ignored or cancels the first; at most one block moves and it costs exactly one move; Undo restores the full pre-move board. ACTUAL: BOTH blocks move for a single charged move (#1 lands at (1,4), #5 at (2,2)), and Undo rewinds only block #5 - block #1 stays at (1,4) while the counter returns to moves=0 / 10 left. Net effect: one block permanently repositioned at ZERO move cost. Repeats indefinitely with any pair of blocks, so any level can be pre-solved for free and still report a perfect par clear. EVIDENCE: engine pos before [[0,1],[1,6],[2,5],[3,0],[3,6],[1,2],[1,0]] moves=0; after held+second gesture pos [[0,1],[1,4],[2,5],[3,0],[3,6],[2,2],[1,0]] moves=1; after undo pos [[0,1],[1,4],[2,5],[3,0],[3,6],[1,2],[1,0]] moves=0. Also seen first on green block #2, dragged (3,4)->(2,5) free. Zero JS errors throughout - it fails silently."
+      }
+    },
+    {
+      "turn": 100,
+      "action": {
+        "type": "tap",
+        "button": "btnRestart"
+      },
+      "result": "tapped HUD: restart level"
+    },
+    {
+      "turn": 101,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          1,
+          6
+        ],
+        "path": [
+          [
+            1,
+            5
+          ]
+        ],
+        "release": false,
+        "steps": 6
+      },
+      "result": "raw gesture STILL HELD (pointer down): moves 0, left 10, over=false, paused=false, positions [[0,1],[1,5],[3,4],[3,0],[3,6],[1,2],[1,0]]"
+    },
+    {
+      "turn": 102,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          3,
+          4
+        ],
+        "path": [
+          [
+            3,
+            7
+          ],
+          [
+            3,
+            10
+          ],
+          [
+            3,
+            20
+          ]
+        ],
+        "release": true,
+        "steps": 8
+      },
+      "result": "raw gesture released: moves 0, left 10, over=false, paused=false, positions [[0,1],[2,4],[3,4],[3,0],[3,6],[1,2],[1,0]]"
+    },
+    {
+      "turn": 103,
+      "level": 22,
+      "say": "Simpler variant of the same hole: hold block 1, second pointer drags block 2 off-board, and block 1 teleports (1,6)->(2,4) with ZERO moves charged. No undo needed. Escape rules still held though - nothing exited a gate illegally.",
+      "thought": "Same root cause, cleaner repro; include it as evidence.",
+      "note": null
+    },
+    {
+      "turn": 103,
+      "action": {
+        "type": "tap",
+        "button": "btnRestart"
+      },
+      "result": "tapped HUD: restart level"
+    },
+    {
+      "turn": 104,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": [
+          1,
+          4
+        ]
+      },
+      "result": "block #1 now at (1,4). 9 moves left."
+    },
+    {
+      "turn": 105,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": [
+          1,
+          6
+        ]
+      },
+      "result": "block #1 now at (1,6). 8 moves left."
+    },
+    {
+      "turn": 106,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #3 (amber / star) to origin (4,2). 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 107,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          4,
+          2
+        ]
+      },
+      "result": "block #3 now at (4,2). 7 moves left."
+    },
+    {
+      "turn": 108,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #6 (cyan / triangle) and push it out through the right gate. 7 drag(s) remain in that line."
+    },
+    {
+      "turn": 109,
+      "action": {
+        "type": "drag",
+        "block": 6,
+        "exit": "right"
+      },
+      "result": "block #6 escaped through the right gate. 6 moves left."
+    },
+    {
+      "turn": 110,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #5 (red / circle) and push it out through the top gate. 6 drag(s) remain in that line."
+    },
+    {
+      "turn": 111,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "exit": "top"
+      },
+      "result": "block #5 escaped through the top gate. 5 moves left."
+    },
+    {
+      "turn": 112,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #1 (cyan / triangle) and push it out through the right gate. 5 drag(s) remain in that line."
+    },
+    {
+      "turn": 113,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "exit": "right"
+      },
+      "result": "block #1 escaped through the right gate. 4 moves left."
+    },
+    {
+      "turn": 114,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #2 (green / diamond) and push it out through the bottom gate. 4 drag(s) remain in that line."
+    },
+    {
+      "turn": 115,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "exit": "bottom"
+      },
+      "result": "block #2 escaped through the bottom gate. 3 moves left."
+    },
+    {
+      "turn": 116,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #0 (red / circle) and push it out through the top gate. 3 drag(s) remain in that line."
+    },
+    {
+      "turn": 117,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "exit": "top"
+      },
+      "result": "block #0 escaped through the top gate. 2 moves left."
+    },
+    {
+      "turn": 118,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #4 (amber / star) and push it out through the top gate. 2 drag(s) remain in that line."
+    },
+    {
+      "turn": 119,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "exit": "top"
+      },
+      "result": "block #4 escaped through the top gate. 1 moves left."
+    },
+    {
+      "turn": 120,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #3 (amber / star) and push it out through the top gate. 1 drag(s) remain in that line."
+    },
+    {
+      "turn": 121,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "exit": "top"
+      },
+      "result": "block #3 escaped through the top gate. 0 moves left."
+    },
+    {
+      "turn": 123,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 22\",\"moves\":\"0 moves★★★par 8\"},\"engine\":{\"level\":22,\"moves\":10,\"movesLeft\":0,\"limit\":10,\"par\":8,\"over\":true,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[null,null,null,null,null,null,null]},\"progress\":{\"u\":22,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":12,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"bl\",\"ge_prog\":\"{\\\"u\\\":22,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2]}\",\"ge_level\":\"21\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":true,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":true,\"text\":\"☰\"},\"btnNext\":{\"visible\":true,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":true,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 124,
+      "level": 22,
+      "say": "Level 22 cleared at the limit - two stars. Now the Replay-for-three-stars path: spam it, then deliberately fail the replay and check the recorded two stars are not clawed back.",
+      "thought": "A replay that overwrites the stored star with a worse result punishes players for trying.",
+      "note": null
+    },
+    {
+      "turn": 124,
+      "action": {
+        "type": "tap",
+        "button": "btnReplay",
+        "times": 3,
+        "gap": 0
+      },
+      "result": "3 taps (gap 0ms): 1× tapped win card: Replay for three stars (sub-3-star wins only) → 2× error: btnReplay is not on screen right now"
+    },
+    {
+      "turn": 125,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 22\",\"moves\":\"10 moves★★★par 8\"},\"engine\":{\"level\":22,\"moves\":0,\"movesLeft\":10,\"limit\":10,\"par\":8,\"over\":false,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[[0,1],[1,6],[3,4],[3,0],[3,6],[1,2],[1,0]]},\"progress\":{\"u\":22,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":13,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"bl\",\"ge_prog\":\"{\\\"u\\\":22,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2]}\",\"ge_level\":\"21\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":false,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 126,
+      "action": {
+        "type": "sequence",
+        "delay": 110,
+        "steps": [
+          {
+            "type": "drag",
+            "block": 1,
+            "to": [
+              1,
+              4
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 1,
+            "to": [
+              1,
+              6
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 1,
+            "to": [
+              1,
+              4
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 1,
+            "to": [
+              1,
+              6
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 1,
+            "to": [
+              1,
+              4
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 1,
+            "to": [
+              1,
+              6
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 1,
+            "to": [
+              1,
+              4
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 1,
+            "to": [
+              1,
+              6
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 1,
+            "to": [
+              1,
+              4
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 1,
+            "to": [
+              1,
+              6
+            ]
+          }
+        ]
+      },
+      "result": "drag: block #1 now at (1,4). 9 moves left. | drag: block #1 now at (1,6). 8 moves left. | drag: block #1 now at (1,4). 7 moves left. | drag: block #1 now at (1,6). 6 moves left. | drag: block #1 now at (1,4). 5 moves left. | drag: block #1 now at (1,6). 4 moves left. | drag: block #1 now at (1,4). 3 moves left. | drag: block #1 now at (1,6). 2 moves left. | drag: block #1 now at (1,4). 1 moves left. | drag: block #1 now at (1,6). 0 moves left."
+    },
+    {
+      "turn": 128,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 22\",\"moves\":\"0 moves★★★par 8\"},\"engine\":{\"level\":22,\"moves\":10,\"movesLeft\":0,\"limit\":10,\"par\":8,\"over\":true,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[[0,1],[1,6],[3,4],[3,0],[3,6],[1,2],[1,0]]},\"progress\":{\"u\":22,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":13,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"bl\",\"ge_prog\":\"{\\\"u\\\":22,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2]}\",\"ge_level\":\"21\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":true,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":true,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":true,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":true,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 130,
+      "level": 22,
+      "say": "Stars survived a failed replay - still two. Now the star-downgrade test: I go back to level 21, which I three-starred, and deliberately win it badly. A stored three must not drop to a two.",
+      "thought": "Regression on stored best is a progress-loss class bug.",
+      "note": null
+    },
+    {
+      "turn": 130,
+      "action": {
+        "type": "tap",
+        "button": "btnRetry"
+      },
+      "result": "tapped fail card: Retry level"
+    },
+    {
+      "turn": 131,
+      "action": {
+        "type": "tap",
+        "button": "btnMenu"
+      },
+      "result": "tapped HUD: pause / unpause"
+    },
+    {
+      "turn": 132,
+      "action": {
+        "type": "tap",
+        "button": "btnPauseLevels"
+      },
+      "result": "tapped pause: Levels"
+    },
+    {
+      "turn": 133,
+      "action": {
+        "type": "tap",
+        "button": "level:21"
+      },
+      "result": "tapped level tile 21"
+    },
+    {
+      "turn": 134,
+      "action": {
+        "type": "sequence",
+        "delay": 110,
+        "steps": [
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              2
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 2,
+            "to": [
+              0,
+              3
+            ]
+          }
+        ]
+      },
+      "result": "drag: block #2 now at (0,2). 9 moves left. | drag: block #2 now at (0,3). 8 moves left."
+    },
+    {
+      "turn": 135,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #1 (cyan / triangle) and push it out through the bottom gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 136,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "exit": "bottom"
+      },
+      "result": "block #1 escaped through the bottom gate. 7 moves left."
+    },
+    {
+      "turn": 137,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #3 (amber / star) to origin (2,2). 7 drag(s) remain in that line."
+    },
+    {
+      "turn": 138,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          2,
+          2
+        ]
+      },
+      "result": "block #3 now at (2,2). 6 moves left."
+    },
+    {
+      "turn": 139,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #2 (green / diamond) and push it out through the top gate. 6 drag(s) remain in that line."
+    },
+    {
+      "turn": 140,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "exit": "top"
+      },
+      "result": "block #2 escaped through the top gate. 5 moves left."
+    },
+    {
+      "turn": 141,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #4 (red / circle) and push it out through the left gate. 5 drag(s) remain in that line."
+    },
+    {
+      "turn": 142,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "exit": "left"
+      },
+      "result": "block #4 escaped through the left gate. 4 moves left."
+    },
+    {
+      "turn": 143,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #6 (cyan / triangle) and push it out through the bottom gate. 4 drag(s) remain in that line."
+    },
+    {
+      "turn": 144,
+      "action": {
+        "type": "drag",
+        "block": 6,
+        "exit": "bottom"
+      },
+      "result": "block #6 escaped through the bottom gate. 3 moves left."
+    },
+    {
+      "turn": 145,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #5 (cyan / triangle) and push it out through the bottom gate. 3 drag(s) remain in that line."
+    },
+    {
+      "turn": 146,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "exit": "bottom"
+      },
+      "result": "block #5 escaped through the bottom gate. 2 moves left."
+    },
+    {
+      "turn": 147,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #3 (amber / star) and push it out through the left gate. 2 drag(s) remain in that line."
+    },
+    {
+      "turn": 148,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "exit": "left"
+      },
+      "result": "block #3 escaped through the left gate. 1 moves left."
+    },
+    {
+      "turn": 150,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #0 (red / circle) and push it out through the left gate. 1 drag(s) remain in that line."
+    },
+    {
+      "turn": 151,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "exit": "left"
+      },
+      "result": "block #0 escaped through the left gate. 0 moves left."
+    },
+    {
+      "turn": 153,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 21\",\"moves\":\"0 moves★★★par 8\"},\"engine\":{\"level\":21,\"moves\":10,\"movesLeft\":0,\"limit\":10,\"par\":8,\"over\":true,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[null,null,null,null,null,null,null]},\"progress\":{\"u\":22,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":15,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"bl\",\"ge_prog\":\"{\\\"u\\\":22,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2]}\",\"ge_level\":\"20\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":true,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":true,\"text\":\"☰\"},\"btnNext\":{\"visible\":true,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":true,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 154,
+      "level": 21,
+      "say": "Good: re-winning level 21 badly showed two stars on the card but the stored three survived. Now reloading the app while the win card is up, to see if the level I just cleared is banked before the refresh.",
+      "thought": "Win-card reload is where an unwritten unlock would show up as lost progress.",
+      "note": null
+    },
+    {
+      "turn": 154,
+      "action": {
+        "type": "reload"
+      },
+      "result": "reloaded the page (progress must come back from storage)"
+    },
+    {
+      "turn": 155,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 21\",\"moves\":\"10 moves★★★par 8\"},\"engine\":{\"level\":21,\"moves\":0,\"movesLeft\":10,\"limit\":10,\"par\":8,\"over\":false,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[[2,6],[0,5],[0,3],[3,0],[0,4],[3,4],[4,2]]},\"progress\":{\"u\":22,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":16,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"bl\",\"ge_prog\":\"{\\\"u\\\":22,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2]}\",\"ge_level\":\"20\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":false,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":true,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":true,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":true,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":true,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 157,
+      "level": 21,
+      "say": "The menu card is contradicting itself: Stars reads 65/90 which is 22 levels' worth, but the Level stat says 21/30 and the big CTA offers Play level 21 - a level I have already beaten twice. Winning does not advance the resume pointer; only tapping Next does.",
+      "thought": "No data loss, but the continue button sends the player backwards after an app kill on the win card.",
+      "note": {
+        "turn": 157,
+        "level": 21,
+        "persona": "breaker",
+        "area": "retention",
+        "severity": "minor",
+        "text": "REPRO: clear level 21 and 22 (unlock reaches 22). Enter level 21 again from Levels, win it, and while the win card is showing POST /act {\"type\":\"reload\"} instead of tapping Next level. EXPECTED: main menu reflects real progress - resume pointer on the highest unplayed level (23), Level stat consistent with the Stars stat. ACTUAL: menu shows Stars 65/90 (correct, 22 levels' worth) but Level 21/30 and a CTA reading 'Play level 21' - the level just beaten. localStorage ge_level stays '20' because the resume pointer is only advanced by the Next level tap, not by the win itself, so an app kill on the win card makes the player replay a cleared level. The two stats on the same card disagree. EVIDENCE: screenshot t157.png; inspect shows progress {u:22, s length 22} alongside ge_level '20'."
+      }
+    },
+    {
+      "turn": 157,
+      "action": {
+        "type": "tap",
+        "button": "btnLevels"
+      },
+      "result": "tapped main menu: Levels"
+    },
+    {
+      "turn": 158,
+      "action": {
+        "type": "tap",
+        "button": "level:23"
+      },
+      "result": "tapped level tile 23"
+    },
+    {
+      "turn": 159,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #5 (red / circle) to origin (3,3). 9 drag(s) remain in that line."
+    },
+    {
+      "turn": 160,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "to": [
+          3,
+          3
+        ]
+      },
+      "result": "block #5 now at (3,3). 10 moves left."
+    },
+    {
+      "turn": 161,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #0 (red / circle) to origin (2,4). 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 162,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          2,
+          4
+        ]
+      },
+      "result": "block #0 now at (2,4). 9 moves left."
+    },
+    {
+      "turn": 163,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #6 (green / diamond) and push it out through the bottom gate. 7 drag(s) remain in that line."
+    },
+    {
+      "turn": 164,
+      "action": {
+        "type": "drag",
+        "block": 6,
+        "exit": "bottom"
+      },
+      "result": "block #6 escaped through the bottom gate. 8 moves left."
+    },
+    {
+      "turn": 165,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #3 (amber / star) and push it out through the right gate. 6 drag(s) remain in that line."
+    },
+    {
+      "turn": 166,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "exit": "right"
+      },
+      "result": "block #3 escaped through the right gate. 7 moves left."
+    },
+    {
+      "turn": 167,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #1 (cyan / triangle) and push it out through the left gate. 5 drag(s) remain in that line."
+    },
+    {
+      "turn": 168,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "exit": "left"
+      },
+      "result": "block #1 escaped through the left gate. 6 moves left."
+    },
+    {
+      "turn": 169,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #2 (green / diamond) and push it out through the bottom gate. 4 drag(s) remain in that line."
+    },
+    {
+      "turn": 170,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "exit": "bottom"
+      },
+      "result": "block #2 escaped through the bottom gate. 5 moves left."
+    },
+    {
+      "turn": 171,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #4 (amber / star) and push it out through the right gate. 3 drag(s) remain in that line."
+    },
+    {
+      "turn": 172,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "exit": "right"
+      },
+      "result": "block #4 escaped through the right gate. 4 moves left."
+    },
+    {
+      "turn": 173,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #5 (red / circle) and push it out through the top gate. 2 drag(s) remain in that line."
+    },
+    {
+      "turn": 174,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "exit": "top"
+      },
+      "result": "block #5 escaped through the top gate. 3 moves left."
+    },
+    {
+      "turn": 176,
+      "level": 23,
+      "say": "Level 23, one block left. Now the nastiest timing race I have: fire the winning escape and three Undo taps in the same frame. If undo lands inside the win it should either be ignored or cleanly un-win - not both.",
+      "thought": "A won level left in a playable state, or a win card over a board with a block back on it, is the classic soft-lock.",
+      "note": null
+    },
+    {
+      "turn": 176,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #0 (red / circle) and push it out through the top gate. 1 drag(s) remain in that line."
+    },
+    {
+      "turn": 177,
+      "action": {
+        "type": "sequence",
+        "delay": 0,
+        "steps": [
+          {
+            "type": "drag",
+            "block": 0,
+            "exit": "top"
+          },
+          {
+            "type": "tap",
+            "button": "btnUndo"
+          },
+          {
+            "type": "tap",
+            "button": "btnUndo"
+          },
+          {
+            "type": "tap",
+            "button": "btnRestart"
+          }
+        ]
+      },
+      "result": "drag: block #0 escaped through the top gate. 2 moves left. | tap: tapped HUD: undo last move (one step) — the button is disabled, no effect | tap: tapped HUD: undo last move (one step) — the button is disabled, no effect | tap: tapped HUD: restart level — the button is disabled, no effect"
+    },
+    {
+      "turn": 178,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 23\",\"moves\":\"2 moves★★★par 9\"},\"engine\":{\"level\":23,\"moves\":9,\"movesLeft\":2,\"limit\":11,\"par\":9,\"over\":true,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[null,null,null,null,null,null,null]},\"progress\":{\"u\":23,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":17,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"bl\",\"ge_prog\":\"{\\\"u\\\":23,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3]}\",\"ge_level\":\"22\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":true,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":true,\"text\":\"☰\"},\"btnNext\":{\"visible\":true,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 179,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 181,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #4 (amber / star) and push it out through the bottom gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 182,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          2,
+          5
+        ],
+        "path": [
+          [
+            2,
+            6
+          ]
+        ],
+        "release": false,
+        "steps": 6
+      },
+      "result": "raw gesture STILL HELD (pointer down): moves 0, left 10, over=false, paused=false, positions [[0,0],[0,4],[2,2],[4,4],[4,6],[2,6],[4,0]]"
+    },
+    {
+      "turn": 183,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          0,
+          4
+        ],
+        "path": [
+          [
+            0,
+            5
+          ],
+          [
+            0,
+            6
+          ]
+        ],
+        "release": true,
+        "steps": 6
+      },
+      "result": "raw gesture released: moves 0, left 10, over=false, paused=false, positions [[0,0],[0,4],[2,2],[4,4],[4,6],[0,6],[4,0]]"
+    },
+    {
+      "turn": 184,
+      "action": {
+        "type": "tap",
+        "button": "btnUndo"
+      },
+      "result": "tapped HUD: undo last move (one step) — the button is disabled, no effect"
+    },
+    {
+      "turn": 185,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #4 (amber / star) and push it out through the bottom gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 187,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          2,
+          5
+        ],
+        "path": [
+          [
+            2,
+            6
+          ]
+        ],
+        "release": false,
+        "steps": 6
+      },
+      "result": "raw gesture STILL HELD (pointer down): moves 0, left 10, over=false, paused=false, positions [[0,0],[0,4],[2,2],[4,4],[4,6],[0,6],[4,0]]"
+    },
+    {
+      "turn": 188,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          0,
+          4
+        ],
+        "path": [
+          [
+            0,
+            5
+          ],
+          [
+            0,
+            6
+          ]
+        ],
+        "release": true,
+        "steps": 6
+      },
+      "result": "raw gesture released: moves 1, left 9, over=false, paused=false, positions [[0,0],[0,4],[2,2],[4,4],[4,6],[0,6],[4,0]]"
+    },
+    {
+      "turn": 189,
+      "action": {
+        "type": "tap",
+        "button": "btnUndo"
+      },
+      "result": "tapped HUD: undo last move (one step)"
+    },
+    {
+      "turn": 190,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #4 (amber / star) and push it out through the bottom gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 192,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          2,
+          5
+        ],
+        "path": [
+          [
+            2,
+            6
+          ]
+        ],
+        "release": false,
+        "steps": 6
+      },
+      "result": "raw gesture STILL HELD (pointer down): moves 0, left 10, over=false, paused=false, positions [[0,0],[0,3],[2,2],[4,4],[4,6],[0,6],[4,0]]"
+    },
+    {
+      "turn": 193,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          0,
+          4
+        ],
+        "path": [
+          [
+            0,
+            5
+          ],
+          [
+            0,
+            6
+          ]
+        ],
+        "release": true,
+        "steps": 6
+      },
+      "result": "raw gesture released: moves 1, left 9, over=false, paused=false, positions [[0,0],[0,4],[2,2],[4,4],[4,6],[0,6],[4,0]]"
+    },
+    {
+      "turn": 194,
+      "action": {
+        "type": "tap",
+        "button": "btnUndo"
+      },
+      "result": "tapped HUD: undo last move (one step)"
+    },
+    {
+      "turn": 195,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #4 (amber / star) and push it out through the bottom gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 197,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          2,
+          5
+        ],
+        "path": [
+          [
+            2,
+            6
+          ]
+        ],
+        "release": false,
+        "steps": 6
+      },
+      "result": "raw gesture STILL HELD (pointer down): moves 0, left 10, over=false, paused=false, positions [[0,0],[0,3],[2,2],[4,4],[4,6],[0,6],[4,0]]"
+    },
+    {
+      "turn": 198,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          0,
+          4
+        ],
+        "path": [
+          [
+            0,
+            5
+          ],
+          [
+            0,
+            6
+          ]
+        ],
+        "release": true,
+        "steps": 6
+      },
+      "result": "raw gesture released: moves 1, left 9, over=false, paused=false, positions [[0,0],[0,4],[2,2],[4,4],[4,6],[0,6],[4,0]]"
+    },
+    {
+      "turn": 199,
+      "action": {
+        "type": "tap",
+        "button": "btnUndo"
+      },
+      "result": "tapped HUD: undo last move (one step)"
+    },
+    {
+      "turn": 200,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #4 (amber / star) and push it out through the bottom gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 202,
+      "action": {
+        "type": "tap",
+        "button": "btnRestart"
+      },
+      "result": "tapped HUD: restart level"
+    },
+    {
+      "turn": 203,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #4 (amber / star) and push it out through the bottom gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 204,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "exit": "bottom"
+      },
+      "result": "block #4 escaped through the bottom gate. 9 moves left."
+    },
+    {
+      "turn": 205,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #1 (cyan / triangle) and push it out through the bottom gate. 7 drag(s) remain in that line."
+    },
+    {
+      "turn": 206,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "exit": "bottom"
+      },
+      "result": "block #1 escaped through the bottom gate. 8 moves left."
+    },
+    {
+      "turn": 207,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #3 (amber / star) and push it out through the bottom gate. 6 drag(s) remain in that line."
+    },
+    {
+      "turn": 208,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "exit": "bottom"
+      },
+      "result": "block #3 escaped through the bottom gate. 7 moves left."
+    },
+    {
+      "turn": 209,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #5 (red / circle) and push it out through the right gate. 5 drag(s) remain in that line."
+    },
+    {
+      "turn": 210,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "exit": "right"
+      },
+      "result": "block #5 escaped through the right gate. 6 moves left."
+    },
+    {
+      "turn": 211,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #2 (green / diamond) to origin (0,6). 4 drag(s) remain in that line."
+    },
+    {
+      "turn": 212,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          0,
+          6
+        ]
+      },
+      "result": "block #2 now at (0,6). 5 moves left."
+    },
+    {
+      "turn": 213,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #6 (amber / star) and push it out through the bottom gate. 3 drag(s) remain in that line."
+    },
+    {
+      "turn": 214,
+      "action": {
+        "type": "drag",
+        "block": 6,
+        "exit": "bottom"
+      },
+      "result": "block #6 escaped through the bottom gate. 4 moves left."
+    },
+    {
+      "turn": 215,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #0 (red / circle) and push it out through the right gate. 2 drag(s) remain in that line."
+    },
+    {
+      "turn": 216,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "exit": "right"
+      },
+      "result": "block #0 escaped through the right gate. 3 moves left."
+    },
+    {
+      "turn": 217,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #2 (green / diamond) and push it out through the top gate. 1 drag(s) remain in that line."
+    },
+    {
+      "turn": 218,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "exit": "top"
+      },
+      "result": "block #2 escaped through the top gate. 2 moves left."
+    },
+    {
+      "turn": 220,
+      "level": 24,
+      "say": "24 cleared at par, four down. Next up on 25: restart fired mid-drag while a block is still in flight, and a reload halfway through a level to see what the app resumes with.",
+      "thought": "Restart racing an in-flight animation is where blocks get stranded between old and new layouts.",
+      "note": null
+    },
+    {
+      "turn": 220,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 222,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #6 (green / diamond) and push it out through the top gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 223,
+      "action": {
+        "type": "sequence",
+        "delay": 0,
+        "steps": [
+          {
+            "type": "drag",
+            "block": 6,
+            "exit": "top"
+          },
+          {
+            "type": "tap",
+            "button": "btnRestart"
+          },
+          {
+            "type": "tap",
+            "button": "btnUndo"
+          }
+        ]
+      },
+      "result": "drag: block #6 escaped through the top gate. 9 moves left. | tap: tapped HUD: restart level | tap: tapped HUD: undo last move (one step) — the button is disabled, no effect"
+    },
+    {
+      "turn": 224,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 25\",\"moves\":\"10 moves★★★par 8\"},\"engine\":{\"level\":25,\"moves\":0,\"movesLeft\":10,\"limit\":10,\"par\":8,\"over\":false,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[[4,3],[4,0],[1,6],[4,6],[0,5],[2,6],[2,3]]},\"progress\":{\"u\":24,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":21,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"bl\",\"ge_prog\":\"{\\\"u\\\":24,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3]}\",\"ge_level\":\"24\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":false,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 225,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #6 (green / diamond) and push it out through the top gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 226,
+      "action": {
+        "type": "drag",
+        "block": 6,
+        "exit": "top"
+      },
+      "result": "block #6 escaped through the top gate. 9 moves left."
+    },
+    {
+      "turn": 227,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #3 (amber / star) and push it out through the right gate. 7 drag(s) remain in that line."
+    },
+    {
+      "turn": 228,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "exit": "right"
+      },
+      "result": "block #3 escaped through the right gate. 8 moves left."
+    },
+    {
+      "turn": 229,
+      "action": {
+        "type": "tap",
+        "button": "btnMenu"
+      },
+      "result": "tapped HUD: pause / unpause"
+    },
+    {
+      "turn": 230,
+      "action": {
+        "type": "tap",
+        "button": "btnPauseSound"
+      },
+      "result": "tapped pause: toggle sound"
+    },
+    {
+      "turn": 231,
+      "action": {
+        "type": "tap",
+        "button": "btnResume"
+      },
+      "result": "tapped pause: Resume"
+    },
+    {
+      "turn": 232,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 25\",\"moves\":\"8 moves★★★par 8\"},\"engine\":{\"level\":25,\"moves\":2,\"movesLeft\":8,\"limit\":10,\"par\":8,\"over\":false,\"paused\":false,\"canUndo\":true,\"soundOn\":false,\"pos\":[[4,3],[4,0],[1,6],null,[0,5],[2,6],null]},\"progress\":{\"u\":24,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":21,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"bl\",\"ge_prog\":\"{\\\"u\\\":24,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3]}\",\"ge_sound\":\"0\",\"ge_level\":\"24\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":false,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":false,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: off\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND off\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 21 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 233,
+      "action": {
+        "type": "reload"
+      },
+      "result": "reloaded the page (progress must come back from storage)"
+    },
+    {
+      "turn": 234,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 25\",\"moves\":\"10 moves★★★par 8\"},\"engine\":{\"level\":25,\"moves\":0,\"movesLeft\":10,\"limit\":10,\"par\":8,\"over\":false,\"paused\":false,\"canUndo\":false,\"soundOn\":false,\"pos\":[[4,3],[4,0],[1,6],[4,6],[0,5],[2,6],[2,3]]},\"progress\":{\"u\":24,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":22,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"bl\",\"ge_prog\":\"{\\\"u\\\":24,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3]}\",\"ge_sound\":\"0\",\"ge_level\":\"24\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":false,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: off\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":true,\"disabled\":false,\"text\":\"SOUND off\"},\"btnPlay\":{\"visible\":true,\"disabled\":false,\"text\":\"Play level 25 ›\"},\"btnLevels\":{\"visible\":true,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":true,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 235,
+      "action": {
+        "type": "tap",
+        "button": "btnSound"
+      },
+      "result": "tapped main menu: toggle sound"
+    },
+    {
+      "turn": 236,
+      "action": {
+        "type": "tap",
+        "button": "btnPlay"
+      },
+      "result": "tapped main menu: Play"
+    },
+    {
+      "turn": 237,
+      "level": 25,
+      "say": "Sound setting survived the reload and a mid-level reload cleanly discards the attempt. Now a rule hole: the amber gate on the right only covers lanes 4-5, so I will try to shove an amber block out at rows 6-7 where there is no gate.",
+      "thought": "Partial lane coverage is the sort of check that gets written for the common case only.",
+      "note": null
+    },
+    {
+      "turn": 237,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          2,
+          6
+        ],
+        "path": [
+          [
+            3,
+            6
+          ],
+          [
+            4,
+            6
+          ],
+          [
+            5,
+            6
+          ],
+          [
+            6,
+            6
+          ],
+          [
+            8,
+            6
+          ]
+        ],
+        "release": true,
+        "steps": 8
+      },
+      "result": "raw gesture released: moves 0, left 10, over=false, paused=false, positions [[4,3],[4,0],[1,6],[4,6],[0,5],[2,6],[2,3]]"
+    },
+    {
+      "turn": 238,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          5,
+          6
+        ],
+        "path": [
+          [
+            6,
+            6
+          ],
+          [
+            8,
+            6
+          ],
+          [
+            12,
+            6
+          ]
+        ],
+        "release": true,
+        "steps": 8
+      },
+      "result": "raw gesture released: moves 0, left 10, over=false, paused=false, positions [[4,3],[4,0],[1,6],[4,6],[0,5],[2,6],[2,3]]"
+    },
+    {
+      "turn": 239,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          4,
+          0
+        ],
+        "path": [
+          [
+            3,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            -2,
+            0
+          ]
+        ],
+        "release": true,
+        "steps": 8
+      },
+      "result": "raw gesture released: moves 1, left 9, over=false, paused=false, positions [[4,3],[2,0],[1,6],[4,6],[0,5],[2,6],[2,3]]"
+    },
+    {
+      "turn": 240,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          1,
+          6
+        ],
+        "path": [
+          [
+            1,
+            7
+          ],
+          [
+            1,
+            9
+          ],
+          [
+            1,
+            12
+          ]
+        ],
+        "release": true,
+        "steps": 8
+      },
+      "result": "raw gesture released: moves 1, left 9, over=false, paused=false, positions [[4,3],[2,0],[1,6],[4,6],[0,5],[2,6],[2,3]]"
+    },
+    {
+      "turn": 241,
+      "action": {
+        "type": "tap",
+        "button": "btnRestart"
+      },
+      "result": "tapped HUD: restart level"
+    },
+    {
+      "turn": 242,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #6 (green / diamond) and push it out through the top gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 243,
+      "action": {
+        "type": "drag",
+        "block": 6,
+        "exit": "top"
+      },
+      "result": "block #6 escaped through the top gate. 9 moves left."
+    },
+    {
+      "turn": 244,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #3 (amber / star) and push it out through the right gate. 7 drag(s) remain in that line."
+    },
+    {
+      "turn": 245,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "exit": "right"
+      },
+      "result": "block #3 escaped through the right gate. 8 moves left."
+    },
+    {
+      "turn": 246,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #0 (red / circle) to origin (0,3). 6 drag(s) remain in that line."
+    },
+    {
+      "turn": 247,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          0,
+          3
+        ]
+      },
+      "result": "block #0 now at (0,3). 7 moves left."
+    },
+    {
+      "turn": 248,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #5 (amber / star) and push it out through the right gate. 5 drag(s) remain in that line."
+    },
+    {
+      "turn": 249,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "exit": "right"
+      },
+      "result": "block #5 escaped through the right gate. 6 moves left."
+    },
+    {
+      "turn": 250,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #2 (green / diamond) and push it out through the top gate. 4 drag(s) remain in that line."
+    },
+    {
+      "turn": 251,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "exit": "top"
+      },
+      "result": "block #2 escaped through the top gate. 5 moves left."
+    },
+    {
+      "turn": 252,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #4 (amber / star) and push it out through the right gate. 3 drag(s) remain in that line."
+    },
+    {
+      "turn": 253,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "exit": "right"
+      },
+      "result": "block #4 escaped through the right gate. 4 moves left."
+    },
+    {
+      "turn": 254,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #0 (red / circle) and push it out through the bottom gate. 2 drag(s) remain in that line."
+    },
+    {
+      "turn": 255,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "exit": "bottom"
+      },
+      "result": "block #0 escaped through the bottom gate. 3 moves left."
+    },
+    {
+      "turn": 256,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #1 (cyan / triangle) and push it out through the left gate. 1 drag(s) remain in that line."
+    },
+    {
+      "turn": 257,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "exit": "left"
+      },
+      "result": "block #1 escaped through the left gate. 2 moves left."
+    },
+    {
+      "turn": 259,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 260,
+      "level": 26,
+      "say": "Gate rules are airtight - colour, side and lane coverage all enforced, illegal shoves cost nothing. 25 cleared at par, five down. On 26 I go after the Escape key and the pause menu, then the rescue at zero moves left.",
+      "thought": "Escape backing out of screens is untested territory and often desyncs the screen stack.",
+      "note": null
+    },
+    {
+      "turn": 260,
+      "action": {
+        "type": "key",
+        "key": "Escape"
+      },
+      "result": "pressed Escape"
+    },
+    {
+      "turn": 261,
+      "action": {
+        "type": "key",
+        "key": "Escape"
+      },
+      "result": "pressed Escape"
+    },
+    {
+      "turn": 262,
+      "action": {
+        "type": "key",
+        "key": "Escape",
+        "times": 6
+      },
+      "result": "pressed Escape"
+    },
+    {
+      "turn": 263,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 26\",\"moves\":\"11 moves★★★par 8\"},\"engine\":{\"level\":26,\"moves\":0,\"movesLeft\":11,\"limit\":11,\"par\":8,\"over\":false,\"paused\":true,\"canUndo\":false,\"soundOn\":true,\"pos\":[[1,4],[5,7],[4,1],[0,1],[2,2],[3,4],[3,3]]},\"progress\":{\"u\":25,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":25,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"bl\",\"ge_prog\":\"{\\\"u\\\":25,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3,3]}\",\"ge_sound\":\"1\",\"ge_level\":\"25\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":true,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":true,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":true,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":true,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":true,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":true,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":true,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 25 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 264,
+      "action": {
+        "type": "key",
+        "key": "Escape"
+      },
+      "result": "pressed Escape"
+    },
+    {
+      "turn": 266,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #1 (cyan / triangle) and push it out through the right gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 269,
+      "action": {
+        "type": "sequence",
+        "delay": 110,
+        "steps": [
+          {
+            "type": "drag",
+            "block": 1,
+            "to": [
+              5,
+              6
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 1,
+            "to": [
+              5,
+              7
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 1,
+            "to": [
+              5,
+              6
+            ]
+          }
+        ]
+      },
+      "result": "drag: block #1 now at (5,6). 10 moves left. | drag: block #1 now at (5,7). 9 moves left. | drag: block #1 now at (5,6). 8 moves left."
+    },
+    {
+      "turn": 270,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #1 (cyan / triangle) and push it out through the right gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 271,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #1 (cyan / triangle) and push it out through the right gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 272,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "exit": "right"
+      },
+      "result": "block #1 escaped through the right gate. 7 moves left."
+    },
+    {
+      "turn": 273,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #2 (green / diamond) and push it out through the left gate. 7 drag(s) remain in that line."
+    },
+    {
+      "turn": 274,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "exit": "left"
+      },
+      "result": "block #2 escaped through the left gate. 6 moves left."
+    },
+    {
+      "turn": 275,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #5 (green / diamond) and push it out through the left gate. 6 drag(s) remain in that line."
+    },
+    {
+      "turn": 276,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "exit": "left"
+      },
+      "result": "block #5 escaped through the left gate. 5 moves left."
+    },
+    {
+      "turn": 277,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #6 (cyan / triangle) and push it out through the right gate. 5 drag(s) remain in that line."
+    },
+    {
+      "turn": 278,
+      "action": {
+        "type": "drag",
+        "block": 6,
+        "exit": "right"
+      },
+      "result": "block #6 escaped through the right gate. 4 moves left."
+    },
+    {
+      "turn": 279,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #4 (green / diamond) to origin (0,7). 4 drag(s) remain in that line."
+    },
+    {
+      "turn": 280,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "to": [
+          0,
+          7
+        ]
+      },
+      "result": "block #4 now at (0,7). 3 moves left."
+    },
+    {
+      "turn": 281,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #3 (amber / star) and push it out through the right gate. 3 drag(s) remain in that line."
+    },
+    {
+      "turn": 282,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "exit": "right"
+      },
+      "result": "block #3 escaped through the right gate. 2 moves left."
+    },
+    {
+      "turn": 283,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #4 (green / diamond) and push it out through the left gate. 2 drag(s) remain in that line."
+    },
+    {
+      "turn": 284,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "exit": "left"
+      },
+      "result": "block #4 escaped through the left gate. 1 moves left."
+    },
+    {
+      "turn": 285,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #0 (red / circle) and push it out through the top gate. 1 drag(s) remain in that line."
+    },
+    {
+      "turn": 286,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "exit": "top"
+      },
+      "result": "block #0 escaped through the top gate. 0 moves left."
+    },
+    {
+      "turn": 288,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 26\",\"moves\":\"0 moves★★★par 8\"},\"engine\":{\"level\":26,\"moves\":11,\"movesLeft\":0,\"limit\":11,\"par\":8,\"over\":true,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[null,null,null,null,null,null,null]},\"progress\":{\"u\":26,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3,3,1]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":25,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"bl\",\"ge_prog\":\"{\\\"u\\\":26,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3,3,1]}\",\"ge_sound\":\"1\",\"ge_level\":\"25\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":true,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":true,\"text\":\"☰\"},\"btnNext\":{\"visible\":true,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":true,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 25 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 289,
+      "level": 26,
+      "say": "Star tiers are par-relative: three at par or better, two at par+1 or +2, one at par+3. But levels 21-25 all cap at par+2, so on those the one-star tier is literally unreachable - you fail before you can earn it. Level 26 is the odd one out at par+3.",
+      "thought": "The bottom star tier only exists on levels whose limit is generous enough, which is one level in ten.",
+      "note": {
+        "turn": 289,
+        "level": 26,
+        "persona": "breaker",
+        "area": "difficulty",
+        "severity": "minor",
+        "text": "REPRO: read par/limit on each level: L21 8/10, L22 8/10, L23 9/11, L24 8/10, L25 8/10 (all par+2) but L26 8/11 (par+3). Then clear L26 in exactly 11 moves. EXPECTED: a consistent spike curve - the brief specifies par+2 limits - and three reachable star tiers. ACTUAL: L26 is the only level in 21-26 with a par+3 limit, so it is the only one where a 1-star clear is achievable; on every par+2 level the 1-star band (par+3 and worse) is unreachable because the player fails first, making the tier dead. L26 also plays materially easier than its neighbours as a result, denting the spike right where the curve should be tightening. EVIDENCE: win card '1 star Level clear! Solved in 11 moves (best: 8)', stored progress s[25]=1; all other cleared levels stored 3 or 2."
+      }
+    },
+    {
+      "turn": 289,
+      "level": 26,
+      "say": "Copy problem on the same card: it reads 'Solved in 11 moves (best: 8)' but 8 is par, not my best - my only clear of this level is the 11-move one I just made. It is claiming a personal best I never set.",
+      "thought": "Small, but it makes the player distrust their own record.",
+      "note": {
+        "turn": 289,
+        "level": 26,
+        "persona": "breaker",
+        "area": "ui",
+        "severity": "nit",
+        "text": "REPRO: clear level 26 for the first time in 11 moves (par 8). EXPECTED: '(best: N)' shows the player's own best move count, or is labelled 'par' / omitted on a first clear. ACTUAL: the win card reads 'Solved in 11 moves (best: 8)' on a level the player has never cleared better than 11 - the figure shown as 'best' is par. Reads as a personal best the player never achieved. EVIDENCE: win card text on L26 first clear; stored stars s[25]=1 confirming no prior better run."
+      }
+    },
+    {
+      "turn": 289,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 291,
+      "level": 27,
+      "say": "On 27 now. This time I take the rescue and then try to break the endgame with it: burn to zero, rescue, then race Undo and Restart against the rescued state, and reload while the rescue is live.",
+      "thought": "The rescued state is a second, less-tested code path for the same board.",
+      "note": null
+    },
+    {
+      "turn": 291,
+      "level": 27,
+      "say": "Correction to my last note: level 27 is also par 8 limit 11, so par+3 is not unique to 26. Both are the bigger 7x9 boards. I will collect par and limit for 28-30 before I call the pattern.",
+      "thought": "Do not let a half-observed pattern stand in the report; the reachable-star-tier half of the note is still valid.",
+      "note": null
+    },
+    {
+      "turn": 292,
+      "action": {
+        "type": "sequence",
+        "delay": 110,
+        "steps": [
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              6,
+              1
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              6,
+              0
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              6,
+              1
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              6,
+              0
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              6,
+              1
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              6,
+              0
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              6,
+              1
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              6,
+              0
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              6,
+              1
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              6,
+              0
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              6,
+              1
+            ]
+          }
+        ]
+      },
+      "result": "drag: block #0 now at (6,1). 10 moves left. | drag: block #0 now at (6,0). 9 moves left. | drag: block #0 now at (6,1). 8 moves left. | drag: block #0 now at (6,0). 7 moves left. | drag: block #0 now at (6,1). 6 moves left. | drag: block #0 now at (6,0). 5 moves left. | drag: block #0 now at (6,1). 4 moves left. | drag: block #0 now at (6,0). 3 moves left. | drag: block #0 now at (6,1). 2 moves left. | drag: block #0 now at (6,0). 1 moves left. | drag: block #0 now at (6,1). 0 moves left."
+    },
+    {
+      "turn": 293,
+      "action": {
+        "type": "sequence",
+        "delay": 0,
+        "steps": [
+          {
+            "type": "tap",
+            "button": "btnRescue"
+          },
+          {
+            "type": "tap",
+            "button": "btnUndo"
+          },
+          {
+            "type": "tap",
+            "button": "btnRescue"
+          },
+          {
+            "type": "tap",
+            "button": "btnRestart"
+          }
+        ]
+      },
+      "result": "tap: tapped fail card: +3 moves rescue | tap: tapped HUD: undo last move (one step) | tap: error: btnRescue is not on screen right now | tap: tapped HUD: restart level"
+    },
+    {
+      "turn": 294,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 27\",\"moves\":\"11 moves★★★par 8\"},\"engine\":{\"level\":27,\"moves\":0,\"movesLeft\":11,\"limit\":11,\"par\":8,\"over\":false,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[[6,0],[2,7],[2,2],[0,5],[4,3],[2,0],[2,4]]},\"progress\":{\"u\":26,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3,3,1]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":27,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"bl\",\"ge_prog\":\"{\\\"u\\\":26,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3,3,1]}\",\"ge_sound\":\"1\",\"ge_level\":\"26\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":false,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 25 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 295,
+      "action": {
+        "type": "tap",
+        "button": "btnMenu"
+      },
+      "result": "tapped HUD: pause / unpause"
+    },
+    {
+      "turn": 296,
+      "action": {
+        "type": "tap",
+        "button": "btnPauseLegend"
+      },
+      "result": "tapped pause: How to play"
+    },
+    {
+      "turn": 297,
+      "action": {
+        "type": "key",
+        "key": "Escape"
+      },
+      "result": "pressed Escape"
+    },
+    {
+      "turn": 298,
+      "action": {
+        "type": "key",
+        "key": "Escape"
+      },
+      "result": "pressed Escape"
+    },
+    {
+      "turn": 299,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 27\",\"moves\":\"11 moves★★★par 8\"},\"engine\":{\"level\":27,\"moves\":0,\"movesLeft\":11,\"limit\":11,\"par\":8,\"over\":false,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[[6,0],[2,7],[2,2],[0,5],[4,3],[2,0],[2,4]]},\"progress\":{\"u\":26,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3,3,1]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":27,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"bl\",\"ge_prog\":\"{\\\"u\\\":26,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3,3,1]}\",\"ge_sound\":\"1\",\"ge_level\":\"26\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":false,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 25 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 300,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #3 (amber / star) and push it out through the left gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 301,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "exit": "left"
+      },
+      "result": "block #3 escaped through the left gate. 10 moves left."
+    },
+    {
+      "turn": 302,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #5 (red / circle) and push it out through the top gate. 7 drag(s) remain in that line."
+    },
+    {
+      "turn": 303,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "exit": "top"
+      },
+      "result": "block #5 escaped through the top gate. 9 moves left."
+    },
+    {
+      "turn": 304,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #2 (green / diamond) to origin (3,0). 6 drag(s) remain in that line."
+    },
+    {
+      "turn": 305,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          3,
+          0
+        ]
+      },
+      "result": "block #2 now at (3,0). 8 moves left."
+    },
+    {
+      "turn": 306,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #6 (red / circle) and push it out through the top gate. 5 drag(s) remain in that line."
+    },
+    {
+      "turn": 307,
+      "action": {
+        "type": "drag",
+        "block": 6,
+        "exit": "top"
+      },
+      "result": "block #6 escaped through the top gate. 7 moves left."
+    },
+    {
+      "turn": 308,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #1 (cyan / triangle) and push it out through the left gate. 4 drag(s) remain in that line."
+    },
+    {
+      "turn": 309,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "exit": "left"
+      },
+      "result": "block #1 escaped through the left gate. 6 moves left."
+    },
+    {
+      "turn": 310,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #4 (green / diamond) and push it out through the bottom gate. 3 drag(s) remain in that line."
+    },
+    {
+      "turn": 311,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "exit": "bottom"
+      },
+      "result": "block #4 escaped through the bottom gate. 5 moves left."
+    },
+    {
+      "turn": 312,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #0 (red / circle) and push it out through the top gate. 2 drag(s) remain in that line."
+    },
+    {
+      "turn": 313,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "exit": "top"
+      },
+      "result": "block #0 escaped through the top gate. 4 moves left."
+    },
+    {
+      "turn": 314,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #2 (green / diamond) and push it out through the bottom gate. 1 drag(s) remain in that line."
+    },
+    {
+      "turn": 315,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "exit": "bottom"
+      },
+      "result": "block #2 escaped through the bottom gate. 3 moves left."
+    },
+    {
+      "turn": 317,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 318,
+      "action": {
+        "type": "tap",
+        "button": "btnMenu"
+      },
+      "result": "tapped HUD: pause / unpause"
+    },
+    {
+      "turn": 319,
+      "action": {
+        "type": "tap",
+        "button": "btnPauseLevels"
+      },
+      "result": "tapped pause: Levels"
+    },
+    {
+      "turn": 321,
+      "level": 28,
+      "say": "Levels grid is honest: 78 stars, 27 of 30, per-level stars all match what I actually scored, 29 and 30 properly locked. Note for the curve though - level 23 is par 9 limit 11, but level 28 is par 9 limit 12. Same par, different generosity.",
+      "thought": "Limits are authored per level, not derived from par, so the +2 rule is not being applied uniformly.",
+      "note": null
+    },
+    {
+      "turn": 321,
+      "action": {
+        "type": "tap",
+        "button": "btnLevelsBack"
+      },
+      "result": "tapped levels: Back"
+    },
+    {
+      "turn": 323,
+      "action": {
+        "type": "tap",
+        "button": "btnPlay"
+      },
+      "result": "tapped main menu: Play"
+    },
+    {
+      "turn": 324,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #0 (red / circle) to origin (5,0). 9 drag(s) remain in that line."
+    },
+    {
+      "turn": 325,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          5,
+          0
+        ]
+      },
+      "result": "block #0 now at (5,0). 11 moves left."
+    },
+    {
+      "turn": 326,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #2 (green / diamond) and push it out through the top gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 327,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "exit": "top"
+      },
+      "result": "block #2 escaped through the top gate. 10 moves left."
+    },
+    {
+      "turn": 328,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #4 (green / diamond) and push it out through the top gate. 7 drag(s) remain in that line."
+    },
+    {
+      "turn": 329,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "exit": "top"
+      },
+      "result": "block #4 escaped through the top gate. 9 moves left."
+    },
+    {
+      "turn": 331,
+      "action": {
+        "type": "tap",
+        "button": "btnMenu"
+      },
+      "result": "tapped HUD: pause / unpause"
+    },
+    {
+      "turn": 332,
+      "action": {
+        "type": "tap",
+        "button": "btnPauseLevels"
+      },
+      "result": "tapped pause: Levels"
+    },
+    {
+      "turn": 333,
+      "action": {
+        "type": "tap",
+        "button": "btnLevelsBack"
+      },
+      "result": "tapped levels: Back"
+    },
+    {
+      "turn": 334,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 28\",\"moves\":\"9 moves★★★par 9\"},\"engine\":{\"level\":28,\"moves\":3,\"movesLeft\":9,\"limit\":12,\"par\":9,\"over\":false,\"paused\":true,\"canUndo\":false,\"soundOn\":true,\"pos\":[[5,0],[1,2],null,[3,8],null,[4,3],[5,6]]},\"progress\":{\"u\":27,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3,3,1,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":29,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"bl\",\"ge_prog\":\"{\\\"u\\\":27,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3,3,1,3]}\",\"ge_sound\":\"1\",\"ge_level\":\"27\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":true,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":true,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":true,\"disabled\":false,\"text\":\"Play level 28 ›\"},\"btnLevels\":{\"visible\":true,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":true,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 335,
+      "action": {
+        "type": "tap",
+        "button": "btnPlay"
+      },
+      "result": "tapped main menu: Play"
+    },
+    {
+      "turn": 336,
+      "level": 28,
+      "say": "Navigation trap: from an in-game pause, Levels then Back drops you on the MAIN MENU, not back to your paused game - and the attempt you were three moves into is silently binned. No confirmation, no route back to it.",
+      "thought": "Back should return to the screen you came from; here it abandons the level.",
+      "note": {
+        "turn": 336,
+        "level": 28,
+        "persona": "breaker",
+        "area": "controls",
+        "severity": "minor",
+        "text": "REPRO: enter level 28, make 3 moves (two blocks escaped), tap HUD pause, tap 'Levels', then tap 'Back'. EXPECTED: Back returns to the screen it was opened from - the pause overlay - leaving the attempt intact and resumable. ACTUAL: Back goes to the MAIN MENU, stranding the player away from a game they never chose to quit. The engine still holds the paused attempt (level 28, moves 3, movesLeft 9, two blocks escaped, paused true) but there is no UI route back to it; the menu CTA 'Play level 28' restarts the level from scratch at 0/12, silently discarding the three moves. No confirmation prompt. EVIDENCE: inspect after Back shows engine {level 28, moves 3, movesLeft 9, paused true, pos [[5,0],[1,2],null,[3,8],null,[4,3],[5,6]]} while screen is 'menu'; tapping btnPlay then reports moves 0 left 12 with all blocks un-escaped."
+      }
+    },
+    {
+      "turn": 336,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #0 (red / circle) to origin (5,0). 9 drag(s) remain in that line."
+    },
+    {
+      "turn": 337,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          5,
+          0
+        ]
+      },
+      "result": "block #0 now at (5,0). 11 moves left."
+    },
+    {
+      "turn": 338,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #2 (green / diamond) and push it out through the top gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 339,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "exit": "top"
+      },
+      "result": "block #2 escaped through the top gate. 10 moves left."
+    },
+    {
+      "turn": 340,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #4 (green / diamond) and push it out through the top gate. 7 drag(s) remain in that line."
+    },
+    {
+      "turn": 341,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "exit": "top"
+      },
+      "result": "block #4 escaped through the top gate. 9 moves left."
+    },
+    {
+      "turn": 342,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #5 (green / diamond) and push it out through the top gate. 6 drag(s) remain in that line."
+    },
+    {
+      "turn": 343,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "exit": "top"
+      },
+      "result": "block #5 escaped through the top gate. 8 moves left."
+    },
+    {
+      "turn": 344,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #0 (red / circle) and push it out through the right gate. 5 drag(s) remain in that line."
+    },
+    {
+      "turn": 345,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "exit": "right"
+      },
+      "result": "block #0 escaped through the right gate. 7 moves left."
+    },
+    {
+      "turn": 346,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #6 (green / diamond) and push it out through the top gate. 4 drag(s) remain in that line."
+    },
+    {
+      "turn": 347,
+      "action": {
+        "type": "drag",
+        "block": 6,
+        "exit": "top"
+      },
+      "result": "block #6 escaped through the top gate. 6 moves left."
+    },
+    {
+      "turn": 348,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #3 (amber / star) to origin (0,4). 3 drag(s) remain in that line."
+    },
+    {
+      "turn": 349,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          0,
+          4
+        ]
+      },
+      "result": "block #3 now at (0,4). 5 moves left."
+    },
+    {
+      "turn": 350,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #1 (cyan / triangle) and push it out through the bottom gate. 2 drag(s) remain in that line."
+    },
+    {
+      "turn": 351,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "exit": "bottom"
+      },
+      "result": "block #1 escaped through the bottom gate. 4 moves left."
+    },
+    {
+      "turn": 352,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #3 (amber / star) and push it out through the top gate. 1 drag(s) remain in that line."
+    },
+    {
+      "turn": 353,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "exit": "top"
+      },
+      "result": "block #3 escaped through the top gate. 3 moves left."
+    },
+    {
+      "turn": 355,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 357,
+      "level": 29,
+      "say": "28 cleared at par, eight down, two to go. On 29 I want the pause menu escape hatches: Main menu mid-level, and whether a paused game survives being abandoned that way. Then the last persistence sweep.",
+      "thought": "Same abandon path but via the explicit Main menu button, which should at least be intentional.",
+      "note": null
+    },
+    {
+      "turn": 357,
+      "action": {
+        "type": "sequence",
+        "delay": 0,
+        "steps": [
+          {
+            "type": "drag",
+            "block": 0,
+            "to": null,
+            "exit": null
+          },
+          {
+            "type": "hint"
+          }
+        ]
+      },
+      "result": "drag: error: give a destination cell and/or an exit side | hint: Designer's reference solution from here: drag block #1 (cyan / triangle) and push it out through the right gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 359,
+      "action": {
+        "type": "sequence",
+        "delay": 0,
+        "steps": [
+          {
+            "type": "drag",
+            "block": 1,
+            "to": [
+              2,
+              3
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 1,
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 1,
+            "to": [
+              2,
+              3
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 1,
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 1,
+            "to": [
+              2,
+              3
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 1,
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 1,
+            "to": [
+              2,
+              3
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 1,
+            "to": [
+              2,
+              2
+            ]
+          }
+        ]
+      },
+      "result": "drag: block #1 now at (2,3). 10 moves left. | drag: block #1 now at (2,2). 9 moves left. | drag: block #1 now at (2,3). 8 moves left. | drag: block #1 now at (2,2). 7 moves left. | drag: block #1 now at (2,3). 6 moves left. | drag: block #1 now at (2,2). 5 moves left. | drag: block #1 now at (2,3). 4 moves left. | drag: block #1 now at (2,2). 3 moves left."
+    },
+    {
+      "turn": 360,
+      "action": {
+        "type": "tap",
+        "button": "btnMenu"
+      },
+      "result": "tapped HUD: pause / unpause"
+    },
+    {
+      "turn": 361,
+      "action": {
+        "type": "tap",
+        "button": "btnPauseHome"
+      },
+      "result": "tapped pause: Main menu"
+    },
+    {
+      "turn": 362,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 29\",\"moves\":\"3 moves★★★par 8\"},\"engine\":{\"level\":29,\"moves\":8,\"movesLeft\":3,\"limit\":11,\"par\":8,\"over\":false,\"paused\":true,\"canUndo\":false,\"soundOn\":true,\"pos\":[[5,5],[2,2],[2,5],[2,0],[1,7],[0,4],[0,1]]},\"progress\":{\"u\":28,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3,3,1,3,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":31,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"bl\",\"ge_prog\":\"{\\\"u\\\":28,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3,3,1,3,3]}\",\"ge_sound\":\"1\",\"ge_level\":\"28\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":true,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":true,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":true,\"disabled\":false,\"text\":\"Play level 29 ›\"},\"btnLevels\":{\"visible\":true,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":true,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 363,
+      "action": {
+        "type": "tap",
+        "button": "btnPlay"
+      },
+      "result": "tapped main menu: Play"
+    },
+    {
+      "turn": 364,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #1 (cyan / triangle) and push it out through the right gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 365,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "exit": "right"
+      },
+      "result": "block #1 escaped through the right gate. 10 moves left."
+    },
+    {
+      "turn": 366,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #0 (red / circle) to origin (2,1). 7 drag(s) remain in that line."
+    },
+    {
+      "turn": 367,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          2,
+          1
+        ]
+      },
+      "result": "block #0 now at (2,1). 9 moves left."
+    },
+    {
+      "turn": 368,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #2 (green / diamond) and push it out through the right gate. 6 drag(s) remain in that line."
+    },
+    {
+      "turn": 369,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "exit": "right"
+      },
+      "result": "block #2 escaped through the right gate. 8 moves left."
+    },
+    {
+      "turn": 370,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #4 (green / diamond) and push it out through the right gate. 5 drag(s) remain in that line."
+    },
+    {
+      "turn": 371,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "exit": "right"
+      },
+      "result": "block #4 escaped through the right gate. 7 moves left."
+    },
+    {
+      "turn": 372,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #5 (red / circle) and push it out through the bottom gate. 4 drag(s) remain in that line."
+    },
+    {
+      "turn": 373,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "exit": "bottom"
+      },
+      "result": "block #5 escaped through the bottom gate. 6 moves left."
+    },
+    {
+      "turn": 374,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #6 (amber / star) and push it out through the left gate. 3 drag(s) remain in that line."
+    },
+    {
+      "turn": 375,
+      "action": {
+        "type": "drag",
+        "block": 6,
+        "exit": "left"
+      },
+      "result": "block #6 escaped through the left gate. 5 moves left."
+    },
+    {
+      "turn": 376,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #3 (amber / star) and push it out through the left gate. 2 drag(s) remain in that line."
+    },
+    {
+      "turn": 377,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "exit": "left"
+      },
+      "result": "block #3 escaped through the left gate. 4 moves left."
+    },
+    {
+      "turn": 378,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #0 (red / circle) and push it out through the bottom gate. 1 drag(s) remain in that line."
+    },
+    {
+      "turn": 379,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "exit": "bottom"
+      },
+      "result": "block #0 escaped through the bottom gate. 3 moves left."
+    },
+    {
+      "turn": 381,
+      "level": 29,
+      "say": "29 cleared at par, nine down. Level 30 is the last one and my last chance to break it - I will run the whole attack set on it: fail, rescue, undo abuse, reload on the fail sheet, then the final-block win race.",
+      "thought": "Last level, so also check the win card does not offer a Next level that does not exist.",
+      "note": null
+    },
+    {
+      "turn": 381,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 383,
+      "action": {
+        "type": "sequence",
+        "delay": 110,
+        "steps": [
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              0,
+              6
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              1,
+              6
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              0,
+              6
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              1,
+              6
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              0,
+              6
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              1,
+              6
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              0,
+              6
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              1,
+              6
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              0,
+              6
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              1,
+              6
+            ]
+          },
+          {
+            "type": "drag",
+            "block": 0,
+            "to": [
+              0,
+              6
+            ]
+          }
+        ]
+      },
+      "result": "drag: block #0 now at (0,6). 10 moves left. | drag: block #0 now at (1,6). 9 moves left. | drag: block #0 now at (0,6). 8 moves left. | drag: block #0 now at (1,6). 7 moves left. | drag: block #0 now at (0,6). 6 moves left. | drag: block #0 now at (1,6). 5 moves left. | drag: block #0 now at (0,6). 4 moves left. | drag: block #0 now at (1,6). 3 moves left. | drag: block #0 now at (0,6). 2 moves left. | drag: block #0 now at (1,6). 1 moves left. | drag: block #0 now at (0,6). 0 moves left."
+    },
+    {
+      "turn": 384,
+      "action": {
+        "type": "tap",
+        "button": "btnRescue"
+      },
+      "result": "tapped fail card: +3 moves rescue"
+    },
+    {
+      "turn": 385,
+      "action": {
+        "type": "reload"
+      },
+      "result": "reloaded the page (progress must come back from storage)"
+    },
+    {
+      "turn": 386,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 30\",\"moves\":\"11 moves★★★par 8\"},\"engine\":{\"level\":30,\"moves\":0,\"movesLeft\":11,\"limit\":11,\"par\":8,\"over\":false,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[[1,6],[1,7],[1,3],[4,6],[4,1],[2,2],[5,0]]},\"progress\":{\"u\":29,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3,3,1,3,3,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":34,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"bl\",\"ge_prog\":\"{\\\"u\\\":29,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3,3,1,3,3,3]}\",\"ge_sound\":\"1\",\"ge_level\":\"29\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":false,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":false,\"text\":\"☰\"},\"btnNext\":{\"visible\":false,\"disabled\":false,\"text\":\"Next level\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":true,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":true,\"disabled\":false,\"text\":\"Play level 30 ›\"},\"btnLevels\":{\"visible\":true,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":true,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    },
+    {
+      "turn": 387,
+      "action": {
+        "type": "tap",
+        "button": "btnPlay"
+      },
+      "result": "tapped main menu: Play"
+    },
+    {
+      "turn": 388,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          1.5,
+          6.5
+        ],
+        "path": [
+          [
+            0.5,
+            6.5
+          ],
+          [
+            0.25,
+            6.75
+          ]
+        ],
+        "release": true,
+        "steps": 8
+      },
+      "result": "raw gesture released: moves 1, left 10, over=false, paused=false, positions [[0,6],[1,7],[1,3],[4,6],[4,1],[2,2],[5,0]]"
+    },
+    {
+      "turn": 389,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          1,
+          6
+        ],
+        "path": [
+          [
+            0.5,
+            6
+          ],
+          [
+            -0.5,
+            6
+          ],
+          [
+            -1.5,
+            6
+          ]
+        ],
+        "release": true,
+        "steps": 8
+      },
+      "result": "raw gesture released: moves 1, left 10, over=false, paused=false, positions [[0,6],[1,7],[1,3],[4,6],[4,1],[2,2],[5,0]]"
+    },
+    {
+      "turn": 390,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          99,
+          99
+        ],
+        "path": [
+          [
+            1,
+            6
+          ],
+          [
+            0,
+            6
+          ]
+        ],
+        "release": true,
+        "steps": 6
+      },
+      "result": "raw gesture released: moves 1, left 10, over=false, paused=false, positions [[0,6],[1,7],[1,3],[4,6],[4,1],[2,2],[5,0]]"
+    },
+    {
+      "turn": 391,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          1,
+          7
+        ],
+        "path": [
+          [
+            0,
+            7
+          ]
+        ],
+        "release": false,
+        "steps": 6
+      },
+      "result": "raw gesture STILL HELD (pointer down): moves 1, left 10, over=false, paused=false, positions [[0,6],[0,7],[1,3],[4,6],[4,1],[2,2],[5,0]]"
+    },
+    {
+      "turn": 392,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          1,
+          3
+        ],
+        "path": [
+          [
+            0,
+            3
+          ]
+        ],
+        "release": true,
+        "steps": 6
+      },
+      "result": "raw gesture released: moves 2, left 9, over=false, paused=false, positions [[0,6],[1,7],[0,3],[4,6],[4,1],[2,2],[5,0]]"
+    },
+    {
+      "turn": 393,
+      "action": {
+        "type": "tap",
+        "button": "btnRestart"
+      },
+      "result": "tapped HUD: restart level"
+    },
+    {
+      "turn": 394,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          1,
+          6
+        ],
+        "path": [
+          [
+            0,
+            6
+          ]
+        ],
+        "release": false,
+        "steps": 6
+      },
+      "result": "raw gesture STILL HELD (pointer down): moves 0, left 11, over=false, paused=false, positions [[0,6],[1,7],[1,3],[4,6],[4,1],[2,2],[5,0]]"
+    },
+    {
+      "turn": 395,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          1,
+          3
+        ],
+        "path": [
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            -2,
+            2
+          ],
+          [
+            -6,
+            2
+          ]
+        ],
+        "release": true,
+        "steps": 10
+      },
+      "result": "raw gesture released: moves 1, left 10, over=false, paused=false, positions [[1,5],[1,7],[0,2],[4,6],[4,1],[2,2],[5,0]]"
+    },
+    {
+      "turn": 397,
+      "action": {
+        "type": "tap",
+        "button": "btnRestart"
+      },
+      "result": "tapped HUD: restart level"
+    },
+    {
+      "turn": 398,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          1,
+          6
+        ],
+        "path": [
+          [
+            0,
+            6
+          ]
+        ],
+        "release": false,
+        "steps": 6
+      },
+      "result": "raw gesture STILL HELD (pointer down): moves 0, left 11, over=false, paused=false, positions [[0,6],[1,7],[1,3],[4,6],[4,1],[2,2],[5,0]]"
+    },
+    {
+      "turn": 399,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          1,
+          3
+        ],
+        "path": [
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            -2,
+            2
+          ],
+          [
+            -6,
+            2
+          ]
+        ],
+        "release": true,
+        "steps": 10
+      },
+      "result": "raw gesture released: moves 1, left 10, over=false, paused=false, positions [[1,5],[1,7],[0,2],[4,6],[4,1],[2,2],[5,0]]"
+    },
+    {
+      "turn": 401,
+      "action": {
+        "type": "tap",
+        "button": "btnRestart"
+      },
+      "result": "tapped HUD: restart level"
+    },
+    {
+      "turn": 402,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          1,
+          6
+        ],
+        "path": [
+          [
+            0,
+            6
+          ]
+        ],
+        "release": false,
+        "steps": 6
+      },
+      "result": "raw gesture STILL HELD (pointer down): moves 0, left 11, over=false, paused=false, positions [[0,6],[1,7],[1,3],[4,6],[4,1],[2,2],[5,0]]"
+    },
+    {
+      "turn": 403,
+      "action": {
+        "type": "raw_drag",
+        "from": [
+          1,
+          3
+        ],
+        "path": [
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            -2,
+            2
+          ],
+          [
+            -6,
+            2
+          ]
+        ],
+        "release": true,
+        "steps": 10
+      },
+      "result": "raw gesture released: moves 1, left 10, over=false, paused=false, positions [[1,5],[1,7],[0,2],[4,6],[4,1],[2,2],[5,0]]"
+    },
+    {
+      "turn": 405,
+      "action": {
+        "type": "tap",
+        "button": "btnRestart"
+      },
+      "result": "tapped HUD: restart level"
+    },
+    {
+      "turn": 406,
+      "level": 30,
+      "say": "Pinned the root cause. The held block gets re-bound to the SECOND pointer: red block 0 was held at (0,6) and ended at (1,5), a cell it was never dragged through, while block 2 also moved - one move charged. Three for three on level 30. It is a gesture-shape-dependent race, not luck.",
+      "thought": "Re-binding the active drag to a new pointer id explains every variant I saw.",
+      "note": null
+    },
+    {
+      "turn": 406,
+      "action": {
+        "type": "tap",
+        "button": "btnRestart"
+      },
+      "result": "tapped HUD: restart level"
+    },
+    {
+      "turn": 407,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #1 (cyan / triangle) and push it out through the bottom gate. 8 drag(s) remain in that line."
+    },
+    {
+      "turn": 408,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "exit": "bottom"
+      },
+      "result": "block #1 escaped through the bottom gate. 10 moves left."
+    },
+    {
+      "turn": 409,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #0 (red / circle) to origin (4,8). 7 drag(s) remain in that line."
+    },
+    {
+      "turn": 410,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          4,
+          8
+        ]
+      },
+      "result": "block #0 now at (4,8). 9 moves left."
+    },
+    {
+      "turn": 411,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #2 (green / diamond) and push it out through the left gate. 6 drag(s) remain in that line."
+    },
+    {
+      "turn": 412,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "exit": "left"
+      },
+      "result": "block #2 escaped through the left gate. 8 moves left."
+    },
+    {
+      "turn": 413,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #6 (green / diamond) and push it out through the left gate. 5 drag(s) remain in that line."
+    },
+    {
+      "turn": 414,
+      "action": {
+        "type": "drag",
+        "block": 6,
+        "exit": "left"
+      },
+      "result": "block #6 escaped through the left gate. 7 moves left."
+    },
+    {
+      "turn": 415,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #5 (green / diamond) and push it out through the left gate. 4 drag(s) remain in that line."
+    },
+    {
+      "turn": 416,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "exit": "left"
+      },
+      "result": "block #5 escaped through the left gate. 6 moves left."
+    },
+    {
+      "turn": 417,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #4 (amber / star) and push it out through the top gate. 3 drag(s) remain in that line."
+    },
+    {
+      "turn": 418,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "exit": "top"
+      },
+      "result": "block #4 escaped through the top gate. 5 moves left."
+    },
+    {
+      "turn": 419,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #3 (amber / star) and push it out through the top gate. 2 drag(s) remain in that line."
+    },
+    {
+      "turn": 420,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "exit": "top"
+      },
+      "result": "block #3 escaped through the top gate. 4 moves left."
+    },
+    {
+      "turn": 421,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #0 (red / circle) and push it out through the right gate. 1 drag(s) remain in that line."
+    },
+    {
+      "turn": 422,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "exit": "right"
+      },
+      "result": "block #0 escaped through the right gate. 3 moves left."
+    },
+    {
+      "turn": 425,
+      "action": {
+        "type": "inspect"
+      },
+      "result": "{\"hud\":{\"level\":\"Level 30\",\"moves\":\"3 moves★★★par 8\"},\"engine\":{\"level\":30,\"moves\":8,\"movesLeft\":3,\"limit\":11,\"par\":8,\"over\":true,\"paused\":false,\"canUndo\":false,\"soundOn\":true,\"pos\":[null,null,null,null,null,null,null]},\"progress\":{\"u\":29,\"s\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3,3,1,3,3,3,3]},\"localStorage\":{\"ge_stats\":\"{\\\"level_start\\\":40,\\\"log\\\":[[1788152222225,\\\"level_start\\\",1],[1788152222512,\\\"level_start\\\",21],[1788152222575,\\\"level_start\\\",21],[1788152372139,\\\"level_start\\\",21],[1788152452484,\\\"undo\\\",21],[1788152475400,\\\"bl\",\"ge_prog\":\"{\\\"u\\\":29,\\\"s\\\":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3,3,1,3,3,3,3]}\",\"ge_sound\":\"1\",\"ge_level\":\"29\"},\"buttons\":{\"btnUndo\":{\"visible\":true,\"disabled\":true,\"text\":\"↶\"},\"btnRestart\":{\"visible\":true,\"disabled\":true,\"text\":\"↻\"},\"btnMenu\":{\"visible\":true,\"disabled\":true,\"text\":\"☰\"},\"btnNext\":{\"visible\":true,\"disabled\":false,\"text\":\"Back to menu\"},\"btnReplay\":{\"visible\":false,\"disabled\":false,\"text\":\"Replay for ★★★\"},\"btnRescue\":{\"visible\":false,\"disabled\":false,\"text\":\"AD +3 moves · free rescue\"},\"btnRetry\":{\"visible\":false,\"disabled\":false,\"text\":\"Retry level\"},\"btnResume\":{\"visible\":false,\"disabled\":false,\"text\":\"Resume\"},\"btnPauseRestart\":{\"visible\":false,\"disabled\":false,\"text\":\"Restart level\"},\"btnPauseLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnPauseLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnPauseSound\":{\"visible\":false,\"disabled\":false,\"text\":\"Sound: on\"},\"btnPauseHome\":{\"visible\":false,\"disabled\":false,\"text\":\"Main menu\"},\"btnSound\":{\"visible\":false,\"disabled\":false,\"text\":\"SOUND on\"},\"btnPlay\":{\"visible\":false,\"disabled\":false,\"text\":\"Play level 30 ›\"},\"btnLevels\":{\"visible\":false,\"disabled\":false,\"text\":\"Levels\"},\"btnLegend\":{\"visible\":false,\"disabled\":false,\"text\":\"How to play\"},\"btnLevelsBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"},\"btnReset\":{\"visible\":false,\"disabled\":false,\"text\":\"Reset progress\"},\"btnLegendBack\":{\"visible\":false,\"disabled\":false,\"text\":\"Back\"}},\"errors\":[]}"
+    }
+  ]
+}

@@ -20,13 +20,17 @@ block's symbol). Stones never move.
 KEY RULE — ONE DRAG = ONE MOVE, no matter how far the block travels: while the finger is down the
 block follows it cell by cell, around corners too, so a whole route (e.g. right, then down, then out
 the gate) is a single move. Par and the move limit are computed on that rule, so plan complete
-routes rather than single steps. Clear all blocks within the move limit. Losing shows a rescue offer (+3 moves, once per level). The game opens on a main menu
-(title block) with Play / Levels / How to play; in-game the HUD has undo (↶, one step), restart (↻) and pause (☰), and shows the stars the current pace would earn.
+routes rather than single steps. Clear all blocks within the move limit. Losing shows a rescue offer (+3 moves, once per attempt — a Restart is a fresh attempt).
+Both the rescue and the HUD hint are rewarded-ad slots: tapping one shows a ~1.2 s placeholder "ad" card first, then the grant lands (free in the prototype).
+The game opens on a main menu (title block) with Play / Levels / How to play; in-game the HUD has hint (?, ghosts the next reference move — an exit route,
+or a dashed outline where a block should park; one per board position), undo (↶, one step, refunds the move), restart (↻) and pause (☰), shows the stars the
+current pace would earn, and an objective row of blocks left per color.
 Coordinates: (x,y) cells, x to the right, y downward, origin top-left. A block's position is its
 top-left origin; its cells are listed absolute.`,
   buttons: {
-    btnPlay: 'main menu: Play', btnLevels: 'main menu: Levels', btnLegend: 'main menu: How to play',
-    btnSound: 'main menu: toggle sound', btnLevelsBack: 'levels: Back', btnReset: 'levels: Reset progress (two-tap arm: first tap arms, second erases)', btnLegendBack: 'how-to-play: Back',
+    btnPlay: 'main menu: Play (resumes a paused attempt if one is on the board)', btnLevels: 'main menu: Levels', btnLegend: 'main menu: How to play',
+    btnSound: 'main menu: toggle sound', btnLevelsBack: 'levels: Back (returns to the pause card if opened from pause)', btnReset: 'levels: Reset progress (two-tap arm: first tap arms, second erases)', btnLegendBack: 'how-to-play: Back',
+    btnHint: 'HUD: hint — show the next reference move (rewarded-ad placeholder, ~1.2 s, then a ghost route appears)',
     btnUndo: 'HUD: undo last move (one step)', btnRestart: 'HUD: restart level', btnMenu: 'HUD: pause / unpause',
     btnResume: 'pause: Resume', btnPauseRestart: 'pause: Restart level', btnPauseLegend: 'pause: How to play',
     btnPauseSound: 'pause: toggle sound', btnPauseLevels: 'pause: Levels', btnPauseHome: 'pause: Main menu',
@@ -66,7 +70,8 @@ top-left origin; its cells are listed absolute.`,
       return {
         level: GE.level, L: GE.L, pos: GE.pos, moves: GE.moves, movesLeft: GE.movesLeft,
         over: GE.over, paused: GE.paused, metrics: GE.metrics, rect: { left: r.left, top: r.top },
-        screens: { menu: vis('menu'), levels: vis('levels'), legend: vis('legend'), pause: vis('pauseModal'), win: vis('winModal'), fail: vis('failModal') },
+        screens: { menu: vis('menu'), levels: vis('levels'), legend: vis('legend'), pause: vis('pauseModal'), win: vis('winModal'), fail: vis('failModal'), ad: vis('adModal') },
+        hint: GE.hint ? { block: GE.hint.bi, path: GE.hint.path, exit: GE.hint.side || null } : null,
         winText: vis('winModal') ? document.querySelector('#winModal .card').innerText.replace(/\s+/g, ' ').trim() : null,
         failText: vis('failModal') ? document.querySelector('#failModal .card').innerText.replace(/\s+/g, ' ').trim() : null,
         rescueHidden: document.getElementById('btnRescue').hidden,
@@ -86,7 +91,7 @@ top-left origin; its cells are listed absolute.`,
         origin: raw.pos[i], cells: raw.pos[i] ? b.cells.map(([cx, cy]) => [raw.pos[i][0] + cx, raw.pos[i][1] + cy]) : null,
       })),
       gates: L.gates.map(g => ({ color: COLOR[g.color], side: g.side, lanes: `${g.start}..${g.start + g.len - 1}` })),
-      winCard: raw.winText, failCard: raw.failText, rescueAvailable: raw.screens.fail && !raw.rescueHidden,
+      winCard: raw.winText, failCard: raw.failText, rescueAvailable: raw.screens.fail && !raw.rescueHidden, hintShown: raw.hint,
       hud: raw.hud, jsErrors: raw.errors.length, recentErrors: raw.errors.slice(-5),
     };
   },
@@ -97,7 +102,7 @@ top-left origin; its cells are listed absolute.`,
       const id = action.button || '';
       if (id.startsWith('level:')) {
         const n = parseInt(id.slice(6), 10);
-        await page.click(`#levelGrid .tile:nth-child(${n})`);
+        await page.click(`#levelGrid .tile[data-level="${n}"]`);
         return `tapped level tile ${n}`;
       }
       if (!this.buttons[id]) return `error: unknown button "${id}"`;
@@ -214,6 +219,7 @@ function canExit(raw, g, bi, x, y, side) {
 async function dragBlock(page, raw, bi, to, exitSide) {
   if (raw.screens.menu || raw.screens.levels || raw.screens.legend) return 'error: not in a level — tap Play first';
   if (raw.screens.pause || raw.screens.win || raw.screens.fail) return 'error: a card is open; tap one of its buttons first';
+  if (raw.screens.ad) return 'error: the ad placeholder is running (~1.2 s); wait, then act';
   const L = raw.L;
   if (!Number.isInteger(bi) || bi < 0 || bi >= L.blocks.length) return `error: no block #${bi}`;
   if (!raw.pos[bi]) return `error: block #${bi} already escaped`;
