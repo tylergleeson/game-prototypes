@@ -7,6 +7,7 @@ const root = new URL('..', import.meta.url).pathname;
 const html = fs.readFileSync(root + 'index.html', 'utf8');
 const levels = fs.readFileSync(root + 'levels.js', 'utf8');
 const game = fs.readFileSync(root + 'game.js', 'utf8');
+const menu = fs.readFileSync(root + 'menu.js', 'utf8');
 
 const style = html.match(/<style>[\s\S]*?<\/style>/)[0];
 const body = html.match(/<body>([\s\S]*?)<script/)[1];
@@ -16,6 +17,7 @@ ${style}
 ${body}<script>
 ${levels}
 ${game}
+${menu}
 </script>
 `;
 fs.mkdirSync(root + 'dist', { recursive: true });

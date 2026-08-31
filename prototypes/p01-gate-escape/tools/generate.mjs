@@ -199,6 +199,29 @@ function solve(level, capExcess, maxStates = 40000) {
   return { par: -1, explored }; // unsolvable within cap
 }
 
+// ---------- start-state analysis (tutorial constraints) ----------
+// From the opening position, each block is one of:
+//   'straight' — can be pushed out right now (its lane to a matching gate is clear)
+//   'turn'     — can exit now, but only by sliding around a corner first
+//   'blocked'  — cannot exit until another block moves
+function exitKind(level, bi) {
+  const start = level.blocks.map(b => [b.x, b.y]);
+  const occ = makeOcc(level, start);
+  if (canExit(level, occ, bi, start[bi][0], start[bi][1])) return 'straight';
+  for (const [x, y] of reachable(level, occ, bi, start[bi])) {
+    if (canExit(level, occ, bi, x, y)) return 'turn';
+  }
+  return 'blocked';
+}
+function meetsShape(level, spec) {
+  const kinds = level.blocks.map((_, i) => exitKind(level, i));
+  const n = k => kinds.filter(x => x === k).length;
+  if (spec.straight && n('straight') !== kinds.length) return false; // no-fail opener: every block pushes straight out
+  if (spec.turns && n('turn') < spec.turns) return false;            // corner lesson: blocks that must route around a corner
+  if (spec.blocked && n('blocked') < spec.blocked) return false;     // ordering lesson: something must wait its turn
+  return true;
+}
+
 // ---------- generation ----------
 let seed = 12345;
 function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
@@ -265,6 +288,7 @@ function genLevel(spec) {
     if (!res || res.par < 0) continue;
     const excess = res.par - level.blocks.length;
     if (excess < spec.minExcess || excess > spec.maxExcess) continue;
+    if (!meetsShape(level, spec)) continue;
     level.par = res.par;
     return level;
   }
@@ -273,15 +297,24 @@ function genLevel(spec) {
 
 // ---------- difficulty curve (CrazyLabs-style) ----------
 const CURVE = [];
-// L1-2: cannot fail. one/two blocks, straight out.
-CURVE.push({ w: 5, h: 7, colors: 1, shapes: ['h2', 'v2'], blockCount: 1, stoneCount: 0, gateSlack: 1, minExcess: 0, maxExcess: 0 });
-CURVE.push({ w: 5, h: 7, colors: 2, shapes: ['h2', 'v2', 's1'], blockCount: 2, stoneCount: 0, gateSlack: 1, minExcess: 0, maxExcess: 0 });
-// L3-10: momentum. growing count/colors, still mostly direct.
-for (let i = 3; i <= 10; i++) {
+// L1-2: cannot fail. one/two blocks, straight out. Boards sized to the content
+// (a near-empty 5x7 reads as "no puzzle"); the grid grows as a progression cue.
+CURVE.push({ w: 4, h: 5, colors: 1, shapes: ['h2', 'v2'], blockCount: 1, stoneCount: 0, gateSlack: 1, minExcess: 0, maxExcess: 0, straight: true });
+CURVE.push({ w: 4, h: 5, colors: 2, shapes: ['h2', 'v2', 's1'], blockCount: 2, stoneCount: 0, gateSlack: 1, minExcess: 0, maxExcess: 0, straight: true });
+// L3: the corner lesson — most blocks must slide around a corner (one drag) to reach the gate.
+CURVE.push({ w: 5, h: 6, colors: 1, shapes: ['h2', 'v2', 'h3', 'v3', 's1'], blockCount: 3, stoneCount: 0, gateSlack: 0.7, minExcess: 0, maxExcess: 0, turns: 2 });
+// L4: the ordering lesson — at least one block is corked until another leaves.
+CURVE.push({ w: 5, h: 7, colors: 2, shapes: ['h2', 'v2', 'h3', 'v3', 's1'], blockCount: 4, stoneCount: 0, gateSlack: 0.7, minExcess: 0, maxExcess: 0, blocked: 1 });
+// L5-6: the first stone (one new obstacle at a time; the legend advertises it).
+CURVE.push({ w: 5, h: 7, colors: 2, shapes: ['h2', 'v2', 'h3', 'v3', 's1'], blockCount: 4, stoneCount: 1, gateSlack: 0.7, minExcess: 0, maxExcess: 0 });
+CURVE.push({ w: 6, h: 8, colors: 2, shapes: ['h2', 'v2', 'h3', 'v3', 's1'], blockCount: 5, stoneCount: 1, gateSlack: 0.7, minExcess: 0, maxExcess: 0 });
+// L7-10: momentum. growing count/colors, still mostly direct (third color at L8,
+// first par > block count at L10).
+for (let i = 7; i <= 10; i++) {
   CURVE.push({
     w: 6, h: 8, colors: Math.min(3, 1 + (i >> 2)), shapes: ['h2', 'v2', 'h3', 'v3', 's1'],
     blockCount: Math.min(6, 2 + Math.floor(i / 2)), stoneCount: 0, gateSlack: 0.7,
-    minExcess: i < 6 ? 0 : 0, maxExcess: i < 8 ? 0 : 1,
+    minExcess: 0, maxExcess: i < 8 ? 0 : 1,
   });
 }
 // L11-13: introduce stones.
@@ -296,20 +329,33 @@ for (let i = 20; i <= 25; i++) CURVE.push({ w: 6, h: 8, colors: 4, shapes: ['h2'
 for (let i = 26; i <= 30; i++) CURVE.push({ w: 7, h: 9, colors: 4, shapes: ['h2', 'v2', 'h3', 'v3', 'l1', 'l2', 'l3', 'l4', 'sq'], blockCount: 7, stoneCount: 2, gateSlack: 0.25, minExcess: 1, maxExcess: 2 });
 
 // ---------- main ----------
+// Each level starts from its own fixed seed, so re-tuning one level's spec never
+// reshuffles the boards after it. (These are the RNG states the original single
+// seed stream produced at each level; L7-L30 are byte-identical to that run.)
+const LEVEL_SEEDS = [
+  12345, 1445521408, 1691301248, 370927360, 858115328, 1425202944, 185173248, 1389427712, 1653472000, 278606656,
+  659884544, 1081859072, 1352462080, 465252608, 678450944, 1542530304, 960517376, 600153408, 983890368, 693348352,
+  325080896, 1431496448, 97040384, 1828582976, 1648706048, 1463444224, 36548864, 1885058816, 197329408, 1618256384,
+];
+// Move limit = par + slack. Generous only while the verbs are being taught
+// (L1-4); from L5 the budget is tight enough that a sloppy route costs stars and
+// the fail/rescue surface can actually appear; tightest through the L20-25 spike.
+function slackFor(idx) { return idx <= 4 ? 4 : idx <= 19 ? 3 : idx <= 25 ? 2 : 3; }
+
 const levels = [];
 for (let i = 0; i < CURVE.length; i++) {
   let lv = null;
+  seed = LEVEL_SEEDS[i];
   for (let s = 0; s < 20 && !lv; s++) {
     lv = genLevel(CURVE[i]);
     if (!lv) seed = (seed + 7919) & 0x7fffffff;
   }
   if (!lv) { console.error(`FAILED level ${i + 1}`); process.exit(1); }
-  // move limit: generous early, tight in the spike
   const idx = i + 1;
-  const slack = idx <= 10 ? 6 : idx <= 19 ? 4 : idx <= 25 ? 2 : 3;
-  lv.moves = lv.par + slack;
+  lv.moves = lv.par + slackFor(idx);
   levels.push(lv);
-  console.error(`L${idx}: ${lv.blocks.length} blocks, par ${lv.par} (excess ${lv.par - lv.blocks.length}), limit ${lv.moves}`);
+  const kinds = lv.blocks.map((_, b) => exitKind(lv, b)[0]).join('');
+  console.error(`L${idx}: ${lv.w}x${lv.h}, ${lv.blocks.length} blocks, ${lv.stones.length} stones, par ${lv.par} (excess ${lv.par - lv.blocks.length}), limit ${lv.moves}, opening ${kinds}`);
 }
 
 const out = 'const LEVELS = ' + JSON.stringify(levels) + ';\n';

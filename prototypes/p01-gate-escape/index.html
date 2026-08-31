@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Gate Escape</title>
 <style>
-  :root { --bg1:#1a4480; --bg2:#0e2c58; --ink:#eaf4ff; --dim:#9dbbdd; }
+  :root { --bg1:#1a4480; --bg2:#0e2c58; --ink:#eaf4ff; --dim:#9dbbdd; --line:rgba(214,238,255,.7); --line2:rgba(214,238,255,.28); --amber:#ffd04d; --amber2:#c99a1e; --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace; }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body { height:100%; overflow:hidden; }
   body {
@@ -14,23 +14,61 @@
     display:flex; flex-direction:column; align-items:center; user-select:none; touch-action:none;
   }
   #hud {
-    width:100%; max-width:560px; display:flex; align-items:center; justify-content:space-between;
+    width:100%; max-width:560px; display:flex; align-items:center; justify-content:space-between; gap:8px;
     padding:calc(10px + env(safe-area-inset-top)) 16px 6px;
   }
   #hud .lvl { font-weight:800; font-size:18px; letter-spacing:.4px; }
-  #hud .moves { font-weight:800; font-size:18px; }
+  /* moves = the score: counter on top, the stars this pace still earns underneath */
+  #hud .moves { position:relative; text-align:center; font-weight:800; font-size:18px; line-height:1.05; transition:color .25s; }
+  #hud .moves .meter { display:block; font:600 11px/1 var(--mono); letter-spacing:.06em; color:var(--dim); margin-top:3px; white-space:nowrap; }
+  #hud .moves .meter span { color:rgba(214,238,255,.28); transition:color .3s, transform .3s; display:inline-block; }
+  #hud .moves .meter span.on { color:var(--amber); }
+  #hud .moves .meter em { font-style:normal; margin-left:5px; }
+  #hud .moves.warn { color:var(--amber); }
   #hud .moves.low { color:#ff5a5f; animation:pulse 1s infinite; }
+  #hud .moves.shake { animation:shake .4s ease-out; }
+  #hud .moves.boost { animation:boost .8s ease-out; }
+  #hud .moves .float {
+    position:absolute; left:calc(100% + 8px); top:0; color:#5fe89b; font-size:22px; font-weight:800;
+    pointer-events:none; animation:floatup 1s ease-out forwards;
+  }
   #hud button {
     background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:var(--ink);
-    border-radius:10px; padding:6px 12px; font-size:14px; font-weight:700; cursor:pointer;
+    border-radius:10px; padding:6px 12px; font-size:14px; font-weight:700; cursor:pointer; transition:opacity .2s;
   }
+  #hud button:disabled { opacity:.32; cursor:default; }
+  #hud .right { display:flex; gap:6px; }
   @keyframes pulse { 50% { opacity:.45; } }
+  @keyframes shake { 0%,100% { transform:translateX(0); } 20% { transform:translateX(-5px); } 40% { transform:translateX(5px); } 60% { transform:translateX(-3px); } 80% { transform:translateX(3px); } }
+  @keyframes boost { 0% { color:#5fe89b; transform:scale(1); } 25% { transform:scale(1.35); } 100% { color:inherit; transform:scale(1); } }
+  @keyframes floatup { from { opacity:1; transform:translateY(0); } 30% { opacity:1; } to { opacity:0; transform:translateY(-16px); } }
+  /* one-line tip strip under the HUD: reinforces, never replaces, what the board shows */
+  #toast {
+    position:fixed; left:50%; top:calc(58px + env(safe-area-inset-top)); transform:translateX(-50%); z-index:5;
+    width:max-content; max-width:min(92vw,400px); padding:9px 14px; border-radius:8px; text-align:center; font-size:14px; font-weight:600;
+    color:#1a2a44; background:var(--amber); box-shadow:0 4px 0 var(--amber2); pointer-events:none;
+  }
+  #toast.in { animation:toastin .35s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes toastin { from { opacity:0; transform:translate(-50%,-8px); } }
   #wrap { flex:1; width:100%; display:flex; align-items:center; justify-content:center; }
   canvas { display:block; }
+  /* while the title block is up the live board rides above it, smaller and crisp */
+  #cv { transition:transform .25s ease; transform-origin:50% 0; }
+  body.menu-up #cv { transform:translateY(-30%) scale(.72); }
+  #hud { transition:opacity .25s; }
+  body.menu-up #hud { opacity:.2; }
   .modal {
     position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
-    background:rgba(8,10,24,.66); backdrop-filter:blur(3px); z-index:10;
+    background:rgba(8,10,24,.5); z-index:10;
   }
+  /* fail card sits at the foot of the screen so the stranded block (and its route) stays in view */
+  .modal.sheet { align-items:flex-end; background:rgba(8,10,24,.22); }
+  .modal.sheet .card { width:min(94vw,400px); padding:18px 22px calc(16px + env(safe-area-inset-bottom)); margin-bottom:10px; animation:sheetup .3s cubic-bezier(.34,1.4,.64,1); }
+  @keyframes sheetup { from { transform:translateY(60px); opacity:0; } }
+  .modal.sheet .card h2 { font-size:24px; }
+  .modal.sheet .card p { margin-bottom:6px; }
+  .modal.sheet .card p.hint { color:var(--ink); font-weight:600; margin-bottom:12px; }
+  .modal.sheet .card button { padding:12px; }
   .card {
     background:linear-gradient(180deg,#1d4a8a,#143764); border:1px solid rgba(255,255,255,.12);
     border-radius:20px; padding:26px 30px; text-align:center; width:min(86vw,340px);
@@ -39,7 +77,13 @@
   @keyframes pop { from { transform:scale(.7); opacity:0; } }
   .card h2 { font-size:26px; margin-bottom:6px; }
   .card p { color:var(--dim); font-size:15px; margin-bottom:16px; }
-  .card .stars { font-size:30px; letter-spacing:6px; margin-bottom:10px; }
+  .card .stars { position:relative; font-size:34px; letter-spacing:6px; margin-bottom:10px; height:44px; line-height:44px; }
+  .card .stars span { display:inline-block; }
+  .card .stars span.on { color:var(--amber); text-shadow:0 0 12px rgba(255,208,77,.55); animation:starpop .42s cubic-bezier(.34,1.56,.64,1) both; }
+  .card .stars span.off { color:rgba(234,244,255,.35); animation:starin .3s ease-out both; }
+  @keyframes starpop { from { transform:scale(0) rotate(-40deg); opacity:0; } 60% { transform:scale(1.35) rotate(6deg); opacity:1; } to { transform:scale(1) rotate(0); opacity:1; } }
+  @keyframes starin { from { transform:scale(.6); opacity:0; } }
+  .card .stars .spark { position:absolute; width:7px; height:7px; border-radius:50%; pointer-events:none; }
   .card button {
     width:100%; border:0; border-radius:14px; padding:14px; font-size:17px; font-weight:800;
     cursor:pointer; margin-top:8px; color:#fff;
@@ -48,36 +92,187 @@
   .card button.rescue  { background:linear-gradient(180deg,#33d17a,#1fae5f); box-shadow:0 6px 0 #12854a; }
   .card button.ghost   { background:rgba(255,255,255,.09); box-shadow:none; font-weight:600; font-size:15px; }
   .card button:active { transform:translateY(3px); box-shadow:none; }
+  .card button:disabled { opacity:.55; transform:none; }
+  .card button.rescue { display:flex; align-items:center; justify-content:center; gap:10px; }
+  .card button.rescue .ad { font:800 10px/1 var(--mono); letter-spacing:.12em; padding:4px 5px; border:1.5px solid rgba(255,255,255,.85); border-radius:4px; }
+  .card button.rescue small { font-size:12px; font-weight:600; opacity:.85; }
+
+  /* ---- drafting-sheet screens: title block, sheet index, legend ---- */
+  .screen {
+    position:fixed; inset:0; z-index:20; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:calc(14px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom));
+    background:rgba(10,30,64,.5);
+  }
+  /* the title block sits at the foot of the sheet (as on a real drawing) so the live board shows above it */
+  #menu { justify-content:flex-end; background:rgba(10,30,64,.18); }
+  .tblock {
+    position:relative; width:min(92vw,400px); max-height:100%; overflow:auto;
+    border:1.5px solid var(--line); outline:1px solid var(--line2); outline-offset:5px;
+    background:rgba(15,44,90,.96); padding:22px 20px 18px;
+    animation:sheet .32s ease-out;
+  }
+  @keyframes sheet { from { opacity:0; transform:translateY(10px); } }
+  .tblock .no { position:absolute; top:6px; left:10px; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); }
+  .tblock .no.r { left:auto; right:10px; }
+  .tblock button.no { background:none; border:1px solid var(--line2); border-radius:4px; padding:4px 7px; top:4px; cursor:pointer; }
+  .tblock button.no b { color:var(--amber); }
+  .title {
+    font-weight:800; font-size:clamp(30px,9.4vw,42px); line-height:1; letter-spacing:.14em; text-transform:uppercase;
+    text-align:center; margin-top:6px; padding-bottom:10px; position:relative;
+  }
+  .title::after { /* dimension line with end ticks */
+    content:''; display:block; height:1px; background:var(--line); margin:10px 8px 0;
+    box-shadow:-8px -3px 0 -2px transparent;
+  }
+  .sub { text-align:center; color:var(--dim); font-size:14px; margin-top:8px; }
+  .fields { display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--line2); margin-top:16px; }
+  .fields > * { padding:8px 6px 9px; text-align:center; border-right:1px solid var(--line2); background:none; color:var(--ink); font-family:inherit; }
+  .fields > :last-child { border-right:0; }
+  .fields .k { display:block; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); margin-bottom:5px; }
+  .fields .v { font-weight:800; font-size:17px; font-variant-numeric:tabular-nums; }
+  .fields button { border:0; cursor:pointer; }
+  .fields button .v { color:var(--amber); }
+  .gatebtn {
+    position:relative; display:flex; align-items:center; justify-content:center; gap:12px; width:100%; margin-top:18px;
+    border:0; border-radius:8px; padding:17px 14px; background:var(--amber); color:#1a2a44;
+    font:800 19px/1 system-ui,sans-serif; box-shadow:0 5px 0 var(--amber2); cursor:pointer;
+    animation:beckon 2.2s ease-in-out infinite;
+  }
+  @keyframes beckon { 0%,55%,100% { transform:scale(1); } 72% { transform:scale(1.035); } }
+  .gatebtn::after { content:''; position:absolute; inset:5px; border:1.5px dashed rgba(26,42,68,.5); border-radius:5px; pointer-events:none; }
+  .gatebtn:active { transform:translateY(3px); box-shadow:none; }
+  .gatebtn .blk { width:22px; height:22px; flex:none; animation:slide 2.2s ease-in-out infinite; }
+  .gatebtn .chev { font-size:22px; line-height:1; margin-left:-4px; }
+  @keyframes slide { 0%,55% { transform:translateX(0); } 75% { transform:translateX(9px); } 100% { transform:translateX(0); } }
+  .row { display:flex; gap:10px; margin-top:12px; }
+  .ghostbtn {
+    flex:1; background:none; border:1.5px dashed var(--line2); border-radius:8px; color:var(--ink);
+    padding:12px 8px; font:700 15px system-ui,sans-serif; cursor:pointer;
+  }
+  .ghostbtn:active { background:rgba(255,255,255,.08); }
+  .shead { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .shead h2 { font-size:18px; letter-spacing:.12em; text-transform:uppercase; }
+  .shead .back { background:none; border:1.5px solid var(--line2); color:var(--ink); border-radius:8px; padding:6px 12px; font:700 14px system-ui; cursor:pointer; }
+  .grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+  .tile {
+    aspect-ratio:1; border:1.5px solid rgba(214,238,255,.5); border-radius:4px; background:rgba(255,255,255,.05);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; cursor:pointer;
+    color:var(--ink); font:800 17px var(--mono); font-variant-numeric:tabular-nums;
+  }
+  .tile .st { font-size:9px; letter-spacing:1px; color:var(--amber); font-family:system-ui; min-height:11px; }
+  .tile.done { background:rgba(114,216,255,.16); border-color:#72d8ff; }
+  .tile.cur { outline:2px solid var(--amber); outline-offset:2px; }
+  .tile.locked {
+    cursor:default; color:rgba(214,238,255,.35); border-style:dashed;
+    background:repeating-linear-gradient(45deg,transparent 0 4px,rgba(214,238,255,.11) 4px 5px);
+  }
+  .tile:not(.locked):active { transform:scale(.94); }
+  .foot { display:flex; justify-content:space-between; align-items:center; margin-top:14px; color:var(--dim); font-size:12px; }
+  .foot button { background:none; border:0; color:var(--dim); text-decoration:underline; font:600 12px system-ui; cursor:pointer; }
+  .foot button.arm { color:#ff8078; }
+  .legend { display:flex; flex-direction:column; gap:10px; }
+  .legend canvas.demo { width:100%; height:auto; border:1px solid var(--line2); }
+  .legend .li { display:flex; align-items:center; gap:14px; }
+  .legend .li canvas { width:64px; height:44px; flex:none; }
+  .legend .li b { display:block; font-size:15px; }
+  .legend .li span { color:var(--dim); font-size:13px; }
+  @media (prefers-reduced-motion: reduce) { .gatebtn, .gatebtn .blk, .tblock, .card, .card .stars span, #toast { animation:none; } }
   [hidden] { display:none !important; }
 </style>
 </head>
 <body>
   <div id="hud">
     <div class="lvl" id="hudLevel">Level 1</div>
-    <div class="moves"><span id="hudMoves">0</span> moves</div>
-    <button id="btnRestart" aria-label="Restart">&#8635;</button>
+    <div class="moves" id="hudMovesBox"><span id="hudMoves">0</span> <span id="hudUnit">moves</span><span class="meter" aria-label="Stars at this pace"><span id="hudMeter"><span>★</span><span>★</span><span>★</span></span><em id="hudPar">par 1</em></span></div>
+    <div class="right">
+      <button id="btnUndo" aria-label="Undo last move" disabled>&#8630;</button>
+      <button id="btnRestart" aria-label="Restart level">&#8635;</button>
+      <button id="btnMenu" aria-label="Pause">&#9776;</button>
+    </div>
   </div>
   <div id="wrap"><canvas id="cv"></canvas></div>
+  <div id="toast" role="status" hidden></div>
 
   <div class="modal" id="winModal" hidden>
     <div class="card">
-      <div class="stars" id="winStars">★★★</div>
-      <h2>Level clear!</h2>
+      <div class="stars" id="winStars" aria-live="polite"></div>
+      <h2 id="winTitle">Level clear!</h2>
       <p id="winSub"></p>
       <button class="primary" id="btnNext">Next level</button>
+      <button class="ghost" id="btnReplay" hidden>Replay for ★★★</button>
     </div>
   </div>
 
-  <div class="modal" id="failModal" hidden>
+  <div class="modal sheet" id="failModal" hidden>
     <div class="card">
       <h2>So close!</h2>
       <p id="failSub"></p>
-      <button class="rescue" id="btnRescue">+3 moves</button>
+      <p class="hint" id="failHint"></p>
+      <button class="rescue" id="btnRescue"><span class="ad">AD</span> +3 moves <small>· free rescue</small></button>
       <button class="ghost" id="btnRetry">Retry level</button>
+    </div>
+  </div>
+
+  <div class="modal" id="pauseModal" hidden>
+    <div class="card">
+      <h2>Paused</h2>
+      <p id="pauseSub"></p>
+      <button class="primary" id="btnResume">Resume</button>
+      <button class="ghost" id="btnPauseRestart">Restart level</button>
+      <button class="ghost" id="btnPauseLevels">Levels</button>
+      <button class="ghost" id="btnPauseLegend">How to play</button>
+      <button class="ghost" id="btnPauseSound">Sound: on</button>
+      <button class="ghost" id="btnPauseHome">Main menu</button>
+    </div>
+  </div>
+
+  <!-- title block: the main menu -->
+  <div class="screen" id="menu" hidden>
+    <div class="tblock">
+      <span class="no">NO. GE-01</span><button class="no r" id="btnSound" aria-label="Toggle sound">SOUND <b id="fSound">on</b></button>
+      <div class="title">Gate Escape</div>
+      <div class="sub">Drag every block out through the gate of its color.</div>
+      <div class="fields">
+        <div><span class="k">Level</span><span class="v" id="fLevel">1 / 30</span></div>
+        <div><span class="k">Stars</span><span class="v" id="fStars">0 / 90</span></div>
+      </div>
+      <button class="gatebtn" id="btnPlay">
+        <svg class="blk" viewBox="0 0 22 22" aria-hidden="true"><defs><pattern id="h" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#ff8078"/><rect width="1.4" height="4" fill="#c24d46" opacity=".55"/></pattern></defs><rect x="1.5" y="1.5" width="19" height="19" fill="url(#h)" stroke="#c24d46" stroke-width="2"/><circle cx="11" cy="11" r="3" fill="#fff" opacity=".9"/></svg>
+        <span id="playLabel">Play level 1</span>
+        <span class="chev">›</span>
+      </button>
+      <div class="row">
+        <button class="ghostbtn" id="btnLevels">Levels</button>
+        <button class="ghostbtn" id="btnLegend">How to play</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- sheet index: level select -->
+  <div class="screen" id="levels" hidden>
+    <div class="tblock">
+      <div class="shead"><h2>Levels</h2><button class="back" id="btnLevelsBack">Back</button></div>
+      <div class="grid" id="levelGrid"></div>
+      <div class="foot"><span id="levelsNote"></span><button id="btnReset">Reset progress</button></div>
+    </div>
+  </div>
+
+  <!-- legend: how to play -->
+  <div class="screen" id="legend" hidden>
+    <div class="tblock">
+      <div class="shead"><h2>How to play</h2><button class="back" id="btnLegendBack">Back</button></div>
+      <div class="legend">
+        <canvas class="demo" id="legendDemo" width="360" height="170"></canvas>
+        <div class="li"><canvas id="symBlock" width="128" height="88"></canvas><div><b>Block</b><span>Drag it anywhere it can slide — around corners too, in one go.</span></div></div>
+        <div class="li"><canvas id="symGate" width="128" height="88"></canvas><div><b>Gate</b><span>Push a block through the gate with its color and symbol — it escapes.</span></div></div>
+        <div class="li"><canvas id="symStone" width="128" height="88"></canvas><div><b>Stone</b><span>Never moves. Go around it.</span></div></div>
+        <div class="li"><canvas id="symMoves" width="128" height="88"></canvas><div><b>Moves</b><span>One drag is one move, however far it goes. Clear the board before they run out.</span></div></div>
+      </div>
     </div>
   </div>
 
   <script src="levels.js"></script>
   <script src="game.js"></script>
+  <script src="menu.js"></script>
 </body>
 </html>

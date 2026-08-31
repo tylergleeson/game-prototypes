@@ -1,6 +1,6 @@
 <title>Gate Escape</title>
 <style>
-  :root { --bg1:#1a4480; --bg2:#0e2c58; --ink:#eaf4ff; --dim:#9dbbdd; }
+  :root { --bg1:#1a4480; --bg2:#0e2c58; --ink:#eaf4ff; --dim:#9dbbdd; --line:rgba(214,238,255,.7); --line2:rgba(214,238,255,.28); --amber:#ffd04d; --amber2:#c99a1e; --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace; }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body { height:100%; overflow:hidden; }
   body {
@@ -9,23 +9,61 @@
     display:flex; flex-direction:column; align-items:center; user-select:none; touch-action:none;
   }
   #hud {
-    width:100%; max-width:560px; display:flex; align-items:center; justify-content:space-between;
+    width:100%; max-width:560px; display:flex; align-items:center; justify-content:space-between; gap:8px;
     padding:calc(10px + env(safe-area-inset-top)) 16px 6px;
   }
   #hud .lvl { font-weight:800; font-size:18px; letter-spacing:.4px; }
-  #hud .moves { font-weight:800; font-size:18px; }
+  /* moves = the score: counter on top, the stars this pace still earns underneath */
+  #hud .moves { position:relative; text-align:center; font-weight:800; font-size:18px; line-height:1.05; transition:color .25s; }
+  #hud .moves .meter { display:block; font:600 11px/1 var(--mono); letter-spacing:.06em; color:var(--dim); margin-top:3px; white-space:nowrap; }
+  #hud .moves .meter span { color:rgba(214,238,255,.28); transition:color .3s, transform .3s; display:inline-block; }
+  #hud .moves .meter span.on { color:var(--amber); }
+  #hud .moves .meter em { font-style:normal; margin-left:5px; }
+  #hud .moves.warn { color:var(--amber); }
   #hud .moves.low { color:#ff5a5f; animation:pulse 1s infinite; }
+  #hud .moves.shake { animation:shake .4s ease-out; }
+  #hud .moves.boost { animation:boost .8s ease-out; }
+  #hud .moves .float {
+    position:absolute; left:calc(100% + 8px); top:0; color:#5fe89b; font-size:22px; font-weight:800;
+    pointer-events:none; animation:floatup 1s ease-out forwards;
+  }
   #hud button {
     background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:var(--ink);
-    border-radius:10px; padding:6px 12px; font-size:14px; font-weight:700; cursor:pointer;
+    border-radius:10px; padding:6px 12px; font-size:14px; font-weight:700; cursor:pointer; transition:opacity .2s;
   }
+  #hud button:disabled { opacity:.32; cursor:default; }
+  #hud .right { display:flex; gap:6px; }
   @keyframes pulse { 50% { opacity:.45; } }
+  @keyframes shake { 0%,100% { transform:translateX(0); } 20% { transform:translateX(-5px); } 40% { transform:translateX(5px); } 60% { transform:translateX(-3px); } 80% { transform:translateX(3px); } }
+  @keyframes boost { 0% { color:#5fe89b; transform:scale(1); } 25% { transform:scale(1.35); } 100% { color:inherit; transform:scale(1); } }
+  @keyframes floatup { from { opacity:1; transform:translateY(0); } 30% { opacity:1; } to { opacity:0; transform:translateY(-16px); } }
+  /* one-line tip strip under the HUD: reinforces, never replaces, what the board shows */
+  #toast {
+    position:fixed; left:50%; top:calc(58px + env(safe-area-inset-top)); transform:translateX(-50%); z-index:5;
+    width:max-content; max-width:min(92vw,400px); padding:9px 14px; border-radius:8px; text-align:center; font-size:14px; font-weight:600;
+    color:#1a2a44; background:var(--amber); box-shadow:0 4px 0 var(--amber2); pointer-events:none;
+  }
+  #toast.in { animation:toastin .35s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes toastin { from { opacity:0; transform:translate(-50%,-8px); } }
   #wrap { flex:1; width:100%; display:flex; align-items:center; justify-content:center; }
   canvas { display:block; }
+  /* while the title block is up the live board rides above it, smaller and crisp */
+  #cv { transition:transform .25s ease; transform-origin:50% 0; }
+  body.menu-up #cv { transform:translateY(-30%) scale(.72); }
+  #hud { transition:opacity .25s; }
+  body.menu-up #hud { opacity:.2; }
   .modal {
     position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
-    background:rgba(8,10,24,.66); backdrop-filter:blur(3px); z-index:10;
+    background:rgba(8,10,24,.5); z-index:10;
   }
+  /* fail card sits at the foot of the screen so the stranded block (and its route) stays in view */
+  .modal.sheet { align-items:flex-end; background:rgba(8,10,24,.22); }
+  .modal.sheet .card { width:min(94vw,400px); padding:18px 22px calc(16px + env(safe-area-inset-bottom)); margin-bottom:10px; animation:sheetup .3s cubic-bezier(.34,1.4,.64,1); }
+  @keyframes sheetup { from { transform:translateY(60px); opacity:0; } }
+  .modal.sheet .card h2 { font-size:24px; }
+  .modal.sheet .card p { margin-bottom:6px; }
+  .modal.sheet .card p.hint { color:var(--ink); font-weight:600; margin-bottom:12px; }
+  .modal.sheet .card button { padding:12px; }
   .card {
     background:linear-gradient(180deg,#1d4a8a,#143764); border:1px solid rgba(255,255,255,.12);
     border-radius:20px; padding:26px 30px; text-align:center; width:min(86vw,340px);
@@ -34,7 +72,13 @@
   @keyframes pop { from { transform:scale(.7); opacity:0; } }
   .card h2 { font-size:26px; margin-bottom:6px; }
   .card p { color:var(--dim); font-size:15px; margin-bottom:16px; }
-  .card .stars { font-size:30px; letter-spacing:6px; margin-bottom:10px; }
+  .card .stars { position:relative; font-size:34px; letter-spacing:6px; margin-bottom:10px; height:44px; line-height:44px; }
+  .card .stars span { display:inline-block; }
+  .card .stars span.on { color:var(--amber); text-shadow:0 0 12px rgba(255,208,77,.55); animation:starpop .42s cubic-bezier(.34,1.56,.64,1) both; }
+  .card .stars span.off { color:rgba(234,244,255,.35); animation:starin .3s ease-out both; }
+  @keyframes starpop { from { transform:scale(0) rotate(-40deg); opacity:0; } 60% { transform:scale(1.35) rotate(6deg); opacity:1; } to { transform:scale(1) rotate(0); opacity:1; } }
+  @keyframes starin { from { transform:scale(.6); opacity:0; } }
+  .card .stars .spark { position:absolute; width:7px; height:7px; border-radius:50%; pointer-events:none; }
   .card button {
     width:100%; border:0; border-radius:14px; padding:14px; font-size:17px; font-weight:800;
     cursor:pointer; margin-top:8px; color:#fff;
@@ -43,36 +87,186 @@
   .card button.rescue  { background:linear-gradient(180deg,#33d17a,#1fae5f); box-shadow:0 6px 0 #12854a; }
   .card button.ghost   { background:rgba(255,255,255,.09); box-shadow:none; font-weight:600; font-size:15px; }
   .card button:active { transform:translateY(3px); box-shadow:none; }
+  .card button:disabled { opacity:.55; transform:none; }
+  .card button.rescue { display:flex; align-items:center; justify-content:center; gap:10px; }
+  .card button.rescue .ad { font:800 10px/1 var(--mono); letter-spacing:.12em; padding:4px 5px; border:1.5px solid rgba(255,255,255,.85); border-radius:4px; }
+  .card button.rescue small { font-size:12px; font-weight:600; opacity:.85; }
+
+  /* ---- drafting-sheet screens: title block, sheet index, legend ---- */
+  .screen {
+    position:fixed; inset:0; z-index:20; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:calc(14px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom));
+    background:rgba(10,30,64,.5);
+  }
+  /* the title block sits at the foot of the sheet (as on a real drawing) so the live board shows above it */
+  #menu { justify-content:flex-end; background:rgba(10,30,64,.18); }
+  .tblock {
+    position:relative; width:min(92vw,400px); max-height:100%; overflow:auto;
+    border:1.5px solid var(--line); outline:1px solid var(--line2); outline-offset:5px;
+    background:rgba(15,44,90,.96); padding:22px 20px 18px;
+    animation:sheet .32s ease-out;
+  }
+  @keyframes sheet { from { opacity:0; transform:translateY(10px); } }
+  .tblock .no { position:absolute; top:6px; left:10px; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); }
+  .tblock .no.r { left:auto; right:10px; }
+  .tblock button.no { background:none; border:1px solid var(--line2); border-radius:4px; padding:4px 7px; top:4px; cursor:pointer; }
+  .tblock button.no b { color:var(--amber); }
+  .title {
+    font-weight:800; font-size:clamp(30px,9.4vw,42px); line-height:1; letter-spacing:.14em; text-transform:uppercase;
+    text-align:center; margin-top:6px; padding-bottom:10px; position:relative;
+  }
+  .title::after { /* dimension line with end ticks */
+    content:''; display:block; height:1px; background:var(--line); margin:10px 8px 0;
+    box-shadow:-8px -3px 0 -2px transparent;
+  }
+  .sub { text-align:center; color:var(--dim); font-size:14px; margin-top:8px; }
+  .fields { display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--line2); margin-top:16px; }
+  .fields > * { padding:8px 6px 9px; text-align:center; border-right:1px solid var(--line2); background:none; color:var(--ink); font-family:inherit; }
+  .fields > :last-child { border-right:0; }
+  .fields .k { display:block; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); margin-bottom:5px; }
+  .fields .v { font-weight:800; font-size:17px; font-variant-numeric:tabular-nums; }
+  .fields button { border:0; cursor:pointer; }
+  .fields button .v { color:var(--amber); }
+  .gatebtn {
+    position:relative; display:flex; align-items:center; justify-content:center; gap:12px; width:100%; margin-top:18px;
+    border:0; border-radius:8px; padding:17px 14px; background:var(--amber); color:#1a2a44;
+    font:800 19px/1 system-ui,sans-serif; box-shadow:0 5px 0 var(--amber2); cursor:pointer;
+    animation:beckon 2.2s ease-in-out infinite;
+  }
+  @keyframes beckon { 0%,55%,100% { transform:scale(1); } 72% { transform:scale(1.035); } }
+  .gatebtn::after { content:''; position:absolute; inset:5px; border:1.5px dashed rgba(26,42,68,.5); border-radius:5px; pointer-events:none; }
+  .gatebtn:active { transform:translateY(3px); box-shadow:none; }
+  .gatebtn .blk { width:22px; height:22px; flex:none; animation:slide 2.2s ease-in-out infinite; }
+  .gatebtn .chev { font-size:22px; line-height:1; margin-left:-4px; }
+  @keyframes slide { 0%,55% { transform:translateX(0); } 75% { transform:translateX(9px); } 100% { transform:translateX(0); } }
+  .row { display:flex; gap:10px; margin-top:12px; }
+  .ghostbtn {
+    flex:1; background:none; border:1.5px dashed var(--line2); border-radius:8px; color:var(--ink);
+    padding:12px 8px; font:700 15px system-ui,sans-serif; cursor:pointer;
+  }
+  .ghostbtn:active { background:rgba(255,255,255,.08); }
+  .shead { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .shead h2 { font-size:18px; letter-spacing:.12em; text-transform:uppercase; }
+  .shead .back { background:none; border:1.5px solid var(--line2); color:var(--ink); border-radius:8px; padding:6px 12px; font:700 14px system-ui; cursor:pointer; }
+  .grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+  .tile {
+    aspect-ratio:1; border:1.5px solid rgba(214,238,255,.5); border-radius:4px; background:rgba(255,255,255,.05);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; cursor:pointer;
+    color:var(--ink); font:800 17px var(--mono); font-variant-numeric:tabular-nums;
+  }
+  .tile .st { font-size:9px; letter-spacing:1px; color:var(--amber); font-family:system-ui; min-height:11px; }
+  .tile.done { background:rgba(114,216,255,.16); border-color:#72d8ff; }
+  .tile.cur { outline:2px solid var(--amber); outline-offset:2px; }
+  .tile.locked {
+    cursor:default; color:rgba(214,238,255,.35); border-style:dashed;
+    background:repeating-linear-gradient(45deg,transparent 0 4px,rgba(214,238,255,.11) 4px 5px);
+  }
+  .tile:not(.locked):active { transform:scale(.94); }
+  .foot { display:flex; justify-content:space-between; align-items:center; margin-top:14px; color:var(--dim); font-size:12px; }
+  .foot button { background:none; border:0; color:var(--dim); text-decoration:underline; font:600 12px system-ui; cursor:pointer; }
+  .foot button.arm { color:#ff8078; }
+  .legend { display:flex; flex-direction:column; gap:10px; }
+  .legend canvas.demo { width:100%; height:auto; border:1px solid var(--line2); }
+  .legend .li { display:flex; align-items:center; gap:14px; }
+  .legend .li canvas { width:64px; height:44px; flex:none; }
+  .legend .li b { display:block; font-size:15px; }
+  .legend .li span { color:var(--dim); font-size:13px; }
+  @media (prefers-reduced-motion: reduce) { .gatebtn, .gatebtn .blk, .tblock, .card, .card .stars span, #toast { animation:none; } }
   [hidden] { display:none !important; }
 </style>
 
   <div id="hud">
     <div class="lvl" id="hudLevel">Level 1</div>
-    <div class="moves"><span id="hudMoves">0</span> moves</div>
-    <button id="btnRestart" aria-label="Restart">&#8635;</button>
+    <div class="moves" id="hudMovesBox"><span id="hudMoves">0</span> <span id="hudUnit">moves</span><span class="meter" aria-label="Stars at this pace"><span id="hudMeter"><span>★</span><span>★</span><span>★</span></span><em id="hudPar">par 1</em></span></div>
+    <div class="right">
+      <button id="btnUndo" aria-label="Undo last move" disabled>&#8630;</button>
+      <button id="btnRestart" aria-label="Restart level">&#8635;</button>
+      <button id="btnMenu" aria-label="Pause">&#9776;</button>
+    </div>
   </div>
   <div id="wrap"><canvas id="cv"></canvas></div>
+  <div id="toast" role="status" hidden></div>
 
   <div class="modal" id="winModal" hidden>
     <div class="card">
-      <div class="stars" id="winStars">★★★</div>
-      <h2>Level clear!</h2>
+      <div class="stars" id="winStars" aria-live="polite"></div>
+      <h2 id="winTitle">Level clear!</h2>
       <p id="winSub"></p>
       <button class="primary" id="btnNext">Next level</button>
+      <button class="ghost" id="btnReplay" hidden>Replay for ★★★</button>
     </div>
   </div>
 
-  <div class="modal" id="failModal" hidden>
+  <div class="modal sheet" id="failModal" hidden>
     <div class="card">
       <h2>So close!</h2>
       <p id="failSub"></p>
-      <button class="rescue" id="btnRescue">+3 moves</button>
+      <p class="hint" id="failHint"></p>
+      <button class="rescue" id="btnRescue"><span class="ad">AD</span> +3 moves <small>· free rescue</small></button>
       <button class="ghost" id="btnRetry">Retry level</button>
     </div>
   </div>
 
+  <div class="modal" id="pauseModal" hidden>
+    <div class="card">
+      <h2>Paused</h2>
+      <p id="pauseSub"></p>
+      <button class="primary" id="btnResume">Resume</button>
+      <button class="ghost" id="btnPauseRestart">Restart level</button>
+      <button class="ghost" id="btnPauseLevels">Levels</button>
+      <button class="ghost" id="btnPauseLegend">How to play</button>
+      <button class="ghost" id="btnPauseSound">Sound: on</button>
+      <button class="ghost" id="btnPauseHome">Main menu</button>
+    </div>
+  </div>
+
+  <!-- title block: the main menu -->
+  <div class="screen" id="menu" hidden>
+    <div class="tblock">
+      <span class="no">NO. GE-01</span><button class="no r" id="btnSound" aria-label="Toggle sound">SOUND <b id="fSound">on</b></button>
+      <div class="title">Gate Escape</div>
+      <div class="sub">Drag every block out through the gate of its color.</div>
+      <div class="fields">
+        <div><span class="k">Level</span><span class="v" id="fLevel">1 / 30</span></div>
+        <div><span class="k">Stars</span><span class="v" id="fStars">0 / 90</span></div>
+      </div>
+      <button class="gatebtn" id="btnPlay">
+        <svg class="blk" viewBox="0 0 22 22" aria-hidden="true"><defs><pattern id="h" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#ff8078"/><rect width="1.4" height="4" fill="#c24d46" opacity=".55"/></pattern></defs><rect x="1.5" y="1.5" width="19" height="19" fill="url(#h)" stroke="#c24d46" stroke-width="2"/><circle cx="11" cy="11" r="3" fill="#fff" opacity=".9"/></svg>
+        <span id="playLabel">Play level 1</span>
+        <span class="chev">›</span>
+      </button>
+      <div class="row">
+        <button class="ghostbtn" id="btnLevels">Levels</button>
+        <button class="ghostbtn" id="btnLegend">How to play</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- sheet index: level select -->
+  <div class="screen" id="levels" hidden>
+    <div class="tblock">
+      <div class="shead"><h2>Levels</h2><button class="back" id="btnLevelsBack">Back</button></div>
+      <div class="grid" id="levelGrid"></div>
+      <div class="foot"><span id="levelsNote"></span><button id="btnReset">Reset progress</button></div>
+    </div>
+  </div>
+
+  <!-- legend: how to play -->
+  <div class="screen" id="legend" hidden>
+    <div class="tblock">
+      <div class="shead"><h2>How to play</h2><button class="back" id="btnLegendBack">Back</button></div>
+      <div class="legend">
+        <canvas class="demo" id="legendDemo" width="360" height="170"></canvas>
+        <div class="li"><canvas id="symBlock" width="128" height="88"></canvas><div><b>Block</b><span>Drag it anywhere it can slide — around corners too, in one go.</span></div></div>
+        <div class="li"><canvas id="symGate" width="128" height="88"></canvas><div><b>Gate</b><span>Push a block through the gate with its color and symbol — it escapes.</span></div></div>
+        <div class="li"><canvas id="symStone" width="128" height="88"></canvas><div><b>Stone</b><span>Never moves. Go around it.</span></div></div>
+        <div class="li"><canvas id="symMoves" width="128" height="88"></canvas><div><b>Moves</b><span>One drag is one move, however far it goes. Clear the board before they run out.</span></div></div>
+      </div>
+    </div>
+  </div>
+
   <script>
-const LEVELS = [{"w":5,"h":7,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":1,"y":3}],"gates":[{"color":0,"side":"right","start":3,"len":3}],"par":1,"moves":7},{"w":5,"h":7,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[1,0]],"x":3,"y":4},{"color":1,"cells":[[0,0]],"x":3,"y":2}],"gates":[{"color":0,"side":"right","start":2,"len":3},{"color":1,"side":"top","start":3,"len":2}],"par":2,"moves":8},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0]],"x":5,"y":0},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":2},{"color":0,"cells":[[0,0],[0,1]],"x":5,"y":2}],"gates":[{"color":0,"side":"bottom","start":0,"len":3}],"par":3,"moves":9},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[1,0]],"x":1,"y":3},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":3},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":5},{"color":0,"cells":[[0,0]],"x":3,"y":6}],"gates":[{"color":0,"side":"left","start":2,"len":4},{"color":1,"side":"top","start":1,"len":4}],"par":4,"moves":10},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":1,"y":2},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":7},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":1},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":2}],"gates":[{"color":0,"side":"left","start":3,"len":3},{"color":1,"side":"bottom","start":1,"len":4}],"par":4,"moves":10},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":2,"y":6},{"color":1,"cells":[[0,0],[0,1]],"x":3,"y":6},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":3},{"color":1,"cells":[[0,0],[0,1]],"x":4,"y":1},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":1}],"gates":[{"color":0,"side":"left","start":4,"len":4},{"color":1,"side":"left","start":0,"len":4}],"par":5,"moves":11},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0]],"x":0,"y":1},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":2},{"color":0,"cells":[[0,0]],"x":4,"y":3},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":5},{"color":1,"cells":[[0,0]],"x":5,"y":4}],"gates":[{"color":0,"side":"right","start":0,"len":4},{"color":1,"side":"bottom","start":1,"len":4}],"par":5,"moves":11},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":5,"y":4},{"color":2,"cells":[[0,0],[1,0]],"x":2,"y":1},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":1,"y":4},{"color":1,"cells":[[0,0],[0,1]],"x":1,"y":2},{"color":1,"cells":[[0,0],[1,0]],"x":2,"y":6}],"gates":[{"color":0,"side":"right","start":2,"len":4},{"color":1,"side":"bottom","start":2,"len":4},{"color":2,"side":"top","start":3,"len":3}],"par":6,"moves":12},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":2},{"color":1,"cells":[[0,0],[0,1]],"x":2,"y":6},{"color":2,"cells":[[0,0],[0,1]],"x":0,"y":6},{"color":2,"cells":[[0,0],[0,1]],"x":1,"y":1},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":5},{"color":2,"cells":[[0,0],[0,1]],"x":1,"y":3}],"gates":[{"color":0,"side":"left","start":3,"len":4},{"color":1,"side":"left","start":0,"len":3},{"color":2,"side":"right","start":0,"len":4}],"par":6,"moves":12},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":3},{"color":2,"cells":[[0,0],[0,1]],"x":2,"y":3},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":7},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":5,"y":1},{"color":1,"cells":[[0,0],[1,0]],"x":1,"y":7}],"gates":[{"color":0,"side":"right","start":2,"len":4},{"color":1,"side":"bottom","start":2,"len":4},{"color":2,"side":"left","start":2,"len":2}],"par":7,"moves":13},{"w":6,"h":8,"stones":[[0,7],[4,6]],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":2,"y":3},{"color":1,"cells":[[0,0],[1,0]],"x":1,"y":5},{"color":2,"cells":[[0,0]],"x":1,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":3,"y":0},{"color":1,"cells":[[0,0]],"x":3,"y":4},{"color":0,"cells":[[0,0],[0,1]],"x":4,"y":2}],"gates":[{"color":0,"side":"top","start":2,"len":3},{"color":1,"side":"right","start":2,"len":3},{"color":2,"side":"left","start":3,"len":2}],"par":6,"moves":10},{"w":6,"h":8,"stones":[[2,5],[2,7]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":1},{"color":1,"cells":[[0,0],[0,1]],"x":0,"y":1},{"color":2,"cells":[[0,0]],"x":2,"y":2},{"color":0,"cells":[[0,0],[1,0]],"x":4,"y":6},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":5},{"color":2,"cells":[[0,0]],"x":0,"y":6}],"gates":[{"color":0,"side":"bottom","start":2,"len":4},{"color":1,"side":"top","start":3,"len":3},{"color":2,"side":"right","start":3,"len":4}],"par":6,"moves":10},{"w":6,"h":8,"stones":[[2,7],[0,5]],"blocks":[{"color":0,"cells":[[0,0]],"x":4,"y":6},{"color":1,"cells":[[0,0],[0,1]],"x":1,"y":5},{"color":2,"cells":[[0,0],[1,0]],"x":2,"y":6},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":0},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":0},{"color":0,"cells":[[0,0],[0,1]],"x":5,"y":0}],"gates":[{"color":0,"side":"left","start":0,"len":4},{"color":1,"side":"top","start":2,"len":4},{"color":2,"side":"right","start":1,"len":2}],"par":6,"moves":10},{"w":6,"h":8,"stones":[[3,0]],"blocks":[{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":1,"y":5},{"color":1,"cells":[[0,0],[1,0]],"x":1,"y":2},{"color":2,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":0},{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":1},{"color":0,"cells":[[0,0],[1,0]],"x":4,"y":6},{"color":2,"cells":[[0,0],[0,1],[1,1]],"x":2,"y":3}],"gates":[{"color":0,"side":"left","start":5,"len":2},{"color":1,"side":"right","start":2,"len":3},{"color":2,"side":"top","start":1,"len":2}],"par":6,"moves":10},{"w":6,"h":8,"stones":[[4,2]],"blocks":[{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":3},{"color":1,"cells":[[0,0],[0,1],[1,1]],"x":4,"y":6},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":1,"y":3},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":4,"y":0},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":0,"y":5},{"color":0,"cells":[[0,0],[0,1]],"x":1,"y":0}],"gates":[{"color":0,"side":"right","start":5,"len":3},{"color":1,"side":"bottom","start":1,"len":3},{"color":2,"side":"top","start":2,"len":3}],"par":6,"moves":10},{"w":6,"h":8,"stones":[[0,1]],"blocks":[{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":3,"y":4},{"color":1,"cells":[[0,0],[1,0],[0,1]],"x":1,"y":5},{"color":2,"cells":[[0,0],[1,0]],"x":2,"y":2},{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":0},{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":2},{"color":0,"cells":[[0,0],[0,1],[1,1]],"x":4,"y":0}],"gates":[{"color":0,"side":"bottom","start":2,"len":2},{"color":1,"side":"right","start":5,"len":3},{"color":2,"side":"top","start":2,"len":2}],"par":6,"moves":10},{"w":7,"h":9,"stones":[[5,6],[0,8]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":5},{"color":1,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":2},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":4,"y":2},{"color":3,"cells":[[0,0],[0,1]],"x":3,"y":6},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":0},{"color":3,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":4},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":4,"y":5}],"gates":[{"color":0,"side":"right","start":2,"len":3},{"color":1,"side":"top","start":0,"len":3},{"color":2,"side":"bottom","start":1,"len":3},{"color":3,"side":"left","start":1,"len":4}],"par":8,"moves":12},{"w":7,"h":9,"stones":[[2,8],[2,4]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":3,"y":0},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":0},{"color":2,"cells":[[0,0],[1,0]],"x":0,"y":5},{"color":3,"cells":[[0,0],[0,1],[0,2]],"x":5,"y":5},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":1,"y":0},{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":5,"y":3},{"color":1,"cells":[[0,0],[0,1]],"x":4,"y":6}],"gates":[{"color":0,"side":"bottom","start":2,"len":3},{"color":1,"side":"right","start":3,"len":4},{"color":2,"side":"left","start":3,"len":4},{"color":3,"side":"top","start":1,"len":4}],"par":8,"moves":12},{"w":7,"h":9,"stones":[[5,1],[4,0]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":5,"y":2},{"color":1,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":5},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":0,"y":2},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":1,"y":0},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":6},{"color":3,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":1},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":3}],"gates":[{"color":0,"side":"left","start":5,"len":3},{"color":1,"side":"left","start":1,"len":3},{"color":2,"side":"bottom","start":3,"len":3},{"color":3,"side":"right","start":1,"len":4}],"par":8,"moves":12},{"w":6,"h":8,"stones":[[4,0],[3,3]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":2},{"color":1,"cells":[[0,0],[1,0],[0,1]],"x":0,"y":0},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":4,"y":3},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":5},{"color":0,"cells":[[0,0],[1,0],[0,1]],"x":1,"y":6},{"color":2,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":3},{"color":1,"cells":[[0,0],[0,1]],"x":2,"y":2}],"gates":[{"color":0,"side":"top","start":1,"len":3},{"color":1,"side":"left","start":0,"len":2},{"color":2,"side":"bottom","start":3,"len":2},{"color":3,"side":"right","start":1,"len":2}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[2,4],[4,7]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":6},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":5},{"color":2,"cells":[[0,0],[1,0]],"x":0,"y":3},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":3,"y":0},{"color":0,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":4},{"color":1,"cells":[[0,0],[1,0],[0,1]],"x":3,"y":4},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":4,"y":2}],"gates":[{"color":0,"side":"left","start":2,"len":2},{"color":1,"side":"bottom","start":0,"len":3},{"color":2,"side":"top","start":3,"len":2},{"color":3,"side":"left","start":4,"len":2}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[5,6],[0,5]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":1},{"color":1,"cells":[[0,0],[0,1]],"x":1,"y":6},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":3,"y":4},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":3,"y":0},{"color":3,"cells":[[0,0],[1,0],[1,1]],"x":3,"y":6},{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":1,"y":2},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":1,"y":0}],"gates":[{"color":0,"side":"top","start":4,"len":2},{"color":1,"side":"right","start":0,"len":2},{"color":2,"side":"bottom","start":0,"len":2},{"color":3,"side":"top","start":0,"len":2}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[5,5],[0,1]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":5},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":1},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":3,"y":0},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":0,"y":2},{"color":3,"cells":[[0,0],[0,1]],"x":5,"y":1},{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":2,"y":6},{"color":2,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":4}],"gates":[{"color":0,"side":"top","start":4,"len":2},{"color":1,"side":"left","start":3,"len":4},{"color":2,"side":"bottom","start":1,"len":2},{"color":3,"side":"right","start":5,"len":3}],"par":9,"moves":11},{"w":6,"h":8,"stones":[[4,4],[1,2]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":0},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":4},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":2},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":4},{"color":3,"cells":[[0,0],[0,1]],"x":4,"y":6},{"color":0,"cells":[[0,0],[1,0]],"x":2,"y":5},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":0}],"gates":[{"color":0,"side":"right","start":4,"len":3},{"color":1,"side":"bottom","start":0,"len":2},{"color":2,"side":"top","start":1,"len":2},{"color":3,"side":"bottom","start":3,"len":2}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[1,2],[1,0]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":3},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":1,"y":6},{"color":3,"cells":[[0,0],[1,0]],"x":4,"y":6},{"color":3,"cells":[[0,0],[1,0],[0,1]],"x":0,"y":5},{"color":3,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":6},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":3}],"gates":[{"color":0,"side":"bottom","start":0,"len":2},{"color":1,"side":"left","start":2,"len":3},{"color":2,"side":"top","start":1,"len":3},{"color":3,"side":"right","start":4,"len":2}],"par":8,"moves":10},{"w":7,"h":9,"stones":[[4,0],[2,4]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":4},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":5,"y":7},{"color":2,"cells":[[0,0],[0,1]],"x":4,"y":1},{"color":3,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":1},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":2},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":4},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":3}],"gates":[{"color":0,"side":"top","start":1,"len":2},{"color":1,"side":"right","start":4,"len":4},{"color":2,"side":"left","start":3,"len":3},{"color":3,"side":"right","start":0,"len":2}],"par":8,"moves":11},{"w":7,"h":9,"stones":[[0,4],[3,3]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":6,"y":0},{"color":1,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":7},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":2},{"color":3,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":5},{"color":2,"cells":[[0,0],[1,0]],"x":4,"y":3},{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":0},{"color":0,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":4}],"gates":[{"color":0,"side":"top","start":1,"len":3},{"color":1,"side":"left","start":1,"len":2},{"color":2,"side":"bottom","start":1,"len":4},{"color":3,"side":"left","start":6,"len":3}],"par":8,"moves":11},{"w":7,"h":9,"stones":[[5,2],[0,8]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":3,"y":0},{"color":1,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":2},{"color":2,"cells":[[0,0],[0,1]],"x":3,"y":2},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":8},{"color":2,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":0},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":4,"y":3},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":5,"y":6}],"gates":[{"color":0,"side":"right","start":3,"len":2},{"color":1,"side":"bottom","start":5,"len":2},{"color":2,"side":"top","start":3,"len":3},{"color":3,"side":"top","start":0,"len":3}],"par":9,"moves":12},{"w":7,"h":9,"stones":[[3,8],[6,1]],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":5,"y":5},{"color":1,"cells":[[0,0],[1,0]],"x":2,"y":2},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":5},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":0},{"color":2,"cells":[[0,0],[1,0],[1,1]],"x":1,"y":7},{"color":0,"cells":[[0,0],[1,0]],"x":0,"y":4},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":1}],"gates":[{"color":0,"side":"bottom","start":1,"len":2},{"color":1,"side":"right","start":1,"len":3},{"color":2,"side":"right","start":5,"len":2},{"color":3,"side":"left","start":5,"len":3}],"par":8,"moves":11},{"w":7,"h":9,"stones":[[5,4],[6,7]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":6},{"color":1,"cells":[[0,0],[1,0]],"x":1,"y":7},{"color":2,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":3},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":6},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":1},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":2},{"color":2,"cells":[[0,0],[1,0]],"x":5,"y":0}],"gates":[{"color":0,"side":"right","start":1,"len":3},{"color":1,"side":"bottom","start":0,"len":3},{"color":2,"side":"left","start":6,"len":3},{"color":3,"side":"top","start":5,"len":2}],"par":8,"moves":11}];
+const LEVELS = [{"w":4,"h":5,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":1,"y":2}],"gates":[{"color":0,"side":"right","start":2,"len":3}],"par":1,"moves":5},{"w":4,"h":5,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[1,0]],"x":2,"y":3},{"color":1,"cells":[[0,0]],"x":2,"y":1}],"gates":[{"color":0,"side":"right","start":1,"len":3},{"color":1,"side":"top","start":2,"len":2}],"par":2,"moves":6},{"w":5,"h":6,"stones":[],"blocks":[{"color":0,"cells":[[0,0]],"x":4,"y":0},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":1},{"color":0,"cells":[[0,0],[0,1]],"x":4,"y":2}],"gates":[{"color":0,"side":"bottom","start":0,"len":3}],"par":3,"moves":7},{"w":5,"h":7,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[1,0]],"x":1,"y":2},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":3},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":4},{"color":0,"cells":[[0,0]],"x":3,"y":0}],"gates":[{"color":0,"side":"left","start":2,"len":4},{"color":1,"side":"bottom","start":0,"len":4}],"par":4,"moves":8},{"w":5,"h":7,"stones":[[4,3]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":1,"y":1},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":6},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":0,"y":0},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":1}],"gates":[{"color":0,"side":"left","start":3,"len":3},{"color":1,"side":"bottom","start":1,"len":4}],"par":4,"moves":7},{"w":6,"h":8,"stones":[[5,4]],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":2,"y":6},{"color":1,"cells":[[0,0],[0,1]],"x":3,"y":6},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":3},{"color":1,"cells":[[0,0],[0,1]],"x":4,"y":1},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":1}],"gates":[{"color":0,"side":"left","start":4,"len":4},{"color":1,"side":"top","start":1,"len":4}],"par":5,"moves":8},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0]],"x":0,"y":1},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":2},{"color":0,"cells":[[0,0]],"x":4,"y":3},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":5},{"color":1,"cells":[[0,0]],"x":5,"y":4}],"gates":[{"color":0,"side":"right","start":0,"len":4},{"color":1,"side":"bottom","start":1,"len":4}],"par":5,"moves":8},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":5,"y":4},{"color":2,"cells":[[0,0],[1,0]],"x":2,"y":1},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":1,"y":4},{"color":1,"cells":[[0,0],[0,1]],"x":1,"y":2},{"color":1,"cells":[[0,0],[1,0]],"x":2,"y":6}],"gates":[{"color":0,"side":"right","start":2,"len":4},{"color":1,"side":"bottom","start":2,"len":4},{"color":2,"side":"top","start":3,"len":3}],"par":6,"moves":9},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":2},{"color":1,"cells":[[0,0],[0,1]],"x":2,"y":6},{"color":2,"cells":[[0,0],[0,1]],"x":0,"y":6},{"color":2,"cells":[[0,0],[0,1]],"x":1,"y":1},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":5},{"color":2,"cells":[[0,0],[0,1]],"x":1,"y":3}],"gates":[{"color":0,"side":"left","start":3,"len":4},{"color":1,"side":"left","start":0,"len":3},{"color":2,"side":"right","start":0,"len":4}],"par":6,"moves":9},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":3},{"color":2,"cells":[[0,0],[0,1]],"x":2,"y":3},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":7},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":5,"y":1},{"color":1,"cells":[[0,0],[1,0]],"x":1,"y":7}],"gates":[{"color":0,"side":"right","start":2,"len":4},{"color":1,"side":"bottom","start":2,"len":4},{"color":2,"side":"left","start":2,"len":2}],"par":7,"moves":10},{"w":6,"h":8,"stones":[[0,7],[4,6]],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":2,"y":3},{"color":1,"cells":[[0,0],[1,0]],"x":1,"y":5},{"color":2,"cells":[[0,0]],"x":1,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":3,"y":0},{"color":1,"cells":[[0,0]],"x":3,"y":4},{"color":0,"cells":[[0,0],[0,1]],"x":4,"y":2}],"gates":[{"color":0,"side":"top","start":2,"len":3},{"color":1,"side":"right","start":2,"len":3},{"color":2,"side":"left","start":3,"len":2}],"par":6,"moves":9},{"w":6,"h":8,"stones":[[2,5],[2,7]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":1},{"color":1,"cells":[[0,0],[0,1]],"x":0,"y":1},{"color":2,"cells":[[0,0]],"x":2,"y":2},{"color":0,"cells":[[0,0],[1,0]],"x":4,"y":6},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":5},{"color":2,"cells":[[0,0]],"x":0,"y":6}],"gates":[{"color":0,"side":"bottom","start":2,"len":4},{"color":1,"side":"top","start":3,"len":3},{"color":2,"side":"right","start":3,"len":4}],"par":6,"moves":9},{"w":6,"h":8,"stones":[[2,7],[0,5]],"blocks":[{"color":0,"cells":[[0,0]],"x":4,"y":6},{"color":1,"cells":[[0,0],[0,1]],"x":1,"y":5},{"color":2,"cells":[[0,0],[1,0]],"x":2,"y":6},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":0},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":0},{"color":0,"cells":[[0,0],[0,1]],"x":5,"y":0}],"gates":[{"color":0,"side":"left","start":0,"len":4},{"color":1,"side":"top","start":2,"len":4},{"color":2,"side":"right","start":1,"len":2}],"par":6,"moves":9},{"w":6,"h":8,"stones":[[3,0]],"blocks":[{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":1,"y":5},{"color":1,"cells":[[0,0],[1,0]],"x":1,"y":2},{"color":2,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":0},{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":1},{"color":0,"cells":[[0,0],[1,0]],"x":4,"y":6},{"color":2,"cells":[[0,0],[0,1],[1,1]],"x":2,"y":3}],"gates":[{"color":0,"side":"left","start":5,"len":2},{"color":1,"side":"right","start":2,"len":3},{"color":2,"side":"top","start":1,"len":2}],"par":6,"moves":9},{"w":6,"h":8,"stones":[[4,2]],"blocks":[{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":3},{"color":1,"cells":[[0,0],[0,1],[1,1]],"x":4,"y":6},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":1,"y":3},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":4,"y":0},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":0,"y":5},{"color":0,"cells":[[0,0],[0,1]],"x":1,"y":0}],"gates":[{"color":0,"side":"right","start":5,"len":3},{"color":1,"side":"bottom","start":1,"len":3},{"color":2,"side":"top","start":2,"len":3}],"par":6,"moves":9},{"w":6,"h":8,"stones":[[0,1]],"blocks":[{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":3,"y":4},{"color":1,"cells":[[0,0],[1,0],[0,1]],"x":1,"y":5},{"color":2,"cells":[[0,0],[1,0]],"x":2,"y":2},{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":0},{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":2},{"color":0,"cells":[[0,0],[0,1],[1,1]],"x":4,"y":0}],"gates":[{"color":0,"side":"bottom","start":2,"len":2},{"color":1,"side":"right","start":5,"len":3},{"color":2,"side":"top","start":2,"len":2}],"par":6,"moves":9},{"w":7,"h":9,"stones":[[5,6],[0,8]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":5},{"color":1,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":2},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":4,"y":2},{"color":3,"cells":[[0,0],[0,1]],"x":3,"y":6},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":0},{"color":3,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":4},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":4,"y":5}],"gates":[{"color":0,"side":"right","start":2,"len":3},{"color":1,"side":"top","start":0,"len":3},{"color":2,"side":"bottom","start":1,"len":3},{"color":3,"side":"left","start":1,"len":4}],"par":8,"moves":11},{"w":7,"h":9,"stones":[[2,8],[2,4]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":3,"y":0},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":0},{"color":2,"cells":[[0,0],[1,0]],"x":0,"y":5},{"color":3,"cells":[[0,0],[0,1],[0,2]],"x":5,"y":5},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":1,"y":0},{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":5,"y":3},{"color":1,"cells":[[0,0],[0,1]],"x":4,"y":6}],"gates":[{"color":0,"side":"bottom","start":2,"len":3},{"color":1,"side":"right","start":3,"len":4},{"color":2,"side":"left","start":3,"len":4},{"color":3,"side":"top","start":1,"len":4}],"par":8,"moves":11},{"w":7,"h":9,"stones":[[5,1],[4,0]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":5,"y":2},{"color":1,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":5},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":0,"y":2},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":1,"y":0},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":6},{"color":3,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":1},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":3}],"gates":[{"color":0,"side":"left","start":5,"len":3},{"color":1,"side":"left","start":1,"len":3},{"color":2,"side":"bottom","start":3,"len":3},{"color":3,"side":"right","start":1,"len":4}],"par":8,"moves":11},{"w":6,"h":8,"stones":[[4,0],[3,3]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":2},{"color":1,"cells":[[0,0],[1,0],[0,1]],"x":0,"y":0},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":4,"y":3},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":5},{"color":0,"cells":[[0,0],[1,0],[0,1]],"x":1,"y":6},{"color":2,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":3},{"color":1,"cells":[[0,0],[0,1]],"x":2,"y":2}],"gates":[{"color":0,"side":"top","start":1,"len":3},{"color":1,"side":"left","start":0,"len":2},{"color":2,"side":"bottom","start":3,"len":2},{"color":3,"side":"right","start":1,"len":2}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[2,4],[4,7]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":6},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":5},{"color":2,"cells":[[0,0],[1,0]],"x":0,"y":3},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":3,"y":0},{"color":0,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":4},{"color":1,"cells":[[0,0],[1,0],[0,1]],"x":3,"y":4},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":4,"y":2}],"gates":[{"color":0,"side":"left","start":2,"len":2},{"color":1,"side":"bottom","start":0,"len":3},{"color":2,"side":"top","start":3,"len":2},{"color":3,"side":"left","start":4,"len":2}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[5,6],[0,5]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":1},{"color":1,"cells":[[0,0],[0,1]],"x":1,"y":6},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":3,"y":4},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":3,"y":0},{"color":3,"cells":[[0,0],[1,0],[1,1]],"x":3,"y":6},{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":1,"y":2},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":1,"y":0}],"gates":[{"color":0,"side":"top","start":4,"len":2},{"color":1,"side":"right","start":0,"len":2},{"color":2,"side":"bottom","start":0,"len":2},{"color":3,"side":"top","start":0,"len":2}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[5,5],[0,1]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":5},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":1},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":3,"y":0},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":0,"y":2},{"color":3,"cells":[[0,0],[0,1]],"x":5,"y":1},{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":2,"y":6},{"color":2,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":4}],"gates":[{"color":0,"side":"top","start":4,"len":2},{"color":1,"side":"left","start":3,"len":4},{"color":2,"side":"bottom","start":1,"len":2},{"color":3,"side":"right","start":5,"len":3}],"par":9,"moves":11},{"w":6,"h":8,"stones":[[4,4],[1,2]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":0},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":4},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":2},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":4},{"color":3,"cells":[[0,0],[0,1]],"x":4,"y":6},{"color":0,"cells":[[0,0],[1,0]],"x":2,"y":5},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":0}],"gates":[{"color":0,"side":"right","start":4,"len":3},{"color":1,"side":"bottom","start":0,"len":2},{"color":2,"side":"top","start":1,"len":2},{"color":3,"side":"bottom","start":3,"len":2}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[1,2],[1,0]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":3},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":1,"y":6},{"color":3,"cells":[[0,0],[1,0]],"x":4,"y":6},{"color":3,"cells":[[0,0],[1,0],[0,1]],"x":0,"y":5},{"color":3,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":6},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":3}],"gates":[{"color":0,"side":"bottom","start":0,"len":2},{"color":1,"side":"left","start":2,"len":3},{"color":2,"side":"top","start":1,"len":3},{"color":3,"side":"right","start":4,"len":2}],"par":8,"moves":10},{"w":7,"h":9,"stones":[[4,0],[2,4]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":4},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":5,"y":7},{"color":2,"cells":[[0,0],[0,1]],"x":4,"y":1},{"color":3,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":1},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":2},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":4},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":3}],"gates":[{"color":0,"side":"top","start":1,"len":2},{"color":1,"side":"right","start":4,"len":4},{"color":2,"side":"left","start":3,"len":3},{"color":3,"side":"right","start":0,"len":2}],"par":8,"moves":11},{"w":7,"h":9,"stones":[[0,4],[3,3]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":6,"y":0},{"color":1,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":7},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":2},{"color":3,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":5},{"color":2,"cells":[[0,0],[1,0]],"x":4,"y":3},{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":0},{"color":0,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":4}],"gates":[{"color":0,"side":"top","start":1,"len":3},{"color":1,"side":"left","start":1,"len":2},{"color":2,"side":"bottom","start":1,"len":4},{"color":3,"side":"left","start":6,"len":3}],"par":8,"moves":11},{"w":7,"h":9,"stones":[[5,2],[0,8]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":3,"y":0},{"color":1,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":2},{"color":2,"cells":[[0,0],[0,1]],"x":3,"y":2},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":8},{"color":2,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":0},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":4,"y":3},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":5,"y":6}],"gates":[{"color":0,"side":"right","start":3,"len":2},{"color":1,"side":"bottom","start":5,"len":2},{"color":2,"side":"top","start":3,"len":3},{"color":3,"side":"top","start":0,"len":3}],"par":9,"moves":12},{"w":7,"h":9,"stones":[[3,8],[6,1]],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":5,"y":5},{"color":1,"cells":[[0,0],[1,0]],"x":2,"y":2},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":5},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":0},{"color":2,"cells":[[0,0],[1,0],[1,1]],"x":1,"y":7},{"color":0,"cells":[[0,0],[1,0]],"x":0,"y":4},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":1}],"gates":[{"color":0,"side":"bottom","start":1,"len":2},{"color":1,"side":"right","start":1,"len":3},{"color":2,"side":"right","start":5,"len":2},{"color":3,"side":"left","start":5,"len":3}],"par":8,"moves":11},{"w":7,"h":9,"stones":[[5,4],[6,7]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":6},{"color":1,"cells":[[0,0],[1,0]],"x":1,"y":7},{"color":2,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":3},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":6},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":1},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":2},{"color":2,"cells":[[0,0],[1,0]],"x":5,"y":0}],"gates":[{"color":0,"side":"right","start":1,"len":3},{"color":1,"side":"bottom","start":0,"len":3},{"color":2,"side":"left","start":6,"len":3},{"color":3,"side":"top","start":5,"len":2}],"par":8,"moves":11}];
 
 'use strict';
 /* Gate Escape — drag colored blocks out through matching gates. */
@@ -82,20 +276,31 @@ const LEVELS = [{"w":5,"h":7,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,
 const COLORS = [
   { main: '#ff8078', dark: '#c24d46', lite: '#ffb3ac', glyph: 'circle' },
   { main: '#72d8ff', dark: '#3d9cc4', lite: '#b5ecff', glyph: 'triangle' },
-  { main: '#5fe89b', dark: '#2fae67', lite: '#a5f5c8', glyph: 'square' },
+  { main: '#5fe89b', dark: '#2fae67', lite: '#a5f5c8', glyph: 'diamond' },
   { main: '#ffd04d', dark: '#c99a1e', lite: '#ffe9a8', glyph: 'star' },
 ];
 
 // ---------- dom ----------
 const cv = document.getElementById('cv');
-const ctx = cv.getContext('2d');
+let ctx = cv.getContext('2d');
 const hudLevel = document.getElementById('hudLevel');
 const hudMoves = document.getElementById('hudMoves');
+const hudBox = document.getElementById('hudMovesBox');
+const hudMeter = document.getElementById('hudMeter');
+const hudPar = document.getElementById('hudPar');
+const hudUnit = document.getElementById('hudUnit');
+const btnUndo = document.getElementById('btnUndo');
+const btnRestart = document.getElementById('btnRestart');
+const btnMenu = document.getElementById('btnMenu');
+const btnNext = document.getElementById('btnNext');
+const btnReplay = document.getElementById('btnReplay');
 const winModal = document.getElementById('winModal');
 const failModal = document.getElementById('failModal');
 const winStars = document.getElementById('winStars');
 const winSub = document.getElementById('winSub');
 const failSub = document.getElementById('failSub');
+const failHint = document.getElementById('failHint');
+const toastEl = document.getElementById('toast');
 
 // ---------- telemetry (local only for the prototype) ----------
 function track(ev, data) {
@@ -116,11 +321,21 @@ let pos = [];          // [x,y] per block, null = exited
 let disp = [];         // eased display positions
 let exitAnim = [];     // {dx,dy,t} per block or null
 let moves = 0, movesLeft = 0, rescued = false, over = false;
-let drag = null;       // {bi, gx, gy, sx, sy, moved}
+let drag = null;       // {bi, gx, gy, sx, sy, moved, counted}
 let particles = [];
 let shakeT = 0;
 let cell = 40, bx = 0, by = 0; // board metrics
 let hintT = 0;
+let paused = false, soundOn = true;
+let undoSnap = null;   // state before the last counted move (one-step undo)
+let pendingSnap = null; // state captured when the current drag began
+let gateFlash = [];    // per-color: seconds since that color's gate closed (or -1)
+let failRoute = null;  // ghost route shown behind the fail card
+let winTimers = [];
+let toastTimer = 0;
+
+// the first level whose par exceeds its block count: "a block has to move twice"
+const FIRST_TWICE = LEVELS.findIndex(l => l.par > l.blocks.length);
 
 function loadLevel(i) {
   li = Math.max(0, Math.min(i, LEVELS.length - 1));
@@ -131,16 +346,65 @@ function loadLevel(i) {
   exitAnim = L.blocks.map(() => null);
   moves = 0; movesLeft = L.moves; rescued = false; over = false;
   drag = null; particles = []; hintT = 0;
+  undoSnap = null; pendingSnap = null; failRoute = null;
+  gateFlash = COLORS.map(() => -1);
+  for (const t of winTimers) clearTimeout(t);
+  winTimers = [];
   hudLevel.textContent = 'Level ' + (li + 1);
+  hudPar.textContent = 'par ' + L.par;
   winModal.hidden = true; failModal.hidden = true;
+  hudBox.classList.remove('boost');
+  toastEl.hidden = true; clearTimeout(toastTimer);
   updateHud();
   layout();
   track('level_start', li + 1);
+  window.dispatchEvent(new CustomEvent('ge:load', { detail: { lvl: li } }));
+  // one-time tips, shown in the HUD strip (never information the board itself lacks)
+  if (li === 2) tip('corner', 'One drag can turn corners. The whole route is one move.');
+  if (li === FIRST_TWICE) tip('twice', 'Everything is corked. Sometimes a block has to move twice.');
 }
 
+// ---------- HUD ----------
+function starsFor(m) { return m <= L.par ? 3 : m <= L.par + 2 ? 2 : 1; }
+function blocksLeft() { return pos.filter(p => p).length; }
 function updateHud() {
   hudMoves.textContent = movesLeft;
-  hudMoves.parentElement.classList.toggle('low', movesLeft <= 2);
+  hudUnit.textContent = movesLeft === 1 ? 'move' : 'moves';
+  const left = blocksLeft();
+  // meter: the stars still reachable — every remaining block costs at least one more move
+  const now = starsFor(moves + left);
+  const spans = hudMeter.children;
+  for (let i = 0; i < 3; i++) {
+    const lit = i < now;
+    if (spans[i].classList.contains('on') !== lit) spans[i].classList.toggle('on', lit);
+  }
+  // amber: the 3-star pace is gone. red: point of no return — every remaining move must be an exit.
+  const low = left > 0 && movesLeft <= left;
+  const warn = !low && left > 0 && now < 3;
+  if (low && !hudBox.classList.contains('low')) { hudBox.classList.add('shake'); setTimeout(() => hudBox.classList.remove('shake'), 400); }
+  hudBox.classList.toggle('low', low);
+  hudBox.classList.toggle('warn', warn);
+  // the HUD goes inert the instant the round is decided (`over` flips before any card
+  // appears) and under the pause card: a card owns the decision, the HUD never does
+  btnUndo.disabled = !undoSnap || over || paused;
+  btnRestart.disabled = over || paused;
+  btnMenu.disabled = over;
+}
+
+function toast(msg, ms = 2800) {
+  toastEl.textContent = msg;
+  toastEl.hidden = false;
+  toastEl.classList.remove('in'); void toastEl.offsetWidth; toastEl.classList.add('in');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toastEl.hidden = true; }, ms);
+}
+function tip(key, msg) {
+  let seen = {};
+  try { seen = JSON.parse(localStorage.getItem('ge_tips') || '{}'); } catch (e) {}
+  if (seen[key]) return;
+  seen[key] = 1;
+  try { localStorage.setItem('ge_tips', JSON.stringify(seen)); } catch (e) {}
+  toast(msg, 3600);
 }
 
 // ---------- grid logic ----------
@@ -163,14 +427,13 @@ function fits(bi, x, y) {
   return true;
 }
 
-// block flush against `side` and every occupied lane covered by a same-color gate?
-function exitGate(bi, side) {
-  const b = L.blocks[bi], p = pos[bi];
-  if (!p) return null;
+// block (at x,y) flush against `side` and every occupied lane covered by a same-color gate?
+function exitGateAt(bi, x, y, side) {
+  const b = L.blocks[bi];
   const lanes = new Set();
   let flush = false;
   for (const [cx, cy] of b.cells) {
-    const gx = p[0] + cx, gy = p[1] + cy;
+    const gx = x + cx, gy = y + cy;
     if (side === 'top') { lanes.add(gx); if (gy === 0) flush = true; }
     if (side === 'bottom') { lanes.add(gx); if (gy === L.h - 1) flush = true; }
     if (side === 'left') { lanes.add(gy); if (gx === 0) flush = true; }
@@ -185,9 +448,58 @@ function exitGate(bi, side) {
   }
   return null;
 }
+function exitGate(bi, side) {
+  const p = pos[bi];
+  return p ? exitGateAt(bi, p[0], p[1], side) : null;
+}
+
+// Shortest drag route (cell by cell, corners allowed) from a block's current
+// spot to any position it can exit from — the same physics the finger uses.
+// Returns { path: [[x,y]...], side } or null if nothing can get it out right now.
+function findRoute(bi) {
+  const start = pos[bi];
+  if (!start) return null;
+  const key = (x, y) => x + ',' + y;
+  const parent = new Map([[key(start[0], start[1]), null]]);
+  const q = [start];
+  while (q.length) {
+    const [x, y] = q.shift();
+    for (const side of ['top', 'bottom', 'left', 'right']) {
+      if (!exitGateAt(bi, x, y, side)) continue;
+      const path = [];
+      let cur = [x, y];
+      while (cur) { path.push(cur); cur = parent.get(key(cur[0], cur[1])); }
+      return { path: path.reverse(), side };
+    }
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx, ny = y + dy;
+      if (parent.has(key(nx, ny))) continue;
+      if (fits(bi, nx, ny)) { parent.set(key(nx, ny), [x, y]); q.push([nx, ny]); }
+    }
+  }
+  return null;
+}
+// the remaining block with the shortest route out (for hints); null if none can exit
+function bestRoute() {
+  let best = null;
+  for (let i = 0; i < L.blocks.length; i++) {
+    if (!pos[i]) continue;
+    const r = findRoute(i);
+    if (r && (!best || r.path.length < best.path.length)) best = { bi: i, ...r };
+  }
+  return best;
+}
 
 // ---------- drag mechanics ----------
 const DIRS = { top: [0, -1], bottom: [0, 1], left: [-1, 0], right: [1, 0] };
+
+function snapshot() {
+  return { pos: pos.map(p => (p ? [p[0], p[1]] : null)), moves, movesLeft };
+}
+function beginDrag(bi, gx, gy) {
+  drag = { bi, gx, gy, sx: pos[bi][0], sy: pos[bi][1], moved: false, counted: false };
+  pendingSnap = snapshot();
+}
 
 function stepToward(bi, wantX, wantY) {
   // slide block one cell at a time toward fractional target; returns exit side or null
@@ -234,26 +546,51 @@ function startExit(bi, side) {
   }
   shakeT = 0.16;
   pos[bi] = null;
+  // last block of its color gone? the gate closes with a flash
+  if (!L.blocks.some((o, i) => pos[i] && o.color === b.color)) { gateFlash[b.color] = 0; sound('gate'); }
   countMove();
   sound('exit');
   track('block_exit', li + 1);
-  if (pos.every(p => !p)) setTimeout(win, 380);
+  // lock the board while the last block flies out; the pending win dies with the level
+  // (loadLevel clears winTimers) so a restart or level change in this window can never
+  // land a win card — and its stars — on a level that was not played
+  if (pos.every(p => !p)) { over = true; updateHud(); winTimers.push(setTimeout(win, 380)); }
   else maybeFail();
 }
 
 function countMove() {
   moves++; movesLeft--;
+  undoSnap = pendingSnap; pendingSnap = null;
   updateHud();
   if (drag) drag.counted = true;
+}
+
+function undo() {
+  if (!undoSnap || over || paused || drag) return;
+  const s = undoSnap; undoSnap = null;
+  pos = s.pos.map(p => (p ? [p[0], p[1]] : null));
+  moves = s.moves; movesLeft = s.movesLeft;
+  exitAnim = L.blocks.map(() => null);
+  gateFlash = COLORS.map(() => -1);
+  for (let i = 0; i < pos.length; i++) if (pos[i]) disp[i] = [pos[i][0], pos[i][1]];
+  updateHud();
+  sound('undo');
+  track('undo', li + 1);
 }
 
 function maybeFail() {
   if (over) return;
   if (movesLeft <= 0 && pos.some(p => p)) {
     over = true;
+    updateHud();
     setTimeout(() => {
-      const out = pos.filter(p => !p).length;
+      const out = pos.filter(p => !p).length, left = pos.length - out;
       failSub.textContent = `${out} of ${pos.length} blocks escaped — out of moves.`;
+      // show what the rescue buys: the block nearest its gate, and its route
+      failRoute = bestRoute();
+      failHint.textContent = failRoute
+        ? (left === 1 ? 'The last block is one drag from its gate.' : `${left} left — one is a single drag from its gate.`)
+        : `${left} block${left > 1 ? 's' : ''} left to clear.`;
       document.getElementById('btnRescue').hidden = rescued;
       failModal.hidden = false;
       sound('fail');
@@ -265,28 +602,72 @@ function maybeFail() {
 function win() {
   if (winModal.hidden === false) return;
   over = true;
-  const stars = moves <= L.par ? 3 : moves <= L.par + 2 ? 2 : 1;
-  winStars.textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
-  winSub.textContent = `Solved in ${moves} moves` + (moves <= L.par ? ' — perfect!' : ` (best: ${L.par})`);
+  updateHud();
+  const stars = starsFor(moves);
+  const last = li === LEVELS.length - 1;
+  document.getElementById('winTitle').textContent = last ? 'Every level clear!' : 'Level clear!';
+  btnNext.textContent = last ? 'Back to menu' : 'Next level';
+  winSub.textContent = `Solved in ${moves} move${moves === 1 ? '' : 's'}` + (stars === 3 ? ' — perfect!' : ` (best: ${L.par})`);
+  // stars drop in one at a time; a burst on the third; buttons go live once the reward has landed
+  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const delays = reduced ? [0, 0, 0] : [80, 260, 440];
+  winStars.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const s = document.createElement('span');
+    s.className = i < stars ? 'on' : 'off';
+    s.textContent = i < stars ? '★' : '☆';
+    s.style.animationDelay = delays[i] + 'ms';
+    winStars.appendChild(s);
+    if (i < stars) winTimers.push(setTimeout(() => sound('star', i), delays[i] + 120));
+  }
+  if (stars === 3 && !reduced) winTimers.push(setTimeout(() => burst(winStars.children[2]), delays[2] + 260));
+  btnReplay.hidden = stars === 3 || last;
+  btnNext.disabled = btnReplay.disabled = !reduced;
+  winTimers.push(setTimeout(() => { btnNext.disabled = btnReplay.disabled = false; }, delays[2] + 400 + 400));
   winModal.hidden = false;
+  window.dispatchEvent(new CustomEvent('ge:win', { detail: { lvl: li, stars, moves, last } }));
   sound('win');
   track('win', { lvl: li + 1, moves, stars });
 }
 
+// DOM spark burst from an element's centre (win card, third star)
+function burst(el) {
+  if (!el || !el.animate) return;
+  const host = el.parentElement;
+  const r = el.getBoundingClientRect(), hr = host.getBoundingClientRect();
+  const cx = r.left + r.width / 2 - hr.left, cy = r.top + r.height / 2 - hr.top;
+  for (let i = 0; i < 18; i++) {
+    const s = document.createElement('i');
+    s.className = 'spark';
+    const a = (i / 18) * Math.PI * 2 + Math.random() * 0.3, d = 44 + Math.random() * 40;
+    s.style.left = cx + 'px'; s.style.top = cy + 'px';
+    s.style.background = i % 3 ? '#ffd04d' : '#ffffff';
+    host.appendChild(s);
+    s.animate([
+      { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 },
+      { transform: `translate(calc(-50% + ${Math.cos(a) * d}px), calc(-50% + ${Math.sin(a) * d}px)) scale(.15)`, opacity: 0 },
+    ], { duration: 620, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'forwards' }).onfinish = () => s.remove();
+  }
+}
+
 // ---------- input ----------
 function evCell(e) {
+  // the rect is the canvas as drawn on screen, including the CSS transform that
+  // scales it during the menu → board transition; divide that out so a touch in the
+  // first frames after Play lands on the right cell instead of being silently dropped
   const r = cv.getBoundingClientRect();
-  return [(e.clientX - r.left - bx) / cell, (e.clientY - r.top - by) / cell];
+  const s = r.width / (cv.clientWidth || 1);
+  return [((e.clientX - r.left) / s - bx) / cell, ((e.clientY - r.top) / s - by) / cell];
 }
 
 cv.addEventListener('pointerdown', (e) => {
   audioInit();
-  if (over) return;
+  if (over || paused) return;
   const [fx, fy] = evCell(e);
   let bi = pickBlock(fx, fy);
   if (bi < 0) return;
-  cv.setPointerCapture(e.pointerId);
-  drag = { bi, gx: fx - pos[bi][0], gy: fy - pos[bi][1], sx: pos[bi][0], sy: pos[bi][1], moved: false, counted: false };
+  try { cv.setPointerCapture(e.pointerId); } catch (err) { /* synthetic pointers (bots) have no capture */ }
+  beginDrag(bi, fx - pos[bi][0], fy - pos[bi][1]);
   sound('tap');
 });
 
@@ -319,22 +700,44 @@ function endDrag(count = true) {
   if (!drag) return;
   const d = drag; drag = null;
   if (!count) return;
-  if (!pos[d.bi]) return;
+  if (!pos[d.bi]) { pendingSnap = null; return; }
   if ((pos[d.bi][0] !== d.sx || pos[d.bi][1] !== d.sy) && !d.counted) {
     countMove();
     maybeFail();
-  }
+  } else pendingSnap = null;
+}
+// a drag the player did not release (OS pointercancel: notification banner, palm
+// rejection, incoming call — or the pause card opening under a held finger) is not
+// a move: the block goes back where it was picked up and nothing is charged
+function cancelDrag() {
+  if (!drag) return;
+  const d = drag; drag = null;
+  if (!d.counted && pos[d.bi]) pos[d.bi] = [d.sx, d.sy];
+  pendingSnap = null;
 }
 cv.addEventListener('pointerup', () => endDrag(true));
-cv.addEventListener('pointercancel', () => endDrag(true));
+cv.addEventListener('pointercancel', cancelDrag);
 
 // ---------- buttons ----------
-document.getElementById('btnRestart').onclick = () => { track('restart', li + 1); loadLevel(li); };
-document.getElementById('btnNext').onclick = () => loadLevel(li + 1);
+btnRestart.onclick = () => { if (over || paused) return; track('restart', li + 1); loadLevel(li); };
+btnUndo.onclick = () => { audioInit(); undo(); };
+btnNext.onclick = () => {
+  if (li === LEVELS.length - 1) window.dispatchEvent(new CustomEvent('ge:finished'));
+  else loadLevel(li + 1);
+};
+btnReplay.onclick = () => { track('replay', li + 1); loadLevel(li); };
 document.getElementById('btnRetry').onclick = () => { track('retry', li + 1); loadLevel(li); };
 document.getElementById('btnRescue').onclick = () => {
-  rescued = true; over = false; movesLeft += 3; failModal.hidden = true;
+  rescued = true; over = false; movesLeft += 3; failModal.hidden = true; failRoute = null;
+  // the losing move stays undoable; undo must hand back the move without taking the rescue away
+  if (undoSnap) undoSnap.movesLeft += 3;
   updateHud(); sound('win'); track('rescue_used', li + 1);
+  // the +3 lands on the counter: green flash + a floating "+3"
+  hudBox.classList.remove('boost'); void hudBox.offsetWidth; hudBox.classList.add('boost');
+  const f = document.createElement('span');
+  f.className = 'float'; f.textContent = '+3';
+  hudBox.appendChild(f);
+  setTimeout(() => f.remove(), 1000);
 };
 
 // ---------- layout / render ----------
@@ -358,6 +761,12 @@ function blockCenterPx(bi) {
   for (const [cx, cy] of b.cells) { sx += p[0] + cx + 0.5; sy += p[1] + cy + 0.5; }
   return [bx + (sx / b.cells.length) * cell, by + (sy / b.cells.length) * cell];
 }
+// centroid offset (in cells) of a block from its origin
+function centroidOff(b) {
+  let sx = 0, sy = 0;
+  for (const [cx, cy] of b.cells) { sx += cx + 0.5; sy += cy + 0.5; }
+  return [sx / b.cells.length, sy / b.cells.length];
+}
 
 function rr(x, y, w, h, r) {
   ctx.beginPath();
@@ -375,7 +784,7 @@ function drawGlyph(kind, x, y, s, color) {
   ctx.fillStyle = color;
   ctx.beginPath();
   if (kind === 'circle') ctx.arc(0, 0, s, 0, Math.PI * 2);
-  else if (kind === 'square') { ctx.rotate(Math.PI / 4); ctx.rect(-s * 0.85, -s * 0.85, s * 1.7, s * 1.7); }
+  else if (kind === 'diamond') { ctx.rotate(Math.PI / 4); ctx.rect(-s * 0.85, -s * 0.85, s * 1.7, s * 1.7); }
   else if (kind === 'triangle') { ctx.moveTo(0, -s); ctx.lineTo(s, s * 0.8); ctx.lineTo(-s, s * 0.8); }
   else { // star
     for (let i = 0; i < 10; i++) {
@@ -384,6 +793,53 @@ function drawGlyph(kind, x, y, s, color) {
     }
   }
   ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+// ghost route: a marching dashed finger path from the block's centre, around
+// corners, out past the gate, with an arrowhead and a travelling finger pip.
+function drawRoute(bi, route, strength) {
+  const b = L.blocks[bi];
+  const [ox, oy] = centroidOff(b);
+  const pts = route.path.map(([x, y]) => [bx + (x + ox) * cell, by + (y + oy) * cell]);
+  const d = DIRS[route.side];
+  const last = pts[pts.length - 1];
+  pts.push([last[0] + d[0] * cell * 1.15, last[1] + d[1] * cell * 1.15]);
+  const pulse = (Math.sin(hintT * 5) + 1) / 2;
+  const a = strength * (0.45 + pulse * 0.4);
+  ctx.save();
+  ctx.strokeStyle = `rgba(255,255,255,${a})`;
+  ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.setLineDash([9, 9]); ctx.lineDashOffset = -hintT * 40;
+  ctx.beginPath();
+  pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+  ctx.stroke();
+  ctx.setLineDash([]);
+  const [ex, ey] = pts[pts.length - 1];
+  const pa = Math.atan2(d[1], d[0]);
+  ctx.fillStyle = `rgba(255,255,255,${a})`;
+  ctx.beginPath();
+  ctx.moveTo(ex + Math.cos(pa) * 11, ey + Math.sin(pa) * 11);
+  ctx.lineTo(ex + Math.cos(pa + 2.5) * 11, ey + Math.sin(pa + 2.5) * 11);
+  ctx.lineTo(ex + Math.cos(pa - 2.5) * 11, ey + Math.sin(pa - 2.5) * 11);
+  ctx.closePath(); ctx.fill();
+  // finger pip travelling the route
+  let total = 0; const seg = [];
+  for (let i = 1; i < pts.length; i++) { const l = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); seg.push(l); total += l; }
+  let t = ((hintT * cell * 2.2) % (total + cell)) ;
+  if (t < total) {
+    for (let i = 0; i < seg.length; i++) {
+      if (t <= seg[i]) {
+        const u = seg[i] ? t / seg[i] : 0;
+        const x = pts[i][0] + (pts[i + 1][0] - pts[i][0]) * u, y = pts[i][1] + (pts[i + 1][1] - pts[i][1]) * u;
+        ctx.fillStyle = `rgba(255,255,255,${strength * 0.95})`;
+        ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = `rgba(20,40,80,${strength * 0.6})`; ctx.lineWidth = 2; ctx.stroke();
+        break;
+      }
+      t -= seg[i];
+    }
+  }
   ctx.restore();
 }
 
@@ -400,6 +856,7 @@ function frame(t) {
   for (const p of particles) { p.x += p.vx; p.y += p.vy; p.vy += 0.22; p.life -= dt * 2.1; }
   particles = particles.filter(p => p.life > 0);
   if (shakeT > 0) shakeT -= dt;
+  for (let c = 0; c < gateFlash.length; c++) if (gateFlash[c] >= 0) gateFlash[c] += dt;
   hintT += dt;
   render();
   requestAnimationFrame(frame);
@@ -441,6 +898,10 @@ function render() {
     ctx.stroke();
   }
 
+  // which colors still have blocks on the board (a gate with none left is "closed")
+  const alive = COLORS.map(() => false);
+  for (let i = 0; i < L.blocks.length; i++) if (pos[i]) alive[L.blocks[i].color] = true;
+
   // gates
   for (const g of L.gates) {
     const c = COLORS[g.color];
@@ -452,6 +913,15 @@ function render() {
     if (g.side === 'bottom') { gx = bx + g.start * cell; gy = by + bh + 3; w = along; h = th; ax = gx + w / 2; ay = gy + h / 2; rot = Math.PI; }
     if (g.side === 'left') { gx = bx - th - 3; gy = by + g.start * cell; w = th; h = along; ax = gx + w / 2; ay = gy + h / 2; rot = -Math.PI / 2; }
     if (g.side === 'right') { gx = bx + bw + 3; gy = by + g.start * cell; w = th; h = along; ax = gx + w / 2; ay = gy + h / 2; rot = Math.PI / 2; }
+    const closed = !alive[g.color];
+    const fl = gateFlash[g.color];
+    if (fl >= 0 && fl < 0.6) {
+      // closing flash: a bright ring swelling off the tab
+      const u = fl / 0.6, grow = 4 + u * 14;
+      ctx.strokeStyle = `rgba(255,255,255,${(1 - u) * 0.9})`; ctx.lineWidth = 3;
+      rr(gx - grow, gy - grow, w + grow * 2, h + grow * 2, 6 + grow); ctx.stroke();
+    }
+    if (closed) ctx.globalAlpha = 0.3;
     // solid ink stamp — must be unmissable at a glance
     ctx.fillStyle = c.dark;
     rr(gx, gy, w, h, 4); ctx.fill();
@@ -461,14 +931,16 @@ function render() {
     ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 1.4;
     rr(gx + 3.5, gy + 3.5, w - 7, h - 7, 2); ctx.stroke();
     ctx.setLineDash([]);
-    // match glyph on the tab + outward chevron floating past it
+    // match glyph on the tab + outward chevron floating past it (chevron only while the gate is live)
     ctx.translate(ax, ay); ctx.rotate(rot);
     drawGlyph(c.glyph, 0, 0, Math.min(cell * 0.13, th * 0.3), 'rgba(255,255,255,.95)');
-    ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
-    const ch = cell * 0.1;
-    ctx.beginPath();
-    ctx.moveTo(-ch, -th * 0.62 - ch * 0.1); ctx.lineTo(0, -th * 0.62 - ch * 1.2); ctx.lineTo(ch, -th * 0.62 - ch * 0.1);
-    ctx.stroke();
+    if (!closed) {
+      ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+      const ch = cell * 0.1;
+      ctx.beginPath();
+      ctx.moveTo(-ch, -th * 0.62 - ch * 0.1); ctx.lineTo(0, -th * 0.62 - ch * 1.2); ctx.lineTo(ch, -th * 0.62 - ch * 0.1);
+      ctx.stroke();
+    }
     ctx.restore();
   }
 
@@ -491,6 +963,8 @@ function render() {
   }
 
   // blocks
+  const failUp = over && !failModal.hidden;
+  const pulse = (Math.sin(hintT * 6) + 1) / 2;
   for (let i = 0; i < L.blocks.length; i++) {
     if (!pos[i] && !exitAnim[i]) continue;
     const b = L.blocks[i], c = COLORS[b.color];
@@ -541,7 +1015,10 @@ function render() {
     ctx.restore();
     ctx.shadowColor = 'transparent';
     // heavy ink outline only on the block's outer edges
-    ctx.strokeStyle = c.dark; ctx.lineWidth = 2.6; ctx.lineCap = 'square';
+    // (on the fail card the stranded blocks breathe with a white edge so the rescue shows what it buys)
+    const stranded = failUp && pos[i];
+    ctx.strokeStyle = stranded ? `rgba(255,255,255,${0.35 + pulse * 0.6})` : c.dark;
+    ctx.lineWidth = stranded ? 3.4 : 2.6; ctx.lineCap = 'square';
     for (const [cx, cy] of b.cells) {
       const x = px + cx * cell, y = py + cy * cell;
       const L2 = x + inset, R2 = x + cell - inset, T2 = y + inset, B2 = y + cell - inset;
@@ -563,9 +1040,7 @@ function render() {
     }
     // glyph at block centroid
     {
-      let gx2 = 0, gy2 = 0;
-      for (const [cx, cy] of b.cells) { gx2 += cx + 0.5; gy2 += cy + 0.5; }
-      gx2 /= b.cells.length; gy2 /= b.cells.length;
+      let [gx2, gy2] = centroidOff(b);
       if (!has(Math.floor(gx2), Math.floor(gy2))) { const [cx, cy] = b.cells[0]; gx2 = cx + 0.5; gy2 = cy + 0.5; }
       drawGlyph(c.glyph, px + gx2 * cell, py + gy2 * cell, cell * 0.16, 'rgba(255,255,255,.85)');
     }
@@ -580,27 +1055,14 @@ function render() {
   }
   ctx.globalAlpha = 1;
 
-  // level-1 hint: pulsing arrow from first block toward its gate
-  if (li === 0 && pos[0] && moves === 0) {
-    const g = L.gates[0];
-    const [cxp, cyp] = blockCenterPx(0);
-    const d = DIRS[g.side];
-    const pulse = (Math.sin(hintT * 5) + 1) / 2;
-    const len = cell * (0.9 + pulse * 0.5);
-    ctx.save();
-    ctx.strokeStyle = `rgba(255,255,255,${0.5 + pulse * 0.4})`;
-    ctx.lineWidth = 5; ctx.lineCap = 'round';
-    const ex = cxp + d[0] * len, ey = cyp + d[1] * len;
-    ctx.beginPath(); ctx.moveTo(cxp + d[0] * cell * 0.2, cyp + d[1] * cell * 0.2); ctx.lineTo(ex, ey); ctx.stroke();
-    const pa = Math.atan2(d[1], d[0]);
-    ctx.beginPath();
-    ctx.moveTo(ex + Math.cos(pa) * 10, ey + Math.sin(pa) * 10);
-    ctx.lineTo(ex + Math.cos(pa + 2.5) * 10, ey + Math.sin(pa + 2.5) * 10);
-    ctx.lineTo(ex + Math.cos(pa - 2.5) * 10, ey + Math.sin(pa - 2.5) * 10);
-    ctx.closePath();
-    ctx.fillStyle = `rgba(255,255,255,${0.5 + pulse * 0.4})`;
-    ctx.fill();
-    ctx.restore();
+  // ghost routes: the opening move on the three teaching levels (L1 straight
+  // out, L2 two colors, L3 around the corner), and behind the fail card the
+  // block nearest freedom — what the rescue is buying.
+  if (li <= 2 && moves === 0 && !drag && !over) {
+    const r = bestRoute();
+    if (r) drawRoute(r.bi, r, 1);
+  } else if (failUp && failRoute && pos[failRoute.bi]) {
+    drawRoute(failRoute.bi, failRoute, 1);
   }
   ctx.restore();
 }
@@ -624,10 +1086,14 @@ function blip(freq, dur, type, vol, when = 0, slide = 0) {
   o.connect(g); g.connect(actx.destination);
   o.start(t0); o.stop(t0 + dur + 0.02);
 }
-function sound(kind) {
-  if (!actx) return;
+// every sound is additive: nothing here carries information the board doesn't show
+function sound(kind, n = 0) {
+  if (!actx || !soundOn) return;
   if (kind === 'tap') blip(300, 0.06, 'sine', 0.12);
   else if (kind === 'exit') { blip(420, 0.16, 'sine', 0.22, 0, 460); blip(880, 0.1, 'triangle', 0.1, 0.05); }
+  else if (kind === 'gate') { blip(1046, 0.18, 'triangle', 0.14, 0.08); blip(1568, 0.22, 'sine', 0.1, 0.14); }
+  else if (kind === 'star') blip(880 * Math.pow(1.25, n), 0.16, 'triangle', 0.18, 0, 200);
+  else if (kind === 'undo') blip(520, 0.12, 'sine', 0.14, 0, -220);
   else if (kind === 'win') { blip(523, 0.14, 'triangle', 0.2); blip(659, 0.14, 'triangle', 0.2, 0.09); blip(784, 0.22, 'triangle', 0.22, 0.18); }
   else if (kind === 'fail') { blip(220, 0.25, 'sawtooth', 0.12, 0, -80); blip(160, 0.3, 'sawtooth', 0.1, 0.12, -60); }
 }
@@ -639,11 +1105,20 @@ window.GE = {
   get L() { return L; },
   get moves() { return moves; },
   get movesLeft() { return movesLeft; },
+  get metrics() { return { cell, bx, by, w: L.w, h: L.h }; }, // board geometry in CSS px (for pointer-driven bots)
+  get over() { return over; },
+  get paused() { return paused; }, set paused(v) { paused = !!v; if (paused) cancelDrag(); updateHud(); },
+  get soundOn() { return soundOn; }, set soundOn(v) { soundOn = !!v; },
+  get canUndo() { return !!undoSnap && !over && !paused; },
+  // drawing helpers shared with menu.js (legend); ctx is swapped for the call
+  draw(c, fn) { const o = ctx; ctx = c; try { fn({ rr, drawGlyph, COLORS }); } finally { ctx = o; } },
   load: loadLevel,
+  undo,
+  route: findRoute,
   // programmatic drag: mirrors player physics exactly
   drag(bi, tx, ty) {
     if (over || !pos[bi]) return false;
-    drag = { bi, gx: 0, gy: 0, sx: pos[bi][0], sy: pos[bi][1], moved: false, counted: false };
+    beginDrag(bi, 0, 0);
     const side = stepToward(bi, tx, ty);
     if (side) { const b = bi; drag = null; startExit(b, side); return 'exit'; }
     endDrag(true);
@@ -658,7 +1133,7 @@ window.GE = {
   // Counts as a single move, exactly like a player's finger would.
   dragVia(bi, points, exitSide) {
     if (over || !pos[bi]) return false;
-    drag = { bi, gx: 0, gy: 0, sx: pos[bi][0], sy: pos[bi][1], moved: false, counted: false };
+    beginDrag(bi, 0, 0);
     for (const [wx, wy] of points) stepToward(bi, wx, wy);
     if (exitSide) {
       const far = { top: [pos[bi][0], -9], bottom: [pos[bi][0], 99], left: [-9, pos[bi][1]], right: [99, pos[bi][1]] }[exitSide];
@@ -673,5 +1148,255 @@ window.GE = {
 // ---------- go ----------
 loadLevel(li);
 requestAnimationFrame(frame);
+
+'use strict';
+/* Gate Escape — the drawing-sheet screens around the game:
+   title block (main menu), sheet index (level select), legend (how to play),
+   and pause. Talks to the engine only through window.GE and the
+   ge:load / ge:win / ge:finished events, so the engine stays bot-identical. */
+(function () {
+  const $ = id => document.getElementById(id);
+  const N = LEVELS.length;
+  const screens = { menu: $('menu'), levels: $('levels'), legend: $('legend') };
+  const pauseModal = $('pauseModal');
+  let legendFrom = 'menu';
+  let resetArmed = false, resetTimer = 0;
+
+  // ---------- progress: highest unlocked level + best stars per level ----------
+  let prog = { u: 0, s: [] };
+  try {
+    const p = JSON.parse(localStorage.getItem('ge_prog') || 'null');
+    if (p && typeof p.u === 'number' && Array.isArray(p.s)) prog = p;
+  } catch (e) {}
+  const save = () => { try { localStorage.setItem('ge_prog', JSON.stringify(prog)); } catch (e) {} };
+  const starsTotal = () => prog.s.reduce((a, b) => a + (b || 0), 0);
+
+  // ---------- sound ----------
+  try { GE.soundOn = localStorage.getItem('ge_sound') !== '0'; } catch (e) {}
+  function setSound(on) {
+    GE.soundOn = on;
+    try { localStorage.setItem('ge_sound', on ? '1' : '0'); } catch (e) {}
+    refreshSound();
+  }
+  function refreshSound() {
+    $('fSound').textContent = GE.soundOn ? 'on' : 'off';
+    $('btnPauseSound').textContent = 'Sound: ' + (GE.soundOn ? 'on' : 'off');
+  }
+
+  // ---------- screens ----------
+  let legendAnim = false, demoT0 = 0;
+  function show(name) {
+    for (const k in screens) screens[k].hidden = k !== name;
+    document.body.classList.toggle('menu-up', name === 'menu');
+    if (name === 'menu') refreshMenu();
+    if (name === 'levels') buildGrid();
+    if (name === 'legend') { drawSymbols(); if (!legendAnim) { legendAnim = true; demoT0 = 0; requestAnimationFrame(demoFrame); } }
+    else legendAnim = false;
+  }
+  function refreshMenu() {
+    $('fLevel').textContent = (GE.level + 1) + ' / ' + N;
+    $('fStars').textContent = starsTotal() + ' / ' + (N * 3);
+    $('playLabel').textContent = 'Play level ' + (GE.level + 1);
+    refreshSound();
+  }
+  function buildGrid() {
+    const g = $('levelGrid');
+    g.innerHTML = '';
+    for (let i = 0; i < N; i++) {
+      const locked = i > prog.u;
+      const b = document.createElement('button');
+      b.className = 'tile' + (locked ? ' locked' : '') + (prog.s[i] ? ' done' : '') + (i === GE.level ? ' cur' : '');
+      b.setAttribute('aria-label', 'Level ' + (i + 1) + (locked ? ', locked' : ''));
+      b.disabled = locked;
+      b.innerHTML = `<span>${String(i + 1).padStart(2, '0')}</span><span class="st">${prog.s[i] ? '★'.repeat(prog.s[i]) : ''}</span>`;
+      if (!locked) b.onclick = () => GE.load(i);
+      g.appendChild(b);
+    }
+    $('levelsNote').textContent = `${prog.s.filter(Boolean).length} of ${N} cleared · ${starsTotal()} stars`;
+    disarmReset();
+  }
+  function disarmReset() {
+    resetArmed = false; clearTimeout(resetTimer);
+    const b = $('btnReset'); b.textContent = 'Reset progress'; b.classList.remove('arm');
+  }
+  $('btnReset').onclick = () => {
+    if (!resetArmed) {
+      resetArmed = true;
+      const b = $('btnReset'); b.textContent = 'Tap again to erase all progress'; b.classList.add('arm');
+      resetTimer = setTimeout(disarmReset, 4000);
+      return;
+    }
+    prog = { u: 0, s: [] }; save();
+    GE.load(0); show('levels');
+  };
+
+  // ---------- pause ----------
+  function pause() {
+    // never over a win/fail card or the last block's exit flight: the round is decided
+    if (!GE.L || GE.over || !screens.menu.hidden || !screens.levels.hidden || !screens.legend.hidden) return;
+    GE.paused = true;
+    $('pauseSub').textContent = `Level ${GE.level + 1} · ${GE.movesLeft} moves left`;
+    refreshSound();
+    pauseModal.hidden = false;
+  }
+  function resume() { GE.paused = false; pauseModal.hidden = true; }
+  $('btnMenu').onclick = () => { if (pauseModal.hidden) pause(); else resume(); };
+  $('btnResume').onclick = resume;
+  $('btnPauseRestart').onclick = () => { resume(); GE.load(GE.level); };
+  $('btnPauseSound').onclick = () => setSound(!GE.soundOn);
+  $('btnPauseLegend').onclick = () => { legendFrom = 'pause'; pauseModal.hidden = true; show('legend'); };
+  $('btnPauseLevels').onclick = () => { pauseModal.hidden = true; show('levels'); };
+  $('btnPauseHome').onclick = () => { pauseModal.hidden = true; show('menu'); };
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (!screens.legend.hidden) $('btnLegendBack').click();
+    else if (!screens.levels.hidden) show('menu');
+    else if (screens.menu.hidden) $('btnMenu').click();
+  });
+
+  // ---------- title block buttons ----------
+  $('btnPlay').onclick = () => GE.load(GE.level);
+  $('btnLevels').onclick = () => show('levels');
+  $('btnLegend').onclick = () => { legendFrom = 'menu'; show('legend'); };
+  $('btnSound').onclick = () => setSound(!GE.soundOn);
+  $('btnLevelsBack').onclick = () => show('menu');
+  $('btnLegendBack').onclick = () => {
+    if (legendFrom === 'pause') { show(null); pauseModal.hidden = false; }
+    else show('menu');
+  };
+
+  // ---------- engine events ----------
+  window.addEventListener('ge:load', () => { show(null); pauseModal.hidden = true; GE.paused = false; });
+  window.addEventListener('ge:win', e => {
+    const { lvl, stars } = e.detail;
+    prog.s[lvl] = Math.max(prog.s[lvl] || 0, stars);
+    prog.u = Math.max(prog.u, Math.min(lvl + 1, N - 1));
+    save();
+  });
+  window.addEventListener('ge:finished', () => { GE.load(0); show('menu'); });
+
+  // ---------- legend drawings (same ink as the board) ----------
+  const INK = 'rgba(214,238,255,.75)';
+  function setup(cv) {
+    const c = cv.getContext('2d');
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.clearRect(0, 0, cv.width, cv.height);
+    return c;
+  }
+  function paper(c, x, y, w, h, cell) {
+    c.fillStyle = 'rgba(255,255,255,.045)'; c.fillRect(x - 8, y - 8, w + 16, h + 16);
+    c.strokeStyle = 'rgba(190,225,255,.12)'; c.lineWidth = 1;
+    for (let gx = 0; gx <= w; gx += cell) { c.beginPath(); c.moveTo(x + gx + 0.5, y); c.lineTo(x + gx + 0.5, y + h); c.stroke(); }
+    for (let gy = 0; gy <= h; gy += cell) { c.beginPath(); c.moveTo(x, y + gy + 0.5); c.lineTo(x + w, y + gy + 0.5); c.stroke(); }
+    c.strokeStyle = 'rgba(214,238,255,.65)'; c.lineWidth = 1.8; c.strokeRect(x - 0.5, y - 0.5, w + 1, h + 1);
+  }
+  function block(c, x, y, w, h, ci, alpha = 1) {
+    const col = COLORS[ci];
+    GE.draw(c, ({ drawGlyph }) => {
+      c.save();
+      c.globalAlpha = alpha;
+      c.shadowColor = 'rgba(4,14,34,.5)'; c.shadowBlur = 6; c.shadowOffsetY = 3;
+      c.fillStyle = col.dark; c.fillRect(x, y, w, h);
+      c.shadowColor = 'transparent';
+      c.save(); c.beginPath(); c.rect(x, y, w, h); c.clip();
+      c.fillStyle = col.main; c.fillRect(x, y, w, h);
+      c.strokeStyle = 'rgba(10,25,55,.22)'; c.lineWidth = 1.4;
+      for (let d = -h; d < w + h; d += 7) { c.beginPath(); c.moveTo(x + d, y + h); c.lineTo(x + d + h, y); c.stroke(); }
+      c.restore();
+      c.strokeStyle = col.dark; c.lineWidth = 2.6; c.strokeRect(x, y, w, h);
+      c.fillStyle = col.lite;
+      for (const [px, py] of [[x, y], [x + w, y], [x, y + h], [x + w, y + h]]) { c.beginPath(); c.arc(px, py, 2.2, 0, Math.PI * 2); c.fill(); }
+      drawGlyph(col.glyph, x + w / 2, y + h / 2, Math.min(w, h) * 0.16, 'rgba(255,255,255,.85)');
+      c.restore();
+    });
+  }
+  function gate(c, x, y, w, h, ci, rot) { // vertical tab on a right edge by default
+    const col = COLORS[ci];
+    GE.draw(c, ({ rr, drawGlyph }) => {
+      c.save();
+      c.fillStyle = col.dark; rr(x, y, w, h, 4); c.fill();
+      c.fillStyle = col.main; rr(x + 1.5, y + 1.5, w - 3, h - 3, 3); c.fill();
+      c.setLineDash([5, 4]); c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 1.4;
+      rr(x + 3.5, y + 3.5, w - 7, h - 7, 2); c.stroke(); c.setLineDash([]);
+      c.translate(x + w / 2, y + h / 2); c.rotate(rot);
+      drawGlyph(col.glyph, 0, 0, Math.min(w, h) * 0.3, 'rgba(255,255,255,.95)');
+      c.strokeStyle = 'rgba(255,255,255,.9)'; c.lineWidth = 2.6; c.lineCap = 'round';
+      const th = Math.min(w, h), ch = th * 0.24;
+      c.beginPath(); c.moveTo(-ch, -th * 0.62 - ch * 0.1); c.lineTo(0, -th * 0.62 - ch * 1.2); c.lineTo(ch, -th * 0.62 - ch * 0.1); c.stroke();
+      c.restore();
+    });
+  }
+  function stone(c, x, y, s) {
+    c.save();
+    c.strokeStyle = INK; c.lineWidth = 1.8; c.strokeRect(x + 4, y + 4, s - 8, s - 8);
+    c.beginPath(); c.rect(x + 4, y + 4, s - 8, s - 8); c.clip();
+    c.lineWidth = 1.1; c.strokeStyle = 'rgba(214,238,255,.5)';
+    for (let d = -s; d < s; d += 6) {
+      c.beginPath(); c.moveTo(x + d, y + s); c.lineTo(x + d + s, y); c.stroke();
+      c.beginPath(); c.moveTo(x + d, y); c.lineTo(x + d + s, y + s); c.stroke();
+    }
+    c.restore();
+  }
+  function drawSymbols() {
+    let c = setup($('symBlock'));
+    block(c, 14, 22, 100, 44, 0);
+    c = setup($('symGate'));
+    c.strokeStyle = 'rgba(214,238,255,.65)'; c.lineWidth = 1.8;
+    c.beginPath(); c.moveTo(74, 4); c.lineTo(74, 84); c.stroke();
+    block(c, 20, 26, 50, 36, 3);
+    gate(c, 78, 20, 22, 48, 3, Math.PI / 2);
+    c = setup($('symStone'));
+    stone(c, 40, 20, 48);
+    c = setup($('symMoves'));
+    c.fillStyle = '#eaf4ff'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.font = '800 34px system-ui, sans-serif'; c.fillText('5', 46, 44);
+    c.font = '700 15px system-ui, sans-serif'; c.fillText('moves', 92, 47);
+  }
+  const demoCv = $('legendDemo'), dc = demoCv.getContext('2d');
+  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function demoFrame(t) {
+    if (!legendAnim) return;
+    if (!demoT0) demoT0 = t;
+    drawDemo(reduced ? 2.0 : ((t - demoT0) / 1000) % 3.7);
+    requestAnimationFrame(demoFrame);
+  }
+  function drawDemo(ph) {
+    // one drag, one move: the red block goes right, down, right, and out — in a single gesture
+    const c = dc, cell = 38, bx = 40, by = 18, W = 5, H = 3;
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, demoCv.width, demoCv.height);
+    paper(c, bx, by, W * cell, H * cell, cell);
+    gate(c, bx + W * cell + 3, by + cell, cell * 0.42, cell, 0, Math.PI / 2);
+    stone(c, bx + 3 * cell, by, cell);
+    block(c, bx + 2 * cell + 3, by + 2 * cell + 3, cell - 6, cell - 6, 1);
+    const ease = u => 1 - Math.pow(1 - u, 3);
+    let x = 0, y = 0, alpha = 1;
+    if (ph < 0.6) { x = 0; y = 0; }
+    else if (ph < 1.1) { x = ease((ph - 0.6) / 0.5); y = 0; }
+    else if (ph < 1.6) { x = 1; y = ease((ph - 1.1) / 0.5); }
+    else if (ph < 2.4) { x = 1 + 2 * ease((ph - 1.6) / 0.8); y = 1; }
+    else if (ph < 3.0) { const u = (ph - 2.4) / 0.6; x = 3 + u * 3; y = 1; alpha = 1 - u; }
+    else { x = 0; y = 0; alpha = ph > 3.3 ? (ph - 3.3) / 0.4 : 0; }
+    c.save(); c.beginPath(); c.rect(bx - 10, by - 10, W * cell + 60, H * cell + 20); c.clip();
+    block(c, bx + x * cell + 3, by + y * cell + 3, 2 * cell - 6, cell - 6, 0, alpha);
+    c.restore();
+    // the route, drawn as one dashed finger path with a pulsing arrowhead at the gate
+    const p = (Math.sin(ph * 6) + 1) / 2;
+    const cx = k => bx + cell * (k + 1), cy = k => by + cell * (k + 0.5);
+    c.save();
+    c.strokeStyle = `rgba(255,255,255,${0.35 + p * 0.4})`; c.lineWidth = 4; c.lineCap = 'round'; c.lineJoin = 'round';
+    c.setLineDash([7, 7]); c.lineDashOffset = -ph * 30;
+    c.beginPath(); c.moveTo(cx(0), cy(0)); c.lineTo(cx(1), cy(0)); c.lineTo(cx(1), cy(1)); c.lineTo(cx(3.4), cy(1)); c.stroke();
+    c.setLineDash([]);
+    c.fillStyle = `rgba(255,255,255,${0.45 + p * 0.4})`;
+    c.beginPath(); c.moveTo(cx(3.4) + 10, cy(1)); c.lineTo(cx(3.4) - 2, cy(1) - 8); c.lineTo(cx(3.4) - 2, cy(1) + 8); c.closePath(); c.fill();
+    c.restore();
+    c.fillStyle = '#ffd04d'; c.font = '700 12px system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText('One drag, around the corner and out = 1 move', demoCv.width / 2, by + H * cell + 22);
+  }
+
+
+  show('menu');
+  window.GE_MENU = { show, get prog() { return prog; } };
+})();
 
 </script>
