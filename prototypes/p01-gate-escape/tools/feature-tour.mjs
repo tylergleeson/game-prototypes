@@ -19,6 +19,8 @@ const { chromium } = createRequire(process.cwd() + '/')('playwright');
 
 const p01 = new URL('..', import.meta.url).pathname;
 const mkt = p01 + 'marketing/';
+const vid = mkt + 'videos/';
+fs.mkdirSync(vid, { recursive: true });
 const stillsDir = mkt + 'tour-stills/';
 const tmp = mkt + 'tour-tmp/';
 const solutions = JSON.parse(fs.readFileSync(p01 + 'tools/solutions.json', 'utf8'));
@@ -409,7 +411,7 @@ await w(3800);
 const video = page.video();
 await ctx.close();
 const src = await video.path();
-fs.renameSync(src, mkt + 'feature-tour.webm');
+fs.renameSync(src, vid + 'feature-tour.webm');
 await browser.close();
 fs.rmSync(tmp, { recursive: true, force: true });
 
@@ -424,8 +426,8 @@ for (const c of [...bundled, '/opt/homebrew/bin/ffmpeg', '/usr/local/bin/ffmpeg'
   try { if (execFileSync(c, ['-encoders'], { stdio: ['ignore', 'pipe', 'ignore'] }).toString().includes('libx264')) { ffmpeg = c; break; } } catch (e) {}
 }
 if (ffmpeg) {
-  execFileSync(ffmpeg, ['-y', '-i', mkt + 'feature-tour.webm', '-c:v', 'libx264', '-pix_fmt', 'yuv420p',
-    '-crf', '23', '-r', '30', '-movflags', '+faststart', mkt + 'feature-tour.mp4'], { stdio: ['ignore', 'ignore', 'pipe'] });
+  execFileSync(ffmpeg, ['-y', '-i', vid + 'feature-tour.webm', '-c:v', 'libx264', '-pix_fmt', 'yuv420p',
+    '-crf', '23', '-r', '30', '-movflags', '+faststart', vid + 'feature-tour.mp4'], { stdio: ['ignore', 'ignore', 'pipe'] });
 } else {
   console.error('WARNING: no libx264-capable ffmpeg found — feature-tour.webm written, mp4 skipped');
 }
@@ -434,5 +436,5 @@ const mb = f => (fs.statSync(f).size / 1e6).toFixed(1);
 console.log('chapters (video timestamps):');
 for (const m of marks) console.log(`  ${String(m.n).padStart(2, '0')}  ${m.t.toFixed(1).padStart(6)}s  ${m.text}`);
 console.log(`total scripted span: ${((Date.now() - t0) / 1000).toFixed(1)}s`);
-console.log(`feature-tour.webm ${mb(mkt + 'feature-tour.webm')} MB` + (ffmpeg ? ` · feature-tour.mp4 ${mb(mkt + 'feature-tour.mp4')} MB (${ffmpeg})` : ''));
+console.log(`feature-tour.webm ${mb(vid + 'feature-tour.webm')} MB` + (ffmpeg ? ` · feature-tour.mp4 ${mb(vid + 'feature-tour.mp4')} MB (${ffmpeg})` : ''));
 console.log('stills → ' + stillsDir);

@@ -32,6 +32,8 @@ const { chromium } = createRequire(process.cwd() + '/')('playwright');
 
 const p01 = new URL('..', import.meta.url).pathname;
 const mkt = p01 + 'marketing/';
+const vid = mkt + 'videos/';
+fs.mkdirSync(vid, { recursive: true });
 const narDir = mkt + 'narration/';
 const stillsDir = mkt + 'promo-stills/';
 const tmp = fs.mkdtempSync(os.tmpdir() + '/ge-promo-');
@@ -695,12 +697,12 @@ function assemble(cutName, cuts, outFile) {
 }
 
 console.log('encoding + assembling cuts…');
-const R30 = assemble('promo-30s', CUT_30, mkt + 'promo-30s.mp4');
-const RMAIN = assemble('promo-main', CUT_MAIN, mkt + 'promo.mp4');
-const R2M = assemble('promo-2min', CUT_2MIN, mkt + 'promo-2min.mp4');
+const R30 = assemble('promo-30s', CUT_30, vid + 'promo-30s.mp4');
+const RMAIN = assemble('promo-main', CUT_MAIN, vid + 'promo.mp4');
+const R2M = assemble('promo-2min', CUT_2MIN, vid + 'promo-2min.mp4');
 
 // ---- stills: hook, mid, chest reveal, end card — per cut ----
-for (const [cut, file, R] of [['30s', mkt + 'promo-30s.mp4', R30], ['main', mkt + 'promo.mp4', RMAIN], ['2min', mkt + 'promo-2min.mp4', R2M]]) {
+for (const [cut, file, R] of [['30s', vid + 'promo-30s.mp4', R30], ['main', vid + 'promo.mp4', RMAIN], ['2min', vid + 'promo-2min.mp4', R2M]]) {
   const find = lbl => R.parts.find(p => p.label === lbl);
   const stillAt = {
     '01-hook': R.parts[0].start + 1.2,
