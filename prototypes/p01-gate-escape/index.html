@@ -55,7 +55,7 @@
   @keyframes floatup { from { opacity:1; transform:translateY(0); } 30% { opacity:1; } to { opacity:0; transform:translateY(-16px); } }
   /* one-line tip strip under the HUD: reinforces, never replaces, what the board shows */
   #toast {
-    position:fixed; left:50%; top:calc(86px + env(safe-area-inset-top)); transform:translateX(-50%); z-index:5;
+    position:fixed; left:50%; top:calc(114px + env(safe-area-inset-top)); transform:translateX(-50%); z-index:5; /* clears the objective row */
     width:max-content; max-width:min(92vw,400px); padding:9px 14px; border-radius:8px; text-align:center; font-size:14px; font-weight:600;
     color:#1a2a44; background:var(--amber); box-shadow:0 4px 0 var(--amber2); pointer-events:none;
   }
