@@ -25,6 +25,10 @@ Both the rescue and the HUD hint are rewarded-ad slots: tapping one shows a ~1.2
 The game opens on a main menu (title block) with Play / Levels / How to play; in-game the HUD has hint (?, ghosts the next reference move — an exit route,
 or a dashed outline where a block should park; one per board position), undo (↶, one step, refunds the move), restart (↻) and pause (☰), shows the stars the
 current pace would earn, and an objective row of blocks left per color.
+Stars have a cosmetic sink: each sheet of ten levels on the level select has a chest that opens at 24 of its 30 stars and rewards a paper skin
+(Sepia draft / Night vellum / Whiteprint; Cyanotype is the default). Skins change only the drafting sheet (page, ink, grid, cards) — never block,
+gate or HUD state colours — and nothing is gated on a chest. The "Paper" picker on the main menu and the pause card lists the skins; a locked swatch
+shows the chest it comes from. A win that opens a chest adds a "Chest opened — <paper>" row with a "Try it" button to the win card.
 Coordinates: (x,y) cells, x to the right, y downward, origin top-left. A block's position is its
 top-left origin; its cells are listed absolute.`,
   buttons: {
@@ -35,6 +39,9 @@ top-left origin; its cells are listed absolute.`,
     btnResume: 'pause: Resume', btnPauseRestart: 'pause: Restart level', btnPauseLegend: 'pause: How to play',
     btnPauseSound: 'pause: toggle sound', btnPauseLevels: 'pause: Levels', btnPauseHome: 'pause: Main menu',
     btnNext: 'win card: Next level', btnReplay: 'win card: Replay for three stars (sub-3-star wins only)', btnRetry: 'fail card: Retry level', btnRescue: 'fail card: +3 moves rescue',
+    btnTrySkin: 'win card: Try it — apply the paper skin the chest just opened (only shown on a win that opened a chest)',
+    btnPaperCyan: 'main menu: Paper → Cyanotype (default)', btnPaperSepia: 'main menu: Paper → Sepia draft (Sheet 1 chest)', btnPaperNight: 'main menu: Paper → Night vellum (Sheet 2 chest)', btnPaperWhite: 'main menu: Paper → Whiteprint (Sheet 3 chest)',
+    btnPausePaperCyan: 'pause: Paper → Cyanotype', btnPausePaperSepia: 'pause: Paper → Sepia draft', btnPausePaperNight: 'pause: Paper → Night vellum', btnPausePaperWhite: 'pause: Paper → Whiteprint',
   },
 
   async ready(page) {
@@ -72,6 +79,8 @@ top-left origin; its cells are listed absolute.`,
         over: GE.over, paused: GE.paused, metrics: GE.metrics, rect: { left: r.left, top: r.top },
         screens: { menu: vis('menu'), levels: vis('levels'), legend: vis('legend'), pause: vis('pauseModal'), win: vis('winModal'), fail: vis('failModal'), ad: vis('adModal') },
         hint: GE.hint ? { block: GE.hint.bi, path: GE.hint.path, exit: GE.hint.side || null } : null,
+        paper: GE.theme, skins: (window.GE_MENU && window.GE_MENU.prog.skins) || [],
+        chestRow: vis('winChest') ? document.querySelector('#winChest').innerText.replace(/\s+/g, ' ').trim() : null,
         winText: vis('winModal') ? document.querySelector('#winModal .card').innerText.replace(/\s+/g, ' ').trim() : null,
         failText: vis('failModal') ? document.querySelector('#failModal .card').innerText.replace(/\s+/g, ' ').trim() : null,
         rescueHidden: document.getElementById('btnRescue').hidden,
@@ -92,6 +101,7 @@ top-left origin; its cells are listed absolute.`,
       })),
       gates: L.gates.map(g => ({ color: COLOR[g.color], side: g.side, lanes: `${g.start}..${g.start + g.len - 1}` })),
       winCard: raw.winText, failCard: raw.failText, rescueAvailable: raw.screens.fail && !raw.rescueHidden, hintShown: raw.hint,
+      paper: raw.paper, skinsUnlocked: raw.skins, chestOpened: raw.chestRow,
       hud: raw.hud, jsErrors: raw.errors.length, recentErrors: raw.errors.slice(-5),
     };
   },

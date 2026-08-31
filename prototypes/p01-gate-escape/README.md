@@ -66,6 +66,22 @@ Built to the hybrid-casual grammar:
   running star total (ticks up) and the next level's block count and par;
   titles rotate with milestone lines at L5/10/20; sub-3-star wins offer
   "Replay for ★★★". Cards share the title block's drafting-sheet styling.
+- **Chests and paper skins** (the star sink): the level select groups levels into three
+  sheets of ten; each sheet has a chest that opens at **24 of its 30 stars**
+  (`CHEST_STARS` in `menu.js`) and rewards a cosmetic paper skin — Sepia draft,
+  Night vellum, Whiteprint (Cyanotype is the default). Nothing is gated on a
+  chest. The chapter header shows the chest and `★ 18/30 · 6 to open`; the win
+  that crosses the threshold adds a `Chest opened — <paper>` row with **Try it**
+  to the win card (lid swings open, sparks, chime). A **Paper** picker on the
+  title block and the pause card lists the skins (locked ones show the chest
+  they come from). Skins change only the drafting sheet — page, ink, rules,
+  cards, the canvas paper/grid/border and the stones' ink (`THEMES` in
+  `game.js` → CSS custom properties + the render's paper values); block and
+  gate colours, glyphs, the block halo and the HUD/state colours are never
+  touched, and the default skin is pixel-identical to the pre-skin build. The
+  amber/red/green *text* inks darken on the two light papers so they still clear
+  4.5:1. Persisted in `ge_prog` (`skin`, `skins`, `seen`); `chest_open` /
+  `skin_select` tracked.
 - **Navigation**: Levels opened from pause returns to pause; "Main menu"
   keeps the paused attempt on the board and Play becomes "Resume level N".
   The resume pointer advances on the win itself, not on the Next tap.
@@ -95,6 +111,7 @@ Built to the hybrid-casual grammar:
 - [x] Reviewer session #1 actioned (`reviews/p01-run-20260830-1835/dev-report.md`): win/fail juice, undo, star meter, ghost routes, tighter budget, stones from L5
 - [x] Breaker session #1 actioned (`reviews/p01-break-20260831-0005/dev-report.md`): undo/rescue/exit-window/pointercancel hardening
 - [x] Parallel critic ×2 + breaker sessions actioned (`reviews/p01-par-20260831-0056-s1/dev-report.md`): multitouch fix, hint slot, block seams, fail-sheet fit, win-card meta, curve retune (L6, L12–16)
+- [x] Cosmetic chapter chests + paper skins (`reviews/p01-par-20260831-0056-s1/chests-report.md`): chest at 24/30 per sheet, three skins, Paper picker, win-card reveal
 - [ ] Web-portal upload (itch.io first)
 - [ ] Real analytics endpoint (D1 retention, level funnel)
 - [ ] Publisher packet (gameplay capture + KPI sheet)

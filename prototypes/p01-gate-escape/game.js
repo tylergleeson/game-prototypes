@@ -10,6 +10,76 @@ const COLORS = [
   { main: '#ffd04d', dark: '#c99a1e', lite: '#ffe9a8', glyph: 'star' },
 ];
 
+// ---------- paper skins (cosmetic, chest rewards) ----------
+// A skin changes ONLY the drafting sheet: page gradient, ink, rules, card tints, the canvas
+// paper/grid/border and the stones' ink. Block and gate colours, glyphs and the block halo are
+// never touched, so the 3-second read is identical on every paper. `css` maps to the custom
+// properties in index.html; the rest is consulted by render() and the legend. The state inks
+// (amber / red / green text on the paper) keep their hue on every skin and only darken on the
+// light papers so they still clear 4.5:1 — the filled amber buttons and AD tags never change.
+const THEMES = {
+  cyan: {
+    name: 'Cyanotype', css: null, // the stylesheet defaults: pixel-identical to the build before skins
+    paper: 'rgba(255,255,255,.045)', grid: 'rgba(190,225,255,.10)', border: 'rgba(214,238,255,.65)',
+    border2: 'rgba(214,238,255,.28)', tick: 'rgba(214,238,255,.8)',
+    stoneBody: 'rgba(8,22,48,.92)', stoneHatch: 'rgba(214,238,255,.55)', stoneEdge: 'rgba(224,242,255,.92)',
+    route: '255,255,255', routeEdge: '20,40,80', spark: '#ffffff', gateHalo: null, arrow: 'rgba(255,255,255,.9)',
+    legendInk: 'rgba(214,238,255,.75)', legendGrid: 'rgba(190,225,255,.12)', legendText: '#eaf4ff', legendAmber: '#ffd04d',
+    swatch: ['#1a4480', '#0e2c58', 'rgba(214,238,255,.7)'],
+  },
+  sepia: {
+    name: 'Sepia draft',
+    css: { bg1: '#dcc7a1', bg2: '#bfa478', ink: '#2a1a0a', dim: '#5e421f', line: 'rgba(58,36,12,.7)', line2: 'rgba(58,36,12,.3)',
+      card: 'rgba(238,224,192,.97)', sheet: 'rgba(238,224,192,.96)', fill: 'rgba(58,36,12,.07)', fill2: 'rgba(58,36,12,.1)', fill3: 'rgba(58,36,12,.25)',
+      'tile-line': 'rgba(58,36,12,.5)', 'lock-ink': 'rgba(58,36,12,.4)', 'lock-hatch': 'rgba(58,36,12,.12)', 'star-off': 'rgba(42,26,10,.3)', tag: 'rgba(42,26,10,.85)',
+      'amber-ink': '#6e4400', 'red-ink': '#a3101a', 'green-ink': '#17603a', done: '#7a4d1c', 'done-fill': 'rgba(122,77,28,.16)' },
+    paper: 'rgba(58,36,12,.06)', grid: 'rgba(58,36,12,.13)', border: 'rgba(58,36,12,.7)',
+    border2: 'rgba(58,36,12,.3)', tick: 'rgba(58,36,12,.85)',
+    stoneBody: 'rgba(46,28,10,.94)', stoneHatch: 'rgba(230,205,160,.55)', stoneEdge: 'rgba(240,222,184,.92)',
+    route: '42,26,10', routeEdge: '255,240,210', spark: '#3a2410', gateHalo: 'rgba(42,26,10,.55)', arrow: 'rgba(42,26,10,.9)',
+    legendInk: 'rgba(58,36,12,.8)', legendGrid: 'rgba(58,36,12,.14)', legendText: '#2a1a0a', legendAmber: '#6e4400',
+    swatch: ['#dcc7a1', '#bfa478', 'rgba(58,36,12,.7)'],
+  },
+  night: {
+    name: 'Night vellum',
+    css: { bg1: '#2c2c31', bg2: '#141417', ink: '#efe9dc', dim: '#a9a394', line: 'rgba(239,233,220,.7)', line2: 'rgba(239,233,220,.28)',
+      card: 'rgba(38,38,43,.97)', sheet: 'rgba(38,38,43,.96)', fill: 'rgba(255,255,255,.05)', fill2: 'rgba(255,255,255,.08)', fill3: 'rgba(255,255,255,.14)',
+      'tile-line': 'rgba(239,233,220,.5)', 'lock-ink': 'rgba(239,233,220,.35)', 'lock-hatch': 'rgba(239,233,220,.11)', 'star-off': 'rgba(239,233,220,.35)', tag: 'rgba(255,255,255,.85)',
+      'amber-ink': '#ffd04d', 'red-ink': '#ff5a5f', 'green-ink': '#5fe89b', done: '#e0c98a', 'done-fill': 'rgba(224,201,138,.14)' },
+    paper: 'rgba(255,255,255,.05)', grid: 'rgba(239,233,220,.10)', border: 'rgba(239,233,220,.65)',
+    border2: 'rgba(239,233,220,.28)', tick: 'rgba(239,233,220,.8)',
+    stoneBody: 'rgba(6,6,8,.94)', stoneHatch: 'rgba(239,233,220,.55)', stoneEdge: 'rgba(245,240,228,.92)',
+    route: '255,255,255', routeEdge: '20,20,24', spark: '#ffffff', gateHalo: null, arrow: 'rgba(255,255,255,.9)',
+    legendInk: 'rgba(239,233,220,.75)', legendGrid: 'rgba(239,233,220,.12)', legendText: '#efe9dc', legendAmber: '#ffd04d',
+    swatch: ['#2c2c31', '#141417', 'rgba(239,233,220,.7)'],
+  },
+  white: {
+    name: 'Whiteprint',
+    css: { bg1: '#f6f3ea', bg2: '#e4dfd0', ink: '#163a6b', dim: '#41598a', line: 'rgba(22,58,107,.7)', line2: 'rgba(22,58,107,.3)',
+      card: 'rgba(255,253,247,.97)', sheet: 'rgba(255,253,247,.96)', fill: 'rgba(22,58,107,.07)', fill2: 'rgba(22,58,107,.1)', fill3: 'rgba(22,58,107,.25)',
+      'tile-line': 'rgba(22,58,107,.5)', 'lock-ink': 'rgba(22,58,107,.4)', 'lock-hatch': 'rgba(22,58,107,.12)', 'star-off': 'rgba(22,58,107,.3)', tag: 'rgba(22,58,107,.85)',
+      'amber-ink': '#8a5a00', 'red-ink': '#b3121a', 'green-ink': '#1b7a45', done: '#1f4e9c', 'done-fill': 'rgba(31,78,156,.14)' },
+    paper: 'rgba(22,58,107,.05)', grid: 'rgba(22,58,107,.13)', border: 'rgba(22,58,107,.7)',
+    border2: 'rgba(22,58,107,.3)', tick: 'rgba(22,58,107,.85)',
+    stoneBody: 'rgba(16,40,76,.94)', stoneHatch: 'rgba(230,238,250,.55)', stoneEdge: 'rgba(240,246,255,.92)',
+    route: '22,58,107', routeEdge: '255,255,255', spark: '#163a6b', gateHalo: 'rgba(22,58,107,.55)', arrow: 'rgba(22,58,107,.9)',
+    legendInk: 'rgba(22,58,107,.8)', legendGrid: 'rgba(22,58,107,.14)', legendText: '#163a6b', legendAmber: '#8a5a00',
+    swatch: ['#f6f3ea', '#e4dfd0', 'rgba(22,58,107,.7)'],
+  },
+};
+const CSS_VARS = ['bg1', 'bg2', 'ink', 'dim', 'line', 'line2', 'card', 'sheet', 'fill', 'fill2', 'fill3', 'tile-line', 'lock-ink', 'lock-hatch', 'star-off', 'tag',
+  'amber-ink', 'red-ink', 'green-ink', 'done', 'done-fill'];
+let themeId = 'cyan', THEME = THEMES.cyan;
+function setTheme(id) {
+  if (!THEMES[id]) id = 'cyan';
+  themeId = id; THEME = THEMES[id];
+  const rs = document.documentElement.style;
+  // the default clears the inline properties so the stylesheet's own values apply untouched
+  for (const k of CSS_VARS) { if (THEME.css && THEME.css[k]) rs.setProperty('--' + k, THEME.css[k]); else rs.removeProperty('--' + k); }
+  document.body.dataset.paper = id;
+  window.dispatchEvent(new CustomEvent('ge:theme', { detail: { id } }));
+}
+
 // ---------- dom ----------
 const cv = document.getElementById('cv');
 let ctx = cv.getContext('2d');
@@ -388,7 +458,7 @@ function startExit(bi, side) {
     particles.push({
       x: cen[0], y: cen[1],
       vx: (Math.random() - 0.5) * 7 + dx * 4, vy: (Math.random() - 0.5) * 7 + dy * 4 - 2,
-      life: 1, color: Math.random() < 0.7 ? COLORS[b.color].main : '#ffffff',
+      life: 1, color: Math.random() < 0.7 ? COLORS[b.color].main : THEME.spark,
       r: 2 + Math.random() * 3.4,
     });
   }
@@ -833,14 +903,14 @@ function drawRoute(bi, route, strength) {
     const [tx, ty] = route.to || route.path[route.path.length - 1];
     ctx.save();
     ctx.setLineDash([6, 5]); ctx.lineDashOffset = -hintT * 30;
-    ctx.strokeStyle = `rgba(255,255,255,${strength * 0.85})`; ctx.lineWidth = 2.5;
+    ctx.strokeStyle = `rgba(${THEME.route},${strength * 0.85})`; ctx.lineWidth = 2.5;
     for (const [cx, cy] of b.cells) ctx.strokeRect(bx + (tx + cx) * cell + 5, by + (ty + cy) * cell + 5, cell - 10, cell - 10);
     ctx.restore();
   }
   const pulse = (Math.sin(hintT * 5) + 1) / 2;
   const a = strength * (0.45 + pulse * 0.4);
   ctx.save();
-  ctx.strokeStyle = `rgba(255,255,255,${a})`;
+  ctx.strokeStyle = `rgba(${THEME.route},${a})`;
   ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   ctx.setLineDash([9, 9]); ctx.lineDashOffset = -hintT * 40;
   ctx.beginPath();
@@ -849,7 +919,7 @@ function drawRoute(bi, route, strength) {
   ctx.setLineDash([]);
   const [ex, ey] = pts[pts.length - 1];
   const pa = Math.atan2(d[1], d[0]);
-  ctx.fillStyle = `rgba(255,255,255,${a})`;
+  ctx.fillStyle = `rgba(${THEME.route},${a})`;
   ctx.beginPath();
   ctx.moveTo(ex + Math.cos(pa) * 11, ey + Math.sin(pa) * 11);
   ctx.lineTo(ex + Math.cos(pa + 2.5) * 11, ey + Math.sin(pa + 2.5) * 11);
@@ -864,9 +934,9 @@ function drawRoute(bi, route, strength) {
       if (t <= seg[i]) {
         const u = seg[i] ? t / seg[i] : 0;
         const x = pts[i][0] + (pts[i + 1][0] - pts[i][0]) * u, y = pts[i][1] + (pts[i + 1][1] - pts[i][1]) * u;
-        ctx.fillStyle = `rgba(255,255,255,${strength * 0.95})`;
+        ctx.fillStyle = `rgba(${THEME.route},${strength * 0.95})`;
         ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = `rgba(20,40,80,${strength * 0.6})`; ctx.lineWidth = 2; ctx.stroke();
+        ctx.strokeStyle = `rgba(${THEME.routeEdge},${strength * 0.6})`; ctx.lineWidth = 2; ctx.stroke();
         break;
       }
       t -= seg[i];
@@ -908,10 +978,10 @@ function render() {
 
   // blueprint sheet
   const bw = L.w * cell, bh = L.h * cell;
-  ctx.fillStyle = 'rgba(255,255,255,.045)';
+  ctx.fillStyle = THEME.paper;
   ctx.fillRect(bx - 14, by - 14, bw + 28, bh + 28);
   // fine draft grid over the whole sheet
-  ctx.strokeStyle = 'rgba(190,225,255,.10)';
+  ctx.strokeStyle = THEME.grid;
   ctx.lineWidth = 1;
   for (let x = 0; x <= L.w; x++) {
     ctx.beginPath(); ctx.moveTo(bx + x * cell + 0.5, by - 8); ctx.lineTo(bx + x * cell + 0.5, by + bh + 8); ctx.stroke();
@@ -920,13 +990,13 @@ function render() {
     ctx.beginPath(); ctx.moveTo(bx - 8, by + y * cell + 0.5); ctx.lineTo(bx + bw + 8, by + y * cell + 0.5); ctx.stroke();
   }
   // double drafting border with corner ticks
-  ctx.strokeStyle = 'rgba(214,238,255,.65)';
+  ctx.strokeStyle = THEME.border;
   ctx.lineWidth = 1.8;
   ctx.strokeRect(bx - 0.5, by - 0.5, bw + 1, bh + 1);
-  ctx.strokeStyle = 'rgba(214,238,255,.28)';
+  ctx.strokeStyle = THEME.border2;
   ctx.lineWidth = 1;
   ctx.strokeRect(bx - 6.5, by - 6.5, bw + 13, bh + 13);
-  ctx.strokeStyle = 'rgba(214,238,255,.8)';
+  ctx.strokeStyle = THEME.tick;
   ctx.lineWidth = 2;
   for (const [cx2, cy2, dx2, dy2] of [
     [bx, by, 1, 1], [bx + bw, by, -1, 1], [bx, by + bh, 1, -1], [bx + bw, by + bh, -1, -1],
@@ -960,6 +1030,8 @@ function render() {
       rr(gx - grow, gy - grow, w + grow * 2, h + grow * 2, 6 + grow); ctx.stroke();
     }
     if (closed) ctx.globalAlpha = 0.3;
+    // on a light paper the tab gets the same ink halo the blocks carry (its colours never change)
+    if (THEME.gateHalo) { ctx.strokeStyle = THEME.gateHalo; ctx.lineWidth = 3; rr(gx, gy, w, h, 4); ctx.stroke(); }
     // solid ink stamp — must be unmissable at a glance
     ctx.fillStyle = c.dark;
     rr(gx, gy, w, h, 4); ctx.fill();
@@ -976,7 +1048,7 @@ function render() {
     drawGlyph(c.glyph, 0, 0, Math.min(cell * 0.13, th * 0.3), 'rgba(255,255,255,.95)');
     ctx.rotate(rot);
     if (!closed) {
-      ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+      ctx.strokeStyle = THEME.arrow; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
       const ch = cell * 0.1;
       ctx.beginPath();
       ctx.moveTo(-ch, -th * 0.62 - ch * 0.1); ctx.lineTo(0, -th * 0.62 - ch * 1.2); ctx.lineTo(ch, -th * 0.62 - ch * 0.1);
@@ -991,7 +1063,7 @@ function render() {
     const x = bx + sx * cell, y = by + sy * cell;
     ctx.save();
     ctx.shadowColor = 'rgba(4,14,34,.55)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3;
-    ctx.fillStyle = 'rgba(8,22,48,.92)';
+    ctx.fillStyle = THEME.stoneBody;
     ctx.fillRect(x + 4, y + 4, cell - 8, cell - 8);
     ctx.shadowColor = 'transparent';
     ctx.save();
@@ -999,13 +1071,13 @@ function render() {
     ctx.rect(x + 4, y + 4, cell - 8, cell - 8);
     ctx.clip();
     ctx.lineWidth = 1.2;
-    ctx.strokeStyle = 'rgba(214,238,255,.55)';
+    ctx.strokeStyle = THEME.stoneHatch;
     for (let d = -cell; d < cell; d += 6) {
       ctx.beginPath(); ctx.moveTo(x + d, y + cell); ctx.lineTo(x + d + cell, y); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(x + d, y); ctx.lineTo(x + d + cell, y + cell); ctx.stroke();
     }
     ctx.restore();
-    ctx.strokeStyle = 'rgba(224,242,255,.92)'; ctx.lineWidth = 2.4;
+    ctx.strokeStyle = THEME.stoneEdge; ctx.lineWidth = 2.4;
     ctx.strokeRect(x + 4, y + 4, cell - 8, cell - 8);
     ctx.restore();
   }
@@ -1087,6 +1159,8 @@ function sound(kind, n = 0) {
   // escapes climb a step each time within a level — the reward sound rises with the streak
   else if (kind === 'exit') { const k = Math.pow(1.122, Math.min(n, 7)); blip(420 * k, 0.16, 'sine', 0.22, 0, 460 * k); blip(880 * k, 0.1, 'triangle', 0.1, 0.05); }
   else if (kind === 'hint') { blip(660, 0.1, 'sine', 0.12); blip(990, 0.14, 'sine', 0.1, 0.08); }
+  // chest: a latch click, then a rising three-note chime
+  else if (kind === 'chest') { blip(240, 0.05, 'square', 0.08); blip(784, 0.16, 'triangle', 0.16, 0.12); blip(1046, 0.16, 'triangle', 0.16, 0.24); blip(1568, 0.3, 'sine', 0.18, 0.36, 120); }
   else if (kind === 'gate') { blip(1046, 0.18, 'triangle', 0.14, 0.08); blip(1568, 0.22, 'sine', 0.1, 0.14); }
   else if (kind === 'star') blip(880 * Math.pow(1.25, n), 0.16, 'triangle', 0.18, 0, 200);
   else if (kind === 'undo') blip(520, 0.12, 'sine', 0.14, 0, -220);
@@ -1109,6 +1183,9 @@ window.GE = {
   get hint() { return hint; },          // the reference move currently ghosted (null if none)
   get best() { return best[li] || 0; }, // personal best moves on this level (0 = never cleared)
   get adUp() { return !adModal.hidden; },
+  // paper skins: id + table for menu.js and the bots; setTheme repaints instantly (next frame)
+  get theme() { return themeId; }, get themes() { return THEMES; }, setTheme,
+  burst, sound, // the chest reveal on the win card reuses the third-star burst and the generated audio
   // drawing helpers shared with menu.js (legend); ctx is swapped for the call
   draw(c, fn) { const o = ctx; ctx = c; try { fn({ rr, drawGlyph, drawBlockShape, COLORS }); } finally { ctx = o; } },
   load: loadLevel,

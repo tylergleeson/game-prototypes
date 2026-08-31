@@ -79,6 +79,56 @@ for (let i = 0; i < solutions.length; i++) {
   }
 }
 
+// chests + paper skins (2026-08-31): 90/90 stars opens all three chests and unlocks every skin;
+// picking a paper swaps the CSS tokens and the canvas paper instantly; the default paper is the
+// build-before-skins pixel (rgba(255,255,255,.045) over the page → [255,255,255,11])
+const paperPx = () => page.evaluate(() => {
+  const cv = document.getElementById('cv'), c = cv.getContext('2d'), m = window.GE.metrics, dpr = cv.width / cv.clientWidth;
+  return Array.from(c.getImageData(Math.round((m.bx - 10) * dpr), Math.round((m.by - 10) * dpr), 1, 1).data);
+});
+const DEFAULT_PAPER = '[255,255,255,11]';
+{
+  const prog = await page.evaluate(() => window.GE_MENU.prog);
+  const stats = await page.evaluate(() => JSON.parse(localStorage.getItem('ge_stats') || '{}'));
+  await page.evaluate(() => window.GE_MENU.show('levels')); await page.waitForTimeout(80);
+  const heads = await page.evaluate(() => [...document.querySelectorAll('#levelGrid .chap .chest')].map(c => ({ open: c.classList.contains('open'), text: c.textContent.replace(/\s+/g, ' ').trim() })));
+  const allOpen = heads.length === 3 && heads.every(h => h.open) && /Sepia draft$/.test(heads[0].text) && /Night vellum$/.test(heads[1].text) && /Whiteprint$/.test(heads[2].text);
+  const skinsOk = ['sepia', 'night', 'white'].every(id => (prog.skins || []).includes(id));
+  if (allOpen && skinsOk && stats.chest_open === 3) console.log(`chests ok: 3/3 open after 90 stars (${heads.map(h => h.text).join(' | ')}); chest_open tracked ×3`);
+  else { failures++; console.error('chests FAIL:', JSON.stringify({ heads, skins: prog.skins, chest_open: stats.chest_open })); }
+  await page.screenshot({ path: `${shotDir}/levels-chests.png` });
+  // skin select from the title block: CSS variable, body colour, canvas paper pixel, persistence
+  await page.evaluate(() => window.GE.load(11)); await page.waitForTimeout(80);
+  const px0 = JSON.stringify(await paperPx());
+  const ink0 = await page.evaluate(() => getComputedStyle(document.body).color);
+  const seen = {};
+  for (const id of ['sepia', 'night', 'white', 'cyan']) {
+    await page.evaluate(() => window.GE_MENU.show('menu')); await page.waitForTimeout(60);
+    await page.click('#btnPaper' + id[0].toUpperCase() + id.slice(1));
+    await page.evaluate(() => window.GE_MENU.show(null)); await page.waitForTimeout(120); // a frame on the new paper
+    seen[id] = await page.evaluate(id => ({
+      theme: window.GE.theme, v: getComputedStyle(document.documentElement).getPropertyValue('--bg1').trim(),
+      want: window.GE.themes[id].css ? window.GE.themes[id].css.bg1 : '#1a4480',
+      ink: getComputedStyle(document.body).color, saved: JSON.parse(localStorage.getItem('ge_prog')).skin || 'cyan',
+      cap: document.querySelector('#menuPapers .cap').textContent, on: document.querySelector('#menuPapers .paper.on').dataset.skin,
+    }), id);
+    seen[id].px = JSON.stringify(await paperPx());
+  }
+  const okSel = ['sepia', 'night', 'white'].every(id => seen[id].theme === id && seen[id].v === seen[id].want && seen[id].saved === id && seen[id].px !== px0 && seen[id].on === id && seen[id].cap === skinName(id))
+    && seen.sepia.ink !== ink0 && seen.white.ink !== ink0
+    && seen.cyan.theme === 'cyan' && seen.cyan.v === '#1a4480' && seen.cyan.px === DEFAULT_PAPER && px0 === DEFAULT_PAPER && seen.cyan.ink === ink0;
+  if (okSel) console.log(`skins ok: sepia/night/white swap --bg1 + ink + paper pixel (${seen.sepia.px} / ${seen.night.px} / ${seen.white.px}) and persist; default paper back to ${DEFAULT_PAPER}`);
+  else { failures++; console.error('skins FAIL:', JSON.stringify({ px0, ink0, seen })); }
+  // the pause card carries the same picker; a locked-free pick there is instant too
+  await page.click('#btnMenu'); await page.click('#btnPausePaperNight'); await page.waitForTimeout(120);
+  const pz = await page.evaluate(() => ({ theme: window.GE.theme, cap: document.querySelector('#pausePapers .cap').textContent, px: null }));
+  pz.px = JSON.stringify(await paperPx());
+  await page.click('#btnPausePaperCyan'); await page.click('#btnResume');
+  if (pz.theme === 'night' && pz.cap === 'Night vellum' && pz.px === seen.night.px) console.log('skins ok: pause-card picker applies Night vellum');
+  else { failures++; console.error('pause picker FAIL:', JSON.stringify(pz)); }
+}
+function skinName(id) { return { sepia: 'Sepia draft', night: 'Night vellum', white: 'Whiteprint', cyan: 'Cyanotype' }[id]; }
+
 // menu screens: progress recorded, level select + legend + pause reachable
 {
   const prog = await page.evaluate(() => window.GE_MENU.prog);
@@ -546,7 +596,61 @@ const burnLevel = () => page.evaluate(() => {
   else { failures++; console.error('objective row FAIL:', JSON.stringify({ c0, c1, col })); }
 }
 
-// Reset progress is a two-tap arm: one tap changes nothing but the label (runs last: it wipes progress)
+// chest progress copy at a partial total, and the win that crosses the threshold: seed sheet 1 with
+// 21 stars (L1–7 at 3), no skins → header reads "3 to open", swatches locked, paper is the default;
+// a par win on L8 makes 24 → chest_open, the win card's chest row names Sepia draft, Try it applies it
+{
+  await page.evaluate(() => { localStorage.setItem('ge_prog', JSON.stringify({ u: 29, s: [3, 3, 3, 3, 3, 3, 3] })); localStorage.setItem('ge_stats', '{}'); });
+  await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L);
+  await page.evaluate(() => window.GE_MENU.show('levels')); await page.waitForTimeout(80);
+  const h0 = await page.evaluate(() => {
+    const ch = [...document.querySelectorAll('#levelGrid .chap .chest')];
+    return { text: ch[0].textContent.replace(/\s+/g, ' ').trim(), open: ch[0].classList.contains('open'), t2: ch[1].textContent.replace(/\s+/g, ' ').trim(), theme: window.GE.theme,
+      locked: document.querySelectorAll('#menuPapers .paper.locked').length, chestGlyphs: document.querySelectorAll('#menuPapers .paper.locked .chest-ico').length };
+  });
+  await page.screenshot({ path: `${shotDir}/levels-chest-closed.png` });
+  // a locked swatch explains itself instead of switching
+  await page.evaluate(() => window.GE_MENU.show('menu')); await page.waitForTimeout(60);
+  await page.click('#btnPaperSepia');
+  const lockTap = await page.evaluate(() => ({ cap: document.querySelector('#menuPapers .cap').textContent, theme: window.GE.theme }));
+  const okCopy = h0.text === '★ 21/30 · 3 to open' && !h0.open && h0.t2 === '★ 0/30 · 24 to open' && h0.theme === 'cyan' && h0.locked === 3 && h0.chestGlyphs === 3
+    && lockTap.cap === 'Sheet 1 chest · opens at 24 ★' && lockTap.theme === 'cyan';
+  if (okCopy) console.log(`chest copy ok: "${h0.text}" / "${h0.t2}"; 3 swatches locked; locked tap → "${lockTap.cap}"`);
+  else { failures++; console.error('chest copy FAIL:', JSON.stringify({ h0, lockTap })); }
+  // the crossing win
+  await page.evaluate(() => window.GE.load(7)); await page.waitForTimeout(60);
+  await page.evaluate(sol => { for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side); }, solutions[7]);
+  await page.waitForSelector('#winModal:not([hidden])', { timeout: 2500 });
+  const c0 = await page.evaluate(() => ({ chest: !document.getElementById('winChest').hidden }));
+  await page.waitForSelector('#winChest:not([hidden])', { timeout: 3000 });
+  await page.waitForTimeout(700); // lid swing + sparks
+  await page.screenshot({ path: `${shotDir}/win-chest.png` });
+  const c1 = await page.evaluate(() => {
+    const p = window.GE_MENU.prog, st = JSON.parse(localStorage.getItem('ge_stats') || '{}');
+    return { name: document.getElementById('winChestName').textContent, lid: document.querySelector('#winChest .chest-ico').classList.contains('open'), tryLabel: document.getElementById('btnTrySkin').textContent,
+      tryDisabled: document.getElementById('btnTrySkin').disabled, skins: p.skins, sheet1: p.s.slice(0, 10).reduce((a, b) => a + (b || 0), 0), chest_open: st.chest_open, theme: window.GE.theme };
+  });
+  await page.click('#btnTrySkin'); await page.waitForTimeout(120);
+  const c2 = await page.evaluate(() => ({ theme: window.GE.theme, saved: JSON.parse(localStorage.getItem('ge_prog')).skin, tryLabel: document.getElementById('btnTrySkin').textContent, tryDisabled: document.getElementById('btnTrySkin').disabled,
+    skin_select: JSON.parse(localStorage.getItem('ge_stats')).skin_select, bg: getComputedStyle(document.documentElement).getPropertyValue('--bg1').trim() }));
+  c2.px = JSON.stringify(await paperPx());
+  await page.screenshot({ path: `${shotDir}/win-chest-tried.png` });
+  // the next win on the same sheet does not re-open the chest; the header now names the paper without replaying the beat
+  await page.click('#btnNext'); await page.waitForTimeout(60);
+  await page.evaluate(sol => { for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side); }, solutions[8]);
+  await page.waitForSelector('#winModal:not([hidden])', { timeout: 2500 }); await page.waitForTimeout(1300);
+  const c3 = await page.evaluate(() => ({ chest: !document.getElementById('winChest').hidden, chest_open: JSON.parse(localStorage.getItem('ge_stats')).chest_open }));
+  await page.evaluate(() => window.GE_MENU.show('levels')); await page.waitForTimeout(80);
+  const c4 = await page.evaluate(() => { const ch = document.querySelector('#levelGrid .chap .chest'); return { text: ch.textContent.replace(/\s+/g, ' ').trim(), open: ch.classList.contains('open'), opening: ch.classList.contains('opening') }; });
+  const okChest = !c0.chest && c1.name === 'Sepia draft' && c1.lid && c1.tryLabel === 'Try it' && !c1.tryDisabled && c1.skins.includes('sepia') && c1.sheet1 === 24 && c1.chest_open === 1 && c1.theme === 'cyan'
+    && c2.theme === 'sepia' && c2.saved === 'sepia' && c2.tryLabel === 'On' && c2.tryDisabled && c2.skin_select === 1 && c2.bg === '#dcc7a1' && c2.px !== DEFAULT_PAPER
+    && !c3.chest && c3.chest_open === 1 && c4.text === '★ 27/30 · Sepia draft' && c4.open && !c4.opening;
+  if (okChest) console.log(`chest open ok: L8 par win → 24 ★ → "Chest opened — Sepia draft" after the stars; Try it → theme sepia (paper ${c2.px}), persisted, skin_select tracked; no repeat on L9; header "${c4.text}"`);
+  else { failures++; console.error('chest open FAIL:', JSON.stringify({ c0, c1, c2, c3, c4 })); }
+}
+
+// Reset progress is a two-tap arm: one tap changes nothing but the label (runs last: it wipes progress
+// — chests close with the stars and the paper returns to the cyanotype)
 {
   await page.evaluate(() => window.GE_MENU.show('levels'));
   await page.waitForTimeout(60);
@@ -554,8 +658,8 @@ const burnLevel = () => page.evaluate(() => {
   await page.click('#btnReset');
   const r1 = await page.evaluate(() => ({ prog: JSON.stringify(window.GE_MENU.prog), label: document.getElementById('btnReset').textContent }));
   await page.click('#btnReset');
-  const r2 = await page.evaluate(() => ({ prog: JSON.stringify(window.GE_MENU.prog), label: document.getElementById('btnReset').textContent }));
-  if (r1.prog === p0 && /again/i.test(r1.label) && r2.prog === '{"u":0,"s":[]}' && !/again/i.test(r2.label)) console.log('reset ok: first tap arms, second erases');
+  const r2 = await page.evaluate(() => ({ prog: JSON.stringify(window.GE_MENU.prog), label: document.getElementById('btnReset').textContent, theme: window.GE.theme, open: document.querySelectorAll('#levelGrid .chap .chest.open').length }));
+  if (r1.prog === p0 && /again/i.test(r1.label) && r2.prog === '{"u":0,"s":[]}' && !/again/i.test(r2.label) && r2.theme === 'cyan' && r2.open === 0) console.log('reset ok: first tap arms, second erases (chests closed, paper back to cyanotype)');
   else { failures++; console.error('reset FAIL:', JSON.stringify({ p0, r1, r2 })); }
 }
 

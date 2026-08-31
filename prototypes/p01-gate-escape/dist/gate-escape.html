@@ -1,6 +1,16 @@
 <title>Gate Escape</title>
 <style>
-  :root { --bg1:#1a4480; --bg2:#0e2c58; --ink:#eaf4ff; --dim:#9dbbdd; --line:rgba(214,238,255,.7); --line2:rgba(214,238,255,.28); --amber:#ffd04d; --amber2:#c99a1e; --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace; }
+  /* the drafting sheet: every paper skin overrides these (game.js THEMES → inline on :root); the
+     defaults below ARE the cyanotype. --amber/--amber2 (filled buttons, AD tags, toast) never change;
+     the *-ink tokens are the same state colours as text on the paper, darkened only on light papers. */
+  :root {
+    --bg1:#1a4480; --bg2:#0e2c58; --ink:#eaf4ff; --dim:#9dbbdd; --line:rgba(214,238,255,.7); --line2:rgba(214,238,255,.28);
+    --card:rgba(15,44,90,.97); --sheet:rgba(15,44,90,.96);
+    --fill:rgba(255,255,255,.05); --fill2:rgba(255,255,255,.08); --fill3:rgba(255,255,255,.14);
+    --tile-line:rgba(214,238,255,.5); --lock-ink:rgba(214,238,255,.35); --lock-hatch:rgba(214,238,255,.11); --star-off:rgba(234,244,255,.35); --tag:rgba(255,255,255,.85);
+    --amber:#ffd04d; --amber2:#c99a1e; --amber-ink:#ffd04d; --red-ink:#ff5a5f; --green-ink:#5fe89b; --done:#72d8ff; --done-fill:rgba(114,216,255,.16);
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body { height:100%; overflow:hidden; }
   body {
@@ -16,25 +26,25 @@
   /* moves = the score: counter on top, the stars this pace still earns underneath */
   #hud .moves { position:relative; text-align:center; font-weight:800; font-size:18px; line-height:1.05; transition:color .25s; }
   #hud .moves .meter { display:block; font:600 11px/1 var(--mono); letter-spacing:.06em; color:var(--dim); margin-top:3px; white-space:nowrap; }
-  #hud .moves .meter span { color:rgba(214,238,255,.28); transition:color .3s, transform .3s; display:inline-block; }
-  #hud .moves .meter span.on { color:var(--amber); }
+  #hud .moves .meter span { color:var(--line2); transition:color .3s, transform .3s; display:inline-block; }
+  #hud .moves .meter span.on { color:var(--amber-ink); }
   #hud .moves .meter em { font-style:normal; margin-left:5px; }
-  #hud .moves.warn { color:var(--amber); }
-  #hud .moves.low { color:#ff5a5f; animation:pulse 1s infinite; }
+  #hud .moves.warn { color:var(--amber-ink); }
+  #hud .moves.low { color:var(--red-ink); animation:pulse 1s infinite; }
   #hud .moves.shake { animation:shake .4s ease-out; }
   #hud .moves.boost { animation:boost .8s ease-out; }
   #hud .moves .float {
-    position:absolute; left:calc(100% + 8px); top:0; color:#5fe89b; font-size:22px; font-weight:800;
+    position:absolute; left:calc(100% + 8px); top:0; color:var(--green-ink); font-size:22px; font-weight:800;
     pointer-events:none; animation:floatup 1s ease-out forwards;
   }
   #hud button {
-    position:relative; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:var(--ink);
+    position:relative; background:var(--fill2); border:1px solid var(--fill3); color:var(--ink);
     border-radius:10px; padding:6px 10px; font-size:14px; font-weight:700; cursor:pointer; transition:opacity .2s;
   }
   #hud button:disabled { opacity:.32; cursor:default; }
   #hud .right { display:flex; gap:5px; }
   /* hint: the rewarded slot that lives in the HUD; AD tag like the rescue; beckons after 20 s idle */
-  #btnHint { color:var(--amber); border-color:rgba(255,208,77,.45); }
+  #btnHint { color:var(--amber-ink); border-color:rgba(255,208,77,.45); }
   #btnHint .ad { position:absolute; top:-7px; right:-6px; font:800 8px/1 var(--mono); letter-spacing:.1em; padding:2px 3px; border-radius:3px; background:var(--amber); color:#1a2a44; }
   #btnHint:disabled .ad { display:none; }
   #btnHint.nudge:not(:disabled) { animation:nudge 1.6s ease-in-out infinite; }
@@ -46,7 +56,7 @@
   #hudGoal .chip.done { opacity:.28; }
   @keyframes pulse { 50% { opacity:.45; } }
   @keyframes shake { 0%,100% { transform:translateX(0); } 20% { transform:translateX(-5px); } 40% { transform:translateX(5px); } 60% { transform:translateX(-3px); } 80% { transform:translateX(3px); } }
-  @keyframes boost { 0% { color:#5fe89b; transform:scale(1); } 25% { transform:scale(1.35); } 100% { color:inherit; transform:scale(1); } }
+  @keyframes boost { 0% { color:var(--green-ink); transform:scale(1); } 25% { transform:scale(1.35); } 100% { color:inherit; transform:scale(1); } }
   @keyframes floatup { from { opacity:1; transform:translateY(0); } 30% { opacity:1; } to { opacity:0; transform:translateY(-16px); } }
   /* one-line tip strip under the HUD: reinforces, never replaces, what the board shows */
   #toast {
@@ -79,7 +89,7 @@
   .modal.sheet .card button { padding:12px; }
   /* cards are drawn like the title block: a drafting annotation on the same sheet */
   .card {
-    position:relative; background:rgba(15,44,90,.97); border:1.5px solid var(--line); outline:1px solid var(--line2); outline-offset:5px;
+    position:relative; background:var(--card); border:1.5px solid var(--line); outline:1px solid var(--line2); outline-offset:5px;
     border-radius:4px; padding:24px 26px 22px; text-align:center; width:min(86vw,340px);
     box-shadow:0 18px 50px rgba(0,0,0,.5); animation:pop .28s cubic-bezier(.34,1.56,.64,1);
   }
@@ -89,11 +99,11 @@
   .card p { color:var(--dim); font-size:15px; margin-bottom:16px; }
   .card .stars { position:relative; font-size:34px; letter-spacing:6px; margin-bottom:10px; height:44px; line-height:44px; }
   .card .stars span { display:inline-block; }
-  .card .stars span.on { color:var(--amber); text-shadow:0 0 12px rgba(255,208,77,.55); animation:starpop .42s cubic-bezier(.34,1.56,.64,1) both; }
-  .card .stars span.off { color:rgba(234,244,255,.35); animation:starin .3s ease-out both; }
+  .card .stars span.on { color:var(--amber-ink); text-shadow:0 0 12px rgba(255,208,77,.55); animation:starpop .42s cubic-bezier(.34,1.56,.64,1) both; }
+  .card .stars span.off { color:var(--star-off); animation:starin .3s ease-out both; }
   @keyframes starpop { from { transform:scale(0) rotate(-40deg); opacity:0; } 60% { transform:scale(1.35) rotate(6deg); opacity:1; } to { transform:scale(1) rotate(0); opacity:1; } }
   @keyframes starin { from { transform:scale(.6); opacity:0; } }
-  .card .stars .spark { position:absolute; width:7px; height:7px; border-radius:50%; pointer-events:none; }
+  .spark { position:absolute; width:7px; height:7px; border-radius:50%; pointer-events:none; } /* burst host: any position:relative parent (star row, chest row, sheet header) */
   /* win-card meta: running star total + what comes next, ruled off like a title-block field row */
   .card .meta { display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--line2); margin:0 0 14px; }
   .card .meta > * { padding:7px 6px 8px; border-right:1px solid var(--line2); }
@@ -101,7 +111,22 @@
   .card .meta .k { display:block; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); margin-bottom:4px; }
   .card .meta .v { font-weight:800; font-size:15px; font-variant-numeric:tabular-nums; }
   .card .meta .v small { display:block; font:600 11px/1.2 var(--mono); color:var(--dim); margin-top:3px; }
-  .card .meta .v b { color:var(--amber); }
+  .card .meta .v b { color:var(--amber-ink); }
+  /* chest reveal on the win card: only when this win crossed a sheet's chest threshold */
+  .card .chest-row { position:relative; display:flex; align-items:center; gap:10px; text-align:left; border:1px solid var(--line2); padding:8px 10px; margin:0 0 6px; animation:pop .45s cubic-bezier(.34,1.56,.64,1) both; }
+  .card .chest-row .chest-ico { width:34px; height:29px; flex:none; color:var(--amber-ink); animation:chestpop .6s cubic-bezier(.34,1.56,.64,1) both; }
+  .card .chest-row > div { flex:1; min-width:0; }
+  .card .chest-row .k { display:block; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); margin-bottom:4px; }
+  .card .chest-row .v { font-weight:800; font-size:15px; }
+  .card .chest-row button { width:auto; margin:0; padding:8px 12px; font-size:14px; }
+  .card .chest-row button:disabled { opacity:1; color:var(--amber-ink); border-color:var(--amber-ink); }
+  @keyframes chestpop { from { transform:scale(.4) rotate(-12deg); } 60% { transform:scale(1.25) rotate(4deg); } to { transform:scale(1) rotate(0); } }
+  /* chest glyph, drawn in the sheet's ink: the lid swings open when the sheet reaches its threshold */
+  .chest-ico { display:inline-block; vertical-align:-3px; width:16px; height:14px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; overflow:visible; }
+  .chest-ico .lid { transform-origin:2px 8px; transition:transform .5s cubic-bezier(.34,1.56,.64,1); }
+  .chest-ico.open .lid { transform:rotate(-40deg); }
+  .chest-ico.open .star { display:block; }
+  .chest-ico .star { display:none; fill:currentColor; stroke:none; }
   .card button {
     position:relative; width:100%; border:0; border-radius:8px; padding:14px; font-size:17px; font-weight:800;
     cursor:pointer; margin-top:8px; color:#fff;
@@ -118,7 +143,7 @@
   /* rewarded-ad placeholder: the state machine around the grant exists before an SDK does */
   #adModal { z-index:30; background:rgba(4,8,20,.72); }
   #adModal .card { width:min(80vw,300px); padding:22px 24px 20px; }
-  #adModal .tag { display:inline-block; font:800 11px/1 var(--mono); letter-spacing:.14em; padding:5px 7px; border:1.5px solid rgba(255,255,255,.85); border-radius:4px; margin-bottom:12px; }
+  #adModal .tag { display:inline-block; font:800 11px/1 var(--mono); letter-spacing:.14em; padding:5px 7px; border:1.5px solid var(--tag); border-radius:4px; margin-bottom:12px; }
   #adModal p { margin-bottom:12px; }
   #adModal .bar { height:6px; border:1px solid var(--line2); border-radius:3px; overflow:hidden; }
   #adModal .bar i { display:block; height:100%; width:0; background:var(--amber); }
@@ -135,14 +160,14 @@
   .tblock {
     position:relative; width:min(92vw,400px); max-height:100%; overflow:auto;
     border:1.5px solid var(--line); outline:1px solid var(--line2); outline-offset:5px;
-    background:rgba(15,44,90,.96); padding:22px 20px 18px;
+    background:var(--sheet); padding:22px 20px 18px;
     animation:sheet .32s ease-out;
   }
   @keyframes sheet { from { opacity:0; transform:translateY(10px); } }
   .tblock .no { position:absolute; top:6px; left:10px; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); }
   .tblock .no.r { left:auto; right:10px; }
   .tblock button.no { background:none; border:1px solid var(--line2); border-radius:4px; padding:4px 7px; top:4px; cursor:pointer; }
-  .tblock button.no b { color:var(--amber); }
+  .tblock button.no b { color:var(--amber-ink); }
   .title {
     font-weight:800; font-size:clamp(30px,9.4vw,42px); line-height:1; letter-spacing:.14em; text-transform:uppercase;
     text-align:center; margin-top:6px; padding-bottom:10px; position:relative;
@@ -158,7 +183,22 @@
   .fields .k { display:block; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); margin-bottom:5px; }
   .fields .v { font-weight:800; font-size:17px; font-variant-numeric:tabular-nums; }
   .fields button { border:0; cursor:pointer; }
-  .fields button .v { color:var(--amber); }
+  .fields button .v { color:var(--amber-ink); }
+  /* paper picker: one swatch per skin (a tiny sheet in that paper's colours); locked ones carry the
+     chest they come from; the caption names the choice — the same control lives on the pause card */
+  .papers { display:flex; align-items:center; gap:8px; border:1px solid var(--line2); margin-top:12px; padding:7px 10px; }
+  .papers .k { font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); margin-right:2px; }
+  .papers .sw { display:flex; gap:7px; }
+  .papers .paper { position:relative; width:30px; height:30px; border-radius:3px; cursor:pointer; padding:0; border:1.5px solid var(--pl); background:linear-gradient(160deg,var(--p1),var(--p2)); box-shadow:inset 0 0 0 3px transparent, inset 0 0 0 4px var(--pl); }
+  .papers .paper::after { content:''; position:absolute; left:8px; right:8px; top:12px; height:1px; background:var(--pl); box-shadow:0 4px 0 var(--pl), 0 -4px 0 var(--pl); opacity:.8; }
+  .papers .paper.on { outline:2px solid var(--amber-ink); outline-offset:2px; }
+  .papers .paper.locked { opacity:.5; }
+  .papers .paper.locked::after { display:none; }
+  .papers .paper .chest-ico { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:15px; height:13px; color:var(--pl); }
+  .papers .cap { flex:1; text-align:right; font-weight:700; font-size:13px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .papers .cap.lock { color:var(--dim); font-weight:600; }
+  .card .papers { margin:8px 0 0; padding:8px 10px; }
+  .card .papers .cap { font-size:12px; }
   .gatebtn {
     position:relative; display:flex; align-items:center; justify-content:center; gap:12px; width:100%; margin-top:18px;
     border:0; border-radius:8px; padding:17px 14px; background:var(--amber); color:#1a2a44;
@@ -176,25 +216,32 @@
     flex:1; background:none; border:1.5px dashed var(--line2); border-radius:8px; color:var(--ink);
     padding:12px 8px; font:700 15px system-ui,sans-serif; cursor:pointer;
   }
-  .ghostbtn:active { background:rgba(255,255,255,.08); }
+  .ghostbtn:active { background:var(--fill2); }
   .shead { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
   .shead h2 { font-size:18px; letter-spacing:.12em; text-transform:uppercase; }
   .shead .back { background:none; border:1.5px solid var(--line2); color:var(--ink); border-radius:8px; padding:6px 12px; font:700 14px system-ui; cursor:pointer; }
   .grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
-  .grid .chap { grid-column:1 / -1; display:flex; justify-content:space-between; align-items:baseline; margin-top:6px; padding-bottom:3px; border-bottom:1px solid var(--line2); font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); text-transform:uppercase; }
+  .grid .chap { grid-column:1 / -1; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:3px 8px; margin-top:6px; padding-bottom:3px; border-bottom:1px solid var(--line2); font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); text-transform:uppercase; }
+  .grid .chap > span:first-child { white-space:nowrap; }
   .grid .chap:first-child { margin-top:0; }
-  .grid .chap b { color:var(--amber); letter-spacing:.06em; }
+  .grid .chap b { color:var(--amber-ink); letter-spacing:.06em; }
+  /* chest per sheet: progress toward its threshold; opened chests name their paper */
+  .grid .chap .chest { position:relative; display:inline-flex; align-items:center; gap:5px; margin-left:auto; white-space:nowrap; letter-spacing:.04em; text-transform:none; font-size:10.5px; }
+  .grid .chap .chest b { letter-spacing:.04em; }
+  .grid .chap .chest .chest-ico { color:var(--dim); }
+  .grid .chap .chest.open .chest-ico { color:var(--amber-ink); }
+  .grid .chap .chest.opening .chest-ico { animation:chestpop .6s cubic-bezier(.34,1.56,.64,1) both; }
   .tile {
-    aspect-ratio:1; border:1.5px solid rgba(214,238,255,.5); border-radius:4px; background:rgba(255,255,255,.05);
+    aspect-ratio:1; border:1.5px solid var(--tile-line); border-radius:4px; background:var(--fill);
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; cursor:pointer;
     color:var(--ink); font:800 17px var(--mono); font-variant-numeric:tabular-nums;
   }
-  .tile .st { font-size:9px; letter-spacing:1px; color:var(--amber); font-family:system-ui; min-height:11px; }
-  .tile.done { background:rgba(114,216,255,.16); border-color:#72d8ff; }
-  .tile.cur { outline:2px solid var(--amber); outline-offset:2px; }
+  .tile .st { font-size:9px; letter-spacing:1px; color:var(--amber-ink); font-family:system-ui; min-height:11px; }
+  .tile.done { background:var(--done-fill); border-color:var(--done); }
+  .tile.cur { outline:2px solid var(--amber-ink); outline-offset:2px; }
   .tile.locked {
-    cursor:default; color:rgba(214,238,255,.35); border-style:dashed;
-    background:repeating-linear-gradient(45deg,transparent 0 4px,rgba(214,238,255,.11) 4px 5px);
+    cursor:default; color:var(--lock-ink); border-style:dashed;
+    background:repeating-linear-gradient(45deg,transparent 0 4px,var(--lock-hatch) 4px 5px);
   }
   .tile:not(.locked):active { transform:scale(.94); }
   .foot { display:flex; justify-content:space-between; align-items:center; margin-top:14px; color:var(--dim); font-size:12px; }
@@ -206,7 +253,7 @@
   .legend .li canvas { width:64px; height:44px; flex:none; }
   .legend .li b { display:block; font-size:15px; }
   .legend .li span { color:var(--dim); font-size:13px; }
-  @media (prefers-reduced-motion: reduce) { .gatebtn, .gatebtn .blk, .tblock, .card, .card .stars span, #toast, #btnHint.nudge { animation:none; } }
+  @media (prefers-reduced-motion: reduce) { .gatebtn, .gatebtn .blk, .tblock, .card, .card .stars span, #toast, #btnHint.nudge, .chest-ico, .card .chest-row { animation:none; } .chest-ico .lid { transition:none; } }
   [hidden] { display:none !important; }
 </style>
 
@@ -233,6 +280,11 @@
       <div class="meta" id="winMeta">
         <div><span class="k">Stars</span><span class="v" id="winTotal">0 / 90</span></div>
         <div><span class="k">Next</span><span class="v" id="winNext">Level 2</span></div>
+      </div>
+      <div class="chest-row" id="winChest" hidden>
+        <svg class="chest-ico open" viewBox="0 0 24 20" aria-hidden="true"><g class="lid"><path d="M2 8V5.5A3.5 3.5 0 0 1 5.5 2h13A3.5 3.5 0 0 1 22 5.5V8"/><path d="M2 8h20"/></g><rect x="2" y="8" width="20" height="10" rx="1.5"/><path d="M10.5 8v4h3V8"/><path class="star" d="M12 9.2l.9 1.9 2.1.3-1.5 1.4.4 2.1-1.9-1-1.9 1 .4-2.1-1.5-1.4 2.1-.3z"/></svg>
+        <div><span class="k">Chest opened</span><span class="v" id="winChestName">Sepia draft</span></div>
+        <button class="ghost" id="btnTrySkin">Try it</button>
       </div>
       <button class="primary" id="btnNext">Next level</button>
       <button class="ghost" id="btnReplay" hidden>Replay for ★★★</button>
@@ -269,6 +321,7 @@
       <button class="ghost" id="btnPauseLevels">Levels</button>
       <button class="ghost" id="btnPauseLegend">How to play</button>
       <button class="ghost" id="btnPauseSound">Sound: on</button>
+      <div class="papers" id="pausePapers" aria-label="Paper"><span class="k">Paper</span><div class="sw"></div><span class="cap"></span></div>
       <button class="ghost" id="btnPauseHome">Main menu</button>
     </div>
   </div>
@@ -292,6 +345,7 @@
         <button class="ghostbtn" id="btnLevels">Levels</button>
         <button class="ghostbtn" id="btnLegend">How to play</button>
       </div>
+      <div class="papers" id="menuPapers" aria-label="Paper"><span class="k">Paper</span><div class="sw"></div><span class="cap"></span></div>
     </div>
   </div>
 
@@ -332,6 +386,76 @@ const COLORS = [
   { main: '#5fe89b', dark: '#2fae67', lite: '#a5f5c8', glyph: 'diamond' },
   { main: '#ffd04d', dark: '#c99a1e', lite: '#ffe9a8', glyph: 'star' },
 ];
+
+// ---------- paper skins (cosmetic, chest rewards) ----------
+// A skin changes ONLY the drafting sheet: page gradient, ink, rules, card tints, the canvas
+// paper/grid/border and the stones' ink. Block and gate colours, glyphs and the block halo are
+// never touched, so the 3-second read is identical on every paper. `css` maps to the custom
+// properties in index.html; the rest is consulted by render() and the legend. The state inks
+// (amber / red / green text on the paper) keep their hue on every skin and only darken on the
+// light papers so they still clear 4.5:1 — the filled amber buttons and AD tags never change.
+const THEMES = {
+  cyan: {
+    name: 'Cyanotype', css: null, // the stylesheet defaults: pixel-identical to the build before skins
+    paper: 'rgba(255,255,255,.045)', grid: 'rgba(190,225,255,.10)', border: 'rgba(214,238,255,.65)',
+    border2: 'rgba(214,238,255,.28)', tick: 'rgba(214,238,255,.8)',
+    stoneBody: 'rgba(8,22,48,.92)', stoneHatch: 'rgba(214,238,255,.55)', stoneEdge: 'rgba(224,242,255,.92)',
+    route: '255,255,255', routeEdge: '20,40,80', spark: '#ffffff', gateHalo: null, arrow: 'rgba(255,255,255,.9)',
+    legendInk: 'rgba(214,238,255,.75)', legendGrid: 'rgba(190,225,255,.12)', legendText: '#eaf4ff', legendAmber: '#ffd04d',
+    swatch: ['#1a4480', '#0e2c58', 'rgba(214,238,255,.7)'],
+  },
+  sepia: {
+    name: 'Sepia draft',
+    css: { bg1: '#dcc7a1', bg2: '#bfa478', ink: '#2a1a0a', dim: '#5e421f', line: 'rgba(58,36,12,.7)', line2: 'rgba(58,36,12,.3)',
+      card: 'rgba(238,224,192,.97)', sheet: 'rgba(238,224,192,.96)', fill: 'rgba(58,36,12,.07)', fill2: 'rgba(58,36,12,.1)', fill3: 'rgba(58,36,12,.25)',
+      'tile-line': 'rgba(58,36,12,.5)', 'lock-ink': 'rgba(58,36,12,.4)', 'lock-hatch': 'rgba(58,36,12,.12)', 'star-off': 'rgba(42,26,10,.3)', tag: 'rgba(42,26,10,.85)',
+      'amber-ink': '#6e4400', 'red-ink': '#a3101a', 'green-ink': '#17603a', done: '#7a4d1c', 'done-fill': 'rgba(122,77,28,.16)' },
+    paper: 'rgba(58,36,12,.06)', grid: 'rgba(58,36,12,.13)', border: 'rgba(58,36,12,.7)',
+    border2: 'rgba(58,36,12,.3)', tick: 'rgba(58,36,12,.85)',
+    stoneBody: 'rgba(46,28,10,.94)', stoneHatch: 'rgba(230,205,160,.55)', stoneEdge: 'rgba(240,222,184,.92)',
+    route: '42,26,10', routeEdge: '255,240,210', spark: '#3a2410', gateHalo: 'rgba(42,26,10,.55)', arrow: 'rgba(42,26,10,.9)',
+    legendInk: 'rgba(58,36,12,.8)', legendGrid: 'rgba(58,36,12,.14)', legendText: '#2a1a0a', legendAmber: '#6e4400',
+    swatch: ['#dcc7a1', '#bfa478', 'rgba(58,36,12,.7)'],
+  },
+  night: {
+    name: 'Night vellum',
+    css: { bg1: '#2c2c31', bg2: '#141417', ink: '#efe9dc', dim: '#a9a394', line: 'rgba(239,233,220,.7)', line2: 'rgba(239,233,220,.28)',
+      card: 'rgba(38,38,43,.97)', sheet: 'rgba(38,38,43,.96)', fill: 'rgba(255,255,255,.05)', fill2: 'rgba(255,255,255,.08)', fill3: 'rgba(255,255,255,.14)',
+      'tile-line': 'rgba(239,233,220,.5)', 'lock-ink': 'rgba(239,233,220,.35)', 'lock-hatch': 'rgba(239,233,220,.11)', 'star-off': 'rgba(239,233,220,.35)', tag: 'rgba(255,255,255,.85)',
+      'amber-ink': '#ffd04d', 'red-ink': '#ff5a5f', 'green-ink': '#5fe89b', done: '#e0c98a', 'done-fill': 'rgba(224,201,138,.14)' },
+    paper: 'rgba(255,255,255,.05)', grid: 'rgba(239,233,220,.10)', border: 'rgba(239,233,220,.65)',
+    border2: 'rgba(239,233,220,.28)', tick: 'rgba(239,233,220,.8)',
+    stoneBody: 'rgba(6,6,8,.94)', stoneHatch: 'rgba(239,233,220,.55)', stoneEdge: 'rgba(245,240,228,.92)',
+    route: '255,255,255', routeEdge: '20,20,24', spark: '#ffffff', gateHalo: null, arrow: 'rgba(255,255,255,.9)',
+    legendInk: 'rgba(239,233,220,.75)', legendGrid: 'rgba(239,233,220,.12)', legendText: '#efe9dc', legendAmber: '#ffd04d',
+    swatch: ['#2c2c31', '#141417', 'rgba(239,233,220,.7)'],
+  },
+  white: {
+    name: 'Whiteprint',
+    css: { bg1: '#f6f3ea', bg2: '#e4dfd0', ink: '#163a6b', dim: '#41598a', line: 'rgba(22,58,107,.7)', line2: 'rgba(22,58,107,.3)',
+      card: 'rgba(255,253,247,.97)', sheet: 'rgba(255,253,247,.96)', fill: 'rgba(22,58,107,.07)', fill2: 'rgba(22,58,107,.1)', fill3: 'rgba(22,58,107,.25)',
+      'tile-line': 'rgba(22,58,107,.5)', 'lock-ink': 'rgba(22,58,107,.4)', 'lock-hatch': 'rgba(22,58,107,.12)', 'star-off': 'rgba(22,58,107,.3)', tag: 'rgba(22,58,107,.85)',
+      'amber-ink': '#8a5a00', 'red-ink': '#b3121a', 'green-ink': '#1b7a45', done: '#1f4e9c', 'done-fill': 'rgba(31,78,156,.14)' },
+    paper: 'rgba(22,58,107,.05)', grid: 'rgba(22,58,107,.13)', border: 'rgba(22,58,107,.7)',
+    border2: 'rgba(22,58,107,.3)', tick: 'rgba(22,58,107,.85)',
+    stoneBody: 'rgba(16,40,76,.94)', stoneHatch: 'rgba(230,238,250,.55)', stoneEdge: 'rgba(240,246,255,.92)',
+    route: '22,58,107', routeEdge: '255,255,255', spark: '#163a6b', gateHalo: 'rgba(22,58,107,.55)', arrow: 'rgba(22,58,107,.9)',
+    legendInk: 'rgba(22,58,107,.8)', legendGrid: 'rgba(22,58,107,.14)', legendText: '#163a6b', legendAmber: '#8a5a00',
+    swatch: ['#f6f3ea', '#e4dfd0', 'rgba(22,58,107,.7)'],
+  },
+};
+const CSS_VARS = ['bg1', 'bg2', 'ink', 'dim', 'line', 'line2', 'card', 'sheet', 'fill', 'fill2', 'fill3', 'tile-line', 'lock-ink', 'lock-hatch', 'star-off', 'tag',
+  'amber-ink', 'red-ink', 'green-ink', 'done', 'done-fill'];
+let themeId = 'cyan', THEME = THEMES.cyan;
+function setTheme(id) {
+  if (!THEMES[id]) id = 'cyan';
+  themeId = id; THEME = THEMES[id];
+  const rs = document.documentElement.style;
+  // the default clears the inline properties so the stylesheet's own values apply untouched
+  for (const k of CSS_VARS) { if (THEME.css && THEME.css[k]) rs.setProperty('--' + k, THEME.css[k]); else rs.removeProperty('--' + k); }
+  document.body.dataset.paper = id;
+  window.dispatchEvent(new CustomEvent('ge:theme', { detail: { id } }));
+}
 
 // ---------- dom ----------
 const cv = document.getElementById('cv');
@@ -711,7 +835,7 @@ function startExit(bi, side) {
     particles.push({
       x: cen[0], y: cen[1],
       vx: (Math.random() - 0.5) * 7 + dx * 4, vy: (Math.random() - 0.5) * 7 + dy * 4 - 2,
-      life: 1, color: Math.random() < 0.7 ? COLORS[b.color].main : '#ffffff',
+      life: 1, color: Math.random() < 0.7 ? COLORS[b.color].main : THEME.spark,
       r: 2 + Math.random() * 3.4,
     });
   }
@@ -1156,14 +1280,14 @@ function drawRoute(bi, route, strength) {
     const [tx, ty] = route.to || route.path[route.path.length - 1];
     ctx.save();
     ctx.setLineDash([6, 5]); ctx.lineDashOffset = -hintT * 30;
-    ctx.strokeStyle = `rgba(255,255,255,${strength * 0.85})`; ctx.lineWidth = 2.5;
+    ctx.strokeStyle = `rgba(${THEME.route},${strength * 0.85})`; ctx.lineWidth = 2.5;
     for (const [cx, cy] of b.cells) ctx.strokeRect(bx + (tx + cx) * cell + 5, by + (ty + cy) * cell + 5, cell - 10, cell - 10);
     ctx.restore();
   }
   const pulse = (Math.sin(hintT * 5) + 1) / 2;
   const a = strength * (0.45 + pulse * 0.4);
   ctx.save();
-  ctx.strokeStyle = `rgba(255,255,255,${a})`;
+  ctx.strokeStyle = `rgba(${THEME.route},${a})`;
   ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   ctx.setLineDash([9, 9]); ctx.lineDashOffset = -hintT * 40;
   ctx.beginPath();
@@ -1172,7 +1296,7 @@ function drawRoute(bi, route, strength) {
   ctx.setLineDash([]);
   const [ex, ey] = pts[pts.length - 1];
   const pa = Math.atan2(d[1], d[0]);
-  ctx.fillStyle = `rgba(255,255,255,${a})`;
+  ctx.fillStyle = `rgba(${THEME.route},${a})`;
   ctx.beginPath();
   ctx.moveTo(ex + Math.cos(pa) * 11, ey + Math.sin(pa) * 11);
   ctx.lineTo(ex + Math.cos(pa + 2.5) * 11, ey + Math.sin(pa + 2.5) * 11);
@@ -1187,9 +1311,9 @@ function drawRoute(bi, route, strength) {
       if (t <= seg[i]) {
         const u = seg[i] ? t / seg[i] : 0;
         const x = pts[i][0] + (pts[i + 1][0] - pts[i][0]) * u, y = pts[i][1] + (pts[i + 1][1] - pts[i][1]) * u;
-        ctx.fillStyle = `rgba(255,255,255,${strength * 0.95})`;
+        ctx.fillStyle = `rgba(${THEME.route},${strength * 0.95})`;
         ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = `rgba(20,40,80,${strength * 0.6})`; ctx.lineWidth = 2; ctx.stroke();
+        ctx.strokeStyle = `rgba(${THEME.routeEdge},${strength * 0.6})`; ctx.lineWidth = 2; ctx.stroke();
         break;
       }
       t -= seg[i];
@@ -1231,10 +1355,10 @@ function render() {
 
   // blueprint sheet
   const bw = L.w * cell, bh = L.h * cell;
-  ctx.fillStyle = 'rgba(255,255,255,.045)';
+  ctx.fillStyle = THEME.paper;
   ctx.fillRect(bx - 14, by - 14, bw + 28, bh + 28);
   // fine draft grid over the whole sheet
-  ctx.strokeStyle = 'rgba(190,225,255,.10)';
+  ctx.strokeStyle = THEME.grid;
   ctx.lineWidth = 1;
   for (let x = 0; x <= L.w; x++) {
     ctx.beginPath(); ctx.moveTo(bx + x * cell + 0.5, by - 8); ctx.lineTo(bx + x * cell + 0.5, by + bh + 8); ctx.stroke();
@@ -1243,13 +1367,13 @@ function render() {
     ctx.beginPath(); ctx.moveTo(bx - 8, by + y * cell + 0.5); ctx.lineTo(bx + bw + 8, by + y * cell + 0.5); ctx.stroke();
   }
   // double drafting border with corner ticks
-  ctx.strokeStyle = 'rgba(214,238,255,.65)';
+  ctx.strokeStyle = THEME.border;
   ctx.lineWidth = 1.8;
   ctx.strokeRect(bx - 0.5, by - 0.5, bw + 1, bh + 1);
-  ctx.strokeStyle = 'rgba(214,238,255,.28)';
+  ctx.strokeStyle = THEME.border2;
   ctx.lineWidth = 1;
   ctx.strokeRect(bx - 6.5, by - 6.5, bw + 13, bh + 13);
-  ctx.strokeStyle = 'rgba(214,238,255,.8)';
+  ctx.strokeStyle = THEME.tick;
   ctx.lineWidth = 2;
   for (const [cx2, cy2, dx2, dy2] of [
     [bx, by, 1, 1], [bx + bw, by, -1, 1], [bx, by + bh, 1, -1], [bx + bw, by + bh, -1, -1],
@@ -1283,6 +1407,8 @@ function render() {
       rr(gx - grow, gy - grow, w + grow * 2, h + grow * 2, 6 + grow); ctx.stroke();
     }
     if (closed) ctx.globalAlpha = 0.3;
+    // on a light paper the tab gets the same ink halo the blocks carry (its colours never change)
+    if (THEME.gateHalo) { ctx.strokeStyle = THEME.gateHalo; ctx.lineWidth = 3; rr(gx, gy, w, h, 4); ctx.stroke(); }
     // solid ink stamp — must be unmissable at a glance
     ctx.fillStyle = c.dark;
     rr(gx, gy, w, h, 4); ctx.fill();
@@ -1299,7 +1425,7 @@ function render() {
     drawGlyph(c.glyph, 0, 0, Math.min(cell * 0.13, th * 0.3), 'rgba(255,255,255,.95)');
     ctx.rotate(rot);
     if (!closed) {
-      ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+      ctx.strokeStyle = THEME.arrow; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
       const ch = cell * 0.1;
       ctx.beginPath();
       ctx.moveTo(-ch, -th * 0.62 - ch * 0.1); ctx.lineTo(0, -th * 0.62 - ch * 1.2); ctx.lineTo(ch, -th * 0.62 - ch * 0.1);
@@ -1314,7 +1440,7 @@ function render() {
     const x = bx + sx * cell, y = by + sy * cell;
     ctx.save();
     ctx.shadowColor = 'rgba(4,14,34,.55)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3;
-    ctx.fillStyle = 'rgba(8,22,48,.92)';
+    ctx.fillStyle = THEME.stoneBody;
     ctx.fillRect(x + 4, y + 4, cell - 8, cell - 8);
     ctx.shadowColor = 'transparent';
     ctx.save();
@@ -1322,13 +1448,13 @@ function render() {
     ctx.rect(x + 4, y + 4, cell - 8, cell - 8);
     ctx.clip();
     ctx.lineWidth = 1.2;
-    ctx.strokeStyle = 'rgba(214,238,255,.55)';
+    ctx.strokeStyle = THEME.stoneHatch;
     for (let d = -cell; d < cell; d += 6) {
       ctx.beginPath(); ctx.moveTo(x + d, y + cell); ctx.lineTo(x + d + cell, y); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(x + d, y); ctx.lineTo(x + d + cell, y + cell); ctx.stroke();
     }
     ctx.restore();
-    ctx.strokeStyle = 'rgba(224,242,255,.92)'; ctx.lineWidth = 2.4;
+    ctx.strokeStyle = THEME.stoneEdge; ctx.lineWidth = 2.4;
     ctx.strokeRect(x + 4, y + 4, cell - 8, cell - 8);
     ctx.restore();
   }
@@ -1410,6 +1536,8 @@ function sound(kind, n = 0) {
   // escapes climb a step each time within a level — the reward sound rises with the streak
   else if (kind === 'exit') { const k = Math.pow(1.122, Math.min(n, 7)); blip(420 * k, 0.16, 'sine', 0.22, 0, 460 * k); blip(880 * k, 0.1, 'triangle', 0.1, 0.05); }
   else if (kind === 'hint') { blip(660, 0.1, 'sine', 0.12); blip(990, 0.14, 'sine', 0.1, 0.08); }
+  // chest: a latch click, then a rising three-note chime
+  else if (kind === 'chest') { blip(240, 0.05, 'square', 0.08); blip(784, 0.16, 'triangle', 0.16, 0.12); blip(1046, 0.16, 'triangle', 0.16, 0.24); blip(1568, 0.3, 'sine', 0.18, 0.36, 120); }
   else if (kind === 'gate') { blip(1046, 0.18, 'triangle', 0.14, 0.08); blip(1568, 0.22, 'sine', 0.1, 0.14); }
   else if (kind === 'star') blip(880 * Math.pow(1.25, n), 0.16, 'triangle', 0.18, 0, 200);
   else if (kind === 'undo') blip(520, 0.12, 'sine', 0.14, 0, -220);
@@ -1432,6 +1560,9 @@ window.GE = {
   get hint() { return hint; },          // the reference move currently ghosted (null if none)
   get best() { return best[li] || 0; }, // personal best moves on this level (0 = never cleared)
   get adUp() { return !adModal.hidden; },
+  // paper skins: id + table for menu.js and the bots; setTheme repaints instantly (next frame)
+  get theme() { return themeId; }, get themes() { return THEMES; }, setTheme,
+  burst, sound, // the chest reveal on the win card reuses the third-star burst and the generated audio
   // drawing helpers shared with menu.js (legend); ctx is swapped for the call
   draw(c, fn) { const o = ctx; ctx = c; try { fn({ rr, drawGlyph, drawBlockShape, COLORS }); } finally { ctx = o; } },
   load: loadLevel,
@@ -1486,8 +1617,14 @@ requestAnimationFrame(frame);
   let legendFrom = 'menu', levelsFrom = 'menu'; // Back returns to the screen a sheet was opened from
   let resetArmed = false, resetTimer = 0;
   const CHAPTERS = ['Foundations', 'Corked', 'The spike'];
+  const PER = Math.ceil(N / CHAPTERS.length); // levels per sheet
+  // chests: one per sheet, opens at CHEST_STARS of the sheet's 30. The reward is a paper skin —
+  // cosmetic only; nothing is ever gated on a chest (the funnel test needs every level reachable)
+  const CHEST_STARS = 24;
+  const CHEST_SKINS = ['sepia', 'night', 'white']; // sheet 1, 2, 3 → GE.themes ids
+  const DEFAULT_SKIN = 'cyan';
 
-  // ---------- progress: highest unlocked level + best stars per level ----------
+  // ---------- progress: highest unlocked level + best stars per level (+ paper skin, unlocked skins) ----------
   let prog = { u: 0, s: [] };
   try {
     const p = JSON.parse(localStorage.getItem('ge_prog') || 'null');
@@ -1495,6 +1632,54 @@ requestAnimationFrame(frame);
   } catch (e) {}
   const save = () => { try { localStorage.setItem('ge_prog', JSON.stringify(prog)); } catch (e) {} };
   const starsTotal = () => prog.s.reduce((a, b) => a + (b || 0), 0);
+  const sheetStars = c => prog.s.slice(c * PER, (c + 1) * PER).reduce((a, b) => a + (b || 0), 0);
+  const sheetMax = c => Math.min(PER, N - c * PER) * 3;
+  const skins = () => prog.skins || [];
+  const unlocked = id => id === DEFAULT_SKIN || skins().includes(id);
+  const chestLabel = id => `Sheet ${CHEST_SKINS.indexOf(id) + 1} chest · opens at ${CHEST_STARS} ★`;
+  // a save that already clears a threshold (older build, seeded progress) owns that skin; the
+  // opening beat then plays the first time its header is seen (prog.seen)
+  for (let c = 0; c < CHEST_SKINS.length; c++) if (sheetStars(c) >= CHEST_STARS && !unlocked(CHEST_SKINS[c])) prog.skins = [...skins(), CHEST_SKINS[c]];
+  GE.setTheme(unlocked(prog.skin) ? prog.skin : DEFAULT_SKIN);
+
+  // ---------- paper skins ----------
+  const CHEST_SVG = open => `<svg class="chest-ico${open ? ' open' : ''}" viewBox="0 0 24 20" aria-hidden="true"><g class="lid"><path d="M2 8V5.5A3.5 3.5 0 0 1 5.5 2h13A3.5 3.5 0 0 1 22 5.5V8"/><path d="M2 8h20"/></g><rect x="2" y="8" width="20" height="10" rx="1.5"/><path d="M10.5 8v4h3V8"/><path class="star" d="M12 9.2l.9 1.9 2.1.3-1.5 1.4.4 2.1-1.9-1-1.9 1 .4-2.1-1.5-1.4 2.1-.3z"/></svg>`;
+  function setSkin(id, from) {
+    if (!unlocked(id) || !GE.themes[id]) return false;
+    GE.setTheme(id); // instant: the next frame draws on the new paper; ge:theme refreshes the pickers
+    if (id === DEFAULT_SKIN) delete prog.skin; else prog.skin = id;
+    save();
+    track('skin_select', { skin: id, from });
+    return true;
+  }
+  // the picker: one swatch per skin (a tiny sheet in that paper's colours), the current one outlined,
+  // locked ones dimmed with the chest they come from; the caption names the choice
+  const capTimers = new Map();
+  function caption(host, text, lock) {
+    const cap = host.querySelector('.cap');
+    cap.textContent = text; cap.classList.toggle('lock', !!lock);
+    clearTimeout(capTimers.get(host));
+    if (lock) capTimers.set(host, setTimeout(() => caption(host, GE.themes[GE.theme].name), 2600));
+  }
+  function buildPapers(host, prefix) {
+    const sw = host.querySelector('.sw');
+    sw.innerHTML = '';
+    for (const id in GE.themes) {
+      const t = GE.themes[id], lock = !unlocked(id);
+      const b = document.createElement('button');
+      b.className = 'paper' + (lock ? ' locked' : '') + (id === GE.theme ? ' on' : '');
+      b.id = prefix + id[0].toUpperCase() + id.slice(1);
+      b.dataset.skin = id;
+      b.style.setProperty('--p1', t.swatch[0]); b.style.setProperty('--p2', t.swatch[1]); b.style.setProperty('--pl', t.swatch[2]);
+      b.setAttribute('aria-label', 'Paper: ' + t.name + (lock ? ', locked. ' + chestLabel(id) : ''));
+      if (lock) b.innerHTML = CHEST_SVG(false);
+      b.onclick = () => { if (lock) caption(host, chestLabel(id), true); else setSkin(id, prefix === 'btnPaper' ? 'menu' : 'pause'); };
+      sw.appendChild(b);
+    }
+    caption(host, GE.themes[GE.theme].name);
+  }
+  function refreshPapers() { buildPapers($('menuPapers'), 'btnPaper'); buildPapers($('pausePapers'), 'btnPausePaper'); }
+  window.addEventListener('ge:theme', () => { refreshPapers(); if (!screens.legend.hidden) drawSymbols(); });
 
   // ---------- sound ----------
   try { GE.soundOn = localStorage.getItem('ge_sound') !== '0'; } catch (e) {}
@@ -1526,20 +1711,28 @@ requestAnimationFrame(frame);
     $('fStars').textContent = starsTotal() + ' / ' + (N * 3);
     $('playLabel').textContent = (resumable() ? 'Resume level ' : 'Play level ') + (GE.level + 1);
     refreshSound();
+    refreshPapers();
   }
   function buildGrid() {
     const g = $('levelGrid');
     g.innerHTML = '';
-    const per = Math.ceil(N / CHAPTERS.length);
+    const per = PER;
     for (let i = 0; i < N; i++) {
       if (i % per === 0) {
-        // chapter rule: a header per sheet of ten with its own star count (no gate — the
-        // funnel test needs every level reachable; the sink is a proposal, see dev report)
-        const c = i / per, got = prog.s.slice(i, i + per).reduce((a, b) => a + (b || 0), 0);
+        // chapter rule: a header per sheet of ten with its star count and the sheet's chest —
+        // progress toward the threshold, or the paper it opened (no gate: every level stays reachable)
+        const c = i / per, got = sheetStars(c), open = got >= CHEST_STARS, skin = GE.themes[CHEST_SKINS[c]];
+        const fresh = open && !(prog.seen || []).includes(c); // first sight of an open chest: play the beat here
         const h = document.createElement('div');
         h.className = 'chap';
-        h.innerHTML = `<span>Sheet ${c + 1} · ${CHAPTERS[c] || ''}</span><b>★ ${got} / ${Math.min(per, N - i) * 3}</b>`;
+        h.innerHTML = `<span>Sheet ${c + 1} · ${CHAPTERS[c] || ''}</span>`
+          + `<span class="chest${open && !fresh ? ' open' : ''}${fresh ? ' opening' : ''}" title="Chest opens at ${CHEST_STARS} ★">${CHEST_SVG(open && !fresh)} <b>★ ${got}/${sheetMax(c)}</b> · ${open ? (skin ? skin.name : 'open') : `${CHEST_STARS - got} to open`}</span>`;
         g.appendChild(h);
+        if (fresh) {
+          prog.seen = [...(prog.seen || []), c]; save();
+          const ch = h.querySelector('.chest'), ico = h.querySelector('.chest-ico');
+          setTimeout(() => { if (!ico.isConnected) return; ch.classList.add('open'); ico.classList.add('open'); GE.burst(ico); GE.sound('chest'); }, 400);
+        }
       }
       const locked = i > prog.u;
       const b = document.createElement('button');
@@ -1566,6 +1759,7 @@ requestAnimationFrame(frame);
       return;
     }
     prog = { u: 0, s: [] }; save();
+    GE.setTheme(DEFAULT_SKIN); // chests close with the stars; the sheet goes back to cyanotype
     GE.load(0); show('levels');
   };
 
@@ -1576,6 +1770,7 @@ requestAnimationFrame(frame);
     GE.paused = true;
     $('pauseSub').textContent = `Level ${GE.level + 1} · ${GE.movesLeft} moves left`;
     refreshSound();
+    refreshPapers();
     pauseModal.hidden = false;
   }
   function resume() { GE.paused = false; pauseModal.hidden = true; }
@@ -1608,13 +1803,38 @@ requestAnimationFrame(frame);
     else show('menu');
   };
 
+  // ---------- win card: chest reveal ----------
+  // only when this win carried the sheet across its threshold; the row pops in after the stars
+  // have landed, the lid swings open with sparks and a chime, and Try it applies the paper
+  let chestTimer = 0, chestSkin = null;
+  const winChest = $('winChest'), btnTry = $('btnTrySkin');
+  function revealChest(id) {
+    chestSkin = id;
+    const ico = winChest.querySelector('.chest-ico');
+    $('winChestName').textContent = GE.themes[id].name;
+    btnTry.disabled = GE.theme === id; btnTry.textContent = btnTry.disabled ? 'On' : 'Try it';
+    ico.classList.remove('open');
+    winChest.hidden = false;
+    chestTimer = setTimeout(() => { ico.classList.add('open'); GE.burst(ico); GE.sound('chest'); }, 140);
+  }
+  btnTry.onclick = () => { if (chestSkin && setSkin(chestSkin, 'win')) { btnTry.disabled = true; btnTry.textContent = 'On'; } };
+
   // ---------- engine events ----------
-  window.addEventListener('ge:load', () => { show(null); pauseModal.hidden = true; GE.paused = false; levelsFrom = 'menu'; });
+  window.addEventListener('ge:load', () => { show(null); pauseModal.hidden = true; GE.paused = false; levelsFrom = 'menu'; clearTimeout(chestTimer); winChest.hidden = true; });
   window.addEventListener('ge:win', e => {
     const { lvl, stars, last } = e.detail;
-    const before = starsTotal();
+    const before = starsTotal(), sheet = Math.floor(lvl / PER), sheetBefore = sheetStars(sheet);
     prog.s[lvl] = Math.max(prog.s[lvl] || 0, stars);
     prog.u = Math.max(prog.u, Math.min(lvl + 1, N - 1));
+    clearTimeout(chestTimer); winChest.hidden = true;
+    if (sheetBefore < CHEST_STARS && sheetStars(sheet) >= CHEST_STARS && CHEST_SKINS[sheet]) {
+      const id = CHEST_SKINS[sheet];
+      if (!unlocked(id)) prog.skins = [...skins(), id];
+      prog.seen = [...(prog.seen || []), sheet]; // the beat plays here, not again on the sheet index
+      track('chest_open', { sheet: sheet + 1, skin: id, lvl: lvl + 1 });
+      const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      chestTimer = setTimeout(() => revealChest(id), reduced ? 0 : 1000);
+    }
     save();
     // win-card meta: the star total ticks up once the stars have landed; the next sheet is named
     const after = starsTotal();
@@ -1632,8 +1852,8 @@ requestAnimationFrame(frame);
   });
   window.addEventListener('ge:finished', () => { GE.load(0); show('menu'); });
 
-  // ---------- legend drawings (same ink as the board) ----------
-  const INK = 'rgba(214,238,255,.75)';
+  // ---------- legend drawings (same ink and paper as the board) ----------
+  const T = () => GE.themes[GE.theme];
   function setup(cv) {
     const c = cv.getContext('2d');
     c.setTransform(1, 0, 0, 1, 0, 0);
@@ -1641,11 +1861,11 @@ requestAnimationFrame(frame);
     return c;
   }
   function paper(c, x, y, w, h, cell) {
-    c.fillStyle = 'rgba(255,255,255,.045)'; c.fillRect(x - 8, y - 8, w + 16, h + 16);
-    c.strokeStyle = 'rgba(190,225,255,.12)'; c.lineWidth = 1;
+    c.fillStyle = T().paper; c.fillRect(x - 8, y - 8, w + 16, h + 16);
+    c.strokeStyle = T().legendGrid; c.lineWidth = 1;
     for (let gx = 0; gx <= w; gx += cell) { c.beginPath(); c.moveTo(x + gx + 0.5, y); c.lineTo(x + gx + 0.5, y + h); c.stroke(); }
     for (let gy = 0; gy <= h; gy += cell) { c.beginPath(); c.moveTo(x, y + gy + 0.5); c.lineTo(x + w, y + gy + 0.5); c.stroke(); }
-    c.strokeStyle = 'rgba(214,238,255,.65)'; c.lineWidth = 1.8; c.strokeRect(x - 0.5, y - 0.5, w + 1, h + 1);
+    c.strokeStyle = T().border; c.lineWidth = 1.8; c.strokeRect(x - 0.5, y - 0.5, w + 1, h + 1);
   }
   function block(c, x, y, w, h, ci, alpha = 1) {
     const col = COLORS[ci];
@@ -1673,6 +1893,7 @@ requestAnimationFrame(frame);
     const col = COLORS[ci];
     GE.draw(c, ({ rr, drawGlyph }) => {
       c.save();
+      if (T().gateHalo) { c.strokeStyle = T().gateHalo; c.lineWidth = 3; rr(x, y, w, h, 4); c.stroke(); }
       c.fillStyle = col.dark; rr(x, y, w, h, 4); c.fill();
       c.fillStyle = col.main; rr(x + 1.5, y + 1.5, w - 3, h - 3, 3); c.fill();
       c.setLineDash([5, 4]); c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 1.4;
@@ -1680,35 +1901,40 @@ requestAnimationFrame(frame);
       c.translate(x + w / 2, y + h / 2);
       drawGlyph(col.glyph, 0, 0, Math.min(w, h) * 0.3, 'rgba(255,255,255,.95)'); // upright, like the block's stamp
       c.rotate(rot);
-      c.strokeStyle = 'rgba(255,255,255,.9)'; c.lineWidth = 2.6; c.lineCap = 'round';
+      c.strokeStyle = T().arrow; c.lineWidth = 2.6; c.lineCap = 'round';
       const th = Math.min(w, h), ch = th * 0.24;
       c.beginPath(); c.moveTo(-ch, -th * 0.62 - ch * 0.1); c.lineTo(0, -th * 0.62 - ch * 1.2); c.lineTo(ch, -th * 0.62 - ch * 0.1); c.stroke();
       c.restore();
     });
   }
-  function stone(c, x, y, s) {
+  function stone(c, x, y, s) { // drawn exactly as on the board: a solid object, not a marking
     c.save();
-    c.strokeStyle = INK; c.lineWidth = 1.8; c.strokeRect(x + 4, y + 4, s - 8, s - 8);
+    c.shadowColor = 'rgba(4,14,34,.55)'; c.shadowBlur = 6; c.shadowOffsetY = 3;
+    c.fillStyle = T().stoneBody; c.fillRect(x + 4, y + 4, s - 8, s - 8);
+    c.shadowColor = 'transparent';
+    c.save();
     c.beginPath(); c.rect(x + 4, y + 4, s - 8, s - 8); c.clip();
-    c.lineWidth = 1.1; c.strokeStyle = 'rgba(214,238,255,.5)';
+    c.lineWidth = 1.2; c.strokeStyle = T().stoneHatch;
     for (let d = -s; d < s; d += 6) {
       c.beginPath(); c.moveTo(x + d, y + s); c.lineTo(x + d + s, y); c.stroke();
       c.beginPath(); c.moveTo(x + d, y); c.lineTo(x + d + s, y + s); c.stroke();
     }
+    c.restore();
+    c.strokeStyle = T().stoneEdge; c.lineWidth = 2.4; c.strokeRect(x + 4, y + 4, s - 8, s - 8);
     c.restore();
   }
   function drawSymbols() {
     let c = setup($('symBlock'));
     block(c, 14, 22, 100, 44, 0);
     c = setup($('symGate'));
-    c.strokeStyle = 'rgba(214,238,255,.65)'; c.lineWidth = 1.8;
+    c.strokeStyle = T().border; c.lineWidth = 1.8;
     c.beginPath(); c.moveTo(74, 4); c.lineTo(74, 84); c.stroke();
     block(c, 20, 26, 50, 36, 3);
     gate(c, 78, 20, 22, 48, 3, Math.PI / 2);
     c = setup($('symStone'));
     stone(c, 40, 20, 48);
     c = setup($('symMoves'));
-    c.fillStyle = '#eaf4ff'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillStyle = T().legendText; c.textAlign = 'center'; c.textBaseline = 'middle';
     c.font = '800 34px system-ui, sans-serif'; c.fillText('5', 46, 44);
     c.font = '700 15px system-ui, sans-serif'; c.fillText('moves', 92, 47);
   }
@@ -1743,20 +1969,20 @@ requestAnimationFrame(frame);
     const p = (Math.sin(ph * 6) + 1) / 2;
     const cx = k => bx + cell * (k + 1), cy = k => by + cell * (k + 0.5);
     c.save();
-    c.strokeStyle = `rgba(255,255,255,${0.35 + p * 0.4})`; c.lineWidth = 4; c.lineCap = 'round'; c.lineJoin = 'round';
+    c.strokeStyle = `rgba(${T().route},${0.35 + p * 0.4})`; c.lineWidth = 4; c.lineCap = 'round'; c.lineJoin = 'round';
     c.setLineDash([7, 7]); c.lineDashOffset = -ph * 30;
     c.beginPath(); c.moveTo(cx(0), cy(0)); c.lineTo(cx(1), cy(0)); c.lineTo(cx(1), cy(1)); c.lineTo(cx(3.4), cy(1)); c.stroke();
     c.setLineDash([]);
-    c.fillStyle = `rgba(255,255,255,${0.45 + p * 0.4})`;
+    c.fillStyle = `rgba(${T().route},${0.45 + p * 0.4})`;
     c.beginPath(); c.moveTo(cx(3.4) + 10, cy(1)); c.lineTo(cx(3.4) - 2, cy(1) - 8); c.lineTo(cx(3.4) - 2, cy(1) + 8); c.closePath(); c.fill();
     c.restore();
-    c.fillStyle = '#ffd04d'; c.font = '700 12px system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillStyle = T().legendAmber; c.font = '700 12px system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
     c.fillText('One drag, around the corner and out = 1 move', demoCv.width / 2, by + H * cell + 22);
   }
 
 
   show('menu');
-  window.GE_MENU = { show, get prog() { return prog; } };
+  window.GE_MENU = { show, get prog() { return prog; }, setSkin, CHEST_STARS, CHEST_SKINS };
 })();
 
 </script>
