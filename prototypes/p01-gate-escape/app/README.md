@@ -36,3 +36,29 @@ reverse-domain).
 App Store submission also needs (all generatable on request): screenshots
 per device size, a privacy "nutrition label" (this build stores data only
 on-device, no tracking), and the store listing copy.
+
+## Bot-testing the iOS build
+
+The Chromium playtest (`tools/playtest.mjs`) certifies the engine; this
+certifies the *iOS app* — the same engine running inside the real WKWebView on
+a simulator.
+
+```bash
+../tools/playtest-ios.sh            # iPhone 17 simulator; watch it live in Simulator.app
+SIM="iPhone 16e" ../tools/playtest-ios.sh
+```
+
+How it works:
+
+- `tools/build-app.mjs` bundles `tools/bot-runtime.js` + `tools/solutions.json`
+  into `www/bot.js`. It is inert in normal play.
+- Launching the app with the `-autoplay` argument makes `AppDelegate.swift`
+  call `GE_BOT.run()` once the engine is up, and mirror `window.__botStatus`
+  into an on-screen accessibility label (`botStatus`).
+- `ios/App/AppUITests/GateEscapeBotTests.swift` launches with that flag, reads
+  the label until it says `BOT PASS …` or `BOT FAIL …`, and saves screenshots
+  (L1, L12, L22, their win screens, the fail offer, final) to `../shots/ios/`
+  and into the `.xcresult` bundle. In Xcode: select the App scheme, ⌘U.
+
+Xcode/SwiftPM will prompt for Keychain access on the first build; allow or
+deny — the Capacitor package is public either way.

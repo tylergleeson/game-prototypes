@@ -26,3 +26,7 @@ Quick orientation:
   — no exceptions.
 - After ANY gameplay or rendering change: re-run the game's playtest bot
   before committing.
+- p01 also has a native iOS app (`app/ios`, Capacitor + SPM) with an in-app
+  autoplay bot verified by XCUITest: `tools/playtest-ios.sh` (needs Xcode + a
+  simulator; run xcodebuild unsandboxed). Re-run it after changing the app
+  shell or the web bundle.
