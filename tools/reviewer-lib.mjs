@@ -310,7 +310,12 @@ export async function openSimulator(game, { device = 'iphone-17', start = null, 
       return fs.readFileSync(p);
     },
     studio: (fn, arg) => panel.evaluate(([f, a]) => window.studio[f](a), [fn, arg]),
-    close: async () => { await run('xcrun', ['simctl', 'terminate', sim.udid, game.ios.bundleId]).catch(() => {}); await b.close(); },
+    // session over: quit the app, shut the simulator down (it is booted again on the next session), close the panel
+    close: async () => {
+      await run('xcrun', ['simctl', 'terminate', sim.udid, game.ios.bundleId]).catch(() => {});
+      await run('xcrun', ['simctl', 'shutdown', sim.udid]).catch(() => {});
+      await b.close();
+    },
   };
   await waitForFunction(() => window.GE && window.GE.L, null, { timeout: 30000 });
   if (start) await game.startAt(view, start);

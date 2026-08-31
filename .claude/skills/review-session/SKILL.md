@@ -30,6 +30,10 @@ Model defaults (set on the Agent call's `model`): personas run on **opus** (perc
 
 Use the prompt in `prompts/developer.md`, substituting `<runDir>` (all run dirs when sessions ran in parallel — one developer pass consumes every report). It reads `review.md`, `notes.json`, `live.md`, actions every note it can (skipping harness artifacts with a stated reason), re-runs the playtest bots, rebuilds `dist/` and `app/www`, and writes `<runDir>/dev-report.md`. It must not commit.
 
-## 4. Report
+## 4. Tidy up and report
+
+Each console shuts its simulator down when the session is filed (`/end`). If a session was aborted, shut the devices down yourself: `xcrun simctl shutdown all`. Never leave simulators booted after the pipeline finishes.
+
+## 4b. Report
 
 Relay: score, the top improvements, what the developer changed and verified, what it skipped and why, and the paths of `review.md` and `dev-report.md`. Offer to commit.
