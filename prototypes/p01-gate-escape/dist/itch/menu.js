@@ -131,7 +131,7 @@
     document.body.classList.toggle('menu-up', name === 'menu');
     if (name === 'menu') refreshMenu();
     if (name === 'levels') buildGrid();
-    if (name === 'legend') { drawSymbols(); if (!legendAnim) { legendAnim = true; demoT0 = 0; requestAnimationFrame(demoFrame); } }
+    if (name === 'legend') { const ll = document.getElementById('legendLives'); if (ll) ll.hidden = !GE.livesEnabled; drawSymbols(); if (!legendAnim) { legendAnim = true; demoT0 = 0; requestAnimationFrame(demoFrame); } }
     else legendAnim = false;
   }
   // an attempt the player walked away from (pause → Main menu) is still on the board behind

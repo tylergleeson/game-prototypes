@@ -282,6 +282,9 @@
   .legend .li { display:flex; align-items:center; gap:14px; }
   .legend .li canvas { width:64px; height:44px; flex:none; }
   .legend .li b { display:block; font-size:15px; }
+  .legend .div { border-top:1px dashed rgba(214,238,255,.3); margin:4px 0 2px; padding-top:8px; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); }
+  .legend .mi { display:flex; align-items:baseline; gap:8px; font-size:13px; color:var(--dim); }
+  .legend .mi .g { flex:none; width:58px; text-align:right; font-weight:800; font-size:12.5px; color:var(--ink); }
   .legend .li span { color:var(--dim); font-size:13px; }
   /* press-depth beat, unified: every tappable control dips on :active (cards already translateY(3)) */
   #hud button:not(:disabled):active { transform:translateY(2px); }
@@ -514,6 +517,12 @@
         <div class="li"><canvas id="symGate" width="128" height="88"></canvas><div><b>Gate</b><span>Same color and symbol: push through to escape.</span></div></div>
         <div class="li"><canvas id="symStone" width="128" height="88"></canvas><div><b>Stone</b><span>Never moves.</span></div></div>
         <div class="li"><canvas id="symMoves" width="128" height="88"></canvas><div><b>Moves</b><span>One drag = one move. ★★★ at par, ★★ within two over. Undo (↶) gives a move back; ? shows the next move.</span></div></div>
+        <div class="div">AROUND THE GAME</div>
+        <div class="mi" id="legendLives"><span class="g">♥ Lives</span><span>Retrying a failed level costs one (from level 6). They refill over time; a rescue saves the attempt instead.</span></div>
+        <div class="mi"><span class="g">Quests</span><span>Three each day, shared by everyone. Finish all three to bank a streak freeze (hold up to 2).</span></div>
+        <div class="mi"><span class="g">Streak</span><span>One clear a day keeps it going. A banked freeze covers a missed day.</span></div>
+        <div class="mi"><span class="g">Survey</span><span>Weekly points — 1 per clear, +1 at par — with stamps at 3, 7, 12 and 20.</span></div>
+        <div class="mi"><span class="g">Chests</span><span>24 ★ on a sheet opens its chest: a new paper for the drawing.</span></div>
       </div>
     </div>
   </div>
