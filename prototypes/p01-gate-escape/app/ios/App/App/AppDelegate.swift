@@ -79,6 +79,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         wv.evaluateJavaScript("String(window.__botStatus || '')") { [weak self] result, _ in
             guard let self = self, let s = result as? String, !s.isEmpty, s != self.botLabel?.text else { return }
             self.botLabel?.text = s
+            // store-quality screenshots: the status strip goes invisible while a shot is staged
+            // (the accessibility label still carries the text, so the XCUITest keeps reading it)
+            let hide = s.hasPrefix("BOT SHOT")
+            self.botLabel?.textColor = hide ? .clear : .white
+            self.botLabel?.backgroundColor = hide ? .clear : UIColor(white: 0, alpha: 0.55)
             NSLog("BOT %@", s)
             if s.hasPrefix("BOT PASS") || s.hasPrefix("BOT FAIL") {
                 self.botTimer?.invalidate()

@@ -18,6 +18,14 @@ Quick orientation:
 - `tools/build-single.mjs` bundles a game into one HTML file (for Claude
   artifacts / portals). p01 also has `tools/build-app.mjs` → `app/www/`
   (installable PWA + Capacitor webDir for iOS).
+- Near-miss rule: near misses must be STATE TRUTH only (a block genuinely one
+  drag from its gate). Never manipulate a board, deal, or outcome post-hoc to
+  manufacture a near miss — deterministic levels are the product.
+- Economy rules (for whenever a currency ships): every grant/spend gets an
+  immutable ledger entry (reason, amount, balance before/after, txn id); any
+  transaction UI shows opening balance, cost, reward, closing balance; never
+  use win language or celebration for a net-negative outcome (loss disguised
+  as win); paid random rewards are off the roadmap (fixed bundles only).
 - Monetization rule (Robinhood consent order / EU DFA): NEVER fire
   celebratory feedback (confetti, chimes, flashes) on a purchase event. The
   rescue/hint "+grant" celebration is acceptable only while those are free

@@ -133,6 +133,7 @@ Built to the hybrid-casual grammar:
 - [x] Analytics beacon: `beacon.js` (anonymous install/session ids, batched, fail-safe, disabled while `BEACON_URL` is empty — zero network, bot-verified) + Cloudflare Worker/D1 collector and retention/funnel report in `tools/beacon/` (repo root; not deployed yet)
 - [x] Ad-moment capture (`tools/showcase.json` + `tools/capture.mjs` at the repo root): four real-gameplay moments filmed at iPhone size into `marketing/` (stills + webm), plus the itch cover
 - [x] itch.io bundle (`tools/build-itch.mjs` → `dist/itch/gate-escape-itch.zip`, index.html at the zip root) and page copy in `marketing/itch-page.md`; embed verified at 412×732 and 960×720
+- [x] Native pass (`reviews/p01-par-20260831-0056-s1/native-report.md`): Capacitor Haptics (pickup/exit/win/fail, no-op on web) + StatusBar tint and runtime `theme-color` meta following the paper skins (bot-asserted); blueprint launch screen (`tools/make-splash.mjs`); `PrivacyInfo.xcprivacy` in the app target; App Store metadata + 6.9" iPhone and 13" iPad store-size screenshots in `marketing/appstore/`
 - [ ] Web-portal upload (itch.io first — zip + copy ready, needs the account)
 - [ ] Beacon deployment (Cloudflare account; commands in `tools/beacon/README.md`), then paste the worker URL into `index.html`
 - [ ] Publisher packet (gameplay capture + KPI sheet)

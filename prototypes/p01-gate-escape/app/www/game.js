@@ -10,6 +10,27 @@ const COLORS = [
   { main: '#ffd04d', dark: '#c99a1e', lite: '#ffe9a8', glyph: 'star' },
 ];
 
+// ---------- native shell (Capacitor) ----------
+// In the iOS app the Capacitor bridge exposes plugins; in a plain browser NATIVE is null and
+// every call below is a no-op. The game itself keeps zero dependencies either way.
+const NATIVE = (() => {
+  try {
+    return window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()
+      ? window.Capacitor.Plugins : null;
+  } catch (e) { return null; }
+})();
+// subtle taptic feedback on the four beats that matter; never load-bearing (sound/visuals
+// already carry each of these), fire-and-forget, and silent wherever haptics don't exist
+function haptic(kind) {
+  if (!NATIVE || !NATIVE.Haptics) return;
+  try {
+    if (kind === 'pick') NATIVE.Haptics.impact({ style: 'LIGHT' }).catch(() => {});
+    else if (kind === 'exit') NATIVE.Haptics.impact({ style: 'MEDIUM' }).catch(() => {});
+    else if (kind === 'win') NATIVE.Haptics.notification({ type: 'SUCCESS' }).catch(() => {});
+    else if (kind === 'fail') NATIVE.Haptics.notification({ type: 'WARNING' }).catch(() => {});
+  } catch (e) { /* haptics are garnish */ }
+}
+
 // ---------- paper skins (cosmetic, chest rewards) ----------
 // A skin changes ONLY the drafting sheet: page gradient, ink, rules, card tints, the canvas
 // paper/grid/border and the stones' ink. Block and gate colours, glyphs and the block halo are
@@ -26,6 +47,7 @@ const THEMES = {
     route: '255,255,255', routeEdge: '20,40,80', spark: '#ffffff', gateHalo: null, arrow: 'rgba(255,255,255,.9)',
     legendInk: 'rgba(214,238,255,.75)', legendGrid: 'rgba(190,225,255,.12)', legendText: '#eaf4ff', legendAmber: '#ffd04d',
     swatch: ['#1a4480', '#0e2c58', 'rgba(214,238,255,.7)'],
+    barStyle: 'DARK', // dark paper → light status-bar text (Capacitor StatusBar style names)
   },
   sepia: {
     name: 'Sepia draft',
@@ -39,6 +61,7 @@ const THEMES = {
     route: '42,26,10', routeEdge: '255,240,210', spark: '#3a2410', gateHalo: 'rgba(42,26,10,.55)', arrow: 'rgba(42,26,10,.9)',
     legendInk: 'rgba(58,36,12,.8)', legendGrid: 'rgba(58,36,12,.14)', legendText: '#2a1a0a', legendAmber: '#6e4400',
     swatch: ['#dcc7a1', '#bfa478', 'rgba(58,36,12,.7)'],
+    barStyle: 'LIGHT', // light paper → dark status-bar text
   },
   night: {
     name: 'Night vellum',
@@ -52,6 +75,7 @@ const THEMES = {
     route: '255,255,255', routeEdge: '20,20,24', spark: '#ffffff', gateHalo: null, arrow: 'rgba(255,255,255,.9)',
     legendInk: 'rgba(239,233,220,.75)', legendGrid: 'rgba(239,233,220,.12)', legendText: '#efe9dc', legendAmber: '#ffd04d',
     swatch: ['#2c2c31', '#141417', 'rgba(239,233,220,.7)'],
+    barStyle: 'DARK',
   },
   white: {
     name: 'Whiteprint',
@@ -65,6 +89,7 @@ const THEMES = {
     route: '22,58,107', routeEdge: '255,255,255', spark: '#163a6b', gateHalo: 'rgba(22,58,107,.55)', arrow: 'rgba(22,58,107,.9)',
     legendInk: 'rgba(22,58,107,.8)', legendGrid: 'rgba(22,58,107,.14)', legendText: '#163a6b', legendAmber: '#8a5a00',
     swatch: ['#f6f3ea', '#e4dfd0', 'rgba(22,58,107,.7)'],
+    barStyle: 'LIGHT',
   },
 };
 const CSS_VARS = ['bg1', 'bg2', 'ink', 'dim', 'line', 'line2', 'card', 'sheet', 'fill', 'fill2', 'fill3', 'tile-line', 'lock-ink', 'lock-hatch', 'star-off', 'tag',
@@ -77,6 +102,14 @@ function setTheme(id) {
   // the default clears the inline properties so the stylesheet's own values apply untouched
   for (const k of CSS_VARS) { if (THEME.css && THEME.css[k]) rs.setProperty('--' + k, THEME.css[k]); else rs.removeProperty('--' + k); }
   document.body.dataset.paper = id;
+  // the chrome above the sheet follows the paper too: the PWA theme-color meta (created here if
+  // the page has none) and, in the native shell, the status-bar text style for the paper's tone
+  try {
+    let meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) { meta = document.createElement('meta'); meta.name = 'theme-color'; document.head.appendChild(meta); }
+    meta.content = THEME.css ? THEME.css.bg2 : '#0e2c58';
+  } catch (e) {}
+  if (NATIVE && NATIVE.StatusBar) { try { NATIVE.StatusBar.setStyle({ style: THEME.barStyle }).catch(() => {}); } catch (e) {} }
   window.dispatchEvent(new CustomEvent('ge:theme', { detail: { id } }));
 }
 
@@ -468,6 +501,7 @@ function startExit(bi, side) {
   if (!L.blocks.some((o, i) => pos[i] && o.color === b.color)) { gateFlash[b.color] = 0; sound('gate'); }
   countMove();
   sound('exit', exited++); // each escape in a level rings a step higher
+  haptic('exit');
   track('block_exit', li + 1);
   // lock the board while the last block flies out; the pending win dies with the level
   // (loadLevel clears winTimers) so a restart or level change in this window can never
@@ -522,6 +556,7 @@ function maybeFail() {
       failModal.hidden = false;
       fitBoardAboveSheet();
       sound('fail');
+      haptic('fail');
       track('fail', li + 1);
     }, 420);
   }
@@ -589,6 +624,7 @@ function win() {
   winModal.hidden = false;
   window.dispatchEvent(new CustomEvent('ge:win', { detail: { lvl: li, stars, moves, last } }));
   sound('win');
+  haptic('win');
   track('win', { lvl: li + 1, moves, stars });
 }
 
@@ -635,6 +671,7 @@ cv.addEventListener('pointerdown', (e) => {
   try { cv.setPointerCapture(e.pointerId); } catch (err) { /* synthetic pointers (bots) have no capture */ }
   beginDrag(bi, fx - pos[bi][0], fy - pos[bi][1], e.pointerId);
   sound('tap');
+  haptic('pick');
 });
 
 function pickBlock(fx, fy) {

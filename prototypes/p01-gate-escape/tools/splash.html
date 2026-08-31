@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><style>html,body{margin:0;background:transparent}</style></head>
+<body>
+<canvas id="c" width="2732" height="2732"></canvas>
+<script>
+// Gate Escape launch screen: the blueprint sheet with the icon's block-and-gate motif and the
+// wordmark. Drawn at 2732×2732 (the storyboard shows it scaleAspectFill), so everything that
+// must stay visible sits inside the central ~1100px column — a 19.5:9 phone crops to ~1260px.
+const c = document.getElementById('c'), x = c.getContext('2d');
+const S = 2732, CX = S / 2;
+function rr(a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
+// background: the cyanotype page
+const g = x.createRadialGradient(CX, S*0.34, S*0.08, CX, S*0.5, S*0.9);
+g.addColorStop(0, '#1d5094'); g.addColorStop(1, '#0e2c58');
+x.fillStyle = g; x.fillRect(0, 0, S, S);
+// fine draft grid across the whole sheet
+x.strokeStyle = 'rgba(190,225,255,.10)'; x.lineWidth = 4;
+for (let i = 1; i < 16; i++) {
+  x.beginPath(); x.moveTo(i*S/16, 0); x.lineTo(i*S/16, S); x.stroke();
+  x.beginPath(); x.moveTo(0, i*S/16); x.lineTo(S, i*S/16); x.stroke();
+}
+// drafting frame with corner ticks, inside the safe column
+const fx = CX - 520, fy = S*0.16, fw = 1040, fh = S*0.68;
+x.strokeStyle = 'rgba(214,238,255,.55)'; x.lineWidth = 8;
+x.strokeRect(fx, fy, fw, fh);
+x.strokeStyle = 'rgba(214,238,255,.28)'; x.lineWidth = 4;
+x.strokeRect(fx - 26, fy - 26, fw + 52, fh + 52);
+x.strokeStyle = 'rgba(214,238,255,.85)'; x.lineWidth = 10;
+for (const [cx2, cy2, dx2, dy2] of [[fx,fy,1,1],[fx+fw,fy,-1,1],[fx,fy+fh,1,-1],[fx+fw,fy+fh,-1,-1]]) {
+  x.beginPath(); x.moveTo(cx2+dx2*56, cy2); x.lineTo(cx2, cy2); x.lineTo(cx2, cy2+dy2*56); x.stroke();
+}
+// the icon motif: hatched red block sliding toward its gate (centered, above the wordmark)
+const bs = 380, bx = CX - 400, by = S*0.30;
+x.save();
+x.shadowColor = 'rgba(4,14,34,.55)'; x.shadowBlur = 60; x.shadowOffsetY = 26;
+x.fillStyle = '#c24d46'; rr(bx, by, bs, bs, 26); x.fill();
+x.restore();
+x.save();
+rr(bx+8, by+8, bs-16, bs-16, 20); x.clip();
+x.fillStyle = '#ff8078'; x.fillRect(bx, by, bs, bs);
+x.strokeStyle = 'rgba(10,25,55,.25)'; x.lineWidth = 9;
+for (let d = -bs; d < bs*1.5; d += 42) {
+  x.beginPath(); x.moveTo(bx+d, by+bs); x.lineTo(bx+d+bs, by); x.stroke();
+}
+x.restore();
+x.strokeStyle = '#c24d46'; x.lineWidth = 15; rr(bx+8, by+8, bs-16, bs-16, 20); x.stroke();
+x.fillStyle = 'rgba(255,255,255,.9)';
+x.beginPath(); x.arc(bx+bs/2, by+bs/2, 44, 0, Math.PI*2); x.fill();
+// arrow to the gate
+const ay = by + bs/2;
+x.strokeStyle = 'rgba(255,255,255,.95)'; x.lineWidth = 26; x.lineCap = 'round';
+x.beginPath(); x.moveTo(bx+bs+56, ay); x.lineTo(CX+220, ay); x.stroke();
+x.fillStyle = 'rgba(255,255,255,.95)';
+x.beginPath(); x.moveTo(CX+286, ay); x.lineTo(CX+206, ay-48); x.lineTo(CX+206, ay+48); x.closePath(); x.fill();
+// the gate tab
+x.fillStyle = '#c24d46'; rr(CX+310, ay-170, 92, 340, 18); x.fill();
+x.fillStyle = '#ff8078'; rr(CX+320, ay-160, 72, 320, 14); x.fill();
+x.setLineDash([18, 14]); x.strokeStyle = 'rgba(255,255,255,.55)'; x.lineWidth = 6;
+rr(CX+330, ay-150, 52, 300, 10); x.stroke(); x.setLineDash([]);
+x.fillStyle = 'rgba(255,255,255,.95)';
+x.beginPath(); x.arc(CX+356, ay, 26, 0, Math.PI*2); x.fill();
+// wordmark, drafting-title style
+x.fillStyle = '#eaf4ff';
+x.font = '800 150px system-ui, -apple-system, sans-serif';
+x.textAlign = 'center'; x.textBaseline = 'middle';
+const word = 'GATE ESCAPE', ls = 26; // manual letterspacing
+let total = 0; for (const ch of word) total += x.measureText(ch).width + ls;
+let px2 = CX - (total - ls) / 2;
+for (const ch of word) { const w = x.measureText(ch).width; x.fillText(ch, px2 + w/2, S*0.565); px2 += w + ls; }
+// dimension line under the title
+x.strokeStyle = 'rgba(214,238,255,.7)'; x.lineWidth = 6;
+x.beginPath(); x.moveTo(CX-480, S*0.605); x.lineTo(CX+480, S*0.605); x.stroke();
+x.lineWidth = 5;
+x.beginPath(); x.moveTo(CX-480, S*0.605-16); x.lineTo(CX-480, S*0.605+16); x.stroke();
+x.beginPath(); x.moveTo(CX+480, S*0.605-16); x.lineTo(CX+480, S*0.605+16); x.stroke();
+// sheet number, small
+x.fillStyle = 'rgba(157,187,221,.9)';
+x.font = '600 44px ui-monospace, Menlo, monospace';
+x.fillText('N O .   G E - 0 1', CX, S*0.645);
+</script>
+</body>
+</html>

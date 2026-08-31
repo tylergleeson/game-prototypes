@@ -115,13 +115,17 @@ const DEFAULT_PAPER = '[255,255,255,11]';
       want: window.GE.themes[id].css ? window.GE.themes[id].css.bg1 : '#1a4480',
       ink: getComputedStyle(document.body).color, saved: JSON.parse(localStorage.getItem('ge_prog')).skin || 'cyan',
       cap: document.querySelector('#menuPapers .cap').textContent, on: document.querySelector('#menuPapers .paper.on').dataset.skin,
+      // the browser-chrome / native status-bar tint follows the paper (setTheme writes the meta)
+      tc: (document.querySelector('meta[name="theme-color"]') || {}).content,
+      tcWant: window.GE.themes[id].css ? window.GE.themes[id].css.bg2 : '#0e2c58',
     }), id);
     seen[id].px = JSON.stringify(await paperPx());
   }
   const okSel = ['sepia', 'night', 'white'].every(id => seen[id].theme === id && seen[id].v === seen[id].want && seen[id].saved === id && seen[id].px !== px0 && seen[id].on === id && seen[id].cap === skinName(id))
     && seen.sepia.ink !== ink0 && seen.white.ink !== ink0
-    && seen.cyan.theme === 'cyan' && seen.cyan.v === '#1a4480' && seen.cyan.px === DEFAULT_PAPER && px0 === DEFAULT_PAPER && seen.cyan.ink === ink0;
-  if (okSel) console.log(`skins ok: sepia/night/white swap --bg1 + ink + paper pixel (${seen.sepia.px} / ${seen.night.px} / ${seen.white.px}) and persist; default paper back to ${DEFAULT_PAPER}`);
+    && seen.cyan.theme === 'cyan' && seen.cyan.v === '#1a4480' && seen.cyan.px === DEFAULT_PAPER && px0 === DEFAULT_PAPER && seen.cyan.ink === ink0
+    && ['sepia', 'night', 'white', 'cyan'].every(id => seen[id].tc === seen[id].tcWant);
+  if (okSel) console.log(`skins ok: sepia/night/white swap --bg1 + ink + paper pixel (${seen.sepia.px} / ${seen.night.px} / ${seen.white.px}) and persist; default paper back to ${DEFAULT_PAPER}; theme-color meta follows the paper`);
   else { failures++; console.error('skins FAIL:', JSON.stringify({ px0, ink0, seen })); }
   // the pause card carries the same picker; a locked-free pick there is instant too
   await page.click('#btnMenu'); await page.click('#btnPausePaperNight'); await page.waitForTimeout(120);
