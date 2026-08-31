@@ -193,7 +193,7 @@ const server = http.createServer((req, res) => {
 });
 server.listen(PORT, '127.0.0.1', async () => {
   try {
-    if (TARGET === 'sim') ({ browser, view } = await openSimulator(game, { device: DEVICE, start: args.start ? parseInt(args.start, 10) : null, who: WHO, bridgeEval, port: PORT, install: !!args.install, fresh: !!args.fresh, slot: SLOT, of: OF }));
+    if (TARGET === 'sim') ({ browser, view } = await openSimulator(game, { device: DEVICE, start: args.start ? parseInt(args.start, 10) : null, who: WHO, bridgeEval, port: PORT, install: !!args.install, fresh: !!args.fresh, slot: SLOT, of: OF, panelMin: PERSONA === 'breaker' ? 212 : 176 }));
     else ({ browser, view } = await openStudio(game, { device: DEVICE, start: args.start ? parseInt(args.start, 10) : null, who: WHO }));
   } catch (e) { console.error('failed to open the game:', e.message); process.exit(1); }
   await view.studio('mode', { persona: PERSONA, label: PERSONAS[PERSONA].label, who: WHO, slot: SLOT, device: view.device.label, levels: LEVELS ? `${LEVELS[0]}–${LEVELS[1]}` : null });

@@ -231,7 +231,7 @@ end tell`;
   return null;
 }
 
-export async function openSimulator(game, { device = 'iphone-17', start = null, who = 'Reviewer', bridgeEval, port, install = false, fresh = false, slot = 1, of = 1 }) {
+export async function openSimulator(game, { device = 'iphone-17', start = null, who = 'Reviewer', bridgeEval, port, install = false, fresh = false, slot = 1, of = 1, panelMin = 176 }) {
   const sim = await findSimulator(device, slot);
   await run('xcrun', ['simctl', 'boot', sim.udid]).catch(() => {});
   await run('xcrun', ['simctl', 'bootstatus', sim.udid, '-b']).catch(() => {});
@@ -269,7 +269,7 @@ export async function openSimulator(game, { device = 'iphone-17', start = null, 
   // placed right under the phone; on a short screen it overlaps the phone's bottom bezel a little
   const panelW = Math.max(340, Math.min(colW - 16, 482));
   const below = placed ? placed.y + placed.h + 10 : simY + 830;
-  const panelH = Math.max(150, Math.min(260, scr.h - below - 16));
+  const panelH = Math.max(panelMin, Math.min(260, scr.h - below - 16));
   const panelY = Math.min(below, scr.h - 16 - panelH);
   const panelUrl = 'file://' + path.join(root, 'tools', 'studio.html') + '?panel=1&who=' + encodeURIComponent(who) + '&slot=' + slot + '&device=' + encodeURIComponent(sim.name);
   const b = await chromium.launch({ headless: false });

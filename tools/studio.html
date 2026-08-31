@@ -18,11 +18,11 @@
   #hdr { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
   #hdr .who { font:600 10px/1 ui-monospace,Menlo,monospace; letter-spacing:.18em; color:var(--dim); }
   #hdr .who b { color:var(--ink); }
-  #timer { margin-left:auto; font:700 13px/1 ui-monospace,Menlo,monospace; color:var(--amber); font-variant-numeric:tabular-nums; }
+  #status { margin-left:auto; display:flex; align-items:center; gap:8px; }
+  #timer { font:700 13px/1 ui-monospace,Menlo,monospace; color:var(--amber); font-variant-numeric:tabular-nums; }
   #timer.over { color:#ff8078; }
   #chip { font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:.1em; color:#0b0f1a; background:#72d8ff; border-radius:5px; padding:4px 7px; white-space:nowrap; }
-  #busy { margin-left:auto; font:600 10px/1 ui-monospace,Menlo,monospace; letter-spacing:.12em; color:#5fe89b; animation:blink 1s infinite; }
-  #busy + #timer { margin-left:10px; }
+  #busy { font:600 10px/1 ui-monospace,Menlo,monospace; letter-spacing:.12em; color:#5fe89b; animation:blink 1s infinite; }
   @keyframes blink { 50% { opacity:.35; } }
   #notesBtn { background:rgba(255,255,255,.08); border:1px solid var(--line); color:var(--ink); border-radius:8px; padding:5px 9px; font:700 11px system-ui; cursor:pointer; }
   #notesBtn.on { background:var(--amber); color:#1a2a44; border-color:var(--amber); }
@@ -41,6 +41,18 @@
   body.side #stage { align-items:flex-start; padding-left:14px; }
   body.side #panel { left:auto; right:12px; top:14px; bottom:auto; transform:none; width:440px; }
   body.side #notes { max-height:60vh; }
+  /* compact panel-only window (under a Simulator): row 1 = slot chip · progress/timer, row 2 = persona · Notes */
+  body.panelmode #panel { padding:8px 12px 10px; border-radius:10px; }
+  body.panelmode #hdr { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:5px 10px; margin-bottom:6px; }
+  body.panelmode #chip { grid-column:1; grid-row:1; justify-self:start; font-size:9px; padding:3px 6px; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+  body.panelmode #status { grid-column:2; grid-row:1; margin-left:0; }
+  body.panelmode #timer { font-size:12px; }
+  body.panelmode #hdr .who { grid-column:1; grid-row:2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  body.panelmode #notesBtn { grid-column:2; grid-row:2; justify-self:end; padding:4px 8px; }
+  body.panelmode #say { font-size:14px; line-height:1.3; }
+  body.panelmode #thought { font-size:11.5px; margin-top:3px; }
+  body.panelmode #note { font-size:12px; margin-top:4px; }
+  body.panelmode #badge { font-size:10px; padding:4px 7px; margin:0 0 6px; }
   #panel.breaker { border-color:#ff8078; box-shadow:0 12px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(255,128,120,.35); }
   #panel.breaker #hdr .who b { color:#ff8078; }
   #badge { display:none; margin:-2px 0 8px; padding:6px 9px; border-radius:7px; background:rgba(255,128,120,.14); border:1px dashed rgba(255,128,120,.6); color:#ffb3ac; font:700 11px/1.3 system-ui; letter-spacing:.04em; }
@@ -55,11 +67,10 @@
     <div id="hdr">
       <span class="who">REVIEWER · <b id="who">—</b></span>
       <span id="chip" hidden></span>
-      <span id="busy" hidden>● playing</span>
-      <span id="timer">--:--</span>
+      <span id="status"><span id="busy" hidden>● playing</span><span id="timer">--:--</span></span>
       <button id="notesBtn">Notes (0)</button>
     </div>
-    <div id="badge">⚠ ADVERSARIAL QA — this tester is deliberately trying to break the game and document bugs. Not a normal play-through.</div>
+    <div id="badge">⚠ ADVERSARIAL QA — deliberately trying to break the game and document bugs; not a normal play-through.</div>
     <div id="say" class="think">Reviewer is settling in — first words appear after the first look.</div>
     <div id="thought"></div>
     <div id="note"></div>
@@ -70,6 +81,7 @@
   if (q.get('side')) document.body.classList.add('side');
   if (q.get('opener')) { document.body.innerHTML = '<p style="color:#9dbbdd;font:13px system-ui;padding:14px">Studio panel opener — minimized; the log panel is the small window under the Simulator.</p>'; }
   else if (q.get('panel')) { // panel-only window (the phone is the iOS Simulator)
+    document.body.classList.add('panelmode');
     document.getElementById('stage').style.display = 'none';
     const p = document.getElementById('panel'); p.style.position = 'static'; p.style.transform = 'none'; p.style.width = 'auto'; p.style.margin = '10px';
     document.body.style.overflow = 'auto';
@@ -111,7 +123,8 @@
     busy(b) { $('busy').hidden = !b; },
     mode({ persona, label, who, slot, device, levels }) {
       $('panel').classList.toggle('breaker', persona === 'breaker');
-      document.querySelector('#hdr .who').innerHTML = (label || 'REVIEWER') + ' · <b>' + who.replace(/</g, '&lt;') + '</b>';
+      const lbl = document.body.classList.contains('panelmode') && persona === 'breaker' ? 'BREAKER' : (label || 'REVIEWER');
+      document.querySelector('#hdr .who').innerHTML = lbl + ' · <b>' + who.replace(/</g, '&lt;') + '</b>';
       const chip = [slot ? 'SLOT ' + slot : null, device || null, levels ? 'L' + levels : null].filter(Boolean).join(' · ');
       $('chip').textContent = chip; $('chip').hidden = !chip;
       document.title = (device || 'Reviewer studio') + (levels ? ' · L' + levels : '');
