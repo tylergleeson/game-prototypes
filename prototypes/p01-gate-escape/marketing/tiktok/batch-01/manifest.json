@@ -1,0 +1,65 @@
+{
+  "_comment": "Batch 01 — first five TikTok verticals. Naming: b<batch>-v<nn>_<hookId from hooks.md>_<moment m1-m4 or tNN tour chapter>_<format>. Clips are src:start:end[:cropY0:cropY1] on the source's own pixel grid (promo.mp4 is 402x874 with a 48 px caption strip at the bottom — crop 0:826 removes it; m*.webm are 390x844). All footage is real gameplay from marketing/videos and marketing/m*.webm; narration lines are the cached ElevenLabs cache in marketing/narration (voice Adam).",
+  "out": "marketing/tiktok/batch-01",
+  "variants": [
+    {
+      "name": "b01-v01_H01_m2_raw",
+      "hook": "One drag from freedom. Can you see it?",
+      "driver": "curiosity gap",
+      "moment": "m2 fail sheet -> rescue +3 -> clear (promo main 19.5-29.3)",
+      "format": "raw gameplay (the ad IS the game)",
+      "clips": ["marketing/videos/promo.mp4:19.5:29.3:0:826"],
+      "narration": ["03-hint@0.4", "06-tag@cta"],
+      "cta": "Play free · link in bio"
+    },
+    {
+      "name": "b01-v02_H34_m1_raw",
+      "hook": "One drag. Any route. Even corners.",
+      "driver": "one-drag rule",
+      "moment": "m1/tour ch04 L3 corner drag -> 3-star card (promo main 0.0-9.2)",
+      "format": "raw gameplay",
+      "clips": ["marketing/videos/promo.mp4:0.0:9.2:0:700"],
+      "narration": ["01-hook@0.3", "02-title@3.4", "06-tag@cta"],
+      "cta": "Play free · link in bio"
+    },
+    {
+      "name": "b01-v03_H11_m3_solve",
+      "hook": "Spot the move before the hint does",
+      "driver": "challenge / dare",
+      "moment": "m3 corked L10 board -> hint ghost route (m3 still + m3-hint.webm 3.0-8.0)",
+      "format": "can you solve it",
+      "clips": [
+        { "src": "marketing/m3-l10-corked.png", "start": 0, "end": 3.5, "cropY0": 0, "cropY1": 1400,
+          "texts": [
+            { "text": "3", "t0": 0.4, "t1": 1.4, "size": 110, "color": "yellow", "y": 560 },
+            { "text": "2", "t0": 1.4, "t1": 2.4, "size": 110, "color": "yellow", "y": 560 },
+            { "text": "1", "t0": 2.4, "t1": 3.5, "size": 110, "color": "yellow", "y": 560 }
+          ] },
+        { "src": "marketing/m3-hint.webm", "start": 3.0, "end": 8.0, "cropY0": 0, "cropY1": 700,
+          "texts": [ { "text": "the hint's route", "t0": 0.2, "t1": 5.0, "size": 48, "color": "pale", "y": 600 } ] }
+      ],
+      "narration": ["03-hint@0.5", "06-tag@cta"],
+      "cta": "Play free · link in bio"
+    },
+    {
+      "name": "b01-v04_H43_m4_raw",
+      "hook": "Every 24 stars opens a chest",
+      "driver": "progression",
+      "moment": "m4 L8 par clear -> chest opens -> paper swap (promo main 29.5-38.6)",
+      "format": "raw gameplay",
+      "clips": ["marketing/videos/promo.mp4:29.5:38.6:0:700"],
+      "narration": ["04-chest@1.2", "06-tag@cta"],
+      "cta": "Play free · link in bio"
+    },
+    {
+      "name": "b01-v05_H18_m2_raw",
+      "hook": "Rescued with 3 moves. Still failed.",
+      "driver": "relatability",
+      "moment": "m2 rescued attempt played out -> honest fail sheet with the one-drag route (m2-rescue.webm 7.0-18.9)",
+      "format": "raw gameplay (the ad IS the game)",
+      "clips": ["marketing/m2-rescue.webm:7.0:18.9:0:844"],
+      "narration": ["03-hint@0.5", "06-tag@cta"],
+      "cta": "Play free · link in bio"
+    }
+  ]
+}

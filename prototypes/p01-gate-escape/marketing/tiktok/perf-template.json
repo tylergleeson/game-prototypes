@@ -1,0 +1,13 @@
+{
+  "_comment": "Copy to marketing/tiktok/batch-NN/perf.json and fill one object per posted variant from TikTok Analytics at 72 h (Business account → Analytics → Content). Percentages as numbers (62 = 62%). Leave installs null until Phase C (App Store campaign links). notes = the best comment + what viewers asked; the worker mines it for the next hooks.",
+  "batch": "b01",
+  "readAt": "2026-09-05T00:00:00Z",
+  "phase": "A",
+  "variants": [
+    { "name": "b01-v01_H01_m2_raw", "postedAt": "2026-09-01", "views": null, "hold3s": null, "avgWatch": null, "completion": null, "likes": null, "comments": null, "shares": null, "saves": null, "profileVisits": null, "linkClicks": null, "installs": null, "notes": "" },
+    { "name": "b01-v02_H34_m1_raw", "postedAt": "2026-09-02", "views": null, "hold3s": null, "avgWatch": null, "completion": null, "likes": null, "comments": null, "shares": null, "saves": null, "profileVisits": null, "linkClicks": null, "installs": null, "notes": "" },
+    { "name": "b01-v03_H11_m3_solve", "postedAt": "2026-09-03", "views": null, "hold3s": null, "avgWatch": null, "completion": null, "likes": null, "comments": null, "shares": null, "saves": null, "profileVisits": null, "linkClicks": null, "installs": null, "notes": "" },
+    { "name": "b01-v04_H43_m4_raw", "postedAt": "2026-09-04", "views": null, "hold3s": null, "avgWatch": null, "completion": null, "likes": null, "comments": null, "shares": null, "saves": null, "profileVisits": null, "linkClicks": null, "installs": null, "notes": "" },
+    { "name": "b01-v05_H18_m2_raw", "postedAt": "2026-09-05", "views": null, "hold3s": null, "avgWatch": null, "completion": null, "likes": null, "comments": null, "shares": null, "saves": null, "profileVisits": null, "linkClicks": null, "installs": null, "notes": "" }
+  ]
+}
