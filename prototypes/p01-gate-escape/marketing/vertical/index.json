@@ -1,0 +1,115 @@
+{
+  "_comment": "Native 9:16 captures of the real game at 540x960 CSS @2x → 1080x1920. Safe-zone layout: top 380 px (hook band) and bottom 480 px (caption zone) left empty by injected spacers; the game lays itself out between. Audio is the engine's own generated synth (tapped in-page). Marks are seconds on each mp4's timeline.",
+  "captures": {
+    "v-fail-retry": {
+      "file": "marketing/vertical/v-fail-retry.mp4",
+      "seconds": 38.47,
+      "marks": {
+        "board": 1.11,
+        "fail": 16.3,
+        "retry": 23.55,
+        "win": 35.74
+      },
+      "stills": [
+        "v-fail-retry-fail-sheet.png"
+      ],
+      "note": "L6: 5 of par 6 played, 4 moves burned with real drags → fail sheet (last block one drag from its gate) → Retry → the reference line → 1-star clear.",
+      "vp": "540x960@2",
+      "sync": {
+        "flash": 0.72,
+        "beep": 0.74
+      }
+    },
+    "v-solve-l14": {
+      "file": "marketing/vertical/v-solve-l14.mp4",
+      "seconds": 18.52,
+      "marks": {
+        "board": 1.08,
+        "solve": 4.81,
+        "win": 15.62
+      },
+      "stills": [
+        "v-solve-l14-board.png"
+      ],
+      "note": "L14 fresh board held (the countdown beat), then the 5-move par line played as real drags → 3-star card.",
+      "vp": "540x960@2",
+      "sync": {
+        "flash": 0.72,
+        "beep": 0.719
+      }
+    },
+    "v-asmr-l8": {
+      "file": "marketing/vertical/v-asmr-l8.mp4",
+      "seconds": 15.19,
+      "marks": {
+        "board": 1.18,
+        "win": 9.97,
+        "chest": 10.75
+      },
+      "stills": [
+        "v-asmr-l8-chest.png"
+      ],
+      "note": "L8: six par drags in one take with the engine's exit whoosh chain, stars, then the 24★ chest (Sepia draft) — audio is the game's generated synth.",
+      "vp": "540x960@2",
+      "sync": {
+        "flash": 0.72,
+        "beep": 0.719
+      }
+    },
+    "v-legend-l3": {
+      "file": "marketing/vertical/v-legend-l3.mp4",
+      "seconds": 16.91,
+      "marks": {
+        "title": 0.15,
+        "legend": 1.01,
+        "play": 6.94,
+        "win": 14.34
+      },
+      "stills": [
+        "v-legend-l3-legend.png"
+      ],
+      "note": "Title block → How to play (animated corner-route demo, block/gate/stone/moves rows) → Back → L3 corner drag at 1.0× → 3-star card.",
+      "vp": "540x960@2",
+      "sync": {
+        "flash": 0.72,
+        "beep": 0.713
+      }
+    },
+    "v-day1": {
+      "file": "marketing/vertical/v-day1.mp4",
+      "seconds": 8.18,
+      "marks": {
+        "title": 0.15,
+        "play": 3.5,
+        "win": 5.82
+      },
+      "stills": [
+        "v-day1-title.png"
+      ],
+      "note": "Fresh save: title block (Level 1/30, Stars 0/90, no streak) → Play → L1 ghost route → one drag out → 3-star card.",
+      "vp": "540x960@2",
+      "sync": {
+        "flash": 0.72,
+        "beep": 0.735
+      }
+    },
+    "v-day7": {
+      "file": "marketing/vertical/v-day7.mp4",
+      "seconds": 11.95,
+      "marks": {
+        "title": 0.15,
+        "play": 6.08,
+        "played": 10.4
+      },
+      "stills": [
+        "v-day7-title.png"
+      ],
+      "note": "Save built by the engine itself: 12 levels cleared over 7 simulated consecutive days (GE.now), so the streak, quests, survey and 24★ chest are the engine's own bookkeeping; then title block → Play → L13 first two real drags.",
+      "vp": "540x960@2",
+      "sync": {
+        "flash": 0.72,
+        "beep": 0.724
+      }
+    }
+  }
+}

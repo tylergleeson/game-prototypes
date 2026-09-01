@@ -14,11 +14,19 @@
 //   node tools/tiktok-batch.mjs --hook "..." --clip <src>:<start>:<end>[:<cropY0>:<cropY1>] [--clip ...]
 //        --out <dir> --name <file-stem> [--narr <line>@<sec|cta>] [--cta "text"] [--no-bed]
 //
-// A manifest is { "out": "<dir>", "variants": [ { name, hook, clips[], narration[], cta, ... } ] }
+// A manifest is { "out": "<dir>", "variants": [ { name, hook, clips[], narration[], cta, stillAt?, sourceGain?, ... } ] }
+// (a clip object may carry `audio: true` to keep the source's own audio)
 // (see marketing/tiktok/batch-01/manifest.json). Every option below has a manifest key.
 //
+// Native 9:16 sources (tools/capture-vertical.mjs → marketing/vertical/*.mp4, already 1080x1920
+// with the hook band and the bottom 25% left empty by the game's own layout) are placed
+// full-frame — no letterbox, no grid, no box — so the fail sheet, quest rows and chest reveal
+// keep their native text size. A clip with `audio: true` keeps its source audio (the engine's
+// generated synth, tapped by the capture tool) under the mix (`sourceGain`, default 1.0).
+//
 // Verification: after each render the script ffprobes the file (dimensions, duration, size,
-// codecs) and extracts a still at 1.5 s into <out>/stills/ (the sound-off legibility frame).
+// codecs) and extracts a still at 1.5 s into <out>/stills/ (the sound-off legibility frame),
+// plus one per `stillAt` second (<name>-text.png = the text-bearing moment).
 // Gates enforced: 1080x1920, 9-15 s (warn outside), <= 8 MB (fail), hook <= 8 words (fail).
 import fs from 'fs';
 import path from 'path';
@@ -89,25 +97,29 @@ function renderSegment(v, seg, idx, opts) {
   const info = probe(src);
   const vs = info.streams.find(s => s.codec_type === 'video');
   const sw = vs.width, sh_ = vs.height;
+  const native = sw === W && sh_ === H && !seg.cropY1;   // a native 9:16 capture: full frame, no letterbox
   const y0 = seg.cropY0 || 0, y1 = seg.cropY1 || sh_;
   const cw = sw, ch = y1 - y0;
-  const scale = Math.min(BOX_W / cw, (BOX_BOTTOM - BOX_TOP) / ch);
+  const scale = native ? 1 : Math.min(BOX_W / cw, (BOX_BOTTOM - BOX_TOP) / ch);
   const gw = Math.round(cw * scale / 2) * 2, gh = Math.round(ch * scale / 2) * 2;
-  const gx = Math.round((W - gw) / 2), gy = Math.round(BOX_TOP + (BOX_BOTTOM - BOX_TOP - gh) / 2);
+  const gx = native ? 0 : Math.round((W - gw) / 2), gy = native ? 0 : Math.round(BOX_TOP + (BOX_BOTTOM - BOX_TOP - gh) / 2);
   const seconds = isStill ? seg.end : seg.end - seg.start;
 
   const hookLines = wrap2(opts.hookText);
   const texts = [];
   hookLines.forEach((line, i) => texts.push(drawtext({ id: `v${idx}h${i}`, text: line, y: HOOK_TOP + i * HOOK_LINE, size: HOOK_SIZE })));
   const barY = HOOK_TOP + hookLines.length * HOOK_LINE + 8;
-  for (const t of seg.texts || []) texts.push(drawtext({ id: `v${idx}t${texts.length}`, text: t.text, y: t.y ?? (BOX_BOTTOM - 120), size: t.size || 64, color: t.color === 'yellow' ? YELLOW : t.color === 'pale' ? PALE : WHITE, t0: t.t0 ?? null, t1: t.t1 ?? null }));
+  for (const t of seg.texts || []) texts.push(drawtext({ id: `v${idx}t${texts.length}`, text: t.text, x: t.x ?? '(w-text_w)/2', y: t.y ?? (BOX_BOTTOM - 120), size: t.size || 64, color: t.color === 'yellow' ? YELLOW : t.color === 'pale' ? PALE : WHITE, t0: t.t0 ?? null, t1: t.t1 ?? null }));
 
-  const vf = [
-    `[1:v]${isStill ? '' : `trim=start=${seg.start}:end=${seg.end},setpts=PTS-STARTPTS,`}fps=${FPS},crop=${cw}:${ch}:0:${y0},scale=${gw}:${gh}:flags=lanczos,format=rgba[g]`,
+  const trimIn = isStill ? '' : `trim=start=${seg.start}:end=${seg.end},setpts=PTS-STARTPTS,`;
+  const bar = `drawbox=x=${Math.round(W / 2 - 60)}:y=${barY}:w=120:h=6:color=${YELLOW}:t=fill`;
+  const vf = native ? [
+    `[1:v]${trimIn}fps=${FPS},format=yuv420p,${bar},` + texts.join(',') + `[v]`,
+  ].join(';') : [
+    `[1:v]${trimIn}fps=${FPS},crop=${cw}:${ch}:0:${y0},scale=${gw}:${gh}:flags=lanczos,format=rgba[g]`,
     `[0:v]drawgrid=width=60:height=60:thickness=1:color=${GRID}@0.35[bg]`,
     `[bg][g]overlay=${gx}:${gy}:shortest=1,format=yuv420p[c]`,
-    `[c]drawbox=x=${gx - 3}:y=${gy - 3}:w=${gw + 6}:h=${gh + 6}:color=${PALE}@0.45:t=3,` +
-      `drawbox=x=${Math.round(W / 2 - 60)}:y=${barY}:w=120:h=6:color=${YELLOW}:t=fill,` + texts.join(',') + `[v]`,
+    `[c]drawbox=x=${gx - 3}:y=${gy - 3}:w=${gw + 6}:h=${gh + 6}:color=${PALE}@0.45:t=3,` + bar + ',' + texts.join(',') + `[v]`,
   ].join(';');
 
   const out = path.join(tmpRoot, `${v.name}-seg${idx}.mp4`);
@@ -115,7 +127,12 @@ function renderSegment(v, seg, idx, opts) {
   sh(['-v', 'error', '-y', '-f', 'lavfi', '-i', `color=c=${INK}:s=${W}x${H}:r=${FPS}`, ...input,
     '-filter_complex', vf, '-map', '[v]', '-t', String(seconds), '-an',
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-pix_fmt', 'yuv420p', '-r', String(FPS), out]);
-  return { file: out, seconds };
+  // the segment's own audio (only when asked for and present) → a wav of exactly `seconds`; else silence
+  const hasAudio = !isStill && seg.audio && info.streams.some(s => s.codec_type === 'audio');
+  const wav = path.join(tmpRoot, `${v.name}-seg${idx}.wav`);
+  if (hasAudio) sh(['-v', 'error', '-y', '-ss', String(seg.start), '-t', String(seconds), '-i', src, '-vn', '-ar', '44100', '-ac', '2', '-af', `apad,atrim=0:${seconds}`, wav]);
+  else sh(['-v', 'error', '-y', '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo', '-t', String(seconds), wav]);
+  return { file: out, seconds, wav, hasAudio };
 }
 
 function buildVariant(v, outDir, dry) {
@@ -158,6 +175,15 @@ function buildVariant(v, outDir, dry) {
   const chains = [];
   const mixIn = [];
   let ai = 1;
+  if (segs.some(s => s.hasAudio)) { // the sources' own audio, segment by segment, under the mix
+    const alist = path.join(tmpRoot, `${v.name}-alist.txt`);
+    fs.writeFileSync(alist, segs.map(s => `file '${s.wav}'`).join('\n') + '\n');
+    const srcWav = path.join(tmpRoot, `${v.name}-src.wav`);
+    sh(['-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', alist, '-c', 'copy', srcWav]);
+    inputs.push('-i', srcWav);
+    chains.push(`[${ai}:a]atrim=0:${total.toFixed(3)},asetpts=PTS-STARTPTS,volume=${v.sourceGain ?? 1.0}[src]`);
+    mixIn.push('[src]'); ai++;
+  }
   if (bedOn) {
     inputs.push('-stream_loop', '-1', '-i', path.resolve(p01, 'marketing/narration/bed.mp3'));
     chains.push(`[${ai}:a]atrim=0:${total.toFixed(3)},asetpts=PTS-STARTPTS,volume=${v.bedGain ?? 0.16},afade=t=out:st=${(total - 0.9).toFixed(3)}:d=0.9[bed]`);
@@ -183,9 +209,12 @@ function buildVariant(v, outDir, dry) {
     sh(['-v', 'error', '-y', '-i', out, '-c:v', 'libx264', '-preset', 'slow', '-crf', '24', '-pix_fmt', 'yuv420p', '-c:a', 'copy', '-movflags', '+faststart', tight]);
     fs.renameSync(tight, out);
   }
-  // still at 1.5 s = the sound-off legibility frame
+  // still at 1.5 s = the sound-off legibility frame; stillAt = the text-bearing moment(s)
   const still = path.join(outDir, 'stills', v.name + '.png');
   sh(['-v', 'error', '-y', '-ss', '1.5', '-i', out, '-frames:v', '1', still]);
+  [].concat(v.stillAt ?? []).forEach((t, i) => {
+    sh(['-v', 'error', '-y', '-ss', String(t), '-i', out, '-frames:v', '1', path.join(outDir, 'stills', `${v.name}-${i ? 't' + t : 'text'}.png`)]);
+  });
 
   const info = probe(out);
   const vs = info.streams.find(s => s.codec_type === 'video'), as = info.streams.find(s => s.codec_type === 'audio');

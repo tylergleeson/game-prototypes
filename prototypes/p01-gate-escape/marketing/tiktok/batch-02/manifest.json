@@ -1,0 +1,96 @@
+{
+  "_comment": "Batch 02 — five NEW cells on the hook × moment × format grid (no batch-01 repeats), exploratory (no perf.json verdicts exist yet). Every clip is a NATIVE 9:16 capture from tools/capture-vertical.mjs (marketing/vertical/*.mp4, 1080x1920, the game laid out by itself between the hook band and the bottom 25%, the engine's own generated audio in the track) — placed full-frame by tiktok-batch.mjs, no crop, no letterbox. Cut points sit between moves (from the capture's own tap/exit sound onsets); text-bearing shots hold ≥ 0.35 s/word (min 2 s) and no cut lands on legible text. Sub-lines and countdown digits live in the hook band, never over the game. Narration = cached ElevenLabs lines only (voice Adam). Phase A CTA.",
+  "_verdicts": "none — batch-01 has no 72-h numbers yet (perf.json all null); this batch widens the grid rather than mutating winners.",
+  "out": "marketing/tiktok/batch-02",
+  "variants": [
+    {
+      "name": "b02-v01_H02_cap_pov",
+      "hook": "The last block is one drag away.",
+      "driver": "the ad IS the game / curiosity gap",
+      "moment": "cap v-fail-retry: L6 fail sheet (4 of 5 out, last block one drag from its gate) 16.7-23.3 -> Retry, fresh board, first drag 23.8-26.4 -> last two drags, 3-star card 34.2-38.3",
+      "format": "pov (my run: hard open on the fail, retry, plan, clear)",
+      "clips": [
+        { "src": "marketing/vertical/v-fail-retry.mp4", "start": 16.7, "end": 23.3, "audio": true },
+        { "src": "marketing/vertical/v-fail-retry.mp4", "start": 23.8, "end": 26.4, "audio": true },
+        { "src": "marketing/vertical/v-fail-retry.mp4", "start": 34.2, "end": 38.3, "audio": true }
+      ],
+      "sourceGain": 0.6,
+      "narration": ["03-hint@0.5", "06-tag@cta"],
+      "cta": "Play free · link in bio",
+      "stillAt": 3.0
+    },
+    {
+      "name": "b02-v02_H13_cap_solve",
+      "hook": "Solve it before the countdown ends",
+      "driver": "challenge / dare",
+      "moment": "cap v-solve-l14: L14 fresh board held 1.6-4.8 with a 3-2-1 in the hook band -> first par drag 4.8-7.3 -> drags 3-5 and the 3-star card 10.4-18.0",
+      "format": "can you solve it",
+      "clips": [
+        { "src": "marketing/vertical/v-solve-l14.mp4", "start": 1.6, "end": 4.8, "audio": true,
+          "texts": [
+            { "text": "3", "t0": 0.2, "t1": 1.2, "size": 96, "color": "yellow", "x": 958, "y": 152 },
+            { "text": "2", "t0": 1.2, "t1": 2.2, "size": 96, "color": "yellow", "x": 958, "y": 152 },
+            { "text": "1", "t0": 2.2, "t1": 3.2, "size": 96, "color": "yellow", "x": 958, "y": 152 }
+          ] },
+        { "src": "marketing/vertical/v-solve-l14.mp4", "start": 4.8, "end": 7.3, "audio": true },
+        { "src": "marketing/vertical/v-solve-l14.mp4", "start": 10.4, "end": 18.0, "audio": true }
+      ],
+      "sourceGain": 0.6,
+      "narration": ["01-hook@3.3", "06-tag@cta"],
+      "cta": "Play free · link in bio",
+      "stillAt": 11.5
+    },
+    {
+      "name": "b02-v03_H26_cap_asmr",
+      "hook": "Every block out. Sheet approved.",
+      "driver": "satisfying / ASMR",
+      "moment": "cap v-asmr-l8: six par drags on L8 in one take 1.1-9.3 (exit whoosh chain) -> stars 9.6 -> 24-star chest opens, Sepia draft 10.75-14.3 — the engine's own audio, no bed",
+      "format": "asmr (satisfying, sound on)",
+      "clips": [
+        { "src": "marketing/vertical/v-asmr-l8.mp4", "start": 1.1, "end": 14.3, "audio": true }
+      ],
+      "sourceGain": 1.0,
+      "bed": false,
+      "narration": ["06-tag@cta"],
+      "cta": "Play free · link in bio",
+      "stillAt": 11.5
+    },
+    {
+      "name": "b02-v04_H35_cap_tut",
+      "hook": "One drag is one move. Plan it.",
+      "driver": "the one-drag rule / explainer",
+      "moment": "cap v-legend-l3: How to play (animated corner-route demo + Block/Gate/Stone/Moves rows) 1.5-6.8 -> Play, the L3 corner tip, the corner drag out 7.1-10.3 -> last drag + 3-star card 12.3-16.9",
+      "format": "tut (narrated explainer, cached Adam lines N1 + N7)",
+      "clips": [
+        { "src": "marketing/vertical/v-legend-l3.mp4", "start": 1.5, "end": 6.8, "audio": true },
+        { "src": "marketing/vertical/v-legend-l3.mp4", "start": 7.1, "end": 10.3, "audio": true },
+        { "src": "marketing/vertical/v-legend-l3.mp4", "start": 12.3, "end": 16.9, "audio": true }
+      ],
+      "sourceGain": 0.5,
+      "narration": ["01-hook@0.3", "07-legend@3.2", "06-tag@cta"],
+      "cta": "Play free · link in bio",
+      "stillAt": 2.6
+    },
+    {
+      "name": "b02-v05_H51_cap_pov",
+      "hook": "Day 1 vs day 7. Same one rule.",
+      "driver": "progression / relatability",
+      "moment": "cap v-day1 (fresh install: empty title block 0.4-3.3, L1 ghost route + one drag out 3.5-5.65) vs cap v-day7 (the save the engine built over 7 simulated days: title block Level 13/30, 36 stars, quests, 7-day streak + freeze 0.3-5.9, then Play and the first L13 drag 6.1-8.1)",
+      "format": "pov (day 1 vs day 7 progression cut)",
+      "clips": [
+        { "src": "marketing/vertical/v-day1.mp4", "start": 0.4, "end": 3.3, "audio": true,
+          "texts": [ { "text": "DAY 1", "t0": 0.0, "t1": 2.9, "size": 56, "color": "yellow", "x": 892, "y": 174 } ] },
+        { "src": "marketing/vertical/v-day1.mp4", "start": 3.5, "end": 5.65, "audio": true,
+          "texts": [ { "text": "DAY 1", "t0": 0.0, "t1": 2.2, "size": 56, "color": "yellow", "x": 892, "y": 174 } ] },
+        { "src": "marketing/vertical/v-day7.mp4", "start": 0.3, "end": 5.9, "audio": true,
+          "texts": [ { "text": "DAY 7", "t0": 0.0, "t1": 5.6, "size": 56, "color": "yellow", "x": 892, "y": 174 } ] },
+        { "src": "marketing/vertical/v-day7.mp4", "start": 6.1, "end": 8.1, "audio": true,
+          "texts": [ { "text": "DAY 7", "t0": 0.0, "t1": 2.0, "size": 56, "color": "yellow", "x": 892, "y": 174 } ] }
+      ],
+      "sourceGain": 0.6,
+      "narration": ["05-meta@5.2", "06-tag@cta"],
+      "cta": "Play free · link in bio",
+      "stillAt": 8.0
+    }
+  ]
+}

@@ -70,6 +70,19 @@ Narration lines: the cached `marketing/narration/0N-*.mp3` only — the ElevenLa
 not available to the worker; a concept that needs a new line ships without narration
 (bed only) and the line request goes in the report.
 
+**Native 9:16 sources (preferred for any text-bearing moment):** `node
+prototypes/p01-gate-escape/tools/capture-vertical.mjs [--only <recipe>]` (repo root, playwright
+there) records the real game at 540×960 CSS @2× → `marketing/vertical/<recipe>.mp4`
+(1080×1920, the hook band and bottom 25% left empty by the game's own layout, the engine's
+generated audio in the track) plus native stills and `marketing/vertical/index.json` with
+per-recipe **marks** (named timestamps). Reference them in a manifest as plain
+`marketing/vertical/<recipe>.mp4:<start>:<end>` with no crop — the batch script detects the
+1080×1920 source and places it full-frame; add `audio: true` on a clip object to keep the game
+audio (`bed: false` for the `asmr` format). Sub-lines and countdown digits go in the hook band
+(`x`/`y` on a text, right of the shorter hook line), never over the game region. Adding a
+recipe = one entry in the tool's `recipes` table (seed → real gestures → marks); the moment id
+for the file name is `cap`.
+
 The script enforces: 1080×1920, H.264+AAC, ≤ 8 MB, hook ≤ 8 words, bottom 25% clear, a
 1.6 s CTA card, and writes `stills/<name>.png` at 1.5 s plus `batch-table.md`.
 
@@ -102,10 +115,7 @@ The script enforces: 1080×1920, H.264+AAC, ≤ 8 MB, hook ≤ 8 words, bottom 2
 
 ## 6. Upgrades worth doing when a batch is idle
 
-- **Native 9:16 capture:** the game is responsive; a Playwright capture at a 540×960 CSS
-  viewport (DPR 2 → 1080×1920) fills the frame natively and doubles the fail sheet's text
-  size versus letterboxing the 402×874 renders. Add as a p01 tool (not the repo-root
-  `capture.mjs`), then point manifests at the new clips with no crop.
-- **Game audio in clips:** Playwright recordings are silent; a headed run with system
-  audio capture would let the `asmr` format use the real exit whoosh.
+- ~~Native 9:16 capture~~ — done in batch-02 (`tools/capture-vertical.mjs`, see §3).
+- ~~Game audio in clips~~ — done: the vertical capture taps the engine's AudioContext
+  in-page (no headed run needed); `audio: true` on a clip keeps it.
 - **`?src=` in the beacon** (developer request) so Phase A/B link clicks attribute.

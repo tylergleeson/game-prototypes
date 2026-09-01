@@ -98,6 +98,13 @@ Hook IDs are stable and referenced by file names (`b01-v01_H01_m2_raw.mp4`) and 
 | H49 | Weekly survey stamp at 20 points. (6) | t11 Field Survey card | Statement | ✓* |
 | H50 | Lives refill. The puzzle waits. (5) | t13 lives card (calm timer) | Statement | ✓* |
 
+## Batch-02 additions — H51
+*Minted 2026-08-31 for batch-02 (the "day 1 vs day 7" POV cut). `cap` = a native 9:16 capture from `tools/capture-vertical.mjs` (`marketing/vertical/index.json` lists the recipe and its marks).*
+
+| id | hook (words) | moment | type | sound-off |
+|---|---|---|---|---|
+| H51 | Day 1 vs day 7. Same one rule. (7) | cap v-day1 (fresh title block → L1) + v-day7 (a save the engine built over 7 simulated days → L13) | Context | ✓* |
+
 ## Honesty notes (why some obvious hooks are missing)
 
 - No "millions of players", no "nobody can solve this", no rankings, no fake pull-the-pin
@@ -107,6 +114,7 @@ Hook IDs are stable and referenced by file names (`b01-v01_H01_m2_raw.mp4`) and 
   player behaviour — we have no quit data yet. Once the beacon is live, level-funnel data
   may earn a "most people stall here" hook; not before.
 - H23 ("Out of lives") is only usable in the lives-ON build (default ON, flag-gated).
+- H51 ("Day 7") shows a save the engine itself built — twelve levels cleared through the solver's own drag physics across seven consecutive days advanced with `GE.now`, the engine's test clock — so the streak, quests, survey points and chest are the game's own bookkeeping, not typed-in numbers. It is still a simulated week, and the report says so; swap in the founder's real day-7 save when one exists.
 - Hooks that name a moment inside a rewarded slot (hint, rescue, refill) must show the
   game's own AD tag when the tap is on screen, or cut around the placeholder card as the
   promo does — never imply the reward is free once monetized.

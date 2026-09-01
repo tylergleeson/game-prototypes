@@ -15,7 +15,8 @@ b01-v01_H01_m2_raw.mp4
 - `<hookId>` from `hooks.md` (H01–H50; append, never renumber). A new hook not yet in the
   library gets the next free ID *before* the file is rendered.
 - `<moment>` `m1`–`m4` (showcase moments), `t01`–`t14` (tour chapters), `ugc` (founder
-  footage), `cap` (a new capture recipe — describe it in the manifest).
+  footage), `cap` (a native 9:16 recipe from `tools/capture-vertical.mjs` — the manifest
+  names the recipe; `marketing/vertical/index.json` holds its marks).
 - `<format>` `raw` (gameplay only), `solve` (can-you-solve-it), `pov`, `tut` (tutorial),
   `ugc` (hands-on-phone), `duet`, `asmr` (satisfying), `play` (playable companion).
 - The manifest (`batch-NN/manifest.json`) is the source of truth for what a name means;
@@ -31,7 +32,7 @@ result).
 |---|---|
 | Mon | Founder pastes last week's 72-h numbers into `batch-NN/perf.json`; worker runs the verdicts (§3) |
 | Mon | Worker writes `batch-(NN+1)/manifest.json`: kills dropped, winners mutated, 1 new-format test per 3 (3-2-1 Strategy) |
-| Mon–Tue | `node tools/tiktok-batch.mjs --spec …` → review stills (sound-off check) → post schedule set |
+| Mon–Tue | any new moment: `node prototypes/p01-gate-escape/tools/capture-vertical.mjs --only <recipe>` from the repo root (native 1080×1920 + game audio + marks); then `node tools/tiktok-batch.mjs --spec …` → review stills (sound-off check, the `-text.png` still for every text-bearing beat) → post schedule set |
 | Tue–Sun | one post per day (Phase A); Spark Ads (Phase C) launched Tue, read Sun |
 | Sun | quick read: any post > 2× the batch median gets its comments mined for the next hooks |
 
