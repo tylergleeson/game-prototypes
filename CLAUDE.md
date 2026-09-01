@@ -5,6 +5,12 @@ design rules, and full history of decisions live in
 **docs/session-01-log.md** — read it before doing game work here; it is the
 context handoff from the founding session.
 
+**docs/production-blueprint.md** is the production pattern — roles (lead,
+developer, critic, breaker, marketing workers, bots), the engine contract, the
+review loop and note schema, the developer-pass contract, gates, directory
+conventions, and the runbook for applying it to the other prototypes or a new
+idea. Follow it when building out any game.
+
 Quick orientation:
 
 - Five playable prototypes in `prototypes/p01..p05`, each self-contained:

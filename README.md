@@ -14,6 +14,13 @@ signal to mobile publishers (submissions are non-exclusive and keep all IP).
 | 04 | [Blockfall](prototypes/p04-blockfall/) | block-fit grid clear (Block Blast) | place pieces, clear rows+columns, endless score | endless, bot-verified |
 | 05 | [Bolt Out](prototypes/p05-boltout/) | nuts & bolts (Screw Jam) | unscrew layered plates, triple-match bolts in a tray | 30 levels, machine-verified |
 
+## Production blueprint
+
+How a prototype becomes a shippable game here — roles, the engine contract, the
+review loop (critic + breaker personas → one developer pass with regression
+checks), research audits → CLAUDE.md rules, generated collateral, gates, and a
+runbook for the next game: **[docs/production-blueprint.md](docs/production-blueprint.md)**.
+
 ## Shared design grammar (per the hybrid-casual research)
 
 - **3-second silent legibility**: one verb per game, no tutorials, un-failable
