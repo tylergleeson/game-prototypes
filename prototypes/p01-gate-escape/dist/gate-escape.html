@@ -63,6 +63,14 @@
   #hudGoal .chip { display:inline-flex; align-items:center; gap:5px; padding:2px 9px 2px 7px; border-radius:11px; border:1.5px solid var(--d); background:var(--fill); font:800 13px/1 var(--mono); color:var(--ink); transition:opacity .3s; }
   #hudGoal .chip i { font-style:normal; font-size:13px; color:var(--c); }
   #hudGoal .chip.done { opacity:.28; }
+  /* ---- pass 5: sequence chip (approval chain) ---- */
+  /* Names the number that may leave now. Mono, uppercase, the same ink as the goal chips —
+     it states the ORDER, never a block or a position, so it can never become a hint. */
+  #hudSeq { display:flex; justify-content:center; align-items:center; gap:6px; width:100%; padding:3px 0 0;
+            font:800 12px/1 var(--mono); letter-spacing:.14em; color:var(--dim); transition:opacity .25s; }
+  #hudSeq b { font-size:15px; line-height:1; color:var(--ink); letter-spacing:0; }
+  #hudSeq.bump { animation:seqbump .42s ease-out; color:var(--ink); }
+  @keyframes seqbump { 0% { transform:scale(1); } 30% { transform:scale(1.14); } 100% { transform:scale(1); } }
   @keyframes pulse { 50% { opacity:.45; } }
   @keyframes shake { 0%,100% { transform:translateX(0); } 20% { transform:translateX(-5px); } 40% { transform:translateX(5px); } 60% { transform:translateX(-3px); } 80% { transform:translateX(3px); } }
   @keyframes boost { 0% { color:var(--green-ink); transform:scale(1); } 25% { transform:scale(1.35); } 100% { color:inherit; transform:scale(1); } }
@@ -83,7 +91,7 @@
   /* under the fail sheet the board rises and shrinks so the position being bet on stays fully visible
      (game.js measures and sets the transform inline: fitBoardAboveSheet) */
   #hud { transition:opacity .25s; }
-  body.menu-up #hud, body.menu-up #hudGoal { opacity:0; pointer-events:none; }
+  body.menu-up #hud, body.menu-up #hudGoal, body.menu-up #hudSeq { opacity:0; pointer-events:none; }
   .modal {
     position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
     background:var(--scrim); z-index:10;
@@ -280,6 +288,11 @@
      has to carry both, and the reduced-motion lists below have to name it for the same reason */
   .landing .gatebtn { animation:rise .42s cubic-bezier(.22,.9,.3,1) .18s both, beckon 2.2s ease-in-out .7s infinite; }
   @keyframes rise { from { opacity:0; transform:translateY(9px); } }
+  /* the return-day status line on the landing: a PASSIVE annotation — a div, never a button, so
+     the landing's three-interactive-element contract is untouched. At most two clauses, and never
+     a countdown, a CTA, or a statement of something the player has lost. */
+  .landing .status { margin-top:9px; text-align:center; font:600 12px/1.35 var(--mono); letter-spacing:.04em; color:var(--dim); animation:rise .42s cubic-bezier(.22,.9,.3,1) .15s both; }
+  .landing .status b { color:var(--ink); font-weight:800; }
   /* the sheet index carries the field log above the grid and the settings below it */
   #levels .fields { margin-top:0; }
   #levels .div { margin:14px 0 8px; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); border-bottom:1px solid var(--line2); padding-bottom:5px; }
@@ -418,13 +431,39 @@
   .seal-ico.on .mk { display:block; fill:none; stroke:var(--green-ink); stroke-width:2.2; stroke-linecap:round; }
   #surveyLast { font:600 11px var(--mono); color:var(--dim); margin-bottom:12px; }
   #surveyModal { z-index:25; } /* the survey sheet opens over the title block (screens are z-20) */
-  @media (prefers-reduced-motion: reduce) { .gatebtn, .gatebtn .blk, .tblock, .card, .card .stars span, #toast, #btnHint.nudge, .cert-ico, .card .cert-row, .card .daily-row, .card .daily-row .stamp, .landing .sub, .landing .stamp, .landing .row, .landing .gatebtn, .landing .title::after { animation:none; } }
+  /* ---- pass 4: Daily Draft UI + staged FTUE ---- */
+  /* the draft's sheet-index row reuses the survey row; its value carries the day's state and,
+     once the record has closed, the PRACTICE framing for what another tap actually gives you */
+  .surveyrow .v small { display:block; font:600 9px/1.2 var(--mono); letter-spacing:.08em; color:var(--dim); margin-top:3px; text-transform:uppercase; }
+  .surveyrow .v .st { color:var(--amber-ink); letter-spacing:1.5px; margin-right:6px; font-family:system-ui; }
+  .surveyrow .v .st .off { color:var(--star-off); }
+  /* the FIELD REPORT, shown VERBATIM: what the share button sends is exactly what is on screen.
+     It scrolls inside its own box rather than widening the card. */
+  .report { text-align:left; white-space:pre; overflow-x:auto; border:1px dashed var(--line2); padding:9px 10px; margin:0 0 8px; font:600 11.5px/1.5 var(--mono); color:var(--ink); }
+  /* last-resort share path: no navigator.share, no clipboard — the text is handed over selectable */
+  .reportfb { display:block; width:100%; height:104px; margin:0 0 8px; padding:8px 9px; border:1.5px solid var(--amber-line); border-radius:4px;
+              background:var(--fill); color:var(--ink); font:600 11.5px/1.5 var(--mono); resize:none; user-select:text; -webkit-user-select:text; }
+  #draftModal { z-index:25; } /* the result card opens over the sheet index, like the survey sheet */
+  /* a rescue is a FACT on the report, never a prize: this stamp is stated in ink, not in the green
+     the win-card beats use — nothing celebratory belongs on a day that was not cleared */
+  #draftRescue .stamp { color:var(--dim); border-color:var(--line2); }
+  .card.draft { width:min(92vw,360px); }
+  .card.draft .stars { font-size:27px; height:36px; line-height:36px; margin-bottom:6px; letter-spacing:5px; }
+  .card.draft p { margin-bottom:12px; }
+  .card.draft .meta { margin-bottom:10px; }
+  /* first-fail teach: one calm line naming what the two buttons under it actually do. It is shown
+     ONCE (prog.rv), it never counts down, and it never tells the player what they lost. */
+  .modal.sheet .card p.teach { text-align:left; color:var(--dim); font-size:12.5px; font-weight:600;
+                               border-top:1px dashed var(--line2); padding-top:8px; margin-bottom:10px; }
+  @media (prefers-reduced-motion: reduce) { .gatebtn, .gatebtn .blk, .tblock, .card, .card .stars span, #toast, #btnHint.nudge, .cert-ico, .card .cert-row, .card .daily-row, .card .daily-row .stamp, .landing .sub, .landing .stamp, .landing .status, .landing .row, .landing .gatebtn, .landing .title::after { animation:none; } }
   /* the Motion toggle (pause card) forces the same reduced path via body.reduce-motion */
-  body.reduce-motion .gatebtn, body.reduce-motion .gatebtn .blk, body.reduce-motion .tblock, body.reduce-motion .card, body.reduce-motion .card .stars span, body.reduce-motion #toast, body.reduce-motion #btnHint.nudge, body.reduce-motion .cert-ico, body.reduce-motion .card .cert-row, body.reduce-motion .card .daily-row, body.reduce-motion .card .daily-row .stamp, body.reduce-motion .landing .sub, body.reduce-motion .landing .stamp, body.reduce-motion .landing .row, body.reduce-motion .landing .gatebtn, body.reduce-motion .landing .title::after { animation:none; }
+  body.reduce-motion .gatebtn, body.reduce-motion .gatebtn .blk, body.reduce-motion .tblock, body.reduce-motion .card, body.reduce-motion .card .stars span, body.reduce-motion #toast, body.reduce-motion #btnHint.nudge, body.reduce-motion .cert-ico, body.reduce-motion .card .cert-row, body.reduce-motion .card .daily-row, body.reduce-motion .card .daily-row .stamp, body.reduce-motion .landing .sub, body.reduce-motion .landing .stamp, body.reduce-motion .landing .status, body.reduce-motion .landing .row, body.reduce-motion .landing .gatebtn, body.reduce-motion .landing .title::after { animation:none; }
   body.reduce-motion .adring .tick path, body.reduce-motion #adModal .daily-row.grant { animation:none; }
   @media (prefers-reduced-motion: reduce) { .adring .tick path, #adModal .daily-row.grant { animation:none; } }
   body.reduce-motion #hud .moves.low { animation:none; }
   body.reduce-motion #hud .moves.shake, body.reduce-motion #hud .moves.boost { animation:none; }
+  body.reduce-motion #hudSeq.bump { animation:none; }
+  @media (prefers-reduced-motion: reduce) { #hudSeq.bump { animation:none; } }
   [hidden] { display:none !important; }
 </style>
 
@@ -439,6 +478,8 @@
     </div>
   </div>
   <div id="hudGoal" aria-label="Blocks left per color"></div>
+  <!-- pass 5: the approval chain's HUD chip — hidden on every board without a chain -->
+  <div id="hudSeq" aria-live="polite" hidden>NEXT &#9656; <b>&#9313;</b></div>
   <div id="wrap"><canvas id="cv"></canvas></div>
   <div id="toast" role="status" hidden></div>
 
@@ -461,6 +502,13 @@
         <span class="stamp" id="winDailyStamp">GOAL</span>
         <div><span class="k" id="winDailyK">Daily goal met</span><span class="v" id="winDailyV"></span></div>
       </div>
+      <!-- a RECORDED draft clear: the day's FIELD REPORT verbatim, and the one action that sends it.
+           Practice runs get nothing here — there is no record to report. -->
+      <div id="winDraft" hidden>
+        <pre class="report" id="winReport"></pre>
+        <textarea class="reportfb" id="winReportFb" readonly hidden aria-label="Field report text"></textarea>
+        <button class="ghost" id="btnWinShare">Share field report</button>
+      </div>
       <button class="primary" id="btnNext">Next level</button>
       <button class="ghost" id="btnReplay" hidden>Replay for ★★★</button>
     </div>
@@ -471,6 +519,7 @@
       <h2>So close!</h2>
       <p id="failSub"></p>
       <p class="hint" id="failHint"></p>
+      <p class="teach" id="failTeach" hidden></p>
       <button class="rescue" id="btnRescue"><span class="ad">AD</span> +3 moves <small>· watch to continue</small></button>
       <button class="ghost" id="btnRetry">Retry level</button>
     </div>
@@ -561,6 +610,32 @@
     </div>
   </div>
 
+  <!-- Daily Draft result: the day's FIELD REPORT, opened from the sheet-index row once the record
+       has closed. The report text is shown VERBATIM — what the share button sends is what is on
+       screen — and it says how the day went, never how the board was solved (every player is on the
+       same board, so a route would be a walkthrough). Sharing is free and always optional. -->
+  <div class="modal" id="draftModal" hidden>
+    <div class="card draft">
+      <span class="no" id="draftNo">DAILY DRAFT</span>
+      <div class="stars" id="draftStars" aria-live="polite"></div>
+      <h2 id="draftTitle">Draft filed</h2>
+      <p id="draftSub"></p>
+      <div class="meta" id="draftMeta">
+        <div><span class="k">Moves</span><span class="v" id="draftMoves">0 / 0</span></div>
+        <div><span class="k" id="draftRouteK">Route</span><span class="v" id="draftRoute">100%</span></div>
+      </div>
+      <div class="daily-row" id="draftRescue" hidden>
+        <span class="stamp">RESCUED</span>
+        <div><span class="k">Rescue taken</span><span class="v">+3 moves on this attempt</span></div>
+      </div>
+      <pre class="report" id="draftReport"></pre>
+      <textarea class="reportfb" id="draftReportFb" readonly hidden aria-label="Field report text"></textarea>
+      <button class="primary" id="btnDraftShare">Share field report</button>
+      <button class="ghost" id="btnDraftPractice">Play again &#183; not recorded</button>
+      <button class="ghost" id="btnDraftClose">Close</button>
+    </div>
+  </div>
+
   <!-- title block: the cold-open landing. A drawing's cover sheet — the title treatment, one
        primary CTA and two quiet entries, and nothing else to read. The stamp line is static text
        (level, stars, streak); the whole field log — the field survey, paper, sound — lives
@@ -571,6 +646,10 @@
       <div class="title">Gate Escape</div>
       <div class="sub">Drag every block out through the gate of its color.</div>
       <div class="stamp" id="menuStamp">LEVEL 1 / 30</div>
+      <!-- staged FTUE: a passive status line, shown only from the first RETURN day on. A div, never
+           a button — the landing is exactly three taps and that is not negotiable. At most two
+           clauses, no countdown, no CTA, and never a statement of something lost. -->
+      <div class="status" id="menuStatus" hidden></div>
       <button class="gatebtn" id="btnPlay">
         <svg class="blk" viewBox="0 0 22 22" aria-hidden="true"><defs><pattern id="h" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#ff8078"/><rect width="1.4" height="4" fill="#c24d46" opacity=".55"/></pattern></defs><rect x="1.5" y="1.5" width="19" height="19" fill="url(#h)" stroke="#c24d46" stroke-width="2"/><circle cx="11" cy="11" r="3" fill="#fff" opacity=".9"/></svg>
         <span id="playLabel">Play</span>
@@ -593,6 +672,13 @@
         <div><span class="k">Stars</span><span class="v" id="fStars">0 / 90</span></div>
       </div>
       <div id="menuDaily">
+        <!-- Daily Draft: one board a day, the same board for everyone. READY while today's record is
+             still open (a tap loads it); once it has closed the row states the RESULT and a tap opens
+             the field report instead — a second run that day is practice and says so. Hidden until
+             the third level is cleared (staged disclosure). -->
+        <button class="surveyrow" id="btnDaily" hidden aria-label="Daily draft">
+          <span class="k" id="fDailyK">Daily draft</span><span class="v" id="fDaily">READY</span><span class="chev">&#8250;</span>
+        </button>
         <button class="surveyrow" id="btnSurvey" aria-label="Field survey — open this week's sheet">
           <span class="k">Field survey</span><span class="v" id="fSurvey">0/7 · 0 pts</span><span class="badge" id="fSurveyBadge" hidden>SELECT 2</span><span class="chev">›</span>
         </button>
@@ -620,13 +706,16 @@
         <div class="li"><canvas id="symBlock" width="128" height="88"></canvas><div><b>Block</b><span>Slides anywhere, corners included.</span></div></div>
         <div class="li"><canvas id="symGate" width="128" height="88"></canvas><div><b>Gate</b><span>Same color and symbol: push through to escape.</span></div></div>
         <div class="li"><canvas id="symStone" width="128" height="88"></canvas><div><b>Stone</b><span>Never moves.</span></div></div>
-        <div class="li"><canvas id="symMoves" width="128" height="88"></canvas><div><b>Moves</b><span>One drag = one move. ★★★ at par, ★★ within two over. Undo (↶) gives a move back; ? shows the next move.</span></div></div>
-        <div class="div">AROUND THE GAME</div>
+        <div class="li"><canvas id="symMoves" width="128" height="88"></canvas><div><b>Moves</b><span>One drag = one move. ★★★ at par · ★★ one over. Undo (↶) gives a move back; ? shows the next move.</span></div></div>
+        <!-- pass 5: the approval chain. Hidden until a chained sheet exists (pass 6). -->
+        <div class="li" id="liSeq" hidden><canvas id="symSeq" width="128" height="88"></canvas><div><b>Approval chain</b><span>Numbered blocks leave in order. The solid stamp is next up; the outlined ones wait.</span></div></div>
+        <div class="div" id="legendMetaDiv">AROUND THE GAME</div>
         <div class="mi" id="legendLives"><span class="g">♥ Lives</span><span>Retrying a failed level costs one (from level 6). They refill over time; a rescue saves the attempt instead.</span></div>
-        <div class="mi"><span class="g">Field survey</span><span>One sheet a week: a stamp for every day you clear a level, two contracts you pick from the four the week offers, and point marks at 3, 7, 12 and 20 (1 point per clear, +1 at par).</span></div>
-        <div class="mi"><span class="g">Contracts</span><span>Swap freely until one of them earns a mark, then the pair is set for the week. File one and you bank a weather delay (hold up to 2); file both and the sheet gets its seal.</span></div>
-        <div class="mi"><span class="g">Streak</span><span>One clear a day keeps it going. A banked weather delay covers a missed day; otherwise it simply starts again.</span></div>
-        <div class="mi"><span class="g">Certification</span><span>24 ★ on a sheet certifies it: a new paper for the drawing.</span></div>
+        <div class="mi" id="legendDaily"><span class="g">Daily draft</span><span>One board a day, the same board for every player, with its own par. The first attempt is the one that is recorded; after that the day is practice. The field report you can share says how the day went, never how it was solved.</span></div>
+        <div class="mi" id="legendSurvey"><span class="g">Field survey</span><span>One sheet a week: a stamp for every day you clear a level, two contracts you pick from the four the week offers, and point marks at 3, 7, 12 and 20 (1 point per clear, +1 at par).</span></div>
+        <div class="mi" id="legendContracts"><span class="g">Contracts</span><span>Swap freely until one of them earns a mark, then the pair is set for the week. File one and you bank a weather delay (hold up to 2); file both and the sheet gets its seal.</span></div>
+        <div class="mi" id="legendStreak"><span class="g">Streak</span><span>One clear a day keeps it going. A banked weather delay covers a missed day; otherwise it simply starts again.</span></div>
+        <div class="mi" id="legendCert"><span class="g">Certification</span><span>24 ★ on a sheet certifies it: a new paper for the drawing.</span></div>
       </div>
     </div>
   </div>
@@ -939,6 +1028,7 @@ const btnHint = document.getElementById('btnHint');
 const btnRestart = document.getElementById('btnRestart');
 const btnMenu = document.getElementById('btnMenu');
 const hudGoal = document.getElementById('hudGoal');
+const hudSeq = document.getElementById('hudSeq');
 const adModal = document.getElementById('adModal');
 const adBar = document.getElementById('adBar');
 const adCount = document.getElementById('adCount');
@@ -1104,6 +1194,8 @@ let particles = [];
 let shakeT = 0;
 let cell = 40, bx = 0, by = 0; // board metrics
 let hintT = 0;
+let seqIntroT = -1;    // seconds since the approval chain's one-shot 1->2->3 overview was armed (-1 = off)
+let seqBumpT = 0;      // countdown on the HUD chip's refusal flick
 let paused = false, soundOn = true;
 let undoSnap = null;   // state before the last counted move (one-step undo)
 let pendingSnap = null; // state captured when the current drag began
@@ -1149,9 +1241,18 @@ let dailyPractice = false; // this play is after the day's record closed — it 
 let dailyPending = null;   // a fail waiting on the rescue decision (see closePendingDaily)
 let resumeLevel = li;      // the last REAL level loaded: the daily must not disturb it
 
+// One more virtual index, immediately past the draft: a board handed in by the
+// automated checks (`GE.loadTest`). It exists so a rule can be verified on a
+// purpose-built position without adding a level to the campaign or editing one —
+// the 30 shipped sheets are the product and stay untouched. Like the draft it is
+// outside the campaign: no resume pointer, no personal best, no `ge_level` write.
+const TEST_INDEX = DAILY_INDEX + 1;
+let testLevel = null;
+
 const isDaily = () => li === DAILY_INDEX;
+const isTest = () => li === TEST_INDEX;
 const dailyReady = () => typeof DAILIES !== 'undefined' && !!(DAILIES && DAILIES.levelFor);
-const levelAt = i => (i === DAILY_INDEX ? dailyLevel : LEVELS[i]);
+const levelAt = i => (i === DAILY_INDEX ? dailyLevel : i === TEST_INDEX ? testLevel : LEVELS[i]);
 // the same day boundary the streak logic uses: local midnight, read through the
 // overridable clock so a bot can walk days without touching the system clock
 const dayStr = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
@@ -1284,10 +1385,12 @@ function dailyShareText(dateStr) {
 function loadLevel(i) {
   // leaving a decided draft board IS the answer to the rescue offer
   if (dailyPending && i !== DAILY_INDEX) closePendingDaily();
-  // the daily is the one index that escapes the clamp, and only while a board is armed
-  li = i === DAILY_INDEX && dailyLevel ? DAILY_INDEX : Math.max(0, Math.min(i, LEVELS.length - 1));
+  // the two virtual indices are the only ones that escape the clamp, and only while
+  // a board is armed at them
+  li = (i === DAILY_INDEX && dailyLevel) || (i === TEST_INDEX && testLevel)
+    ? i : Math.max(0, Math.min(i, LEVELS.length - 1));
   if (isDaily()) syncDailyMode();
-  else { resumeLevel = li; try { localStorage.setItem('ge_level', String(li)); } catch (e) {} }
+  else if (!isTest()) { resumeLevel = li; try { localStorage.setItem('ge_level', String(li)); } catch (e) {} }
   L = JSON.parse(JSON.stringify(levelAt(li)));
   pos = L.blocks.map(b => [b.x, b.y]);
   disp = L.blocks.map(b => [b.x, b.y]);
@@ -1296,6 +1399,9 @@ function loadLevel(i) {
   exitAnim = L.blocks.map(() => null);
   gateAlign = []; lastExit = null;
   settleT = L.blocks.map(() => 0);
+  // the approval chain's one-shot overview: the whole 1→2→3 order is drawn before the
+  // first move, so the order is a fact the player HAS before they act, never a refusal after
+  seqIntroT = hasChain(L) ? 0 : -1;
   moves = 0; movesLeft = L.moves; rescued = false; over = false;
   attemptUndos = 0; attemptHints = 0;
   drag = null; particles = []; hintT = 0; idleT = 0; exitChain = 0; lastExitAt = 0;
@@ -1306,7 +1412,7 @@ function loadLevel(i) {
   adClose();
   hudLevel.textContent = isDaily()
     ? (dailyPractice ? 'PRACTICE \u00b7 NOT RECORDED' : 'DAILY DRAFT \u00b7 ' + dayLabel(dailyDate))
-    : 'Level ' + (li + 1);
+    : isTest() ? 'TEST BOARD' : 'Level ' + (li + 1);
   hudLevel.classList.toggle('daily', isDaily());
   hudPar.textContent = 'par ' + L.par;
   winModal.hidden = true; failModal.hidden = true;
@@ -1318,10 +1424,11 @@ function loadLevel(i) {
   layout();
   if (isDaily()) track(dailyPractice ? 'daily_practice' : 'daily_started', dailyDate);
   else track('level_start', li + 1);
-  window.dispatchEvent(new CustomEvent('ge:load', { detail: { lvl: li, daily: isDaily(), date: isDaily() ? dailyDate : null } }));
+  window.dispatchEvent(new CustomEvent('ge:load', { detail: { lvl: li, daily: isDaily(), test: isTest(), date: isDaily() ? dailyDate : null } }));
   // one-time tips, shown in the HUD strip (never information the board itself lacks).
   // The draft is not a teaching surface: it teaches nothing and interrupts nothing.
   if (isDaily()) return;
+  if (hasChain(L)) tip('seq', 'Numbered blocks leave in order. The solid stamp is next.');
   if (li === 2) tip('corner', 'One drag can turn corners. The whole route is one move.');
   if (li === FIRST_STONE) tip('stone', 'Stones never move. Route around them.');
   if (li === FIRST_TWICE) tip('twice', 'Everything is corked. Sometimes a block has to move twice.');
@@ -1341,8 +1448,30 @@ function buildGoal() {
   }
 }
 
+// The approval-chain chip: the one place the order is stated in words. It names the number
+// that may leave now — never the block, never a position — so it can never become a hint.
+function updateSeqHud() {
+  if (!hudSeq) return;
+  const n = hasChain(L) ? nextSeq() : Infinity;
+  const on = n !== Infinity && !isDaily();
+  showEl(hudSeq, on);
+  if (on) hudSeq.innerHTML = 'NEXT \u25b8 <b></b>';
+  if (on) hudSeq.lastChild.textContent = SEQ_GLYPH[n] || n;
+}
+// an out-of-turn block bumped its gate: flick the chip so the refusal has an author
+function bumpSeq() {
+  if (!hudSeq || hudSeq.hidden) return;
+  seqBumpT = 0.42;
+  hudSeq.classList.remove('bump'); void hudSeq.offsetWidth; hudSeq.classList.add('bump');
+  haptic('low');
+}
+
 // ---------- HUD ----------
-function starsFor(m) { return m <= L.par ? 3 : m <= L.par + 2 ? 2 : 1; }
+// 3★ is exactly par (optimal) and always has been; the 2★ band was tightened from
+// par+2 to par+1 (round decision 2026-09-02) so the second star costs something too.
+// The HUD meter reads this same function forward (`moves + blocksLeft()`), so the amber
+// "the 3-star pace is gone" warning now lands one move earlier by construction.
+function starsFor(m) { return m <= L.par ? 3 : m <= L.par + 1 ? 2 : 1; }
 function blocksLeft() { return pos.filter(p => p).length; }
 function updateHud() {
   hudMoves.textContent = movesLeft;
@@ -1368,6 +1497,7 @@ function updateHud() {
   btnMenu.disabled = over;
   // one hint per board position: it stays lit until the player acts on it (or undoes)
   btnHint.disabled = over || paused || !!hint || left === 0;
+  updateSeqHud();
   // objective chips: blocks of each color still to clear
   for (const chip of hudGoal.children) {
     const c = +chip.dataset.color;
@@ -1413,7 +1543,31 @@ function fits(bi, x, y) {
   return true;
 }
 
+// ---------- sequenced exits: the approval chain ----------
+// A block may carry `blocks[i].seq` (1..k). The rule is DERIVED from the blocks still
+// on the board rather than stored: `nextSeqIn(ps)` is the lowest seq among them, and a
+// chained block may leave only while its own number IS that lowest one. Because the
+// positions array is the rule's ONLY input, undo is correct for free (undo restores
+// `pos`, and restoring `pos` restores the chain), and the solver's state space is
+// unchanged — no new dimension, just a predicate over a state it already had.
+//
+// Unchained blocks are never gated: the chain says which CHAINED block may leave next,
+// not which block may move. Movement is never gated at all — `fits` / `stepToward` stay
+// pure geometry, because a chain restricts WHEN a block may leave, never where it may slide.
+const SEQ_GLYPH = ['', '\u2460', '\u2461', '\u2462', '\u2463', '\u2464', '\u2465'];
+const hasChain = lv => !!(lv && lv.blocks && lv.blocks.some(b => b.seq));
+function nextSeqIn(ps) {
+  let m = Infinity;
+  for (let i = 0; i < L.blocks.length; i++) { const s = L.blocks[i].seq; if (ps[i] && s && s < m) m = s; }
+  return m;
+}
+function seqOkIn(ps, bi) { const s = L.blocks[bi].seq; return !s || s === nextSeqIn(ps); }
+const nextSeq = () => nextSeqIn(pos);
+const seqOk = bi => seqOkIn(pos, bi);
+
 // block (at x,y) flush against `side` and every occupied lane covered by a same-color gate?
+// PURELY GEOMETRIC, deliberately: the chain is a separate predicate, applied by the three
+// callers that decide whether an exit may HAPPEN (stepToward, findRoute, solveFrom).
 function exitGateAt(bi, x, y, side) {
   const b = L.blocks[bi];
   const lanes = new Set();
@@ -1442,9 +1596,15 @@ function exitGate(bi, side) {
 // Shortest drag route (cell by cell, corners allowed) from a block's current
 // spot to any position it can exit from — the same physics the finger uses.
 // Returns { path: [[x,y]...], side } or null if nothing can get it out right now.
-function findRoute(bi) {
+function findRoute(bi, opts) {
   const start = pos[bi];
   if (!start) return null;
+  // The approval chain first: a chained block that is not next up has no legal exit from
+  // ANY position, and the chain does not depend on where it stands, so this is exactly
+  // equivalent to testing it inside the search — and it stops hints, the opening ghost
+  // route and the fail card's rescue preview from ever proposing an illegal exit.
+  // `{ ignoreSeq: true }` asks the purely geometric question; nothing shipped does.
+  if (!(opts && opts.ignoreSeq) && !seqOk(bi)) return null;
   const key = (x, y) => x + ',' + y;
   const parent = new Map([[key(start[0], start[1]), null]]);
   const q = [start];
@@ -1504,7 +1664,8 @@ function solveFrom(startPos) {
     return { order, path(t) { const out = []; let c = t; while (c) { out.push(c); c = par.get(key(c)); } return out.reverse(); } };
   };
   // exit from (x,y) through `side`: gate covers every lane, and the lane ahead is clear
-  const canExitG = (g, bi, x, y, side) => {
+  const canExitG = (g, bi, x, y, side, ps) => {
+    if (!seqOkIn(ps, bi)) return false;   // the approval chain, on the HYPOTHETICAL position
     if (!exitGateAt(bi, x, y, side)) return false;
     const [dx, dy] = DIRS[side];
     for (const [cx, cy] of L.blocks[bi].cells) {
@@ -1517,7 +1678,13 @@ function solveFrom(startPos) {
   const start = startPos.map(p => (p ? [p[0], p[1]] : null));
   const remaining = start.filter(Boolean).length;
   if (!remaining) return null;
-  for (let cap = remaining; cap <= remaining + 4; cap++) {
+  // A chain forces waiting moves into the optimal line, so the extra depth the search may
+  // spend above the trivial lower bound is raised on chained boards, and the state budget
+  // with it. Unchained boards keep the exact allowance they have always had.
+  const chained = hasChain(L);
+  const extra = chained ? 6 : 4;
+  const stateCap = chained ? 80000 : 40000;
+  for (let cap = remaining; cap <= remaining + extra; cap++) {
     const nodes = new Map([[key(start), { g: 0, parent: null, action: null, pos: start }]]);
     const buckets = Array.from({ length: cap + 2 }, () => []);
     buckets[remaining].push(key(start));
@@ -1529,7 +1696,7 @@ function solveFrom(startPos) {
       const rem = node.pos.filter(Boolean).length;
       if (rem === 0) { let c = node, act = null; while (c.action) { act = c.action; c = nodes.get(c.parent); } return act; }
       if (node.g + rem > cap) continue;
-      if (++explored > 40000) break;
+      if (++explored > stateCap) break;
       for (let bi = 0; bi < n; bi++) {
         if (!node.pos[bi]) continue;
         const g = grid(node.pos, bi), R = reach(g, bi, node.pos[bi]);
@@ -1541,7 +1708,7 @@ function solveFrom(startPos) {
           if (nf <= cap) buckets[nf].push(nk);
         };
         for (const p of R.order) {
-          const side = ['top', 'bottom', 'left', 'right'].find(s => canExitG(g, bi, p[0], p[1], s));
+          const side = ['top', 'bottom', 'left', 'right'].find(s => canExitG(g, bi, p[0], p[1], s, node.pos));
           if (side) { const np = node.pos.slice(); np[bi] = null; push(np, { bi, path: R.path(p), side }); break; }
         }
         for (const p of R.order) {
@@ -1565,6 +1732,7 @@ function beginDrag(bi, gx, gy, pid = -1) {
   // moved on, so its flight starts now. Nothing on the board is ever drawn on top of it.
   flushHeldExits();
   // t0 drives the pickup press beat: a 70 ms dip before the lift reads as started (render)
+  seqIntroT = -1; // the player has taken the board: the overview stops explaining over their hand
   drag = { bi, pid, gx, gy, sx: pos[bi][0], sy: pos[bi][1], moved: false, counted: false, t0: performance.now() };
   pendingSnap = snapshot();
 }
@@ -1587,10 +1755,13 @@ function stepToward(bi, wantX, wantY) {
         if (tn - hapticStepT > 70) { hapticStepT = tn; haptic('step'); }
         break;
       }
-      // blocked by the board edge? if a matching gate covers us, that's an exit.
+      // blocked by the board edge? if a matching gate covers us, that's an exit — unless the
+      // approval chain says another number is up first. This is the ONE player-facing gate:
+      // an out-of-turn block bumps flush against its gate and stops there. Nothing is spent,
+      // nothing leaves, and the HUD chip flicks to name the number the drawing is waiting on.
       if (mag > 0.62 && wouldLeaveBoard(bi, sx, sy)) {
         const side = sx === 1 ? 'right' : sx === -1 ? 'left' : sy === 1 ? 'bottom' : 'top';
-        if (exitGate(bi, side)) return side;
+        if (exitGate(bi, side)) { if (seqOk(bi)) return side; bumpSeq(); }
       }
     }
     if (!stepped) break;
@@ -1609,6 +1780,11 @@ function wouldLeaveBoard(bi, sx, sy) {
 // off the board, fail/win decided). The *picture* of it — burst, shake, sound, haptic, gate
 // close — is spent by beginFlight() once the rendered block has walked into the aligned cell.
 function startExit(bi, side) {
+  // Defensive assert, not a second rule: every player path into an exit goes through
+  // stepToward, which already refuses an out-of-turn one. If anything ever reaches here
+  // out of turn (a console hook, a future caller) the exit is refused outright rather
+  // than silently falsifying the level's par.
+  if (!seqOk(bi)) { track('seq_refused', li + 1); bumpSeq(); return false; }
   const [dx, dy] = DIRS[side];
   const b = L.blocks[bi];
   const from = [pos[bi][0], pos[bi][1]]; // the flush, fully-covered cell the rule matched on
@@ -1633,6 +1809,7 @@ function startExit(bi, side) {
   // still owes is added on so the card never lands over a block that has not left yet.
   if (pos.every(p => !p)) { over = true; updateHud(); winTimers.push(setTimeout(win, 380 + visLagMs(bi))); }
   else maybeFail();
+  return true;
 }
 
 // the rendered block has landed flush in its gate lane: spend the exit's feedback and let it fly
@@ -1719,6 +1896,15 @@ function maybeFail() {
         rescued, cleared: pos.filter(p => !p).length, blocks: pos.length };
     }
     updateHud();
+    // The attempt is decided HERE, a beat before the sheet animates in — pass 4's one-time
+    // rescue teach hangs off this event, and with the streak-repair surface gone it is also
+    // the only signal a build has that a player ran out of moves at all. It is a statement of
+    // fact and nothing more: no card, no offer, no copy of its own.
+    window.dispatchEvent(new CustomEvent('ge:fail', { detail: {
+      lvl: li, daily: isDaily(), test: isTest(), moves, par: L.par,
+      blocks: pos.length, cleared: pos.filter(p => !p).length, rescued,
+      date: isDaily() ? dailyDate : null,
+    } }));
     setTimeout(() => {
       const out = pos.filter(p => !p).length, left = pos.length - out;
       failSub.textContent = `${out} of ${pos.length} blocks escaped — out of moves.`;
@@ -1772,19 +1958,19 @@ function win() {
   hint = null;
   updateHud();
   const stars = starsFor(moves);
-  const daily = isDaily();
+  const daily = isDaily(), test = isTest();
   // the draft has nothing after it: its "next" is the way out, never LEVELS[31]
-  const last = daily || li === LEVELS.length - 1;
+  const last = daily || test || li === LEVELS.length - 1;
   const winUndos = attemptUndos, winHints = attemptHints;
   document.getElementById('winTitle').textContent = winTitleFor(stars);
   btnNext.textContent = last ? 'Back to menu' : 'Next level';
   // par is the target, never "best"; the player's own best is a separate fact once one exists
   // the draft keeps no personal best: one board, one recorded attempt, no ladder to climb
-  const prev = daily ? 0 : best[li];
+  const prev = daily || test ? 0 : best[li];
   winSub.textContent = `Solved in ${moves} move${moves === 1 ? '' : 's'}`
     + (stars === 3 ? ' — perfect!' : ` · par ${L.par}`)
     + (prev && prev < moves ? ` · your best ${prev}` : '');
-  if (!daily && (!prev || moves < prev)) { best[li] = moves; try { localStorage.setItem('ge_best', JSON.stringify(best)); } catch (e) {} }
+  if (!daily && !test && (!prev || moves < prev)) { best[li] = moves; try { localStorage.setItem('ge_best', JSON.stringify(best)); } catch (e) {} }
   // the day's record closes here, before the event goes out, so every listener
   // (and GE.dailyShareText) sees the resolved row rather than an open one
   if (daily) {
@@ -1811,7 +1997,7 @@ function win() {
   btnNext.disabled = btnReplay.disabled = !reduced;
   winTimers.push(setTimeout(() => { btnNext.disabled = btnReplay.disabled = false; }, delays[2] + 400 + 400));
   winModal.hidden = false;
-  window.dispatchEvent(new CustomEvent('ge:win', { detail: { lvl: li, stars, moves, last, par: L.par, blocks: pos.length, undos: winUndos, hints: winHints, daily, date: daily ? dailyDate : null } }));
+  window.dispatchEvent(new CustomEvent('ge:win', { detail: { lvl: li, stars, moves, last, par: L.par, blocks: pos.length, undos: winUndos, hints: winHints, daily, test, date: daily ? dailyDate : null } }));
   sound('win');
   haptic('win');
   track('win', daily ? { daily: dailyDate, moves, stars } : { lvl: li + 1, moves, stars });
@@ -1997,14 +2183,13 @@ btnRestart.onclick = () => { if (over || paused) return; track('restart', li + 1
 btnUndo.onclick = () => { audioInit(); undo(); };
 btnNext.onclick = () => {
   if (isDaily()) {
-    // Hand control back to the menu on the shared event, then put the resume
-    // pointer back: the campaign's own finish handler sends the player to level 1,
-    // which is right after the 30th sheet and wrong after a draft — the draft is
-    // not part of the campaign and must not move where "Play" resumes.
-    const back = resumeLevel;
-    window.dispatchEvent(new CustomEvent('ge:finished', { detail: { daily: true, date: dailyDate } }));
-    li = resumeLevel = back;
-    try { localStorage.setItem('ge_level', String(back)); } catch (e) {}
+    // Load FIRST, hand control to the menu second (r3-report §3). Loading the resume level
+    // hides the win card and restores `li` / `L` / `ge_level` together, so there is no window
+    // in which the board on screen disagrees with the level index; the menu's finish handler
+    // then only has to show itself, because a draft has no campaign reset to do.
+    const date = dailyDate;
+    loadLevel(resumeLevel);
+    window.dispatchEvent(new CustomEvent('ge:finished', { detail: { daily: true, date } }));
     return;
   }
   if (li === LEVELS.length - 1) { window.dispatchEvent(new CustomEvent('ge:finished')); return; }
@@ -2196,6 +2381,126 @@ function drawBlockShape(b, px, py, inset, st) {
   drawGlyph(st.glyph, px + gx2 * cell, py + gy2 * cell, gs, 'rgba(255,255,255,.92)');
 }
 
+// ---------- approval-chain rendering ----------
+// The order is carried by THREE SHAPE CHANNELS and zero colour, so it survives every
+// paper skin, every colour-vision deficiency and the 3-second sound-off read:
+//   next up  — a SOLID ink stamp (white numeral), a dashed on-deck ring around the whole
+//              block, and a double chevron beside the stamp;
+//   waiting  — the SAME numeral as an OUTLINE stamp (ink numeral, no fill), at reduced alpha.
+// Fill-vs-outline alone already separates them; the ring and the chevron are redundancy,
+// which is the point — a player who misses one still has two.
+const SEQ_INTRO_S = 3.2;   // how long the one-shot 1->2->3 overview stays up
+
+function seqBoxAt(b, px, py, inset) {
+  const [cx, cy] = b.cells[0];                       // the block's first cell, top-left corner
+  const s = Math.max(12, Math.round(cell * 0.30));
+  return [px + cx * cell + inset + 1, py + cy * cell + inset + 1, s];
+}
+function blockBoundsCells(b) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const [qx, qy] of b.cells) { x0 = Math.min(x0, qx); y0 = Math.min(y0, qy); x1 = Math.max(x1, qx + 1); y1 = Math.max(y1, qy + 1); }
+  return [x0, y0, x1, y1];
+}
+function drawSeqStamp(b, px, py, inset, next) {
+  const [x, y, s] = seqBoxAt(b, px, py, inset);
+  // next up is a WIDE ink tab carrying the numeral and a chevron; waiting is a NARROW paper
+  // label carrying the numeral alone. The two are tonal inverses as well as different widths,
+  // so they never have to be told apart by colour or by reading the number.
+  const w = next ? Math.round(s * 1.85) : s;
+  ctx.save();
+  if (!next) ctx.globalAlpha *= 0.82;
+  // channel 3 — the on-deck ring: dashed, inside the block's own outline, around the footprint
+  if (next) {
+    const [x0, y0, x1, y1] = blockBoundsCells(b), d = inset + 3.5;
+    const rx = px + x0 * cell + d, ry = py + y0 * cell + d;
+    const rw = (x1 - x0) * cell - d * 2, rh = (y1 - y0) * cell - d * 2;
+    if (rw > 6 && rh > 6) {
+      ctx.setLineDash([6, 4]);
+      ctx.lineDashOffset = reducedMotion() ? 0 : -hintT * 26; // static under reduced motion
+      ctx.strokeStyle = THEME.halo; ctx.lineWidth = 3.4;
+      rr(rx, ry, rw, rh, 5); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,.95)'; ctx.lineWidth = 1.7;
+      rr(rx, ry, rw, rh, 5); ctx.stroke();
+      ctx.setLineDash([]); ctx.lineDashOffset = 0;
+    }
+  }
+  // channel 1 — the revision stamp itself
+  rr(x, y, w, s, 3);
+  ctx.fillStyle = next ? THEME.halo : 'rgba(255,255,255,.92)';
+  ctx.fill();
+  ctx.strokeStyle = THEME.halo; ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fillStyle = next ? 'rgba(255,255,255,.97)' : THEME.halo;
+  ctx.font = '800 ' + Math.round(s * 0.66) + 'px ui-monospace, SFMono-Regular, Menlo, monospace';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(String(b.seq), x + s / 2, y + s / 2 + 0.5);
+  // channel 2 — the chevron, inside the tab beside the numeral: "this one is up"
+  if (next) {
+    const a = s * 0.22, mx = x + s + (w - s) / 2, my = y + s / 2;
+    ctx.strokeStyle = 'rgba(255,255,255,.97)'; ctx.lineWidth = 2;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(mx - a * 1.5, my - a); ctx.lineTo(mx - a * 0.4, my); ctx.lineTo(mx - a * 1.5, my + a);
+    ctx.moveTo(mx + a * 0.1, my - a); ctx.lineTo(mx + a * 1.2, my); ctx.lineTo(mx + a * 0.1, my + a);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+// The one-shot overview: a dashed line through the chain in order, drawn once on load so the
+// WHOLE order is a fact the player has before the first drag rather than something they learn
+// from a refusal. Each leg is TRIMMED to the two stamps it joins, so it connects the numbers
+// instead of running across them (which is what it looked like with the marching turned off).
+// It dies on the first pickup, and it never marks a route — it joins stamps, not cells.
+function drawSeqIntro(inset) {
+  const up = nextSeq();
+  const nodes = L.blocks
+    .map((b, i) => ({ b, i }))
+    .filter(o => o.b.seq && pos[o.i] && !exitAnim[o.i])
+    .sort((a, z) => a.b.seq - z.b.seq)
+    .map(({ b, i }) => {
+      const [x, y, sz] = seqBoxAt(b, bx + disp[i][0] * cell, by + disp[i][1] * cell, inset);
+      const w = b.seq === up ? Math.round(sz * 1.85) : sz;
+      return { c: [x + w / 2, y + sz / 2], r: Math.max(w, sz) / 2 + 5 };
+    });
+  if (nodes.length < 2) return;
+  const u = seqIntroT / SEQ_INTRO_S;
+  const alpha = reducedMotion() ? 1 : Math.min(1, u * 8) * Math.min(1, (1 - u) * 4);
+  if (alpha <= 0) return;
+  const legs = [];
+  for (let i = 1; i < nodes.length; i++) {
+    const a = nodes[i - 1], z = nodes[i];
+    const dx = z.c[0] - a.c[0], dy = z.c[1] - a.c[1], len = Math.hypot(dx, dy);
+    if (len <= a.r + z.r + 6) continue;                 // the two stamps are already touching
+    const ux = dx / len, uy = dy / len;
+    legs.push([[a.c[0] + ux * a.r, a.c[1] + uy * a.r], [z.c[0] - ux * z.r, z.c[1] - uy * z.r], ux, uy]);
+  }
+  if (!legs.length) return;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.setLineDash([7, 5]);
+  ctx.lineDashOffset = reducedMotion() ? 0 : -hintT * 30;  // static under reduced motion
+  for (const [col, wid] of [[THEME.halo, 6.5], ['rgba(255,255,255,.95)', 2.6]]) {
+    ctx.strokeStyle = col; ctx.lineWidth = wid;
+    ctx.beginPath();
+    for (const [p0, p1] of legs) { ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); }
+    ctx.stroke();
+  }
+  ctx.setLineDash([]); ctx.lineDashOffset = 0;
+  // arrowhead on the last leg: the line has a direction, and the direction IS the order
+  const [, end, ux, uy] = legs[legs.length - 1];
+  const ang = Math.atan2(uy, ux), h = Math.max(7, cell * 0.15);
+  for (const [col, wid] of [[THEME.halo, 6], ['rgba(255,255,255,.95)', 2.6]]) {
+    ctx.strokeStyle = col; ctx.lineWidth = wid;
+    ctx.beginPath();
+    ctx.moveTo(end[0] - Math.cos(ang - 0.5) * h, end[1] - Math.sin(ang - 0.5) * h);
+    ctx.lineTo(end[0], end[1]);
+    ctx.lineTo(end[0] - Math.cos(ang + 0.5) * h, end[1] - Math.sin(ang + 0.5) * h);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 // ghost route: a marching dashed finger path from the block's centre, around
 // corners, out past the gate, with an arrowhead and a travelling finger pip.
 // Without a side (a hint that parks a block) the path ends at the destination and
@@ -2309,6 +2614,8 @@ function frame(t) {
   for (let c = 0; c < gateFlash.length; c++) if (gateFlash[c] >= 0) gateFlash[c] += dt;
   for (let i = 0; i < settleT.length; i++) if (settleT[i] > 0) { settleT[i] += dt; if (settleT[i] > 0.4) settleT[i] = 0; }
   livesTick(dt);
+  if (seqIntroT >= 0) { seqIntroT += dt; if (seqIntroT >= SEQ_INTRO_S) seqIntroT = -1; }
+  if (seqBumpT > 0) { seqBumpT -= dt; if (seqBumpT <= 0) { seqBumpT = 0; if (hudSeq) hudSeq.classList.remove('bump'); } }
   hintT += dt;
   // a player who has done nothing for 20 s is stuck: the hint button beckons (the hint
   // itself is never shown unasked — that would give the level away)
@@ -2438,6 +2745,7 @@ function render() {
   // every block is inset from its cells so a gutter of paper always separates neighbours —
   // two red blocks side by side must never read as one slab (3-second rule)
   const inset = Math.max(4, Math.round(cell * 0.1));
+  const nextUp = hasChain(L) ? nextSeq() : Infinity; // one read for the whole frame
   for (let i = 0; i < L.blocks.length; i++) {
     if (!pos[i] && !exitAnim[i]) continue;
     const b = L.blocks[i], c = COLORS[b.color];
@@ -2470,8 +2778,12 @@ function render() {
       // on the fail card the stranded blocks breathe with a white edge so the rescue shows what it buys
       edge: stranded ? `rgba(${THEME.flash},${0.35 + pulse * 0.6})` : null,
     });
+    // the approval chain rides on the block, inside the same transform, so it presses,
+    // settles, glides and fades out with the block it belongs to
+    if (b.seq) drawSeqStamp(b, px, py, inset, b.seq === nextUp);
     ctx.restore();
   }
+  if (seqIntroT >= 0) drawSeqIntro(inset);
 
   // gate alignment flash: on the frame a block lands flush in its lane, the gate it is about to
   // leave by lights up — drawn OVER the block so the eye is told "it lined up" before it goes
@@ -2632,6 +2944,33 @@ window.GE = {
   // drawing helpers shared with menu.js (legend); ctx is swapped for the call
   draw(c, fn) { const o = ctx; ctx = c; try { fn({ rr, drawGlyph, drawBlockShape, COLORS }); } finally { ctx = o; } },
   load: loadLevel,
+  // ---- sequenced exits (the approval chain) ----
+  // The whole rule, readable from outside: which numbers are still on the board, which one
+  // may leave now, and per block its number and whether it is the one that is up. Derived
+  // fresh from `pos` on every read, exactly like the rule itself.
+  seqInfo() {
+    const n = hasChain(L) ? nextSeq() : Infinity;
+    return {
+      chained: hasChain(L),
+      next: n === Infinity ? null : n,
+      chain: L.blocks
+        .map((b, i) => ({ bi: i, seq: b.seq || null, out: !pos[i] }))
+        .filter(o => o.seq)
+        .sort((a, z) => a.seq - z.seq),
+      blocks: L.blocks.map((b, i) => ({ seq: b.seq || null, out: !pos[i], nextUp: !!b.seq && b.seq === n })),
+    };
+  },
+  // Load a synthetic board at TEST_INDEX (checks only). It is outside the campaign in every
+  // way the draft is — no resume pointer, no personal best, no `ge_level` write — so a rule
+  // can be verified on a purpose-built position without touching the 30 shipped sheets.
+  loadTest(level) {
+    testLevel = level ? JSON.parse(JSON.stringify(level)) : null;
+    if (!testLevel) return false;
+    loadLevel(TEST_INDEX);
+    return li === TEST_INDEX;
+  },
+  get isTest() { return isTest(); },
+  get testIndex() { return TEST_INDEX; },
   // ---- Daily Draft (the menu/index UI wires onto these; the engine owns the rules) ----
   loadDaily,                                  // (dateStr?) -> bool; defaults to today
   get isDaily() { return isDaily(); },        // the draft is the board on screen
@@ -2640,7 +2979,7 @@ window.GE = {
   get dailyIndex() { return DAILY_INDEX; },   // the virtual level index it lives at
   dailyShareText,                             // (dateStr?) -> the FIELD REPORT string, or null
   undo,
-  route: findRoute,
+  route: findRoute,   // (bi, {ignoreSeq}?) -> the drag out, or null; respects the chain by default
   solve: solveFrom,   // reference next move from any position (bots / reviewer console)
   showHint,           // show the hint directly (skips the ad stub; the button never does)
   // programmatic drag: mirrors player physics exactly
@@ -2648,7 +2987,7 @@ window.GE = {
     if (over || !pos[bi]) return false;
     beginDrag(bi, 0, 0);
     const side = stepToward(bi, tx, ty);
-    if (side) { const b = bi; drag = null; startExit(b, side); return 'exit'; }
+    if (side) { const b = bi; drag = null; return startExit(b, side) ? 'exit' : false; }
     endDrag(true);
     return true;
   },
@@ -2666,7 +3005,7 @@ window.GE = {
     if (exitSide) {
       const far = { top: [pos[bi][0], -9], bottom: [pos[bi][0], 99], left: [-9, pos[bi][1]], right: [99, pos[bi][1]] }[exitSide];
       const side = stepToward(bi, far[0], far[1]);
-      if (side) { drag = null; startExit(bi, side); return 'exit'; }
+      if (side) { drag = null; return startExit(bi, side) ? 'exit' : false; }
     }
     endDrag(true);
     return true;
@@ -2759,7 +3098,14 @@ requestAnimationFrame(frame);
     }
     caption(host, GE.themes[GE.theme].name);
   }
-  function refreshPapers() { buildPapers($('menuPapers'), 'btnPaper'); buildPapers($('pausePapers'), 'btnPausePaper'); }
+  // the picker is the payoff of certification, so it arrives with it (staged disclosure): on a
+  // cold open there is nothing to say about three papers the player cannot have yet
+  function refreshPapers() {
+    const on = disclosure().cert;
+    $('menuPapers').hidden = $('pausePapers').hidden = !on;
+    if (!on) return;
+    buildPapers($('menuPapers'), 'btnPaper'); buildPapers($('pausePapers'), 'btnPausePaper');
+  }
   window.addEventListener('ge:theme', () => { refreshPapers(); if (!screens.legend.hidden) drawSymbols(); });
 
   // ---------- sound ----------
@@ -2819,7 +3165,7 @@ requestAnimationFrame(frame);
     document.body.classList.toggle('menu-up', name === 'menu');
     if (name === 'menu') refreshMenu();
     if (name === 'levels') { refreshLog(); buildGrid(); }
-    if (name === 'legend') { const ll = document.getElementById('legendLives'); if (ll) ll.hidden = !GE.livesEnabled; drawSymbols(); if (!legendAnim) { legendAnim = true; demoT0 = 0; requestAnimationFrame(demoFrame); } }
+    if (name === 'legend') { refreshLegendRows(); drawSymbols(); if (!legendAnim) { legendAnim = true; demoT0 = 0; requestAnimationFrame(demoFrame); } }
     else legendAnim = false;
   }
   // an attempt the player walked away from (pause → Main menu) is still on the board behind
@@ -2839,6 +3185,22 @@ requestAnimationFrame(frame);
       ? `New sheet · <b>${N}</b> levels`
       : `Level <b>${GE.level + 1}</b> / ${N} · ★ <b>${starsTotal()}</b>`
         + (live ? ` · <i>${live}-day streak</i>` : '');
+    refreshStatus();
+  }
+  // The status line is the LAST thing the landing gained and the most easily abused: it is a passive
+  // div (never a button), it appears only from the first return day, it states at most two facts, and
+  // it may never carry a countdown, a call to action, or a loss. So it only ever says things that
+  // are true and finished — a draft already filed, the days already stamped this week. The streak is
+  // deliberately NOT repeated here: the stamp line above already carries it.
+  function refreshStatus() {
+    const st = $('menuStatus'), d = disclosure(), parts = [];
+    if (d.daily && draftReady()) { const i = GE.dailyInfo; if (i.done && i.cur && i.cur.state === 'won') parts.push("Today's draft is filed"); }
+    if (d.survey) {
+      const s = surveyWeek(), stamped = weekDates(GE.now()).filter(x => s.days.includes(x)).length;
+      parts.push(`<b>${stamped}</b> of 7 survey days`);
+    }
+    st.hidden = !d.status || !parts.length;
+    if (!st.hidden) st.innerHTML = parts.slice(0, 2).join(' · ');
   }
   // the sheet index's field log: progress, the field-survey row (the week's sheet is one tap
   // deeper), the lives row when the economy is on, the paper picker and the sound/haptics toggles
@@ -2848,6 +3210,7 @@ requestAnimationFrame(frame);
     refreshSound();
     refreshHaptics();
     refreshPapers();
+    refreshDraft();
     refreshSurvey();
   }
   function buildGrid() {
@@ -2859,11 +3222,12 @@ requestAnimationFrame(frame);
         // chapter rule: a header per sheet of ten with its star count and the sheet's certification —
         // progress toward the threshold, or the paper it earned (no gate: every level stays reachable)
         const c = i / per, got = sheetStars(c), done = got >= CERT_STARS, skin = GE.themes[CERT_SKINS[c]];
-        const fresh = done && !(prog.seen || []).includes(c); // first sight of a certified sheet: stamp it here
+        const cert = disclosure().cert; // staged: the sheet is just a sheet until level 2 is cleared
+        const fresh = cert && done && !(prog.seen || []).includes(c); // first sight of a certified sheet: stamp it here
         const h = document.createElement('div');
         h.className = 'chap';
         h.innerHTML = `<span>Sheet ${c + 1} · ${CHAPTERS[c] || ''}</span>`
-          + `<span class="cert${done && !fresh ? ' on' : ''}" title="Certified at ${CERT_STARS} ★">${CERT_SVG(done && !fresh)} <b>★ ${got}/${sheetMax(c)}</b> · ${done ? (skin ? skin.name : 'certified') : `${CERT_STARS - got} to certify`}</span>`;
+          + (cert ? `<span class="cert${done && !fresh ? ' on' : ''}" title="Certified at ${CERT_STARS} ★">${CERT_SVG(done && !fresh)} <b>★ ${got}/${sheetMax(c)}</b> · ${done ? (skin ? skin.name : 'certified') : `${CERT_STARS - got} to certify`}</span>` : '');
         g.appendChild(h);
         if (fresh) {
           prog.seen = [...(prog.seen || []), c]; save();
@@ -2905,7 +3269,12 @@ requestAnimationFrame(frame);
     // never over a win/fail card or the last block's exit flight: the round is decided
     if (!GE.L || GE.over || !screens.menu.hidden || !screens.levels.hidden || !screens.legend.hidden) return;
     GE.paused = true;
-    $('pauseSub').textContent = `Level ${GE.level + 1} · ${GE.movesLeft} moves left`;
+    // the Daily Draft rides on a virtual level index one past LEVELS, so "Level 31" is the one
+    // thing this line must never say; the draft names itself and its date instead
+    $('pauseSub').textContent = (GE.isDaily
+      ? (GE.dailyInfo.practice ? 'Practice · not recorded' : 'Daily draft') + (GE.dailyDate ? ' · ' + dateLabel(GE.dailyDate) : '')
+      : `Level ${GE.level + 1}`)
+      + ` · ${GE.movesLeft} moves left`;
     refreshSound();
     refreshMotion();
     refreshHaptics();
@@ -2936,6 +3305,7 @@ requestAnimationFrame(frame);
     });
   }
   dismissOnScrim(pauseModal, () => { if (!pauseModal.hidden) resume(); });          // resume play
+  dismissOnScrim($('draftModal'), () => $('btnDraftClose').click());
   dismissOnScrim($('surveyModal'), () => $('btnSurveyClose').click());
   dismissOnScrim($('freezeModal'), () => $('btnFreezeOk').click());
   dismissOnScrim($('livesModal'), () => $('btnLivesHome').click());                 // browsing is never blocked
@@ -2944,6 +3314,7 @@ requestAnimationFrame(frame);
 
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
+    if (!$('draftModal').hidden) { $('btnDraftClose').click(); return; }
     if (!$('surveyModal').hidden) { $('btnSurveyClose').click(); return; }
     if (!$('freezeModal').hidden) { $('btnFreezeOk').click(); return; }
     if (!$('livesModal').hidden) { $('btnLivesHome').click(); return; }
@@ -2987,6 +3358,68 @@ requestAnimationFrame(frame);
   }
   btnTry.onclick = () => { if (certSkin && setSkin(certSkin, 'win')) { btnTry.disabled = true; btnTry.textContent = 'On'; } };
 
+  // ---------- staged disclosure (the FTUE ladder) ----------
+  // The research round's finding: a cold open that shows every meta system at once reads as noise in
+  // the first minute, and a player who has not yet cleared a level has no use for any of it. So the
+  // sheet index opens BARE — level, stars, the thirty tiles, sound — and each system arrives on the
+  // win that makes it meaningful: certification after 2 levels, the Daily Draft after 3, the Field
+  // Survey after 5 (with one contract already taken, so the sheet arrives demonstrated rather than
+  // demanding two decisions), and a passive status line on the landing from the first RETURN day.
+  //
+  // The gate is DERIVED from cleared levels, never stored, so it cannot drift from the save and
+  // "Reset progress" genuinely starts the tutorial over. Exactly two facts are written down, because
+  // neither can be derived: prog.d0 (the date of the first clear — a level count cannot tell you the
+  // player came back another day) and prog.rv (which reveals have already had their one quiet beat,
+  // so a replay never re-announces anything).
+  const REVEALS = [
+    { id: 'cert',   need: 2, k: 'Sheet certification', v: '24 ★ on a sheet earns its paper' },
+    { id: 'daily',  need: 3, k: 'Daily draft',         v: 'One board a day, the same for everyone' },
+    { id: 'survey', need: 5, k: 'Field survey',        v: 'A week to fill in · one contract taken' },
+  ];
+  const clearedCount = () => prog.s.reduce((n, v) => n + (v ? 1 : 0), 0);
+  const seenReveal = id => (prog.rv || []).includes(id);
+  function disclosure() {
+    const n = clearedCount(), d = { cleared: n };
+    for (const r of REVEALS) d[r.id] = n >= r.need;
+    // a return day is any day that is not the day of the first clear ('pre' marks a save that
+    // already had progress when this shipped — a returning player by definition)
+    d.status = !!prog.d0 && prog.d0 !== dayStr(GE.now());
+    return d;
+  }
+  // the reveal this win has just earned, if any — marked seen here, so the beat plays exactly once
+  function takeReveal() {
+    const d = disclosure();
+    const r = REVEALS.find(x => d[x.id] && !seenReveal(x.id));
+    if (!r) return null;
+    prog.rv = [...(prog.rv || []), r.id];
+    if (r.id === 'survey') preselectContract();
+    save();
+    track('ftue_reveal', { id: r.id, cleared: d.cleared });
+    return r;
+  }
+  // A save that already had progress when staged disclosure shipped belongs to someone who has met
+  // all of this already: mark what they can see as seen rather than replaying three tutorials at
+  // them, and treat them as the returning player they are. The first-clear date is the one thing
+  // that cannot be recovered honestly, so it is marked 'pre' rather than invented.
+  function seedDisclosure() {
+    if (prog.rv || !prog.s.some(Boolean)) return;
+    const d = disclosure();
+    prog.rv = ['rescue', ...REVEALS.filter(r => d[r.id]).map(r => r.id)];
+    if (!prog.d0) prog.d0 = 'pre';
+    save();
+  }
+  function refreshLegendRows() {
+    const d = disclosure(), g = (id, on) => { const el = $(id); if (el) el.hidden = !on; };
+    g('legendLives', GE.livesEnabled);
+    g('legendCert', d.cert); g('legendDaily', d.daily && draftReady());
+    // the approval chain explains itself only once a chained sheet exists (pass 6 adds one);
+    // derived from the shipped levels, so it turns itself on with no second edit
+    g('liSeq', LEVELS.some(l => l.blocks.some(b => b.seq)));
+    g('legendSurvey', d.survey); g('legendContracts', d.survey); g('legendStreak', d.survey);
+    // the divider is a heading for a list that can be empty on a cold open
+    g('legendMetaDiv', GE.livesEnabled || d.cert || d.daily || d.survey);
+  }
+
   // ---------- Field Survey: ONE weekly sheet (day spine + contracts + marks + seal) ----------
   // The 2026-09-02 research round merged three overlapping meta systems — daily quests, the
   // streak card and the weekly ladder — into a single sheet the surveyor fills in over a week:
@@ -3006,15 +3439,18 @@ requestAnimationFrame(frame);
   // to buy, no card at the moment of loss. All dates flow through GE.now() so bots simulate days.
   // State: ge_streak (unchanged) + ge_survey (new). ge_quests / ge_ladder are migrated once, then
   // removed. Nothing here is ever gated on — the funnel test needs every level reachable.
+  // `ease` ranks the catalog by roughly how many clears the contract asks for, lowest first. It is
+  // used for ONE thing: which contract the survey arrives with already taken when it is first
+  // revealed. Nothing else reads it, and it never changes what a contract is worth.
   const CONTRACTS = {
-    clear12:  { label: 'Clear 12 levels',             target: 12, gain: d => 1 },
-    clear20:  { label: 'Clear 20 levels',             target: 20, gain: d => 1 },
-    stars30:  { label: 'Earn 30 stars',               target: 30, gain: d => d.stars },
-    stars45:  { label: 'Earn 45 stars',               target: 45, gain: d => d.stars },
-    par8:     { label: 'Clear 8 levels at par',       target: 8,  gain: d => (d.moves <= d.par ? 1 : 0) },
-    noundo5:  { label: 'Clear 5 levels without undo', target: 5,  gain: d => (d.undos === 0 ? 1 : 0) },
-    nohint8:  { label: 'Clear 8 levels without hints',target: 8,  gain: d => (d.hints === 0 ? 1 : 0) },
-    blocks60: { label: 'Clear 60 blocks',             target: 60, gain: d => d.blocks },
+    clear12:  { label: 'Clear 12 levels',             target: 12, ease: 5, gain: d => 1 },
+    clear20:  { label: 'Clear 20 levels',             target: 20, ease: 8, gain: d => 1 },
+    stars30:  { label: 'Earn 30 stars',               target: 30, ease: 4, gain: d => d.stars },
+    stars45:  { label: 'Earn 45 stars',               target: 45, ease: 7, gain: d => d.stars },
+    par8:     { label: 'Clear 8 levels at par',       target: 8,  ease: 2, gain: d => (d.moves <= d.par ? 1 : 0) },
+    noundo5:  { label: 'Clear 5 levels without undo', target: 5,  ease: 1, gain: d => (d.undos === 0 ? 1 : 0) },
+    nohint8:  { label: 'Clear 8 levels without hints',target: 8,  ease: 3, gain: d => (d.hints === 0 ? 1 : 0) },
+    blocks60: { label: 'Clear 60 blocks',             target: 60, ease: 6, gain: d => d.blocks },
   };
   const OFFERED = 4, PICKS = 2, DELAY_MAX = 2, MILESTONES = [3, 7, 12, 20];
   const DAY_INITIALS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -3109,6 +3545,18 @@ requestAnimationFrame(frame);
     track('contract_select', { id, on: i < 0, chosen: s.chosen.length });
     return true;
   }
+  // The survey is revealed with ONE contract already taken — the easiest of the four this week
+  // offers. A blank sheet demanding two decisions about a system the player has never seen is the
+  // worst possible first impression of it; one worked example is a demonstration. It is not a lock:
+  // swapping stays free until progress, exactly as if the player had tapped it themselves.
+  function preselectContract() {
+    const s = surveyWeek();
+    if (s.chosen.length || contractsLocked()) return null;
+    const id = s.offered.slice().sort((a, b) => CONTRACTS[a].ease - CONTRACTS[b].ease)[0];
+    if (!id || !chooseContract(id)) return null;
+    track('contract_preselect', { id });
+    return id;
+  }
   // streak day-mark (unchanged: >=1 clear marks the day) + the rolling last-7-days marks
   function onClear() {
     const today = dayStr(GE.now());
@@ -3156,11 +3604,15 @@ requestAnimationFrame(frame);
 
   // ---------- sheet-index row ----------
   function refreshSurvey() {
+    $('btnSurvey').hidden = !disclosure().survey; // staged: the week's sheet arrives after level 5
     const s = surveyWeek(), dates = weekDates(GE.now());
     const stamped = dates.filter(d => s.days.includes(d)).length;
     $('fSurvey').innerHTML = `${stamped}/7 · ${s.pts} pt${s.pts === 1 ? '' : 's'}`
       + (s.ms.includes(20) ? '<span class="mark" title="20-point mark">⌖</span>' : '');
-    $('fSurveyBadge').hidden = s.chosen.length === PICKS;
+    // the badge counts what is still to choose — the survey now ARRIVES with one contract taken
+    // (staged disclosure), so a flat "SELECT 2" would be asking for a decision already half made
+    $('fSurveyBadge').hidden = s.chosen.length >= PICKS;
+    $('fSurveyBadge').textContent = 'SELECT ' + Math.max(0, PICKS - s.chosen.length);
     refreshLives();
     if (!screens.menu.hidden) refreshMenu(); // the landing stamp carries the same streak
   }
@@ -3237,27 +3689,139 @@ requestAnimationFrame(frame);
   $('btnSurvey').onclick = () => { renderSurvey(); $('surveyModal').hidden = false; };
   $('btnSurveyClose').onclick = () => { $('surveyModal').hidden = true; };
 
+  // ---------- Daily Draft: the sheet-index row and the FIELD REPORT result card ----------
+  // The engine owns the draft entirely (the table, the board, the one recorded attempt a day, the
+  // report text). Everything here is the surface: a row that states today in one line, a card that
+  // states the result, and one share action. Two rules shape all of it —
+  //   * the row never nags. It says READY while the day is open and states the RESULT once it has
+  //     closed; there is no countdown, no "don't lose it", no red dot. A draft you skipped is a day
+  //     that went by, not a debt.
+  //   * what you send is what you see. The card shows GE.dailyShareText() VERBATIM in a block above
+  //     the button, so the player reads the exact text before it leaves the phone. The report is
+  //     spoiler-free by construction (no route, no grid) — that is the engine's guarantee, and the
+  //     UI's job is not to add anything to it.
+  const MONS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const dateLabel = d => { const q = String(d).split('-'); return +q[2] + ' ' + MONS[+q[1] - 1]; };
+  const draftReady = () => !!(GE.loadDaily && GE.dailyInfo && typeof DAILIES !== 'undefined' && DAILIES);
+  const SHARE_LABEL = 'Share field report';
+  const draftModal = $('draftModal');
+  let recordedNow = null;  // the row the engine just closed (ge:daily fires before ge:win)
+  let shareTimer = 0;
+
+  const starRow = n => `<span class="st">${'★'.repeat(n)}<span class="off">${'☆'.repeat(3 - n)}</span></span>`;
+  function fillStars(host, n) {
+    host.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+      const sp = document.createElement('span');
+      sp.className = i < n ? 'on' : 'off';
+      sp.textContent = i < n ? '★' : '☆';
+      host.appendChild(sp);
+    }
+  }
+  // the sheet-index row: READY / the day's result + the practice framing for what a tap now gives
+  function refreshDraft() {
+    const on = disclosure().daily && draftReady();
+    $('btnDaily').hidden = !on;
+    if (!on) return;
+    const i = GE.dailyInfo, cur = i.done ? i.cur : null;
+    $('fDailyK').textContent = 'Daily draft · ' + dateLabel(i.today);
+    $('fDaily').innerHTML = !cur ? 'READY'
+      : (cur.state === 'won' ? starRow(cur.stars || 0) + 'FILED' : starRow(0) + 'NOT CLEARED')
+        + '<small>Practice · not recorded</small>';
+    $('btnDaily').setAttribute('aria-label', !cur ? 'Daily draft — today’s board, ready to play'
+      : 'Daily draft — today’s result, open the field report');
+  }
+  // the result card. It only ever renders a CLOSED record: an open day has no result to state.
+  function openDraft() {
+    const i = GE.dailyInfo, row = i.done ? i.cur : null;
+    if (!row) return false;
+    const won = row.state === 'won';
+    fillStars($('draftStars'), row.stars || 0);
+    $('draftTitle').textContent = won ? 'Draft filed' : 'Draft not cleared';
+    $('draftSub').textContent = dateLabel(row.date) + ' · ' + (won ? 'cleared' : row.cleared + ' of ' + row.blocks + ' blocks out')
+      + ' · undo ' + (row.undos || 0) + ' · hint ' + (row.hints || 0);
+    $('draftMoves').textContent = row.moves + ' / ' + row.par;
+    $('draftRouteK').textContent = won ? 'Route' : 'Blocks out';
+    $('draftRoute').textContent = won ? Math.round(row.par / Math.max(1, row.moves) * 100) + '%'
+      : row.cleared + ' / ' + row.blocks;
+    $('draftRescue').hidden = !row.rescued;
+    const text = GE.dailyShareText(row.date) || '';
+    $('draftReport').textContent = text;
+    const fb = $('draftReportFb'); fb.hidden = true; fb.value = text;
+    $('btnDraftShare').textContent = SHARE_LABEL; $('btnDraftShare').disabled = !text;
+    draftModal.hidden = false;
+    track('daily_report', { date: row.date, state: row.state });
+    return true;
+  }
+  // navigator.share → clipboard → a selectable textarea. Every path hands over the SAME string the
+  // block above is showing; nothing is composed here, so nothing can leak that the engine did not
+  // already decide to say.
+  function shareReport(text, btn, fb) {
+    if (!text) return;
+    const flash = t => { btn.textContent = t; clearTimeout(shareTimer); shareTimer = setTimeout(() => { btn.textContent = SHARE_LABEL; }, 2400); };
+    const handOver = () => { fb.hidden = false; fb.value = text; try { fb.focus(); fb.select(); } catch (e) {} btn.textContent = 'Select and copy'; track('daily_shared', { via: 'text' }); };
+    const copy = () => {
+      let c = null;
+      try { if (navigator.clipboard && navigator.clipboard.writeText) c = navigator.clipboard.writeText(text); } catch (e) { c = null; }
+      if (c && c.then) c.then(() => { flash('Copied'); track('daily_shared', { via: 'clipboard' }); }, handOver);
+      else handOver();
+    };
+    track('daily_share', { len: text.length });
+    let sp = null;
+    try { if (navigator.share) sp = navigator.share({ text }); } catch (e) { sp = null; }
+    if (sp && sp.then) sp.then(() => { flash('Shared'); track('daily_shared', { via: 'share' }); },
+      e => { if (!(e && e.name === 'AbortError')) copy(); });
+    else copy();
+  }
+  // the same report on the win card, the moment a recorded draft is filed
+  function showWinDraft(row) {
+    const text = row ? GE.dailyShareText(row.date) : null;
+    $('winReport').textContent = text || '';
+    const fb = $('winReportFb'); fb.hidden = true; fb.value = text || '';
+    $('btnWinShare').textContent = SHARE_LABEL;
+    $('winDraft').hidden = !text;
+  }
+  $('btnDaily').onclick = () => {
+    if (!draftReady()) return;
+    if (GE.dailyInfo.done) { openDraft(); return; }
+    if (GE.loadDaily()) track('daily_enter', { from: 'index' }); // ge:load puts the screens down
+  };
+  $('btnDraftClose').onclick = () => { draftModal.hidden = true; };
+  $('btnDraftPractice').onclick = () => { draftModal.hidden = true; GE.loadDaily(); };
+  $('btnDraftShare').onclick = () => shareReport($('draftReport').textContent, $('btnDraftShare'), $('draftReportFb'));
+  $('btnWinShare').onclick = () => shareReport($('winReport').textContent, $('btnWinShare'), $('winReportFb'));
+  // the record closing is the only moment the row's state changes without a screen change
+  window.addEventListener('ge:daily', e => { recordedNow = (e.detail && e.detail.cur) || null; refreshDraft(); });
+
   // win-card beat: ONE quiet stamped row after the stars — the week's seal over a filed contract
   // over a new best streak. A play beat, never a purchase event.
   let dailyTimer = 0;
   const winDaily = $('winDaily');
   window.addEventListener('ge:win', e => {
     const d = e.detail, lvl = d.lvl, L = LEVELS[lvl] || { par: d.par, blocks: [] };
+    if (d.test) return; // a synthetic rule-check board is not play: it stamps no day and takes no points
     const info = { stars: d.stars, moves: d.moves, par: d.par != null ? d.par : L.par, undos: d.undos || 0, hints: d.hints || 0, blocks: (d.blocks != null ? d.blocks : L.blocks.length) };
     const sr = onClear();
     const rs = onWinSurvey(info);
-    clearTimeout(dailyTimer); winDaily.hidden = true;
     let row = null;
     if (rs.sealed) row = { stamp: 'SEAL', k: 'Survey sealed', v: `Both contracts filed · fragment ${survey.frags}` };
     else if (rs.justFiled.length) row = { stamp: 'FILED', k: 'Contract filed', v: rs.delayBanked ? `Weather delay banked · ${streak.freezes} held` : CONTRACTS[rs.justFiled[0]].label };
     else if (sr.newBest) row = { stamp: 'BEST', k: 'New best streak', v: `${streak.len} days in a row` };
+    queueQuietRow(row);
+  });
+  // ONE scheduler for that row, so the two ge:win listeners cannot both land a beat: the survey
+  // listener offers its row first, the progress listener (which runs second, once prog is updated)
+  // overrides it with a staged-disclosure reveal when there is one. A reveal outranks a survey beat
+  // because it is the only time that system will ever introduce itself.
+  function queueQuietRow(row) {
+    clearTimeout(dailyTimer); winDaily.hidden = true;
     if (!row) return;
     dailyTimer = setTimeout(() => {
       $('winDailyStamp').textContent = row.stamp; $('winDailyK').textContent = row.k; $('winDailyV').textContent = row.v;
       winDaily.hidden = false;
       GE.sound('gate');
     }, GE.reduced ? 0 : 1150);
-  });
+  }
   // launch check: banked weather delays cover the missed day(s) automatically and each covered day
   // is stamped WEATHER DELAY on the survey spine (calm notice, nothing to buy). Otherwise the
   // streak lapses SILENTLY — the counter is cleared here so the field log tells the truth on the
@@ -3290,16 +3854,34 @@ requestAnimationFrame(frame);
   $('btnFreezeOk').onclick = () => { $('freezeModal').hidden = true; };
 
   // ---------- engine events ----------
-  window.addEventListener('ge:load', () => { show(null); pauseModal.hidden = true; GE.paused = false; levelsFrom = 'menu'; clearTimeout(certTimer); winCert.hidden = true; clearTimeout(dailyTimer); winDaily.hidden = true; });
+  window.addEventListener('ge:load', () => { show(null); pauseModal.hidden = true; GE.paused = false; levelsFrom = 'menu'; clearTimeout(certTimer); winCert.hidden = true; clearTimeout(dailyTimer); winDaily.hidden = true;
+    $('winDraft').hidden = true; draftModal.hidden = true; $('failTeach').hidden = true; recordedNow = null; });
   window.addEventListener('ge:win', e => {
-    const { lvl, stars, last, daily } = e.detail;
+    const { lvl, stars, last, daily, test } = e.detail;
     clearTimeout(certTimer); winCert.hidden = true;
+    // GE.loadTest boards ride on a second virtual index (one past the draft) so a rule can be
+    // verified on a synthetic level. They are not the campaign and not a draft: nothing is
+    // recorded, and the card says what the board was rather than naming a sheet that does not exist.
+    if (test) { $('winNo').textContent = 'TEST BOARD'; $('winMeta').hidden = true; $('winDraft').hidden = true; return; }
     // The Daily Draft rides on a VIRTUAL level index one past LEVELS. It is play — so it stamps
     // the survey day spine and counts toward contracts and points, exactly like any other clear —
     // but it is NOT campaign progress: no star on a sheet, no unlock, no certification, and the
     // win card's campaign meta (star total / next level) has nothing true to say about it.
     $('winMeta').hidden = !!daily;
-    if (daily) { $('winNo').textContent = 'DAILY DRAFT'; return; }
+    $('winDraft').hidden = true;
+    if (daily) {
+      // ge:daily fired a moment ago if THIS clear closed the day's record; a practice run closes
+      // nothing, has no result to report, and says so on the card rather than pretending otherwise
+      const rec = recordedNow; recordedNow = null;
+      $('winNo').textContent = rec && rec.state === 'won' ? 'DAILY DRAFT' : 'PRACTICE · NOT RECORDED';
+      if (rec && rec.state === 'won') showWinDraft(rec);
+      refreshDraft();
+      return;
+    }
+    // the first CAMPAIGN clear's date: the one FTUE fact a level count cannot supply (see
+    // disclosure()). It is written below the daily branch on purpose — a draft is outside the
+    // campaign and must not put a single byte into ge_prog.
+    if (!prog.d0) prog.d0 = dayStr(GE.now());
     const before = starsTotal(), sheet = Math.floor(lvl / PER), sheetBefore = sheetStars(sheet);
     prog.s[lvl] = Math.max(prog.s[lvl] || 0, stars);
     prog.u = Math.max(prog.u, Math.min(lvl + 1, N - 1));
@@ -3325,8 +3907,36 @@ requestAnimationFrame(frame);
       const tick = t => { const u = Math.min(1, Math.max(0, (t - t0) / dur)); paint(Math.round(before + (after - before) * u)); if (u < 1) requestAnimationFrame(tick); };
       requestAnimationFrame(tick);
     }
+    // staged disclosure: this win may have earned a system. One quiet stamped row introduces it —
+    // the same row the survey beats use, so the FTUE adds no new surface of its own.
+    const rev = takeReveal();
+    if (rev) queueQuietRow({ stamp: 'NEW', k: rev.k, v: rev.v });
   });
-  window.addEventListener('ge:finished', () => { GE.load(0); show('menu'); });
+  // The campaign's finish means "you cleared the last sheet" and sends the player back to level 1.
+  // A draft is not part of the campaign: its finish is simply the way out, and GE.load(0) would move
+  // the resume pointer somewhere the player never was. (The engine restores that pointer around this
+  // event — before it once pass 5's half lands, immediately after it until then — so the landing is
+  // refreshed once more on the next tick, when it is correct either way. The win card is put down
+  // explicitly here because the engine's own load is what used to do it.)
+  window.addEventListener('ge:finished', e => {
+    if (e.detail && e.detail.daily) {
+      $('winModal').hidden = true;
+      show('menu');
+      setTimeout(refreshMenu, 0);
+      return;
+    }
+    GE.load(0); show('menu');
+  });
+  // first time out of moves: one calm line naming what the two buttons under it do. Shown ONCE ever
+  // (prog.rv), never counting down, and never telling the player what they lost. The engine fires
+  // ge:fail from maybeFail the moment the attempt is decided, before the sheet animates in.
+  window.addEventListener('ge:fail', () => {
+    if (seenReveal('rescue')) return;
+    prog.rv = [...(prog.rv || []), 'rescue']; save();
+    $('failTeach').textContent = 'Out of moves is not the end of the level — the rescue adds 3 moves to this attempt, and Retry starts the level again.';
+    $('failTeach').hidden = false;
+    track('ftue_reveal', { id: 'rescue' });
+  });
 
   // ---------- legend drawings (same ink and paper as the board) ----------
   const T = () => GE.themes[GE.theme];
@@ -3399,6 +4009,43 @@ requestAnimationFrame(frame);
     c.strokeStyle = T().stoneEdge; c.lineWidth = 2.4; c.strokeRect(x + 4, y + 4, s - 8, s - 8);
     c.restore();
   }
+  // The approval chain's two states. The order cue is THREE SHAPE CHANNELS and no colour at all:
+  // a wide filled tab against a narrow paper label (tonal inverses AND different widths), a dashed
+  // on-deck ring inside the block's own outline, and a chevron in the tab. Geometry follows
+  // drawSeqStamp() in game.js, scaled up on purpose — this canvas is drawn at 2x for a 64px box,
+  // so the board's ~13px stamp would land at 6px on screen and be unreadable as a legend.
+  function seqSym(c, x, y, size, n, next) {
+    const inset = 3, s = 20, w = next ? Math.round(s * 1.85) : s;
+    const bx = x + inset + 1, by = y + inset + 1;
+    block(c, x, y, size, size, 1);
+    GE.draw(c, ({ rr }) => {
+      c.save();
+      if (!next) c.globalAlpha *= 0.82;
+      if (next) {                                   // channel 3 — the on-deck ring
+        const d = inset + 3.5, rw = size - d * 2;
+        c.setLineDash([6, 4]);
+        c.strokeStyle = T().halo; c.lineWidth = 3.4; rr(x + d, y + d, rw, rw, 5); c.stroke();
+        c.strokeStyle = 'rgba(255,255,255,.95)'; c.lineWidth = 1.7; rr(x + d, y + d, rw, rw, 5); c.stroke();
+        c.setLineDash([]);
+      }
+      rr(bx, by, w, s, 3);                          // channel 1 — the revision stamp itself
+      c.fillStyle = next ? T().halo : 'rgba(255,255,255,.92)'; c.fill();
+      c.strokeStyle = T().halo; c.lineWidth = 2; c.stroke();
+      c.fillStyle = next ? 'rgba(255,255,255,.97)' : T().halo;
+      c.font = '800 ' + Math.round(s * 0.66) + 'px ui-monospace, SFMono-Regular, Menlo, monospace';
+      c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText(String(n), bx + s / 2, by + s / 2 + 0.5);
+      if (next) {                                   // channel 2 — the chevron, beside the numeral
+        const a = s * 0.22, mx = bx + s + (w - s) / 2, my = by + s / 2;
+        c.strokeStyle = 'rgba(255,255,255,.97)'; c.lineWidth = 2; c.lineCap = 'round'; c.lineJoin = 'round';
+        c.beginPath();
+        c.moveTo(mx - a * 1.5, my - a); c.lineTo(mx - a * 0.4, my); c.lineTo(mx - a * 1.5, my + a);
+        c.moveTo(mx + a * 0.1, my - a); c.lineTo(mx + a * 1.2, my); c.lineTo(mx + a * 0.1, my + a);
+        c.stroke();
+      }
+      c.restore();
+    });
+  }
   function drawSymbols() {
     let c = setup($('symBlock'));
     block(c, 14, 22, 100, 44, 0);
@@ -3413,6 +4060,7 @@ requestAnimationFrame(frame);
     c.fillStyle = T().legendText; c.textAlign = 'center'; c.textBaseline = 'middle';
     c.font = '800 34px system-ui, sans-serif'; c.fillText('5', 46, 44);
     c.font = '700 15px system-ui, sans-serif'; c.fillText('moves', 92, 47);
+    if ($('symSeq')) { c = setup($('symSeq')); seqSym(c, 8, 18, 52, 1, true); seqSym(c, 68, 18, 52, 2, false); }
   }
   const demoCv = $('legendDemo'), dc = demoCv.getContext('2d');
   const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -3457,6 +4105,7 @@ requestAnimationFrame(frame);
   }
 
 
+  seedDisclosure(); // an existing save is a returning player, not a first-time one
   show('menu');
   checkStreak(); // weather-delay notice / silent lapse, resolved once on launch (and only then)
   window.GE_MENU = { show, get prog() { return prog; }, setSkin, CERT_STARS, CERT_SKINS,
@@ -3465,7 +4114,10 @@ requestAnimationFrame(frame);
       .filter(b => !b.hidden && b.getClientRects().length > 0).map(b => b.id || b.className),
     get streak() { return streak; }, checkStreak, refreshSurvey, renderSurvey,
     get survey() { return surveyWeek(); }, weekDates: () => weekDates(GE.now()), isoWeek: () => isoWeek(GE.now()),
-    contractsLocked, chooseContract,
+    contractsLocked, chooseContract, preselectContract,
+    disclosure, REVEALS, takeReveal, refreshStatus, refreshDraft, openDraft, refreshLegendRows,
+    draftRow: () => ({ hidden: $('btnDaily').hidden, k: $('fDailyK').textContent, v: $('fDaily').innerText.replace(/\s+/g, ' ').trim() }),
+    status: () => ({ hidden: $('menuStatus').hidden, tag: $('menuStatus').tagName, text: $('menuStatus').innerText.replace(/\s+/g, ' ').trim() }),
     contractInfo: () => { const s = surveyWeek(); return s.offered.map(id => ({ id, label: CONTRACTS[id].label, target: CONTRACTS[id].target,
       prog: Math.min(CONTRACTS[id].target, s.prog[id] || 0), chosen: s.chosen.includes(id), filed: s.filed.includes(id) })); },
     CONTRACTS, MILESTONES, DELAY_MAX, PICKS };

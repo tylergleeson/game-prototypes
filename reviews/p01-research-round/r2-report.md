@@ -149,6 +149,25 @@ I left `menu.js`'s `ge:finished` handler alone (it still calls `GE.load(0)`); r3
 `li = back` restore in `btnNext.onclick` already handles the draft, and unpicking their
 workaround mid-flight was not worth the churn. Offered to them either way.
 
+### The pause card's other virtual-index leak
+
+developer-r3 flagged a second one in my file and left it for me: `pause()` built its subtitle
+from `Level ${GE.level + 1}`, so a paused Daily Draft read **"Level 31"**. That is the same
+class of bug as the progress leak — a virtual index reaching the player as a level number — so
+I fixed it here rather than leave a falsehood on screen for a later pass. It uses only the
+published hooks and touches nothing else about the draft's UI, which stays pass 4's:
+
+```js
+$('pauseSub').textContent = (GE.isDaily ? 'Daily draft' + (GE.dailyDate ? ' · ' + GE.dailyDate : '')
+  : `Level ${GE.level + 1}`) + ` · ${GE.movesLeft} moves left`;
+```
+
+`ge:finished` is **deliberately still unguarded**. r3's reply made the reason concrete: today
+`GE.load(0)` is the only thing that hides the win card after a draft, so branching menu.js
+alone would leave the card up over the menu. The engine has to move first (`loadLevel(resumeLevel)`
+*before* the dispatch), and the two halves land together in pass 4. Their `btnNext` patch-up can
+be deleted at that point.
+
 ## 6. Checks
 
 The old `quests` / `streak freeze` / `freeze cap` / `menu rows` / `ladder ×3` blocks are gone,
@@ -160,7 +179,7 @@ helpers were carried over; new ones: `V()` (survey + contracts + locked + stats)
 further days inside the same ISO week, so the suite behaves the same whatever weekday it is
 run on.
 
-Eleven `ok:` lines, all green:
+Twelve `ok:` lines, all green:
 
 ```
 survey roll ok: 2026-W36 offers 4 distinct contracts (clear20, nohint8, par8, clear12),
@@ -193,7 +212,12 @@ no repair surface ok: a 2-day gap with 0 weather delays lapses a 3-day streak si
 survey row ok: the sheet index carries ONE meta row — "FIELD SURVEY 0/7 · 0 pts ›" — with the
         SELECT 2 badge up only while the contracts are unchosen; #menuQuests and the streak
         field are gone from the DOM
+pause copy ok: "Level 8 · 9 moves left" on a campaign level, "Daily draft · 2026-09-02 ·
+        9 moves left" mid-draft — the virtual index never reaches the player as "Level 31"
 ```
+
+The pause check opens a real draft through `GE.loadDaily()`, reads the card, then clears
+`ge_daily` again so the day's one recorded attempt is left unspent for r3's own daily blocks.
 
 The **migration check seeds a realistic v1 save** — a live 4-day streak (best 6, 1 freeze,
 4 marks), a half-played day of quests, and a mid-week ladder on 9 points with marks 3/7 — and
@@ -259,9 +283,30 @@ asked.
 
 ## Verification
 
-`node tools/playtest.mjs` — **two consecutive fully green runs, exit 0, 104 `ok` lines**,
-`All levels playtested clean through the real engine.` (logs `liveB.log`, `liveC.log` in the
-session scratchpad).
+`node tools/playtest.mjs` — **two consecutive fully green runs, exit 0, 105 `ok` lines**,
+`All levels playtested clean through the real engine.` (logs `finalA.log`, `finalB.log` in the
+session scratchpad), run on the shared tree with developer-r3's pass 3 landed alongside.
+
+**Re-verified after passes 4 and 5 landed:** two more consecutive green runs, exit 0, 118 and
+119 `ok` lines (`verifyA.log`, `verifyB.log`) — the count moved by one between them because
+another developer was still landing checks. developer-r3 reported `survey row` and `pause copy`
+red on an intermediate snapshot; both were legitimate staleness in *my* checks caused by pass 4,
+and pass 4's developer had already repaired both correctly before I looked:
+
+- `pause copy` — pass 4 rewrote the pause line to use its friendly `dateLabel()` (and added a
+  `Practice · not recorded` branch), so the card now reads `Daily draft · 2 Sep · 9 moves left`.
+  The check derives the same label from `GE.dailyDate` in-page and pins the format, which is a
+  stronger assertion than the ISO string I had. Left as found.
+- `survey row` — pass 4 added the Daily Draft row to `#menuDaily` and put both rows behind
+  staged disclosure, so on a save with one level cleared the block was legitimately empty. The
+  check now seeds a 5-cleared save and asserts both staged rows. Its premise changed from "the
+  sheet index carries ONE meta row" to "exactly the two staged meta rows" — correctly, since
+  the draft row is a real second surface and not a regression. Left as found.
+
+**Closing state.** One more run on the settled live tree after passes 4 and 5 and r3's
+`bundles fresh` gate landed: **exit 0, 120 `ok` lines**, with all twelve pass-2 checks, the
+landing check (still exactly 3 interactive elements), `themes` and `bundles fresh` green
+together (`closing.log`).
 
 An earlier run had three failures that were **not** mine, and I isolated each rather than
 guessing: copying the working tree to a temp directory and swapping only `game.js` back to
@@ -297,10 +342,20 @@ Deleted (the surfaces no longer exist, each with a named replacement above):
 
 ## Left for the lead / later passes
 
-1. **Bundles.** `tools/build-single.mjs` / `build-itch.mjs` / `build-app.mjs` are
-   developer-r3's lane this round, and they rebuilt after this pass landed — `dist/gate-escape.html`,
-   `dist/itch/menu.js` and `app/www/menu.js` all carry `ge_survey` and none carries `menuQuests`,
-   so the merge is in the shipped bundles. `cap sync ios` is still pass 8's step —
+1. **Bundles rebuilt.** After the pause-card fix I re-ran `build-single` / `build-itch` /
+   `build-app` (r3's tools, unmodified), so `dist/gate-escape.html` (236,139 bytes),
+   `dist/itch/` and `app/www/` all carry the final `menu.js` and `index.html` — verified by
+   grep: `ge_survey` present, `menuQuests` absent, the draft-aware pause line present.
+
+   **Resolved as a bot check, not a rule.** The artifacts went stale twice — `f1c3078`
+   committed the source *with* the pause fix but the bundles from *before* it, and passes 4/5
+   then edited `menu.js` again. developer-r3 turned it into `bundles fresh` (check 10 of their
+   region): `build-single` inlines the five scripts verbatim and the other two copy them, so it
+   is a byte-exact comparison with no timestamps and no false positives. It was red when they
+   added it, which is the point. Verified on the live tree: all five scripts byte-identical in
+   `app/www/` and `dist/itch/`, `index.html` verbatim in the itch zip, and the current `menu.js`
+   inlined in `dist/gate-escape.html`. Note its limit — it gates the *run*, not the commit, so
+   the order is rebuild, then run the bot. `cap sync ios` is still pass 8's step —
    `app/ios/App/App/public/` has been stale since pass 1.
 2. **`tools/feature-tour.mjs` and `tools/promo-video.mjs` are stale and I deliberately did not
    touch them** — the plan gives them to pass 8 and the "one writer per file set" rule made
@@ -316,5 +371,9 @@ Deleted (the surfaces no longer exist, each with a named replacement above):
    shows it mattering, the fix is a per-level-per-week point cap, not a rule about dailies.
 4. **No telemetry on streak lapse** (carried over from pass 1) — still one line in
    `checkStreak` whenever the beacon event model expands.
-5. **Critic session** should be pointed at *two* things now: the silent lapse (pass 1's open
+5. **The legend's star copy will go stale in pass 5.** The lead's 2026-09-02 tightening makes
+   2★ `par+1` instead of `par+2`, and `index.html`'s legend says *"★★★ at par, ★★ within two
+   over"* — it is correct today and becomes a lie the moment `starsFor` changes. Pass 5 owns
+   `game.js`, so flagging it here: the string lives in my file, at the `Moves` legend row.
+6. **Critic session** should be pointed at *two* things now: the silent lapse (pass 1's open
    question) and the contract lock. Both are written into the adapter's rules text.

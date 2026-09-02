@@ -47,6 +47,23 @@ automatically (calm "Weather delay used — survey day covered" notice at next l
 streak simply LAPSES SILENTLY — there is no repair surface at all: no card, no ad, no offer at the moment of loss; the counter clears and the next
 clear starts a new streak at 1. (Worth a reviewer's attention: does the silent reset read as calm, or as something going missing? And is "choose 2 of 4,
 set once you start" a real decision or a trap?) Only last week's result line is kept. Dates all come from GE.now (overridable for testing).
+DAILY DRAFT — one solver-verified board a day, the SAME board for every player, precomputed (never generated on the device) and living outside
+the campaign entirely: it never stars a level, never moves the unlock or resume pointer, never certifies a sheet and never costs a life.
+The "Daily draft · <date>" row on the sheet index reads READY while today's record is open and a tap loads the board; the HUD and pause card
+name it by date rather than by a level number. The FIRST attempt is the one that is recorded, and the record closes on the first resolution —
+a clear, or a loss the player resolves by declining the rescue (retrying or leaving). After that the row states the result (★★☆ FILED, or
+NOT CLEARED) with "practice · not recorded" under it, a tap opens the FIELD REPORT card instead of the board, and any further play is practice
+that rewrites nothing. The field report is five lines — a par bar, stars, moves/par, route efficiency, undo/hint counts, and "rescued" when a
+rescue was taken — and deliberately contains NO route or grid: every player is on the same board, so a picture of the line would be a walkthrough.
+The card shows that exact text in a block above the Share button (what you send is what you see); sharing tries navigator.share, then the
+clipboard, then hands the text over in a selectable box. Nothing about the draft is ever sold, and a skipped day is simply a day that went by.
+STAGED DISCLOSURE (FTUE) — the sheet index opens BARE on a new save: level, stars, the thirty tiles, sound. Each meta system arrives on the win
+that earns it — sheet certification (and the paper picker) after 2 levels cleared, the Daily Draft after 3, the Field Survey after 5 (revealed
+with the easiest of the week's four contracts ALREADY taken, as a worked example; swapping stays free until progress). Each reveal is announced
+by ONE quiet stamped NEW row on the win card, once ever. The gate is derived from cleared levels; only the first-clear date and which reveals
+have played are stored. From the first RETURN day the landing gains a passive status line (a div, never a button — the landing is exactly three
+taps) of at most two finished facts, e.g. "Today's draft is filed · 3 of 7 survey days"; it may never carry a countdown, a CTA or a loss.
+The first time a player runs out of moves the fail sheet gains one calm line naming what the rescue and Retry do — shown once, ever.
 Lives (DEFAULT OFF — flag-gated via ?lives=1 / ge_flags / GE.livesEnabled): the shipped game has NO energy gate; there are no hearts anywhere and a
 failed level can be retried forever. Everything in this paragraph therefore describes what ?lives=1 turns on, and is not what a normal session shows:
 five hearts, HUD top-left and sheet index. Levels 1–5 NEVER cost a life.
@@ -72,6 +89,11 @@ top-left origin; its cells are listed absolute.`,
     btnFreezeOk: 'weather-delay notice: Continue — dismiss the "Weather delay used — survey day covered" notice',
     btnSurvey: "sheet index: Field survey row — open this week's sheet (day spine, contracts, marks, seal)",
     btnSurveyClose: 'survey sheet: Close',
+    btnDaily: "sheet index: Daily draft row — loads today's board while the day is READY; once the record has closed it opens the field report card instead (hidden until 3 levels are cleared)",
+    btnDraftShare: 'field report card: Share field report (navigator.share → clipboard → a selectable text box; the string is exactly what the card shows)',
+    btnDraftPractice: "field report card: Play again · not recorded — reload today's board as practice",
+    btnDraftClose: 'field report card: Close',
+    btnWinShare: 'win card (recorded daily draft only): Share field report',
     btnLifeRefill: 'out-of-lives card: +1 life (rewarded-ad placeholder; offered once per appearance of the card, never past 5)',
     btnLivesHome: 'out-of-lives card: Back to menu (Escape does the same; browsing is never blocked)',
   },
@@ -109,12 +131,19 @@ top-left origin; its cells are listed absolute.`,
       return {
         level: GE.level, L: GE.L, pos: GE.pos, moves: GE.moves, movesLeft: GE.movesLeft,
         over: GE.over, paused: GE.paused, metrics: GE.metrics, rect: { left: r.left, top: r.top },
-        screens: { menu: vis('menu'), levels: vis('levels'), legend: vis('legend'), pause: vis('pauseModal'), win: vis('winModal'), fail: vis('failModal'), ad: vis('adModal'), delayNotice: vis('freezeModal'), lives: vis('livesModal'), survey: vis('surveyModal') },
+        screens: { menu: vis('menu'), levels: vis('levels'), legend: vis('legend'), pause: vis('pauseModal'), win: vis('winModal'), fail: vis('failModal'), ad: vis('adModal'), delayNotice: vis('freezeModal'), lives: vis('livesModal'), survey: vis('surveyModal'), draftReport: vis('draftModal') },
         streak: (window.GE_MENU && window.GE_MENU.streak) || null,
         survey: window.GE_MENU ? { ...window.GE_MENU.survey, contracts: window.GE_MENU.contractInfo(), locked: window.GE_MENU.contractsLocked() } : null,
         lives: { enabled: GE.livesEnabled, ...GE.livesInfo },
         winDaily: vis('winDaily') ? document.getElementById('winDaily').innerText.replace(/\s+/g, ' ').trim() : null,
-        menuSurvey: vis('levels') ? ('survey ' + document.getElementById('fSurvey').innerText + (document.getElementById('fSurveyBadge').hidden ? '' : ' [SELECT 2]')).replace(/\s+/g, ' ').trim() : null,
+        menuSurvey: vis('levels') ? ('survey ' + document.getElementById('fSurvey').innerText + (document.getElementById('fSurveyBadge').hidden ? '' : ' [' + document.getElementById('fSurveyBadge').textContent + ']')).replace(/\s+/g, ' ').trim() : null,
+        disclosure: window.GE_MENU ? window.GE_MENU.disclosure() : null,
+        menuStatus: window.GE_MENU ? window.GE_MENU.status() : null,
+        menuDraft: window.GE_MENU ? window.GE_MENU.draftRow() : null,
+        daily: GE.dailyInfo ? { ...GE.dailyInfo, hist: (GE.dailyInfo.hist || []).length, report: GE.dailyShareText() } : null,
+        draftCard: vis('draftModal') ? document.querySelector('#draftModal .card').innerText.replace(/\s+/g, ' ').trim() : null,
+        winReport: vis('winModal') && !document.getElementById('winDraft').hidden ? document.getElementById('winReport').textContent : null,
+        failTeach: vis('failModal') && !document.getElementById('failTeach').hidden ? document.getElementById('failTeach').textContent : null,
         surveySheet: vis('surveyModal') ? document.querySelector('#surveyModal .card').innerText.replace(/\s+/g, ' ').trim() : null,
         hint: GE.hint ? { block: GE.hint.bi, path: GE.hint.path, exit: GE.hint.side || null } : null,
         paper: GE.theme, skins: (window.GE_MENU && window.GE_MENU.prog.skins) || [],
@@ -145,6 +174,14 @@ top-left origin; its cells are listed absolute.`,
         points: raw.survey.pts, marks: raw.survey.ms, contracts: raw.survey.contracts, chosen: raw.survey.chosen,
         contractsLocked: raw.survey.locked, filed: raw.survey.filed, sealed: !!raw.survey.seal, fragments: raw.survey.frags || 0, lastWeek: raw.survey.last } : null,
       lives: raw.lives,
+      // the draft is outside the campaign: its own date, its own par, one recorded attempt a day
+      dailyDraft: raw.daily ? { today: raw.daily.today, armed: raw.daily.date, onScreen: raw.daily.active,
+        practice: raw.daily.practice, recorded: raw.daily.done, result: raw.daily.cur, par: raw.daily.par,
+        limit: raw.daily.limit, practicePlays: raw.daily.plays, closedDays: raw.daily.hist,
+        wrappedPastTable: raw.daily.wrapped, fieldReport: raw.daily.report } : null,
+      // what the staged FTUE has disclosed so far (derived from cleared levels), and the surfaces it gates
+      disclosed: raw.disclosure, landingStatus: raw.menuStatus, menuDraftRow: raw.menuDraft,
+      draftReportCard: raw.draftCard, winFieldReport: raw.winReport, failTeach: raw.failTeach,
       winBeat: raw.winDaily, menuSurveyRow: raw.menuSurvey, surveySheet: raw.surveySheet,
       hud: raw.hud, jsErrors: raw.errors.length, recentErrors: raw.errors.slice(-5),
     };

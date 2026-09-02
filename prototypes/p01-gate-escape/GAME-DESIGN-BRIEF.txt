@@ -157,6 +157,60 @@ a solid stamped frame with a star once earned, so the state reads by shape
 and not by colour alone. (This mechanic shipped as a treasure "chest"; only
 the language and the glyph changed on 2026-09-02, never the 24-star rule.)
 
+Daily Draft: one board a day, the SAME board for every player, added on
+2026-09-02. It is precomputed — a year of solver-verified boards ships as a
+compact table and nothing about a board is generated on the device, because a
+generator on the device is a solver on the device and par has to be a fact the
+player cannot dial. The draft lives OUTSIDE the campaign entirely: it never
+stars a level, never moves the unlock or resume pointer, never certifies a
+sheet, never writes a personal best and never costs a life. The weekday curve
+rises to a Saturday peak; the move limit is par+3 every day.
+
+  * The sheet index carries a "Daily draft - <date>" row. It reads READY while
+    today's record is open and a tap loads the board; the HUD and the pause
+    card name the draft by date, never by a level number.
+  * The FIRST attempt is the one that is recorded, and the record closes on
+    the first RESOLUTION: a clear, or a loss the player resolves by declining
+    the rescue (retrying, leaving, closing the page). The fail sheet alone
+    decides nothing, because taking the rescue keeps the same attempt alive —
+    and a rescue that leads to a clear is recorded as a fact, never hidden.
+  * Once the day has closed the row states the result (three stars and FILED,
+    or NOT CLEARED) with "practice - not recorded" under it; a tap then opens
+    the FIELD REPORT card instead of the board. Everything after that is
+    practice and rewrites nothing.
+  * The FIELD REPORT is five short lines — a par bar, stars, moves against
+    par, route efficiency, undo/hint counts, and "rescued" when one was taken.
+    It contains NO route and NO per-move grid, deliberately: every player is
+    on the same board, so a picture of the line would be a walkthrough. Two
+    different boards played to the same numbers produce the same report but
+    for the date, which is the proof that nothing about the board leaks. The
+    card shows that exact string in a block above the Share button — what you
+    send is what you see — and sharing tries the OS share sheet, then the
+    clipboard, then hands the text over in a selectable box.
+  * Nothing about the draft is ever sold, and a skipped day is a day that went
+    by, not a debt: the row never counts down and never asks.
+
+Staged disclosure (the FTUE ladder, 2026-09-02): a new save opens BARE. The
+sheet index shows the level, the stars, the thirty tiles and Sound, and
+nothing else — no certification stamps, no paper picker, no draft row, no
+survey row, and no status line on the landing. Each system arrives on the win
+that makes it mean something: certification (with the paper picker) after two
+levels cleared, the Daily Draft after three, the Field Survey after five. Each
+arrival is announced by ONE quiet stamped NEW row on the win card — the same
+row the survey beats use, so the tutorial adds no surface of its own — and it
+is shown once, ever. The survey is revealed with the EASIEST of the week's
+four contracts already taken, as a worked example rather than a demand for two
+decisions about a system the player has never seen; swapping stays free until
+progress, exactly as if they had picked it. From the first RETURN day the
+landing gains a passive status line — a div, never a button, because the
+landing is exactly three taps and that is not negotiable — carrying at most
+two finished facts ("Today's draft is filed - 3 of 7 survey days"). It may
+never carry a countdown, a call to action, or a statement of something lost.
+The first time a player runs out of moves the fail sheet gains one calm line
+naming what the rescue and Retry actually do, also once ever. The whole ladder
+is DERIVED from cleared levels; only two things are stored, because neither
+can be derived — the date of the first clear and which reveals have played.
+
 Field Survey: ONE weekly sheet, and the only meta system besides
 certification. As of 2026-09-02 the three daily quests, the streak card and
 the weekly ladder were MERGED into it — the research round's verdict was that

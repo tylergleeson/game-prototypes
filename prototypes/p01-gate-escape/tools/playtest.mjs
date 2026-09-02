@@ -513,7 +513,7 @@ const burnLevel = () => page.evaluate(() => {
   await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L);
   await page.evaluate(() => window.GE.load(0)); // L1: par 1, limit 5
   await page.waitForTimeout(60);
-  await shuffleL1(2); // 2 wasted + the exit = 3 moves → 2 stars
+  await shuffleL1(2); // 2 wasted + the exit = 3 moves → par+2 → 1 star under the tightened band
   await page.evaluate(sol => { for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side); }, solutions[0]);
   await page.waitForSelector('#winModal:not([hidden])', { timeout: 2500 });
   const w1 = await page.evaluate(() => ({ sub: document.getElementById('winSub').textContent, geLevel: localStorage.getItem('ge_level'), next: document.getElementById('winNext').textContent, no: document.getElementById('winNo').textContent, moves: window.GE.moves }));
@@ -724,7 +724,7 @@ const V = () => page.evaluate(() => ({ ...window.GE_MENU.survey, contracts: wind
   stats: JSON.parse(localStorage.getItem('ge_stats') || '{}') }));
 const beatRow = () => page.evaluate(() => (document.getElementById('winDaily').hidden ? null
   : { stamp: document.getElementById('winDailyStamp').textContent, k: document.getElementById('winDailyK').textContent, v: document.getElementById('winDailyV').textContent }));
-const wipeMeta = () => page.evaluate(() => { for (const k of ['ge_streak', 'ge_survey', 'ge_quests', 'ge_ladder']) localStorage.removeItem(k); localStorage.setItem('ge_stats', '{}'); });
+const wipeMeta = () => page.evaluate(() => { for (const k of ['ge_streak', 'ge_survey', 'ge_quests', 'ge_ladder', 'ge_daily']) localStorage.removeItem(k); localStorage.setItem('ge_stats', '{}'); });
 // a day offset that still leaves `need` further days inside the SAME ISO week, so a multi-day walk
 // never falls off the end of the sheet it is testing (the suite runs on whatever weekday it runs on)
 const weekBase = need => page.evaluate(n => { const dow = (new Date(window.GE.now()).getDay() + 6) % 7; return 6 - dow >= n ? 0 : 7 - dow; }, need);
@@ -1077,10 +1077,17 @@ const pickTwo = () => page.evaluate(() => {
   else { failures++; console.error('repair-surface FAIL:', JSON.stringify({ gone, beforeLen: before.len, r, after, days: [w0, w1, w2, miss], spine: lapsed.spine, sub: lapsed.sub, nextLen: next.len })); }
 }
 
-// the sheet-index row is the whole meta surface on that screen: one row, the week's state on it,
-// and a SELECT 2 badge for exactly as long as the contracts are unchosen
+// the sheet index's meta surface: the two staged rows (Daily Draft, Field Survey) and nothing else
+// — the week's state on the survey row, and a SELECT 2 badge for exactly as long as the contracts
+// are unchosen. (Pass 4 added the draft row above it; this save has cleared every level, so both
+// rows are fully disclosed here — the FTUE walk covers the staged case.)
 {
-  await wipeMeta(); await readyAgain();
+  // the migration check above cleared the whole save, and staged disclosure (pass 4) holds both
+  // rows back on a save with nothing cleared — so this check seeds a player who is past the ladder
+  // and asks what the fully disclosed sheet index looks like
+  await wipeMeta();
+  await page.evaluate(() => localStorage.setItem('ge_prog', JSON.stringify({ u: 5, s: [3, 3, 3, 3, 3] })));
+  await readyAgain();
   const base = await weekBase(1); await setDay(base);
   const unchosen = await sheet();
   await closeSheet();
@@ -1098,8 +1105,9 @@ const pickTwo = () => page.evaluate(() => {
   await page.waitForTimeout(300);
   await page.screenshot({ path: `${shotDir}/survey-row.png` });
   const ok = unchosen.badge && unchosen.row === '0/7 · 0 pts' && !chosen.badge
-    && row.gone.length === 0 && row.surveyRows === 1 && !row.livesRow && row.text === 'FIELD SURVEY 0/7 · 0 pts ›';
-  if (ok) console.log(`survey row ok: the sheet index carries ONE meta row — "${row.text}" — with the SELECT 2 badge up only while the contracts are unchosen; #menuQuests and the streak field are gone from the DOM`);
+    && row.gone.length === 0 && row.surveyRows === 2 && !row.livesRow
+    && /^DAILY DRAFT · \d{1,2} [A-Z]{3} READY › FIELD SURVEY 0\/7 · 0 pts ›$/.test(row.text);
+  if (ok) console.log(`survey row ok: the sheet index carries exactly the two staged meta rows — "${row.text}" — with the SELECT 2 badge up only while the contracts are unchosen; #menuQuests and the streak field are gone from the DOM`);
   else { failures++; console.error('survey row FAIL:', JSON.stringify({ unchosen: { badge: unchosen.badge, row: unchosen.row }, chosenBadge: chosen.badge, row })); }
 }
 
@@ -1116,14 +1124,19 @@ const pickTwo = () => page.evaluate(() => {
   const opened = await page.evaluate(() => window.GE.loadDaily());
   await page.waitForTimeout(140);
   await page.evaluate(() => document.getElementById('btnMenu').click());
-  const draft = await page.evaluate(() => ({ sub: document.getElementById('pauseSub').textContent, date: window.GE.dailyDate, isDaily: window.GE.isDaily }));
+  const draft = await page.evaluate(() => {
+    const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const p = window.GE.dailyDate.split('-');
+    return { sub: document.getElementById('pauseSub').textContent, date: window.GE.dailyDate,
+      label: (+p[2]) + ' ' + MON[+p[1] - 1], isDaily: window.GE.isDaily };
+  });
   await page.evaluate(() => document.getElementById('btnResume').click());
   await page.evaluate(() => { window.GE.load(0); localStorage.removeItem('ge_daily'); }); // leave the day's attempt unspent
   await readyAgain();
   const ok = lvl === 7 && /^Level 8 · \d+ moves left$/.test(campaign)
     && opened && draft.isDaily && !/Level \d+/.test(draft.sub)
-    && /^Daily draft · \d{4}-\d{2}-\d{2} · \d+ moves left$/.test(draft.sub)
-    && draft.sub.startsWith(`Daily draft · ${draft.date} · `);
+    && /^Daily draft · \d{1,2} [A-Z][a-z]{2} · \d+ moves left$/.test(draft.sub)
+    && draft.sub.startsWith(`Daily draft · ${draft.label} · `);
   if (ok) console.log(`pause copy ok: "${campaign}" on a campaign level, "${draft.sub}" mid-draft — the virtual index never reaches the player as "Level 31"`);
   else { failures++; console.error('pause copy FAIL:', JSON.stringify({ lvl, campaign, opened, draft })); }
 }
@@ -1402,6 +1415,8 @@ const trailOf = t => {
     // the entrance animation must not have eaten the CTA's beckon pulse (.landing .gatebtn outranks .gatebtn)
     ctaAnim: getComputedStyle(document.getElementById('btnPlay')).animationName,
     levels: document.getElementById('levels').hidden, legend: document.getElementById('legend').hidden,
+    // staged disclosure: day one has nothing to report, so the status line does not exist yet
+    status: window.GE_MENU.status(),
   }));
   await page.screenshot({ path: shotDir + '/landing-fresh.png' });
   // one tap: Play → the board, on level 1, with the tutorial route still to be ghosted
@@ -1412,7 +1427,7 @@ const trailOf = t => {
   await page.evaluate(() => { localStorage.setItem('ge_prog', JSON.stringify({ u: 11, s: [3, 3, 2, 3, 3, 3, 2, 3, 3, 3, 1] })); localStorage.setItem('ge_level', '11'); });
   await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L);
   await page.waitForTimeout(700);
-  const back = await page.evaluate(() => ({ landing: window.GE_MENU.landing(), cta: document.getElementById('playLabel').textContent, stamp: document.getElementById('menuStamp').textContent.replace(/\s+/g, ' ').trim() }));
+  const back = await page.evaluate(() => ({ landing: window.GE_MENU.landing(), cta: document.getElementById('playLabel').textContent, stamp: document.getElementById('menuStamp').textContent.replace(/\s+/g, ' ').trim(), status: window.GE_MENU.status() }));
   await page.screenshot({ path: shotDir + '/landing-continue.png' });
   await page.click('#btnPlay');
   await page.waitForTimeout(200);
@@ -1431,10 +1446,11 @@ const trailOf = t => {
     && fresh.cta === 'Play' && /New sheet/i.test(fresh.stamp) && fresh.quiet && fresh.levels && fresh.legend
     && /beckon/.test(fresh.ctaAnim) && /rise/.test(fresh.ctaAnim)
     && !played.menu && played.lvl === 0 && played.moves === 0 && !played.paused && played.route
-    && back.landing.length === 3 && back.cta === 'Continue — Level 12' && /Level 12 \/ 30/i.test(back.stamp)
+    && fresh.status.hidden && back.status.tag === 'DIV' && back.landing.length === 3
+    && back.cta === 'Continue — Level 12' && /Level 12 \/ 30/i.test(back.stamp)
     && !backPlayed.menu && backPlayed.lvl === 11
     && idx.levels && idx.tiles === 30 && idx.log && leg;
-  if (ok) console.log('landing ok: 3 interactive elements (Play + Levels + How to play), stamp "' + back.stamp + '", "' + back.cta + '" lands on L12 in one tap; the field log and the 30-tile index live on the sheet index');
+  if (ok) console.log('landing ok: 3 interactive elements (Play + Levels + How to play), stamp "' + back.stamp + '", "' + back.cta + '" lands on L12 in one tap; the field log and the 30-tile index live on the sheet index — and the staged status line is absent on day one, a passive div when it arrives');
   else { failures++; console.error('landing FAIL:', JSON.stringify({ fresh, played, back, backPlayed, idx, leg })); }
 }
 
@@ -2072,7 +2088,32 @@ const pixelOf = async (sel, fx, fy) => {
     else { failures++; console.error('field report FAIL:', JSON.stringify({ pinned, allowed, spoilerFree, capOk, lostOk, winOk, none: texts.none, errs, sample: texts.a })); }
   }
 
-  // 10. the draft is OUTSIDE the campaign. It is a virtual level index, so every
+  // 10. the shipped bundles are downstream of every pass's source files, and they go
+  //     stale SILENTLY — a commit can carry correct source next to artifacts built
+  //     before it, and nothing on screen says so. `build-single` inlines the scripts
+  //     verbatim and `build-itch` / `build-app` copy them, so staleness is exactly
+  //     detectable: no timestamps, no heuristics, no false positives. Four passes share
+  //     menu.js and index.html this round, which is what makes this worth a check rather
+  //     than a rule people remember.
+  {
+    const INLINED = ['game.js', 'levels.js', 'dailies.js', 'menu.js', 'beacon.js'];
+    const dist = fs.readFileSync(root + 'dist/gate-escape.html', 'utf8');
+    const stale = [];
+    for (const f of INLINED) {
+      const src = fs.readFileSync(root + f, 'utf8');
+      if (!dist.includes(src)) stale.push('dist/gate-escape.html <- ' + f);
+      for (const copy of ['app/www/' + f, 'dist/itch/' + f]) {
+        if (!fs.existsSync(root + copy) || fs.readFileSync(root + copy, 'utf8') !== src) stale.push(copy);
+      }
+    }
+    // index.html is transformed by the single/app builds but copied verbatim into the itch zip
+    const html = fs.readFileSync(root + 'index.html', 'utf8');
+    if (!fs.existsSync(root + 'dist/itch/index.html') || fs.readFileSync(root + 'dist/itch/index.html', 'utf8') !== html) stale.push('dist/itch/index.html');
+    if (!stale.length) console.log(`bundles fresh ok: dist/gate-escape.html, dist/itch/ and app/www/ all carry the current source (${INLINED.length} scripts + index.html)`);
+    else { failures++; console.error(`bundles stale FAIL: ${stale.length} artifact(s) behind the source. Run tools/build-single.mjs, tools/build-itch.mjs and tools/build-app.mjs before committing:`, JSON.stringify(stale)); }
+  }
+
+  // 11. the draft is OUTSIDE the campaign. It is a virtual level index, so every
   //     consumer that keys off a level index has to be told — a daily clear must not
   //     star a level, must not move the unlock pointer, must not certify a sheet,
   //     must not touch the resume pointer or a personal best.
@@ -2081,21 +2122,29 @@ const pixelOf = async (sel, fx, fy) => {
     // stand the player somewhere real first, so "the resume pointer is untouched" means something
     await pg.evaluate(() => window.GE.load(12));
     await pg.waitForTimeout(60);
-    const before = await pg.evaluate(() => ({ prog: JSON.stringify(window.GE_MENU.prog), level: localStorage.getItem('ge_level'), best: localStorage.getItem('ge_best'), theme: window.GE.theme }));
+    // CAMPAIGN progress only — stars, the unlock pointer, certification skins and the
+    // sheets already celebrated. Deliberately NOT the whole `prog` blob: a draft clear is
+    // still a clear, so a field like `prog.d0` (has this player ever finished a board, and
+    // on what day) legitimately moves. What must never move is anything that says the
+    // player got further through the 30 sheets.
+    const campaign = () => pg.evaluate(() => JSON.stringify({ s: window.GE_MENU.prog.s, u: window.GE_MENU.prog.u, skins: window.GE_MENU.prog.skins || [], seen: window.GE_MENU.prog.seen || [] }));
+    const before = await pg.evaluate(() => ({ level: localStorage.getItem('ge_level'), best: localStorage.getItem('ge_best'), theme: window.GE.theme }));
+    before.prog = await campaign();
     await replayDaily(pg, DT.dateAt(244));
     // ...and leaving the draft puts the player back where they were, not at level 1
     await pg.waitForSelector('#btnNext:not([disabled])', { timeout: 4000 });
     await pg.click('#btnNext');
     await pg.waitForTimeout(160);
-    const after = await pg.evaluate(() => ({ prog: JSON.stringify(window.GE_MENU.prog), level: localStorage.getItem('ge_level'), best: localStorage.getItem('ge_best'), theme: window.GE.theme, lvl: window.GE.level, daily: window.GE.isDaily, menu: !document.getElementById('menu').hidden }));
+    const after = await pg.evaluate(() => ({ level: localStorage.getItem('ge_level'), best: localStorage.getItem('ge_best'), theme: window.GE.theme, lvl: window.GE.level, daily: window.GE.isDaily, menu: !document.getElementById('menu').hidden, card: !document.getElementById('winModal').hidden }));
+    after.prog = await campaign();
     await ctx.close();
     const ok = after.prog === before.prog && before.level === '12' && after.level === '12' && after.best === before.best
-      && after.theme === before.theme && !after.daily && after.lvl === 12 && after.menu && !errs.length;
-    if (ok) console.log('daily isolation ok: a cleared draft leaves level stars, the unlock pointer, certification and the paper untouched, and "Back to menu" returns the player to level 13 — not to level 1');
+      && after.theme === before.theme && !after.daily && after.lvl === 12 && after.menu && !after.card && !errs.length;
+    if (ok) console.log('daily isolation ok: a cleared draft leaves level stars, the unlock pointer, certification and the paper untouched, and "Back to menu" puts the win card down and returns the player to level 13 — not to level 1');
     else { failures++; console.error('daily isolation FAIL:', JSON.stringify({ before, after, errs })); }
   }
 
-  // 10. bundle cost: the whole year of boards is data, and it has to stay small
+  // 12. bundle cost: the whole year of boards is data, and it has to stay small
   {
     const tableBytes = fs.statSync(root + 'dailies.js').size;
     const distPath = root + 'dist/gate-escape.html';
@@ -2104,6 +2153,673 @@ const pixelOf = async (sel, fx, fy) => {
     if (tableBytes <= 40960 && shipped)
       console.log(`daily size ok: dailies.js is ${(tableBytes / 1024).toFixed(1)} KB for ${DT.rows.length} boards (${(tableBytes / DT.rows.length).toFixed(0)} B/day)${dist ? `, dist/gate-escape.html ${(dist / 1024).toFixed(1)} KB` : ''}; the solutions file stays tool-side`);
     else { failures++; console.error('daily size FAIL:', JSON.stringify({ tableBytes, dist, solutionsKeptOutOfBundle: shipped })); }
+  }
+}
+
+// ---- pass 5: sequence engine ----
+// The approval chain (`blocks[i].seq`): a chained block may leave only while its number is
+// the lowest still on the board. Everything below runs on SYNTHETIC boards handed to the
+// engine through `GE.loadTest`, in an isolated browser context — the 30 shipped sheets are
+// the product and are not touched, and nothing here can write campaign progress.
+{
+  const gc = await import('file://' + root + 'tools/gen-core.mjs');
+
+  // (a) an open chain: three singles in one lane, each able to leave on its own, plus one
+  //     unchained block that proves partial chains are legal (it is never gated).
+  const OPEN = {
+    w: 5, h: 5, stones: [],
+    blocks: [
+      { color: 0, cells: [[0, 0]], x: 0, y: 2, seq: 1 },
+      { color: 0, cells: [[0, 0]], x: 2, y: 2, seq: 2 },
+      { color: 0, cells: [[0, 0]], x: 4, y: 2, seq: 3 },
+      { color: 1, cells: [[0, 0], [1, 0]], x: 1, y: 4 },
+    ],
+    gates: [{ color: 0, side: 'top', start: 0, len: 5 }, { color: 1, side: 'bottom', start: 1, len: 2 }],
+  };
+  // (b) a chain that COSTS moves: the gate is one lane wide, the chain stands in that lane in
+  //     REVERSE order, and stones leave one pocket (row 0) to step aside into — so ② and ③ have
+  //     to get out of ①'s way and then come back for their own turn.
+  const CORKED = {
+    w: 4, h: 4, stones: [[0, 1], [0, 2], [0, 3], [2, 1], [2, 2], [2, 3]],
+    blocks: [
+      { color: 0, cells: [[0, 0]], x: 1, y: 3, seq: 1 },
+      { color: 0, cells: [[0, 0]], x: 1, y: 2, seq: 2 },
+      { color: 0, cells: [[0, 0]], x: 1, y: 1, seq: 3 },
+    ],
+    gates: [{ color: 0, side: 'top', start: 1, len: 1 }],
+  };
+  // par comes from gen-core with the chain on, exactly as a generated sheet's would; the
+  // free par (same board, `seq` stripped) is what the chain is being charged against.
+  const parOf = lv => gc.solve(JSON.parse(JSON.stringify(lv)), 6, 200000, {}).par;
+  const strip = lv => ({ ...lv, blocks: lv.blocks.map(({ seq, ...b }) => b) });
+  for (const lv of [OPEN, CORKED]) { lv.par = parOf(lv); lv.moves = lv.par + 5; }
+  const freePar = { open: parOf(strip(OPEN)), corked: parOf(strip(CORKED)) };
+  if (OPEN.par === 4 && freePar.open === 4 && CORKED.par === 5 && freePar.corked === 3
+      && OPEN.par === freePar.open && CORKED.par === freePar.corked + 2)
+    console.log(`seq par ok: gen-core grades the open chain at par ${OPEN.par} = its unchained par (a teaching chain costs nothing) and the corked chain at par ${CORKED.par} vs ${freePar.corked} unchained — the ordering rule is worth 2 real moves, so the solver is genuinely obeying it`);
+  else { failures++; console.error('seq par FAIL:', JSON.stringify({ open: OPEN.par, corked: CORKED.par, freePar })); }
+
+  const sctx = await browser.newContext({ viewport: { width: 420, height: 780 } });
+  const sp = await sctx.newPage();
+  const serrs = [];
+  sp.on('pageerror', e => serrs.push(e.message));
+  await sp.goto('file://' + root + 'index.html');
+  await sp.waitForFunction(() => window.GE && window.GE.L);
+  const armed = await sp.evaluate(lv => {
+    window.__geLevelBefore = localStorage.getItem('ge_level');
+    return window.GE.loadTest(lv);
+  }, OPEN);
+  await sp.waitForTimeout(120);
+
+  // 1. the board explains the order BEFORE the first move: the one-shot 1->2->3 overview,
+  //    the stamps, the chip, and the one-time tip.
+  {
+    const s0 = await sp.evaluate(() => ({
+      lvl: window.GE.level, testIdx: window.GE.testIndex, isTest: window.GE.isTest,
+      hudLevel: document.getElementById('hudLevel').textContent,
+      chip: document.getElementById('hudSeq').textContent,
+      chipUp: !document.getElementById('hudSeq').hidden,
+      toast: document.getElementById('toast').textContent,
+      toastUp: !document.getElementById('toast').hidden,
+      info: window.GE.seqInfo(),
+      geLevel: localStorage.getItem('ge_level'),
+      geLevelBefore: window.__geLevelBefore,
+    }));
+    await sp.screenshot({ path: `${shotDir}/seq-intro.png` });
+    const ok = armed && s0.isTest && s0.lvl === s0.testIdx && s0.hudLevel === 'TEST BOARD'
+      && s0.chipUp && s0.chip === 'NEXT ▸ ①'
+      && s0.toastUp && /leave in order/.test(s0.toast)
+      && s0.info.chained && s0.info.next === 1 && s0.info.chain.length === 3
+      && s0.info.blocks[0].nextUp && !s0.info.blocks[1].nextUp && s0.info.blocks[3].seq === null
+      && s0.geLevel === s0.geLevelBefore; // the synthetic board never moves the resume pointer
+    if (ok) console.log(`seq board ok: chained board loads outside the campaign (index ${s0.testIdx}, ge_level still ${s0.geLevel}), chip reads "${s0.chip}", the order is taught once ("${s0.toast}")`);
+    else { failures++; console.error('seq board FAIL:', JSON.stringify(s0)); }
+  }
+
+  // 2. RULE 1 — an out-of-turn exit is refused: the block bumps flush against its own gate
+  //    and stops there. It is still on the board, and at most the one repositioning drag it
+  //    really made was charged (a second push from the flush cell charges nothing at all).
+  {
+    const r = await sp.evaluate(() => {
+      const a = window.GE.exit(1, 'top');                       // seq 2 while seq 1 is up
+      const afterFirst = { r: a, pos: JSON.stringify(window.GE.pos[1]), moves: window.GE.moves, out: !window.GE.pos[1] };
+      const b = window.GE.exit(1, 'top');                       // again, already flush: free
+      return { afterFirst, second: { r: b, pos: JSON.stringify(window.GE.pos[1]), moves: window.GE.moves, out: !window.GE.pos[1] },
+               bumped: document.getElementById('hudSeq').classList.contains('bump'),
+               chip: document.getElementById('hudSeq').textContent, next: window.GE.seqInfo().next };
+    });
+    await sp.screenshot({ path: `${shotDir}/seq-refused.png` });
+    const ok = r.afterFirst.r !== 'exit' && !r.afterFirst.out && r.afterFirst.pos === '[2,0]' && r.afterFirst.moves === 1
+      && r.second.r !== 'exit' && !r.second.out && r.second.pos === '[2,0]' && r.second.moves === 1
+      && r.bumped && r.chip === 'NEXT ▸ ①' && r.next === 1;
+    if (ok) console.log('seq rule ok (1/5): an out-of-turn exit is refused — the block bumps flush at [2,0] and stays on the board, one repositioning drag charged and no more, the chip flicks and still names ①');
+    else { failures++; console.error('seq illegal-exit FAIL:', JSON.stringify(r)); }
+  }
+
+  // 3. RULE 2 — the chain advances; RULE 3 — undo restores the order with the position,
+  //    because the position IS the rule's only input.
+  {
+    const r = await sp.evaluate(() => {
+      const out = {};
+      out.e1 = window.GE.exit(0, 'top');                        // seq 1: legal
+      out.after1 = { next: window.GE.seqInfo().next, chip: document.getElementById('hudSeq').textContent, moves: window.GE.moves };
+      out.blocked3 = window.GE.exit(2, 'top');                  // seq 3 while 2 is up: refused
+      out.e2 = window.GE.exit(1, 'top');                        // seq 2: legal now
+      out.after2 = { next: window.GE.seqInfo().next, chip: document.getElementById('hudSeq').textContent, out2: !window.GE.pos[1] };
+      window.GE.undo();                                        // hand back the seq-2 exit
+      out.undone = { next: window.GE.seqInfo().next, chip: document.getElementById('hudSeq').textContent,
+                     back: !!window.GE.pos[1], canExit3: window.GE.exit(2, 'top') !== 'exit', out3: !window.GE.pos[2] };
+      out.unchained = window.GE.exit(3, 'bottom');              // never gated, at any point
+      return out;
+    });
+    const ok = r.e1 === 'exit' && r.after1.next === 2 && r.after1.chip === 'NEXT ▸ ②'
+      && r.blocked3 !== 'exit' && r.e2 === 'exit' && r.after2.next === 3 && r.after2.out2
+      && r.undone.next === 2 && r.undone.chip === 'NEXT ▸ ②' && r.undone.back
+      && r.undone.canExit3 && !r.undone.out3 && r.unchained === 'exit';
+    if (ok) console.log('seq rule ok (2/5 + 3/5): the chain advances ①→②→③ as blocks leave, undo puts the number back with the block (③ is refused again), and an unchained block is never gated');
+    else { failures++; console.error('seq advance/undo FAIL:', JSON.stringify(r)); }
+    await sp.screenshot({ path: `${shotDir}/seq-next.png` });
+  }
+
+  // 3b. reduced motion: the on-deck ring stops marching and the overview stops fading, but every
+  //     channel is still drawn — the order must never be carried by movement alone.
+  {
+    await sp.evaluate(lv => { window.GE.motionOn = false; window.GE.loadTest(lv); }, OPEN);
+    await sp.waitForTimeout(400);
+    const r = await sp.evaluate(() => ({ reduced: window.GE.reduced, chip: document.getElementById('hudSeq').textContent, next: window.GE.seqInfo().next }));
+    await sp.screenshot({ path: `${shotDir}/seq-reduced.png` });
+    await sp.evaluate(() => { window.GE.motionOn = true; });
+    if (r.reduced && r.chip === 'NEXT ▸ ①' && r.next === 1) console.log('seq reduced-motion ok: the chained board draws its stamps, ring and overview with motion off (nothing about the order is carried by movement)');
+    else { failures++; console.error('seq reduced-motion FAIL:', JSON.stringify(r)); }
+  }
+
+  // 4. RULE 4 — nothing that PROPOSES a move may propose an illegal one: the hint route,
+  //    the opening ghost, the fail card's rescue preview (all `findRoute`) and the reference
+  //    solver. `{ignoreSeq:true}` is the escape hatch and proves the refusal is the chain.
+  {
+    await sp.evaluate(lv => window.GE.loadTest(lv), OPEN);
+    await sp.waitForTimeout(80);
+    const r = await sp.evaluate(() => {
+      const route = i => !!window.GE.route(i);
+      const geo = i => !!window.GE.route(i, { ignoreSeq: true });
+      const first = { routes: [0, 1, 2, 3].map(route), geo: [0, 1, 2, 3].map(geo) };
+      const info = window.GE.seqInfo();
+      const mv = window.GE.solve(window.GE.pos);
+      const seq = mv ? info.blocks[mv.bi].seq : null;
+      return { first, solveBi: mv && mv.bi, solveSide: (mv && mv.side) || null, seq, next: info.next,
+               // the block the fail card would offer as the rescue's proof is a findRoute answer too
+               bestIsLegal: [0, 1, 2, 3].every(i => !window.GE.route(i) || !info.blocks[i].seq || info.blocks[i].nextUp) };
+    });
+    // the solver is free to open on ① OR on the unchained block (both are optimal here); what it is
+    // NOT free to do is propose an exit for a chained block that is not up
+    const solveLegal = !r.solveSide || !r.seq || r.seq === r.next;
+    const ok = JSON.stringify(r.first.routes) === '[true,false,false,true]'
+      && JSON.stringify(r.first.geo) === '[true,true,true,true]'
+      && solveLegal && r.bestIsLegal;
+    if (ok) console.log(`seq rule ok (4/5): findRoute refuses every out-of-turn block (routes [①,✗,✗,unchained], so hints, the opening ghost and the fail card's rescue preview cannot propose one) while {ignoreSeq:true} still finds all four geometrically; the reference solver opened on ${r.solveSide ? 'an exit for block ' + r.solveBi : 'a relocation'} and it was in turn`);
+    else { failures++; console.error('seq route legality FAIL:', JSON.stringify({ ...r, solveLegal })); }
+  }
+
+  // 5. RULE 5 — the solver never proposes an out-of-order exit, and its line is still
+  //    optimal: driven move by move from the live position, the corked chain clears at the
+  //    par gen-core graded it at, with every exit legal at the moment it was proposed.
+  {
+    await sp.evaluate(lv => window.GE.loadTest(lv), CORKED);
+    await sp.waitForTimeout(80);
+    const r = await sp.evaluate(par => {
+      const acts = [], illegal = [];
+      for (let n = 0; n < par + 4 && !window.GE.pos.every(p => !p); n++) {
+        const mv = window.GE.solve(window.GE.pos);
+        if (!mv) return { stuck: n, acts, illegal };
+        if (mv.side) {
+          const info = window.GE.seqInfo();
+          const seq = info.blocks[mv.bi].seq;
+          if (seq && seq !== info.next) illegal.push({ n, bi: mv.bi, seq, next: info.next });
+        }
+        acts.push({ bi: mv.bi, side: mv.side || null });
+        const res = window.GE.dragVia(mv.bi, mv.path, mv.side || null);
+        if (res === false) return { refused: n, acts, illegal };
+      }
+      return { acts, illegal, moves: window.GE.moves, cleared: window.GE.pos.every(p => !p) };
+    }, CORKED.par);
+    await sp.waitForTimeout(900);
+    const w = await sp.evaluate(() => ({ stars: document.querySelectorAll('#winStars span.on').length, up: !document.getElementById('winModal').hidden }));
+    const exits = (r.acts || []).filter(a => a.side).map(a => a.bi);
+    const ok = r.cleared && r.moves === CORKED.par && !r.illegal.length
+      && JSON.stringify(exits) === '[0,1,2]' && w.up && w.stars === 3;
+    if (ok) console.log(`seq rule ok (5/5): following the in-engine solver clears the corked chain in ${r.moves} moves (= gen-core's par ${CORKED.par}), exits fire strictly ①②③, and no proposed exit was ever out of turn`);
+    else { failures++; console.error('seq solve legality FAIL:', JSON.stringify({ r, w, par: CORKED.par })); }
+  }
+
+  // 6. RULE PARITY — the tool-side rule (`gen-core.canExit`, which grades every level) and
+  //    the runtime rule (`game.js findRoute`, which the finger obeys) are two copies of one
+  //    thing, and drift between them is the tracked risk of this whole round. 200 random
+  //    reachable positions of both chained boards, every block, both answers, computed fresh
+  //    from gen-core on every run so a stale fixture can never hide a divergence.
+  {
+    const rnd = (() => { let s = 987654321; return () => ((s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff); })();
+    const states = [];
+    for (const lv of [OPEN, CORKED]) {
+      let ps = lv.blocks.map(b => [b.x, b.y]);
+      for (let n = 0; states.length < (lv === OPEN ? 100 : 200) && n < 4000; n++) {
+        if (!ps.some(Boolean)) ps = lv.blocks.map(b => [b.x, b.y]);
+        const occ = gc.makeOcc(lv, ps);
+        const opts = { remaining: ps };
+        const expect = lv.blocks.map((b, i) => (ps[i]
+          ? gc.reachable(lv, occ, i, ps[i]).some(([x, y]) => !!gc.canExit(lv, occ, i, x, y, opts))
+          : null));
+        const seq = lv.blocks.map((b, i) => (ps[i] ? gc.seqAllowed(lv, i, ps) : null));
+        states.push({ lv: lv === OPEN ? 'open' : 'corked', pos: ps.map(p => (p ? [p[0], p[1]] : null)), expect, seq });
+        // random walk: relocate a random remaining block, or exit it when the rule allows
+        const live = ps.map((p, i) => (p ? i : -1)).filter(i => i >= 0);
+        const bi = live[Math.floor(rnd() * live.length)];
+        const spots = gc.reachable(lv, occ, bi, ps[bi]);
+        const canGo = spots.filter(([x, y]) => !!gc.canExit(lv, occ, bi, x, y, opts));
+        const np = ps.slice();
+        if (canGo.length && rnd() < 0.35) np[bi] = null;
+        else np[bi] = spots[Math.floor(rnd() * spots.length)];
+        ps = np;
+      }
+    }
+    const res = await sp.evaluate(({ OPEN, CORKED, states }) => {
+      const out = { checked: 0, mismatch: [], seqMismatch: [] };
+      let cur = null;
+      for (const st of states) {
+        if (cur !== st.lv) { window.GE.loadTest(st.lv === 'open' ? OPEN : CORKED); cur = st.lv; }
+        const pos = window.GE.pos;
+        for (let i = 0; i < pos.length; i++) pos[i] = st.pos[i] ? [st.pos[i][0], st.pos[i][1]] : null;
+        const info = window.GE.seqInfo();
+        for (let i = 0; i < st.expect.length; i++) {
+          if (st.expect[i] === null) continue;
+          out.checked++;
+          const got = !!window.GE.route(i);
+          if (got !== st.expect[i]) out.mismatch.push({ lv: st.lv, pos: st.pos, bi: i, tool: st.expect[i], runtime: got });
+          const gotSeq = !info.blocks[i].seq || info.blocks[i].nextUp;
+          if (gotSeq !== st.seq[i]) out.seqMismatch.push({ lv: st.lv, pos: st.pos, bi: i, tool: st.seq[i], runtime: gotSeq });
+        }
+      }
+      return out;
+    }, { OPEN, CORKED, states });
+    if (states.length === 200 && res.checked > 400 && !res.mismatch.length && !res.seqMismatch.length)
+      console.log(`seq parity ok: ${states.length} random reachable positions, ${res.checked} block answers — gen-core's canExit and the engine's findRoute agree on every one, and so do gen-core's seqAllowed and the engine's seqInfo`);
+    else { failures++; console.error('seq parity FAIL:', JSON.stringify({ states: states.length, checked: res.checked, mismatch: res.mismatch.slice(0, 4), seqMismatch: res.seqMismatch.slice(0, 4) })); }
+  }
+
+  // 7. the tightened star bands (round decision 2026-09-02): 3 stars is exactly par, 2 stars
+  //    is par+1 (it was par+2), 1 star beyond. Checked at the boundary in both directions, on
+  //    the engine's own `starsFor` (the win card) and on the live HUD meter that reads it
+  //    forward. Under the OLD band the meter below would read 3,2,2 instead of 3,2,1.
+  {
+    const STAR = { w: 3, h: 3, stones: [], blocks: [{ color: 0, cells: [[0, 0]], x: 1, y: 1 }],
+                   gates: [{ color: 0, side: 'top', start: 0, len: 3 }], par: 1, moves: 9 };
+    const meter = () => sp.evaluate(() => document.querySelectorAll('#hudMeter span.on').length);
+    const rows = [];
+    for (const waste of [0, 1, 2, 3]) {
+      await sp.evaluate(lv => window.GE.loadTest(lv), STAR);
+      await sp.waitForTimeout(60);
+      const m0 = await meter();
+      await sp.evaluate(n => {
+        for (let k = 0; k < n; k++) { const p = window.GE.pos[0]; window.GE.dragVia(0, [[p[0], p[1] + (k % 2 ? -1 : 1)]], null); }
+      }, waste);
+      const m1 = await meter();
+      await sp.evaluate(() => window.GE.exit(0, 'top'));
+      await sp.waitForSelector('#winModal:not([hidden])', { timeout: 3000 });
+      await sp.waitForTimeout(700);
+      const w = await sp.evaluate(() => ({ stars: document.querySelectorAll('#winStars span.on').length,
+        sub: document.getElementById('winSub').textContent, replay: !document.getElementById('btnReplay').hidden }));
+      rows.push({ moves: waste + 1, over: waste, meterStart: m0, meterBeforeExit: m1, stars: w.stars, perfect: /perfect/.test(w.sub) });
+    }
+    const ok = JSON.stringify(rows.map(r => [r.over, r.stars, r.meterBeforeExit]))
+      === JSON.stringify([[0, 3, 3], [1, 2, 2], [2, 1, 1], [3, 1, 1]])
+      && rows[0].perfect && !rows[1].perfect && rows.every(r => r.meterStart === 3);
+    if (ok) console.log('stars ok: par → ★★★, par+1 → ★★, par+2 → ★, par+3 → ★ — and the HUD meter predicts the same band one move ahead (3,2,1,1), which is the tightened par+1 rule, not the old par+2');
+    else { failures++; console.error('star band FAIL:', JSON.stringify(rows)); }
+  }
+
+  if (serrs.length) { failures++; console.error('seq page errors FAIL:', JSON.stringify(serrs.slice(0, 3))); }
+  await sctx.close();
+}
+
+// ---- pass 4: ftue + draft ui ----
+// Two surfaces, one rule between them: the game should never say anything it has not earned the
+// right to say. Staged disclosure holds every meta system back until the win that makes it mean
+// something, and the Daily Draft's row states today as a fact — never as a debt. Both are checked
+// end to end on fresh contexts with a fixed clock, so "the day after" is a real reload, not a stub.
+{
+  const DT4 = new Function(fs.readFileSync(root + 'dailies.js', 'utf8') + '\nreturn DAILIES;')();
+  const dsol4 = JSON.parse(fs.readFileSync(root + 'tools/daily-solutions.json', 'utf8'));
+  const open4 = async () => {
+    const ctx = await browser.newContext({ viewport: { width: 420, height: 780 } });
+    const pg = await ctx.newPage();
+    const errs = [];
+    pg.on('pageerror', e => errs.push(e.message));
+    await pg.goto('file://' + root + 'index.html');
+    await pg.waitForFunction(() => window.GE && window.GE.L);
+    return { ctx, pg, errs };
+  };
+  // a fixed calendar day, re-applied after every reload (GE.now is the engine's only clock)
+  const day4 = (pg, d) => pg.evaluate(day => {
+    const t = new Date(day + 'T10:00:00').getTime();
+    window.GE.now = () => t;
+    window.GE.motionOn = false; // the quiet win-card row lands at 0 ms on the reduced path
+  }, d);
+  const reload4 = async (pg, d) => { await pg.reload(); await pg.waitForFunction(() => window.GE && window.GE.L); await day4(pg, d); };
+  // clear a campaign level through the real engine and report the quiet win-card row it produced
+  const winLevel4 = async (pg, i) => {
+    await pg.evaluate(i => window.GE.load(i), i);
+    await pg.waitForTimeout(50);
+    await pg.evaluate(sol => { for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side); }, solutions[i]);
+    await pg.waitForSelector('#winModal:not([hidden])', { timeout: 3000 });
+    await pg.waitForTimeout(90);
+    return pg.evaluate(() => (document.getElementById('winDaily').hidden ? null
+      : { stamp: document.getElementById('winDailyStamp').textContent, k: document.getElementById('winDailyK').textContent,
+          v: document.getElementById('winDailyV').textContent }));
+  };
+  // everything staged disclosure can hide, read off the three screens in one round trip
+  const look4 = pg => pg.evaluate(() => {
+    const hid = id => document.getElementById(id).hidden;
+    window.GE_MENU.show('levels');
+    const r = { d: window.GE_MENU.disclosure(), draft: window.GE_MENU.draftRow(), survey: hid('btnSurvey'),
+      papers: hid('menuPapers'), certChips: document.querySelectorAll('#levelGrid .chap .cert').length,
+      chosen: [...window.GE_MENU.survey.chosen], offered: [...window.GE_MENU.survey.offered] };
+    window.GE_MENU.show('legend');
+    r.legend = { cert: hid('legendCert'), daily: hid('legendDaily'), survey: hid('legendSurvey'),
+      contracts: hid('legendContracts'), streak: hid('legendStreak'), div: hid('legendMetaDiv') };
+    window.GE_MENU.show('menu');
+    r.landing = window.GE_MENU.landing();
+    r.status = window.GE_MENU.status();
+    return r;
+  });
+  const shot4 = async (pg, name, screen) => {
+    await pg.evaluate(s => window.GE_MENU.show(s), screen);
+    await pg.waitForTimeout(260);
+    await pg.screenshot({ path: `${shotDir}/${name}.png` });
+  };
+
+  // 1. the FTUE walk: a cold open says nothing, and each system arrives on the win that earns it
+  {
+    const D0 = '2026-09-14', D1 = '2026-09-15'; // a Monday and the Tuesday after: one ISO week
+    const { ctx, pg, errs } = await open4();
+    await pg.evaluate(() => localStorage.clear());
+    await reload4(pg, D0);
+    const fresh = await look4(pg);
+    await shot4(pg, 'ftue-index-fresh', 'levels');
+    const beats = [];
+    const seen = [];
+    const REVEAL_SHOT = { 1: 'cert', 2: 'daily', 4: 'survey' };
+    for (let i = 0; i < 5; i++) {
+      beats.push(await winLevel4(pg, i));
+      if (REVEAL_SHOT[i]) await pg.screenshot({ path: `${shotDir}/ftue-reveal-${REVEAL_SHOT[i]}.png` }); // the quiet NEW row
+      seen.push(await look4(pg));
+      if (REVEAL_SHOT[i]) await shot4(pg, 'ftue-index-' + REVEAL_SHOT[i], 'levels');                     // ...and what it uncovered
+    }
+    const afterL2 = seen[1], afterL3 = seen[2], afterL4 = seen[3], afterL5 = seen[4];
+    // the survey arrives with the EASIEST offered contract already taken — a worked example, not a
+    // demand for two decisions about a system the player has never seen
+    const easiest = await pg.evaluate(o => o.slice().sort((a, b) => window.GE_MENU.CONTRACTS[a].ease - window.GE_MENU.CONTRACTS[b].ease)[0], afterL5.offered);
+    const stored = await pg.evaluate(() => JSON.parse(localStorage.getItem('ge_prog')));
+    // a replay never re-announces: prog.rv is the record that the beat has been played
+    const replay = await winLevel4(pg, 1);
+    // ...and the status line only exists on a RETURN day, as a passive div with at most two clauses
+    await reload4(pg, D1);
+    const back = await look4(pg);
+    await shot4(pg, 'ftue-status-day2', 'menu');
+    await ctx.close();
+    const hiddenAll = s => s.draft.hidden && s.survey && s.papers && s.certChips === 0
+      && s.legend.cert && s.legend.daily && s.legend.survey && s.legend.contracts && s.legend.streak && s.legend.div;
+    const clauses = back.status.text.split('·').length;
+    const ok = hiddenAll(fresh) && fresh.status.hidden && JSON.stringify(fresh.landing) === '["btnPlay","btnLevels","btnLegend"]'
+      && hiddenAll(seen[0]) && !beats[0]                                            // L1 reveals nothing
+      && beats[1] && beats[1].stamp === 'NEW' && beats[1].k === 'Sheet certification'
+      && !afterL2.papers && afterL2.certChips === 3 && !afterL2.legend.cert && afterL2.draft.hidden && afterL2.survey
+      && beats[2] && beats[2].stamp === 'NEW' && beats[2].k === 'Daily draft'
+      && !afterL3.draft.hidden && /^Daily draft · \d{1,2} Sep$/.test(afterL3.draft.k) && afterL3.draft.v === 'READY' && afterL3.survey
+      && !beats[3] && afterL4.survey                                                // L4 reveals nothing
+      && beats[4] && beats[4].stamp === 'NEW' && beats[4].k === 'Field survey'
+      && !afterL5.survey && !afterL5.legend.survey && afterL5.chosen.length === 1 && afterL5.chosen[0] === easiest
+      && stored.d0 === D0 && JSON.stringify(stored.rv) === '["cert","daily","survey"]'
+      && !replay                                                                    // and never again
+      && !back.status.hidden && back.status.tag === 'DIV' && clauses <= 2
+      && /(survey days|draft is filed)/.test(back.status.text)
+      && !/(left|remaining|expire|lost|streak ends|hurry|tap|play now)/i.test(back.status.text)
+      && JSON.stringify(back.landing) === '["btnPlay","btnLevels","btnLegend"]'
+      && !errs.length;
+    if (ok) console.log(`ftue ok: a cold open hides every meta system (landing 3 taps, no status line, no cert stamp, no draft row, no survey row); L2 reveals certification, L3 the draft ("${afterL3.draft.k}"), L5 the survey with ${easiest} already taken — each as ONE quiet NEW row, never twice; the day after, the landing gains a passive div "${back.status.text}" and is still exactly 3 interactive elements`);
+    else { failures++; console.error('ftue FAIL:', JSON.stringify({ fresh, beats, afterL2, afterL3, afterL4, afterL5, easiest, stored, replay, back, errs })); }
+  }
+
+  // 2. an existing save is a returning player: it never gets three tutorials replayed at it
+  {
+    const { ctx, pg, errs } = await open4();
+    await pg.evaluate(() => { localStorage.clear();
+      localStorage.setItem('ge_prog', JSON.stringify({ u: 11, s: [3, 3, 2, 3, 3, 3, 2, 3, 3, 3, 1] }));
+      localStorage.setItem('ge_level', '11'); });
+    await reload4(pg, '2026-09-16');
+    const s = await look4(pg);
+    const stored = await pg.evaluate(() => JSON.parse(localStorage.getItem('ge_prog')));
+    const beat = await winLevel4(pg, 0);
+    await ctx.close();
+    const ok = !s.draft.hidden && !s.survey && !s.papers && s.certChips === 3 && !s.status.hidden
+      && stored.d0 === 'pre' && JSON.stringify(stored.rv) === '["rescue","cert","daily","survey"]'
+      && !beat && !errs.length;
+    if (ok) console.log('ftue legacy ok: a save that already had progress opens fully disclosed and marked seen (d0 "pre", rv rescue+cert+daily+survey) — the next win announces nothing');
+    else { failures++; console.error('ftue legacy FAIL:', JSON.stringify({ s, stored, beat, errs })); }
+  }
+
+  // 3. the first fail teaches the rescue ONCE. The engine fires ge:fail from maybeFail; until pass 5
+  //    lands that event the teach is verified through a manual dispatch, and this check says which.
+  {
+    const { ctx, pg, errs } = await open4();
+    await pg.evaluate(() => localStorage.clear());
+    await reload4(pg, '2026-09-17');
+    const hasEvent = fs.readFileSync(root + 'game.js', 'utf8').includes("'ge:fail'");
+    await pg.evaluate(() => window.GE.load(2));
+    await pg.waitForTimeout(60);
+    await pg.evaluate(() => {
+      const L = window.GE.L;
+      for (let m = 0; m < L.moves + 2 && window.GE.movesLeft > 0; m++) {
+        let done = false;
+        for (let bi = 0; bi < L.blocks.length && !done; bi++) {
+          const p = window.GE.pos[bi]; if (!p) continue;
+          for (const [tx, ty] of [[p[0] + 1, p[1]], [p[0] - 1, p[1]], [p[0], p[1] + 1], [p[0], p[1] - 1]]) {
+            const b = JSON.stringify(window.GE.pos[bi]); window.GE.dragVia(bi, [[tx, ty]], null);
+            if (JSON.stringify(window.GE.pos[bi]) !== b) { done = true; break; }
+          }
+        }
+        if (!done) break;
+      }
+    });
+    await pg.waitForSelector('#failModal:not([hidden])', { timeout: 3000 });
+    let live = await pg.evaluate(() => ({ up: !document.getElementById('failTeach').hidden, text: document.getElementById('failTeach').textContent }));
+    const viaEngine = live.up;
+    if (!viaEngine) { // pass 5's engine half has not landed yet: prove the listener, not the trigger
+      await pg.evaluate(() => window.dispatchEvent(new CustomEvent('ge:fail', { detail: { lvl: 2 } })));
+      live = await pg.evaluate(() => ({ up: !document.getElementById('failTeach').hidden, text: document.getElementById('failTeach').textContent }));
+    }
+    await pg.screenshot({ path: `${shotDir}/ftue-rescue-teach.png` });
+    const rv = await pg.evaluate(() => JSON.parse(localStorage.getItem('ge_prog')).rv);
+    // a second fail says nothing: the teach is a one-time line, not a lecture
+    await pg.click('#btnRetry');
+    await pg.waitForTimeout(150);
+    const gone = await pg.evaluate(() => document.getElementById('failTeach').hidden);
+    await pg.evaluate(() => window.dispatchEvent(new CustomEvent('ge:fail', { detail: { lvl: 2 } })));
+    const again = await pg.evaluate(() => document.getElementById('failTeach').hidden);
+    await ctx.close();
+    const ok = live.up && /rescue adds 3 moves/.test(live.text) && !/(lost|failed|last chance|only)/i.test(live.text)
+      && rv.includes('rescue') && gone && again && !errs.length;
+    if (ok) console.log(`rescue teach ok: the first time out of moves the fail sheet gains one calm line (${viaEngine ? 'fired by the engine’s ge:fail' : 'engine ge:fail NOT LANDED YET — verified by dispatching the event the listener waits for'}); it is recorded in prog.rv and never shown again`);
+    else { failures++; console.error('rescue teach FAIL:', JSON.stringify({ live, viaEngine, hasEvent, rv, gone, again, errs })); }
+  }
+
+  // 4. the Daily Draft row and the FIELD REPORT card: READY → play → the day's result, stated once,
+  //    with the share text plumbed VERBATIM through all three fallbacks and nothing composed here.
+  {
+    const DATE = DT4.dateAt(45);
+    const { ctx, pg, errs } = await open4();
+    await pg.evaluate(() => { localStorage.clear();
+      localStorage.setItem('ge_prog', JSON.stringify({ u: 12, s: Array(12).fill(3) }));
+      localStorage.setItem('ge_level', '12'); });
+    await reload4(pg, DATE);
+    await pg.evaluate(() => window.GE.load(12));
+    await pg.waitForTimeout(60);
+    await pg.evaluate(() => window.GE_MENU.show('levels'));
+    await pg.waitForTimeout(200);
+    const ready = await pg.evaluate(() => window.GE_MENU.draftRow());
+    await pg.screenshot({ path: `${shotDir}/draft-row-ready.png` });
+    // the row loads today's board (no level index anywhere in sight), and the pause card names it
+    await pg.click('#btnDaily');
+    await pg.waitForTimeout(160);
+    const loaded = await pg.evaluate(() => ({ daily: window.GE.isDaily, date: window.GE.dailyDate, hud: document.getElementById('hudLevel').textContent }));
+    await pg.evaluate(() => document.getElementById('btnMenu').click());
+    await pg.waitForTimeout(120);
+    const paused = await pg.evaluate(() => document.getElementById('pauseSub').textContent);
+    await pg.click('#btnResume');
+    await pg.waitForTimeout(100);
+    await pg.evaluate(sol => { for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side); }, dsol4[DT4.rowFor(DATE).i]);
+    await pg.waitForSelector('#winModal:not([hidden])', { timeout: 3000 });
+    await pg.waitForTimeout(220);
+    const won = await pg.evaluate(() => ({ no: document.getElementById('winNo').textContent,
+      meta: document.getElementById('winMeta').hidden, block: !document.getElementById('winDraft').hidden,
+      report: document.getElementById('winReport').textContent, verbatim: document.getElementById('winReport').textContent === window.GE.dailyShareText() }));
+    await pg.screenshot({ path: `${shotDir}/draft-win.png` });
+    // share: navigator.share first, then the clipboard, then a selectable textarea — one string, three doors
+    const shared = await pg.evaluate(() => { window.__share = []; navigator.share = t => { window.__share.push(t.text); return Promise.resolve(); }; });
+    await pg.click('#btnWinShare');
+    await pg.waitForTimeout(200);
+    const viaShare = await pg.evaluate(() => ({ sent: window.__share, same: window.__share[0] === window.GE.dailyShareText(), label: document.getElementById('btnWinShare').textContent }));
+    const viaClip = await pg.evaluate(async () => {
+      window.__clip = [];
+      navigator.share = null;
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: t => { window.__clip.push(t); return Promise.resolve(); } } });
+      document.getElementById('btnWinShare').click();
+      await new Promise(r => setTimeout(r, 120));
+      return { sent: window.__clip, same: window.__clip[0] === window.GE.dailyShareText(), label: document.getElementById('btnWinShare').textContent };
+    });
+    const viaText = await pg.evaluate(async () => {
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: () => Promise.reject(new Error('denied')) } });
+      document.getElementById('btnWinShare').click();
+      await new Promise(r => setTimeout(r, 120));
+      const fb = document.getElementById('winReportFb');
+      return { up: !fb.hidden, same: fb.value === window.GE.dailyShareText(), label: document.getElementById('btnWinShare').textContent };
+    });
+    // back out: the draft is not the campaign, so the resume pointer is exactly where it was
+    await pg.waitForSelector('#btnNext:not([disabled])', { timeout: 4000 });
+    await pg.click('#btnNext');
+    await pg.waitForTimeout(220);
+    const out = await pg.evaluate(() => ({ menu: !document.getElementById('menu').hidden, win: !document.getElementById('winModal').hidden,
+      lvl: window.GE.level, cta: document.getElementById('playLabel').textContent, status: window.GE_MENU.status() }));
+    await pg.evaluate(() => window.GE_MENU.show('levels'));
+    await pg.waitForTimeout(200);
+    const filed = await pg.evaluate(() => window.GE_MENU.draftRow());
+    await pg.screenshot({ path: `${shotDir}/draft-row-filed.png` });
+    // the closed row opens the report instead of the board
+    await pg.click('#btnDaily');
+    await pg.waitForTimeout(220);
+    const card = await pg.evaluate(() => ({ up: !document.getElementById('draftModal').hidden,
+      title: document.getElementById('draftTitle').textContent, sub: document.getElementById('draftSub').textContent,
+      stars: document.querySelectorAll('#draftStars span.on').length, moves: document.getElementById('draftMoves').textContent,
+      routeK: document.getElementById('draftRouteK').textContent, route: document.getElementById('draftRoute').textContent,
+      rescue: document.getElementById('draftRescue').hidden,
+      verbatim: document.getElementById('draftReport').textContent === window.GE.dailyShareText() }));
+    await pg.screenshot({ path: `${shotDir}/draft-card.png` });
+    // ...and a second run that day is practice, and every surface says so
+    await pg.click('#btnDraftPractice');
+    await pg.waitForTimeout(180);
+    const prac = await pg.evaluate(() => ({ hud: document.getElementById('hudLevel').textContent, card: document.getElementById('draftModal').hidden }));
+    const pracPause = await pg.evaluate(() => { document.getElementById('btnMenu').click(); const t = document.getElementById('pauseSub').textContent; document.getElementById('btnResume').click(); return t; });
+    await pg.evaluate(sol => { for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side); }, dsol4[DT4.rowFor(DATE).i]);
+    await pg.waitForSelector('#winModal:not([hidden])', { timeout: 3000 });
+    await pg.waitForTimeout(200);
+    const pracWin = await pg.evaluate(() => ({ no: document.getElementById('winNo').textContent, block: !document.getElementById('winDraft').hidden,
+      cur: window.GE.dailyInfo.cur, plays: window.GE.dailyInfo.plays }));
+    await ctx.close();
+    const rep = won.report.split('\n');
+    const ok = !ready.hidden && ready.v === 'READY' && /^Daily draft · /.test(ready.k)
+      && loaded.daily && loaded.date === DATE && /^DAILY DRAFT · /.test(loaded.hud)
+      && /^Daily draft · /.test(paused) && !/Level 31/.test(paused)
+      && won.no === 'DAILY DRAFT' && won.meta && won.block && won.verbatim && rep.length === 5
+      && viaShare.sent.length === 1 && viaShare.same && viaClip.sent.length === 1 && viaClip.same
+      && viaText.up && viaText.same && /select and copy/i.test(viaText.label)
+      && out.menu && !out.win && out.lvl === 12 && /Level 13/.test(out.cta) && /draft is filed/.test(out.status.text)
+      && /FILED/.test(filed.v) && /PRACTICE · NOT RECORDED/i.test(filed.v)
+      && card.up && card.title === 'Draft filed' && card.stars === 3 && card.moves === '7 / 7'
+      && card.routeK === 'Route' && card.route === '100%' && card.rescue && card.verbatim
+      && prac.card && /^PRACTICE · NOT RECORDED/.test(prac.hud) && /^Practice · not recorded/.test(pracPause)
+      && pracWin.no === 'PRACTICE · NOT RECORDED' && !pracWin.block && pracWin.cur.moves === 7 && pracWin.plays === 1
+      && !errs.length;
+    if (ok) console.log(`daily draft ui ok: the row reads "${ready.k} — ${ready.v}" and loads today's board (pause card: "${paused}"); the clear files it and the win card carries the FIELD REPORT verbatim (share → clipboard → selectable text, all three sent the identical string); the row then states "${filed.v.replace(/\s+/g, ' ')}" and opens the report card instead of the board, and a second run is practice on every surface and rewrites nothing`);
+    else { failures++; console.error('daily draft ui FAIL:', JSON.stringify({ ready, loaded, paused, won: { ...won, report: rep }, viaShare, viaClip, viaText, out, filed, card, prac, pracPause, pracWin, errs })); }
+  }
+
+  // 5. a day that was LOST is still a result: the row states it plainly (never "you failed", never a
+  //    second chance to buy) and the report card renders the loss form of the field report.
+  {
+    const DATE = DT4.dateAt(88);
+    const { ctx, pg, errs } = await open4();
+    await pg.evaluate(d => { localStorage.clear();
+      localStorage.setItem('ge_prog', JSON.stringify({ u: 12, s: Array(12).fill(3) }));
+      localStorage.setItem('ge_daily', JSON.stringify({ v: 1, practice: null, hist: [],
+        cur: { date: d, state: 'lost', moves: 9, par: 6, stars: 0, undos: 2, hints: 1, rescued: true, cleared: 4, blocks: 6 } })); }, DATE);
+    await reload4(pg, DATE);
+    await pg.evaluate(() => window.GE_MENU.show('levels'));
+    await pg.waitForTimeout(200);
+    const row = await pg.evaluate(() => window.GE_MENU.draftRow());
+    await pg.click('#btnDaily');
+    await pg.waitForTimeout(220);
+    const card = await pg.evaluate(() => ({ title: document.getElementById('draftTitle').textContent,
+      sub: document.getElementById('draftSub').textContent, stars: document.querySelectorAll('#draftStars span.on').length,
+      moves: document.getElementById('draftMoves').textContent, routeK: document.getElementById('draftRouteK').textContent,
+      route: document.getElementById('draftRoute').textContent, rescue: !document.getElementById('draftRescue').hidden,
+      report: document.getElementById('draftReport').textContent,
+      verbatim: document.getElementById('draftReport').textContent === window.GE.dailyShareText(),
+      body: document.querySelector('#draftModal .card').innerText.replace(/\s+/g, ' ').trim() }));
+    await pg.screenshot({ path: `${shotDir}/draft-card-lost.png` });
+    // the sheet can be put down by its scrim like every other safe sheet
+    const box = await (await pg.$('#draftModal')).boundingBox();
+    await pg.mouse.click(box.x + 6, box.y + 6);
+    await pg.waitForTimeout(160);
+    const dismissed = await pg.evaluate(() => document.getElementById('draftModal').hidden);
+    await ctx.close();
+    const ok = /NOT CLEARED/.test(row.v) && /PRACTICE · NOT RECORDED/i.test(row.v)
+      && card.title === 'Draft not cleared' && card.stars === 0 && card.moves === '9 / 6'
+      && card.routeK === 'Blocks out' && card.route === '4 / 6' && card.rescue && card.verbatim
+      && /NOT CLEARED/.test(card.report) && /rescued/.test(card.report) && !/route/.test(card.report)
+      && !/(try again|second chance|buy|lost your)/i.test(card.body) && dismissed && !errs.length;
+    if (ok) console.log(`daily loss ui ok: a lost day reads "${row.v.replace(/\s+/g, ' ')}" on the row and opens as "${card.title}" (${card.moves} moves, ${card.route} blocks out, rescue stated as a fact) with the loss form of the report — nothing is sold at that moment, and the sheet closes on its scrim`);
+    else { failures++; console.error('daily loss ui FAIL:', JSON.stringify({ row, card, dismissed, errs })); }
+  }
+
+  // 6. the legend's star sentence and the engine's starsFor cannot drift apart. The 2026-09-02
+  //    round tightened the 2-star band from par+2 to par+1 (pass 5) and the legend was the one
+  //    place that stated the old number in words — so the number is now pinned in three places at
+  //    once: the engine's own function, the sentence a player reads, and what the engine actually
+  //    awards at that pace.
+  {
+    const band = (fs.readFileSync(root + 'game.js', 'utf8')
+      .match(/return m <= L\.par \? 3 : m <= L\.par \+ (\d+) \? 2 : 1;/) || [])[1];
+    const WORDS = ['zero', 'one', 'two', 'three', 'four'];
+    const said = (fs.readFileSync(root + 'index.html', 'utf8').match(/★★★ at par · ★★ (\w+) over/) || [])[1];
+    const n = Number(band);
+    const { ctx, pg, errs } = await open4();
+    const runs = [];
+    for (const waste of [0, n, n + 1]) {
+      runs.push(await pg.evaluate(({ sol, waste }) => {
+        window.GE.load(0);
+        // burn moves without clearing: shuffle the block between two in-board cells
+        for (let i = 0; i < waste; i++) { const p = window.GE.pos[0]; window.GE.dragVia(0, [[p[0] === 1 ? 0 : 1, p[1]]], null); }
+        for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side);
+        return { moves: window.GE.moves, par: window.GE.L.par, stars: document.querySelectorAll('#winStars span.on').length };
+      }, { sol: solutions[0], waste }));
+    }
+    await ctx.close();
+    const ok = n >= 1 && said === WORDS[n]
+      && runs[0].moves === runs[0].par && runs[0].stars === 3
+      && runs[1].moves === runs[1].par + n && runs[1].stars === 2
+      && runs[2].moves === runs[2].par + n + 1 && runs[2].stars === 1
+      && !errs.length;
+    if (ok) console.log(`legend star copy ok: game.js grades 2★ at par+${n}, the legend says "★★★ at par · ★★ ${said} over", and the engine awards 3/2/1 at par, par+${n}, par+${n + 1} — one number, pinned in all three places`);
+    else { failures++; console.error('legend star copy FAIL:', JSON.stringify({ band, said, expected: WORDS[n], runs, errs })); }
+  }
+
+  // 7. the approval chain's legend drawing (pass 5 added the canvas and the row; the legend's ink
+  //    is menu.js). The two states must be told apart WITHOUT colour: a wide filled tab against a
+  //    narrow paper label, a dashed on-deck ring on the next one only, and a chevron in the tab.
+  //    The row itself stays hidden until a chained sheet exists, so this forces it open to look.
+  {
+    const { ctx, pg, errs } = await open4();
+    const px = await pg.evaluate(() => {
+      window.GE_MENU.show('legend');
+      const row = document.getElementById('liSeq');
+      const gated = row.hidden;                       // no chained level ships yet (pass 6)
+      row.hidden = false;
+      window.GE_MENU.refreshLegendRows();             // ...and the gate must not put it straight back
+      const stillGated = row.hidden;
+      row.hidden = false;
+      const c = document.getElementById('symSeq').getContext('2d');
+      const lum = ([r, g, b]) => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+      const at = (x, y) => lum([...c.getImageData(x, y, 1, 1).data]);
+      const runAt = (y, x0, x1, test) => { let n = 0; for (let x = x0; x <= x1; x++) if (test(at(x, y))) n++; return n; };
+      return {
+        gated, stillGated,
+        // the stamp bodies, sampled two pixels below their top edge (above the numeral)
+        tabDark: runAt(24, 10, 56, v => v < 0.3),      // the NEXT UP tab: filled ink, ~37 wide
+        labelLight: runAt(24, 70, 116, v => v > 0.6),  // the WAITING label: paper, ~20 wide
+        // the chevron lives in the right half of the tab, on the numeral's line
+        chevron: runAt(32, 32, 50, v => v > 0.75),
+        // the dashed on-deck ring crosses the lower half of the NEXT block only
+        ringLeft: runAt(64, 16, 52, v => v > 0.75),
+        ringRight: runAt(64, 76, 112, v => v > 0.75),
+      };
+    });
+    await pg.screenshot({ path: `${shotDir}/legend-seq.png` });
+    await ctx.close();
+    const ok = px.gated && px.stillGated                       // hidden until a chained sheet ships
+      && px.tabDark >= 30 && px.labelLight >= 14 && px.labelLight <= 26
+      && px.tabDark > px.labelLight * 1.4                      // channel: width
+      && px.chevron > 0 && px.ringLeft > 0 && px.ringRight === 0 // channels: chevron, on-deck ring
+      && !errs.length;
+    if (ok) console.log(`legend approval chain ok: the row is gated until a chained sheet exists; forced open, "next up" is a ${px.tabDark}px inked tab with a chevron and a dashed on-deck ring, "waiting" a ${px.labelLight}px paper label with neither — tonal inverses, different widths, three shape channels, zero colour dependence`);
+    else { failures++; console.error('legend approval chain FAIL:', JSON.stringify({ px, errs })); }
   }
 }
 

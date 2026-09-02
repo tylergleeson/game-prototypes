@@ -97,30 +97,21 @@ the draft is outside the campaign.
   which developer-r2's Field Survey handler reads).
 - Retry on the draft never spends or gates on a life, at any level index, with
   the economy switched back on.
-- "Back to menu" dispatches `ge:finished` with `{ daily: true, date }`, then
-  restores `li`/`resumeLevel`/`ge_level` — the shared handler still does
-  `GE.load(0)`, which is right after the 30th sheet and wrong after a draft.
-  The restore leaves one cosmetic seam: `L` is briefly level 1's board while
-  `li` is the resume level, until the next load. It resolves itself (`resumable()`
-  is false at that point, so Play runs `GE.load(GE.level)` and lands correctly),
-  and the bot asserts the player returns to level 13 rather than level 1.
+- "Back to menu" loads the resume level FIRST, then dispatches `ge:finished` with
+  `{ daily: true, date }`. Loading first hides the win card and restores
+  `li` / `L` / `ge_level` together, so there is no window in which the board on
+  screen disagrees with the level index; `menu.js` then branches on
+  `detail.daily` and only has to show itself, because a draft has no campaign
+  reset to do. The plain `GE.load(0)` reset is right after the 30th sheet and
+  wrong after a draft — it would move the resume pointer somewhere the player
+  never was.
 
-  **Pass 4 should fix both halves together, in this order** — the menu-side
-  change alone would leave the win card on screen, because `GE.load(0)` is
-  currently the only thing that hides it:
-
-  ```js
-  // game.js, btnNext.onclick daily branch — load first (hides the card, restores
-  // li/L/ge_level consistently), THEN hand control to the menu
-  loadLevel(resumeLevel);                       // fires ge:load → menu.js show(null)
-  window.dispatchEvent(new CustomEvent('ge:finished', { detail: { daily: true, date } }));
-
-  // menu.js ge:finished — the draft has no campaign reset to do
-  window.addEventListener('ge:finished', e => {
-    if (e.detail && e.detail.daily) { show('menu'); return; }
-    GE.load(0); show('menu');
-  });
-  ```
+  This landed as a **paired** change across `game.js` and `menu.js` while pass 3
+  was closing out. It shipped in halves for a while, and the engine half alone is
+  worse than neither: `loadLevel(resumeLevel)` followed by an unconditional
+  `GE.load(0)` sends the player to level 1 with no compensating restore. The
+  `daily isolation` check below caught exactly that on a snapshot taken mid-
+  landing, which is the argument for keeping the two edits in one commit.
 
 **Record (`ge_daily`)** — `{ v: 1, cur, practice, hist[≤30] }`.
 `cur = { date, state:'won'|'lost', moves, par, stars, undos, hints, rescued, cleared, blocks }`.
@@ -200,6 +191,10 @@ Under the ≤ ~40 KB target. `dailies.js` is in the copy/inline lists of
 `build-single`, `build-itch` and `build-app`, and in the service worker's
 `ASSETS`.
 
+All figures measured **at the close of pass 3**. `game.js` and the bundle have
+grown since with passes 4 and 5; the pass-3 contribution itself does not move,
+because it is `dailies.js` plus the engine diff, both fixed.
+
 ## 7. Verification
 
 - `node tools/generate-dailies.mjs` twice → `dailies.js` and `tools/dailies.lock`
@@ -209,7 +204,9 @@ Under the ≤ ~40 KB target. `dailies.js` is in the copy/inline lists of
 - `node tools/solve-daily-paths.mjs` → 365/365 rows solved at par.
 - `node tools/generate.mjs` → `levels.js` byte-identical;
   `node tools/solve-paths.mjs` → `tools/solutions.json` byte-identical.
-- `node tools/playtest.mjs` **green twice** (`EXIT=0`). New checks, in a marked
+- `node tools/playtest.mjs` **green twice** (`EXIT=0`, 114 `ok:` lines) on the
+  shared tree with passes 2, 4 and 5 all landed — the whole run, not just this
+  region. Twelve checks here, in a marked
   `// ---- pass 3: daily draft (engine) ----` region placed immediately before
   the final network-silence guard (that block audits the whole run and has to
   stay last):
@@ -227,21 +224,63 @@ Under the ≤ ~40 KB target. `dailies.js` is in the copy/inline lists of
   8. past-table-end — wraps onto verified row 35 and clears at par
   9. FIELD REPORT — pinned regex, codepoint allowlist, bar cap, loss form, and
      the spoiler assertion
-  10. isolation — a cleared draft leaves stars, unlock pointer, certification and
-      paper untouched, and "Back to menu" returns to level 13, not level 1
-  11. size — table ≤ 40 KB, solutions file stays out of every bundle
+  10. bundle freshness — every shipped artifact carries the current source
+  11. isolation — a cleared draft leaves **campaign** progress untouched (stars,
+      unlock pointer, certification skins, sheets celebrated) plus the paper and
+      the resume pointer, and "Back to menu" puts the win card down and returns
+      to level 13, not level 1. Scoped to those fields on purpose: a draft clear
+      is still a clear, so a field like pass 4's `prog.d0` (has this player ever
+      finished a board) legitimately moves — what must never move is anything
+      claiming the player got further through the 30 sheets.
+  12. size — table ≤ 40 KB, solutions file stays out of every bundle
 - Bundles rebuilt: `dist/gate-escape.html`, `dist/itch/gate-escape-itch.zip`
   (6 files incl. `dailies.js`), `app/www/` (+ `dailies.js` in `sw.js` ASSETS).
   `cap sync ios` is still the round follow-up already tracked for pass 8.
 
-## 8. Not done / handed on
+## 8. Shared-tree notes
+
+Passes 3, 4 and 5 overlapped in one checkout, and two of the three problems that
+cost real time came from that rather than from any pass's logic:
+
+- **A half-landed paired change is worse than neither half.** A snapshot taken
+  mid-landing had `game.js`'s new "load the resume level, then dispatch" but
+  `menu.js`'s old unconditional `GE.load(0)`, which sends the player to level 1
+  with nothing to compensate. `daily isolation` caught it. Land both edits in one
+  commit.
+- **A snapshot beats the live tree for verification.** A run against the live
+  checkout died on `ReferenceError: seqIntroT is not defined` — pass 5 mid-edit,
+  a reference written before its declaration. Copy the prototype directory once
+  the relevant files have been idle for a minute, then run the bot against the
+  copy; otherwise a red run tells you nothing about your own work.
+- **The bundles go stale silently, so the bot now checks them.** Four passes share
+  `menu.js` and `index.html`, and `dist/gate-escape.html`, `dist/itch/` and
+  `app/www/` are downstream of both — a commit can carry correct source beside
+  artifacts built before it, with nothing on screen saying so. It happened twice
+  this round. `build-single` inlines the scripts verbatim and the other two copy
+  them, so staleness is exactly detectable, and check 10 (`bundles fresh`) now
+  fails with the list of behind artifacts and the three commands to run. That
+  turns "rebuild before commit" from a rule people remember into a gate.
+
+  Two limits, so nobody over-trusts it. It gates the **run**, not the commit: if
+  source is edited after the bot passes, that green says nothing about the commit
+  that follows. And it goes red for anyone mid-pass who has edited source and not
+  yet rebuilt. So **the order is rebuild → run → commit**, not the reverse —
+  worth carrying into the round's follow-ups, since four passes shared these
+  files and the artifacts went stale twice.
+- **Assert the invariant, not the blob.** `daily isolation` originally compared
+  the whole `prog` object and started failing the moment pass 4 added `prog.d0`.
+  It now compares only `s` / `u` / `skins` / `seen` — the fields that actually
+  say "the player got further through the 30 sheets". A draft clear is still a
+  clear; it is allowed to move `d0`.
+
+## 9. Not done / handed on
 
 - All draft UI (sheet-index entry, result card, share sheet with
-  `navigator.share` → clipboard → textarea fallback) — pass 4, per the lane
-  change. `GE.dailyShareText()` returns the finished string; nothing renders it
-  yet.
-- `ge:finished`'s `detail.daily` branch in `menu.js` (pass 4) so the engine's
-  resume-pointer patch-up can be deleted.
+  `navigator.share` → clipboard → textarea fallback) was pass 4's, per the lane
+  change. It has since landed and consumes these hooks — `daily draft ui ok` and
+  `daily loss ui ok` now run alongside the eleven engine checks.
+- The `ge:finished` handoff has also landed as the paired change described in
+  §3; the engine's original resume-pointer patch-up is gone.
 - Beacon: the engine fires `daily_started` / `daily_practice` / `daily_won` /
   `daily_lost` through `track()`; wiring them into the beacon event model is the
   beacon pass.

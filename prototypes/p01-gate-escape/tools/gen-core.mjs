@@ -21,23 +21,28 @@
 // (how many "wasted" repositioning drags the best line needs).
 //
 // ---------------------------------------------------------------------------
-// `opts` — reserved, threaded, currently unused by every code path.
+// `opts` — the approval chain (sequenced exits). LANDED in pass 5.
 // ---------------------------------------------------------------------------
-// `canExit` / `cascadeSolvable` / `solve` / `exitKind` / `meetsShape` /
-// `genLevel` all take a trailing plain `opts` object and pass it down the exit
-// chain unchanged. It exists so the planned "approval chain" (sequenced exits:
-// a block carrying `seq` may only leave while its `seq` is the lowest among the
-// blocks still on the board) can be switched on at the single site marked
-// `SEQUENCE HOOK` in `canExit` without another refactor of every caller. The
-// intended shape:
+// A block may carry `blocks[i].seq` (1..k). It may leave only while its `seq` is
+// the LOWEST among the blocks still on the board — so the rule is derived from
+// the position, never stored, which is what makes undo correct for free on the
+// runtime side and leaves this solver's state space unchanged (no new dimension,
+// just a predicate over a state it already had). Partial chains are legal: a
+// block with no `seq` is never gated.
 //
-//   { sequence: true,            // enforce the ordering rule at all
-//     remaining: positions }     // the solver's positions array (null = exited)
+// It is enforced at exactly one site, marked `SEQUENCE HOOK` in `canExit`, which
+// needs to know which blocks are still on the board:
+//
+//   opts.remaining = positions   // the caller's positions array (null = exited)
+//
+// Every solver in this file injects that field per node before it asks `canExit`
+// anything (`withRemaining` below); an outside caller that asks about a chained
+// level without it gets a THROW rather than a silently wrong par, because a
+// wrong par is a broken level and a broken level is the product.
 //
 // Movement is deliberately NOT gated: `makeOcc` / `fits` / `reachable` are pure
-// geometry and take no `opts`, because a sequence constraint restricts when a
-// block may leave, never where it may slide. Nothing else needs to change when
-// the rule lands.
+// geometry and take no `opts`, because a chain restricts WHEN a block may leave,
+// never where it may slide.
 
 export const SIDES = ['top', 'bottom', 'left', 'right'];
 
@@ -108,12 +113,33 @@ export function reachable(level, occ, bi, from) {
 // between the block's leading cell and the edge must be free, and the gate of
 // the block's color must cover every occupied column/row.
 // Returns the gate object it would leave through, or null.
+// Is `bi` allowed to leave right now, given which blocks are still on the board?
+// `remaining` is a positions array (null = exited); only truthiness is read.
+// The one copy of the ordering rule on the tool side — `game.js` holds the runtime
+// copy, and the bot's parity oracle is the guard for that pair.
+export function seqAllowed(level, bi, remaining) {
+  const s = level.blocks[bi].seq;
+  if (!s) return true;                       // unchained blocks are never gated
+  let lowest = Infinity;
+  for (let i = 0; i < level.blocks.length; i++) {
+    const q = level.blocks[i].seq;
+    if (remaining[i] && q && q < lowest) lowest = q;
+  }
+  return s === lowest;
+}
+export const isChained = level => level.blocks.some(b => b.seq);
+// per-node opts for the solvers: only allocated on chained levels, so an unchained
+// board runs through exactly the code path (and the allocations) it always did
+const withRemaining = (chained, opts, positions) => (chained ? { ...opts, remaining: positions } : opts);
+
 export function canExit(level, occ, bi, x, y, opts = {}) {
   const b = level.blocks[bi];
-  // SEQUENCE HOOK — the single site where the "approval chain" rule will gate
-  // an otherwise-geometric exit (see the `opts` contract at the top of the
-  // file). Nothing reads `opts` today; the parameter is threaded so the rule
-  // can land here alone.
+  // SEQUENCE HOOK — the single site where the approval chain gates an otherwise
+  // geometric exit (see the `opts` contract at the top of the file).
+  if (b.seq) {
+    if (!opts || !opts.remaining) throw new Error('gen-core: canExit on a chained level needs opts.remaining (the positions array)');
+    if (!seqAllowed(level, bi, opts.remaining)) return null;
+  }
   const cols = new Map(); // col -> leading y (min for top / max for bottom)
   const rows = new Map();
   for (const [cx, cy] of b.cells) {
@@ -165,6 +191,7 @@ function stateKey(positions) {
 // Blocks never move except to leave, so state = set of remaining blocks.
 export function cascadeSolvable(level, opts = {}) {
   const n = level.blocks.length;
+  const chained = isChained(level);
   const seen = new Set();
   const q = [(1 << n) - 1]; // bitmask of remaining blocks
   seen.add((1 << n) - 1);
@@ -177,7 +204,7 @@ export function cascadeSolvable(level, opts = {}) {
       if (!(mask & (1 << bi))) continue;
       const spots = reachable(level, occ, bi, positions[bi]);
       for (const [x, y] of spots) {
-        if (canExit(level, occ, bi, x, y, opts)) {
+        if (canExit(level, occ, bi, x, y, withRemaining(chained, opts, positions))) {
           const nm = mask & ~(1 << bi);
           if (!seen.has(nm)) { seen.add(nm); q.push(nm); }
           break;
@@ -192,6 +219,7 @@ export function cascadeSolvable(level, opts = {}) {
 // h = remaining block count (admissible: each block needs >= 1 drag).
 export function solve(level, capExcess, maxStates = 40000, opts = {}) {
   const n = level.blocks.length;
+  const chained = isChained(level);
   if (cascadeSolvable(level, opts)) return { par: n };
   if (capExcess <= 0) return { par: -1 };
   const cap = n + capExcess;
@@ -209,12 +237,13 @@ export function solve(level, capExcess, maxStates = 40000, opts = {}) {
     if (g + rem > cap) continue;
     if (++explored > maxStates) return null;
     const occ = makeOcc(level, positions);
+    const nodeOpts = withRemaining(chained, opts, positions);
     for (let bi = 0; bi < n; bi++) {
       if (!positions[bi]) continue;
       const spots = reachable(level, occ, bi, positions[bi]);
       let exits = false;
       for (const [x, y] of spots) {
-        if (canExit(level, occ, bi, x, y, opts)) { exits = true; break; }
+        if (canExit(level, occ, bi, x, y, nodeOpts)) { exits = true; break; }
       }
       const push = (np) => {
         const k = stateKey(np);
@@ -247,9 +276,11 @@ export function solve(level, capExcess, maxStates = 40000, opts = {}) {
 export function exitKind(level, bi, opts = {}) {
   const start = level.blocks.map(b => [b.x, b.y]);
   const occ = makeOcc(level, start);
-  if (canExit(level, occ, bi, start[bi][0], start[bi][1], opts)) return 'straight';
+  // the opening position: every block is still on the board, so `start` IS `remaining`
+  const o = withRemaining(isChained(level), opts, start);
+  if (canExit(level, occ, bi, start[bi][0], start[bi][1], o)) return 'straight';
   for (const [x, y] of reachable(level, occ, bi, start[bi])) {
-    if (canExit(level, occ, bi, x, y, opts)) return 'turn';
+    if (canExit(level, occ, bi, x, y, o)) return 'turn';
   }
   return 'blocked';
 }
@@ -393,6 +424,7 @@ export function pathTo(parents, target) {
 
 export function solveWithPath(level, opts = {}) {
   const n = level.blocks.length;
+  const chained = isChained(level);
   const cap = level.par;
   const start = level.blocks.map(b => [b.x, b.y]);
   const startKey = stateKey(start);
@@ -414,6 +446,7 @@ export function solveWithPath(level, opts = {}) {
     }
     if (g + rem > cap) continue;
     const occ = makeOcc(level, positions);
+    const nodeOpts = withRemaining(chained, opts, positions);
     for (let bi = 0; bi < n; bi++) {
       if (!positions[bi]) continue;
       const { spots, parents } = reachableWithPaths(level, occ, bi, positions[bi]);
@@ -428,7 +461,7 @@ export function solveWithPath(level, opts = {}) {
       };
       // exit moves
       for (const [x, y] of spots) {
-        const gate = canExit(level, occ, bi, x, y, opts);
+        const gate = canExit(level, occ, bi, x, y, nodeOpts);
         if (gate) {
           const np = positions.slice(); np[bi] = null;
           push(np, { bi, path: pathTo(parents, [x, y]), side: gate.side });

@@ -194,6 +194,7 @@ const btnHint = document.getElementById('btnHint');
 const btnRestart = document.getElementById('btnRestart');
 const btnMenu = document.getElementById('btnMenu');
 const hudGoal = document.getElementById('hudGoal');
+const hudSeq = document.getElementById('hudSeq');
 const adModal = document.getElementById('adModal');
 const adBar = document.getElementById('adBar');
 const adCount = document.getElementById('adCount');
@@ -359,6 +360,8 @@ let particles = [];
 let shakeT = 0;
 let cell = 40, bx = 0, by = 0; // board metrics
 let hintT = 0;
+let seqIntroT = -1;    // seconds since the approval chain's one-shot 1->2->3 overview was armed (-1 = off)
+let seqBumpT = 0;      // countdown on the HUD chip's refusal flick
 let paused = false, soundOn = true;
 let undoSnap = null;   // state before the last counted move (one-step undo)
 let pendingSnap = null; // state captured when the current drag began
@@ -404,9 +407,18 @@ let dailyPractice = false; // this play is after the day's record closed — it 
 let dailyPending = null;   // a fail waiting on the rescue decision (see closePendingDaily)
 let resumeLevel = li;      // the last REAL level loaded: the daily must not disturb it
 
+// One more virtual index, immediately past the draft: a board handed in by the
+// automated checks (`GE.loadTest`). It exists so a rule can be verified on a
+// purpose-built position without adding a level to the campaign or editing one —
+// the 30 shipped sheets are the product and stay untouched. Like the draft it is
+// outside the campaign: no resume pointer, no personal best, no `ge_level` write.
+const TEST_INDEX = DAILY_INDEX + 1;
+let testLevel = null;
+
 const isDaily = () => li === DAILY_INDEX;
+const isTest = () => li === TEST_INDEX;
 const dailyReady = () => typeof DAILIES !== 'undefined' && !!(DAILIES && DAILIES.levelFor);
-const levelAt = i => (i === DAILY_INDEX ? dailyLevel : LEVELS[i]);
+const levelAt = i => (i === DAILY_INDEX ? dailyLevel : i === TEST_INDEX ? testLevel : LEVELS[i]);
 // the same day boundary the streak logic uses: local midnight, read through the
 // overridable clock so a bot can walk days without touching the system clock
 const dayStr = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
@@ -539,10 +551,12 @@ function dailyShareText(dateStr) {
 function loadLevel(i) {
   // leaving a decided draft board IS the answer to the rescue offer
   if (dailyPending && i !== DAILY_INDEX) closePendingDaily();
-  // the daily is the one index that escapes the clamp, and only while a board is armed
-  li = i === DAILY_INDEX && dailyLevel ? DAILY_INDEX : Math.max(0, Math.min(i, LEVELS.length - 1));
+  // the two virtual indices are the only ones that escape the clamp, and only while
+  // a board is armed at them
+  li = (i === DAILY_INDEX && dailyLevel) || (i === TEST_INDEX && testLevel)
+    ? i : Math.max(0, Math.min(i, LEVELS.length - 1));
   if (isDaily()) syncDailyMode();
-  else { resumeLevel = li; try { localStorage.setItem('ge_level', String(li)); } catch (e) {} }
+  else if (!isTest()) { resumeLevel = li; try { localStorage.setItem('ge_level', String(li)); } catch (e) {} }
   L = JSON.parse(JSON.stringify(levelAt(li)));
   pos = L.blocks.map(b => [b.x, b.y]);
   disp = L.blocks.map(b => [b.x, b.y]);
@@ -551,6 +565,9 @@ function loadLevel(i) {
   exitAnim = L.blocks.map(() => null);
   gateAlign = []; lastExit = null;
   settleT = L.blocks.map(() => 0);
+  // the approval chain's one-shot overview: the whole 1→2→3 order is drawn before the
+  // first move, so the order is a fact the player HAS before they act, never a refusal after
+  seqIntroT = hasChain(L) ? 0 : -1;
   moves = 0; movesLeft = L.moves; rescued = false; over = false;
   attemptUndos = 0; attemptHints = 0;
   drag = null; particles = []; hintT = 0; idleT = 0; exitChain = 0; lastExitAt = 0;
@@ -561,7 +578,7 @@ function loadLevel(i) {
   adClose();
   hudLevel.textContent = isDaily()
     ? (dailyPractice ? 'PRACTICE \u00b7 NOT RECORDED' : 'DAILY DRAFT \u00b7 ' + dayLabel(dailyDate))
-    : 'Level ' + (li + 1);
+    : isTest() ? 'TEST BOARD' : 'Level ' + (li + 1);
   hudLevel.classList.toggle('daily', isDaily());
   hudPar.textContent = 'par ' + L.par;
   winModal.hidden = true; failModal.hidden = true;
@@ -573,10 +590,11 @@ function loadLevel(i) {
   layout();
   if (isDaily()) track(dailyPractice ? 'daily_practice' : 'daily_started', dailyDate);
   else track('level_start', li + 1);
-  window.dispatchEvent(new CustomEvent('ge:load', { detail: { lvl: li, daily: isDaily(), date: isDaily() ? dailyDate : null } }));
+  window.dispatchEvent(new CustomEvent('ge:load', { detail: { lvl: li, daily: isDaily(), test: isTest(), date: isDaily() ? dailyDate : null } }));
   // one-time tips, shown in the HUD strip (never information the board itself lacks).
   // The draft is not a teaching surface: it teaches nothing and interrupts nothing.
   if (isDaily()) return;
+  if (hasChain(L)) tip('seq', 'Numbered blocks leave in order. The solid stamp is next.');
   if (li === 2) tip('corner', 'One drag can turn corners. The whole route is one move.');
   if (li === FIRST_STONE) tip('stone', 'Stones never move. Route around them.');
   if (li === FIRST_TWICE) tip('twice', 'Everything is corked. Sometimes a block has to move twice.');
@@ -596,8 +614,30 @@ function buildGoal() {
   }
 }
 
+// The approval-chain chip: the one place the order is stated in words. It names the number
+// that may leave now — never the block, never a position — so it can never become a hint.
+function updateSeqHud() {
+  if (!hudSeq) return;
+  const n = hasChain(L) ? nextSeq() : Infinity;
+  const on = n !== Infinity && !isDaily();
+  showEl(hudSeq, on);
+  if (on) hudSeq.innerHTML = 'NEXT \u25b8 <b></b>';
+  if (on) hudSeq.lastChild.textContent = SEQ_GLYPH[n] || n;
+}
+// an out-of-turn block bumped its gate: flick the chip so the refusal has an author
+function bumpSeq() {
+  if (!hudSeq || hudSeq.hidden) return;
+  seqBumpT = 0.42;
+  hudSeq.classList.remove('bump'); void hudSeq.offsetWidth; hudSeq.classList.add('bump');
+  haptic('low');
+}
+
 // ---------- HUD ----------
-function starsFor(m) { return m <= L.par ? 3 : m <= L.par + 2 ? 2 : 1; }
+// 3★ is exactly par (optimal) and always has been; the 2★ band was tightened from
+// par+2 to par+1 (round decision 2026-09-02) so the second star costs something too.
+// The HUD meter reads this same function forward (`moves + blocksLeft()`), so the amber
+// "the 3-star pace is gone" warning now lands one move earlier by construction.
+function starsFor(m) { return m <= L.par ? 3 : m <= L.par + 1 ? 2 : 1; }
 function blocksLeft() { return pos.filter(p => p).length; }
 function updateHud() {
   hudMoves.textContent = movesLeft;
@@ -623,6 +663,7 @@ function updateHud() {
   btnMenu.disabled = over;
   // one hint per board position: it stays lit until the player acts on it (or undoes)
   btnHint.disabled = over || paused || !!hint || left === 0;
+  updateSeqHud();
   // objective chips: blocks of each color still to clear
   for (const chip of hudGoal.children) {
     const c = +chip.dataset.color;
@@ -668,7 +709,31 @@ function fits(bi, x, y) {
   return true;
 }
 
+// ---------- sequenced exits: the approval chain ----------
+// A block may carry `blocks[i].seq` (1..k). The rule is DERIVED from the blocks still
+// on the board rather than stored: `nextSeqIn(ps)` is the lowest seq among them, and a
+// chained block may leave only while its own number IS that lowest one. Because the
+// positions array is the rule's ONLY input, undo is correct for free (undo restores
+// `pos`, and restoring `pos` restores the chain), and the solver's state space is
+// unchanged — no new dimension, just a predicate over a state it already had.
+//
+// Unchained blocks are never gated: the chain says which CHAINED block may leave next,
+// not which block may move. Movement is never gated at all — `fits` / `stepToward` stay
+// pure geometry, because a chain restricts WHEN a block may leave, never where it may slide.
+const SEQ_GLYPH = ['', '\u2460', '\u2461', '\u2462', '\u2463', '\u2464', '\u2465'];
+const hasChain = lv => !!(lv && lv.blocks && lv.blocks.some(b => b.seq));
+function nextSeqIn(ps) {
+  let m = Infinity;
+  for (let i = 0; i < L.blocks.length; i++) { const s = L.blocks[i].seq; if (ps[i] && s && s < m) m = s; }
+  return m;
+}
+function seqOkIn(ps, bi) { const s = L.blocks[bi].seq; return !s || s === nextSeqIn(ps); }
+const nextSeq = () => nextSeqIn(pos);
+const seqOk = bi => seqOkIn(pos, bi);
+
 // block (at x,y) flush against `side` and every occupied lane covered by a same-color gate?
+// PURELY GEOMETRIC, deliberately: the chain is a separate predicate, applied by the three
+// callers that decide whether an exit may HAPPEN (stepToward, findRoute, solveFrom).
 function exitGateAt(bi, x, y, side) {
   const b = L.blocks[bi];
   const lanes = new Set();
@@ -697,9 +762,15 @@ function exitGate(bi, side) {
 // Shortest drag route (cell by cell, corners allowed) from a block's current
 // spot to any position it can exit from — the same physics the finger uses.
 // Returns { path: [[x,y]...], side } or null if nothing can get it out right now.
-function findRoute(bi) {
+function findRoute(bi, opts) {
   const start = pos[bi];
   if (!start) return null;
+  // The approval chain first: a chained block that is not next up has no legal exit from
+  // ANY position, and the chain does not depend on where it stands, so this is exactly
+  // equivalent to testing it inside the search — and it stops hints, the opening ghost
+  // route and the fail card's rescue preview from ever proposing an illegal exit.
+  // `{ ignoreSeq: true }` asks the purely geometric question; nothing shipped does.
+  if (!(opts && opts.ignoreSeq) && !seqOk(bi)) return null;
   const key = (x, y) => x + ',' + y;
   const parent = new Map([[key(start[0], start[1]), null]]);
   const q = [start];
@@ -759,7 +830,8 @@ function solveFrom(startPos) {
     return { order, path(t) { const out = []; let c = t; while (c) { out.push(c); c = par.get(key(c)); } return out.reverse(); } };
   };
   // exit from (x,y) through `side`: gate covers every lane, and the lane ahead is clear
-  const canExitG = (g, bi, x, y, side) => {
+  const canExitG = (g, bi, x, y, side, ps) => {
+    if (!seqOkIn(ps, bi)) return false;   // the approval chain, on the HYPOTHETICAL position
     if (!exitGateAt(bi, x, y, side)) return false;
     const [dx, dy] = DIRS[side];
     for (const [cx, cy] of L.blocks[bi].cells) {
@@ -772,7 +844,13 @@ function solveFrom(startPos) {
   const start = startPos.map(p => (p ? [p[0], p[1]] : null));
   const remaining = start.filter(Boolean).length;
   if (!remaining) return null;
-  for (let cap = remaining; cap <= remaining + 4; cap++) {
+  // A chain forces waiting moves into the optimal line, so the extra depth the search may
+  // spend above the trivial lower bound is raised on chained boards, and the state budget
+  // with it. Unchained boards keep the exact allowance they have always had.
+  const chained = hasChain(L);
+  const extra = chained ? 6 : 4;
+  const stateCap = chained ? 80000 : 40000;
+  for (let cap = remaining; cap <= remaining + extra; cap++) {
     const nodes = new Map([[key(start), { g: 0, parent: null, action: null, pos: start }]]);
     const buckets = Array.from({ length: cap + 2 }, () => []);
     buckets[remaining].push(key(start));
@@ -784,7 +862,7 @@ function solveFrom(startPos) {
       const rem = node.pos.filter(Boolean).length;
       if (rem === 0) { let c = node, act = null; while (c.action) { act = c.action; c = nodes.get(c.parent); } return act; }
       if (node.g + rem > cap) continue;
-      if (++explored > 40000) break;
+      if (++explored > stateCap) break;
       for (let bi = 0; bi < n; bi++) {
         if (!node.pos[bi]) continue;
         const g = grid(node.pos, bi), R = reach(g, bi, node.pos[bi]);
@@ -796,7 +874,7 @@ function solveFrom(startPos) {
           if (nf <= cap) buckets[nf].push(nk);
         };
         for (const p of R.order) {
-          const side = ['top', 'bottom', 'left', 'right'].find(s => canExitG(g, bi, p[0], p[1], s));
+          const side = ['top', 'bottom', 'left', 'right'].find(s => canExitG(g, bi, p[0], p[1], s, node.pos));
           if (side) { const np = node.pos.slice(); np[bi] = null; push(np, { bi, path: R.path(p), side }); break; }
         }
         for (const p of R.order) {
@@ -820,6 +898,7 @@ function beginDrag(bi, gx, gy, pid = -1) {
   // moved on, so its flight starts now. Nothing on the board is ever drawn on top of it.
   flushHeldExits();
   // t0 drives the pickup press beat: a 70 ms dip before the lift reads as started (render)
+  seqIntroT = -1; // the player has taken the board: the overview stops explaining over their hand
   drag = { bi, pid, gx, gy, sx: pos[bi][0], sy: pos[bi][1], moved: false, counted: false, t0: performance.now() };
   pendingSnap = snapshot();
 }
@@ -842,10 +921,13 @@ function stepToward(bi, wantX, wantY) {
         if (tn - hapticStepT > 70) { hapticStepT = tn; haptic('step'); }
         break;
       }
-      // blocked by the board edge? if a matching gate covers us, that's an exit.
+      // blocked by the board edge? if a matching gate covers us, that's an exit — unless the
+      // approval chain says another number is up first. This is the ONE player-facing gate:
+      // an out-of-turn block bumps flush against its gate and stops there. Nothing is spent,
+      // nothing leaves, and the HUD chip flicks to name the number the drawing is waiting on.
       if (mag > 0.62 && wouldLeaveBoard(bi, sx, sy)) {
         const side = sx === 1 ? 'right' : sx === -1 ? 'left' : sy === 1 ? 'bottom' : 'top';
-        if (exitGate(bi, side)) return side;
+        if (exitGate(bi, side)) { if (seqOk(bi)) return side; bumpSeq(); }
       }
     }
     if (!stepped) break;
@@ -864,6 +946,11 @@ function wouldLeaveBoard(bi, sx, sy) {
 // off the board, fail/win decided). The *picture* of it — burst, shake, sound, haptic, gate
 // close — is spent by beginFlight() once the rendered block has walked into the aligned cell.
 function startExit(bi, side) {
+  // Defensive assert, not a second rule: every player path into an exit goes through
+  // stepToward, which already refuses an out-of-turn one. If anything ever reaches here
+  // out of turn (a console hook, a future caller) the exit is refused outright rather
+  // than silently falsifying the level's par.
+  if (!seqOk(bi)) { track('seq_refused', li + 1); bumpSeq(); return false; }
   const [dx, dy] = DIRS[side];
   const b = L.blocks[bi];
   const from = [pos[bi][0], pos[bi][1]]; // the flush, fully-covered cell the rule matched on
@@ -888,6 +975,7 @@ function startExit(bi, side) {
   // still owes is added on so the card never lands over a block that has not left yet.
   if (pos.every(p => !p)) { over = true; updateHud(); winTimers.push(setTimeout(win, 380 + visLagMs(bi))); }
   else maybeFail();
+  return true;
 }
 
 // the rendered block has landed flush in its gate lane: spend the exit's feedback and let it fly
@@ -974,6 +1062,15 @@ function maybeFail() {
         rescued, cleared: pos.filter(p => !p).length, blocks: pos.length };
     }
     updateHud();
+    // The attempt is decided HERE, a beat before the sheet animates in — pass 4's one-time
+    // rescue teach hangs off this event, and with the streak-repair surface gone it is also
+    // the only signal a build has that a player ran out of moves at all. It is a statement of
+    // fact and nothing more: no card, no offer, no copy of its own.
+    window.dispatchEvent(new CustomEvent('ge:fail', { detail: {
+      lvl: li, daily: isDaily(), test: isTest(), moves, par: L.par,
+      blocks: pos.length, cleared: pos.filter(p => !p).length, rescued,
+      date: isDaily() ? dailyDate : null,
+    } }));
     setTimeout(() => {
       const out = pos.filter(p => !p).length, left = pos.length - out;
       failSub.textContent = `${out} of ${pos.length} blocks escaped — out of moves.`;
@@ -1027,19 +1124,19 @@ function win() {
   hint = null;
   updateHud();
   const stars = starsFor(moves);
-  const daily = isDaily();
+  const daily = isDaily(), test = isTest();
   // the draft has nothing after it: its "next" is the way out, never LEVELS[31]
-  const last = daily || li === LEVELS.length - 1;
+  const last = daily || test || li === LEVELS.length - 1;
   const winUndos = attemptUndos, winHints = attemptHints;
   document.getElementById('winTitle').textContent = winTitleFor(stars);
   btnNext.textContent = last ? 'Back to menu' : 'Next level';
   // par is the target, never "best"; the player's own best is a separate fact once one exists
   // the draft keeps no personal best: one board, one recorded attempt, no ladder to climb
-  const prev = daily ? 0 : best[li];
+  const prev = daily || test ? 0 : best[li];
   winSub.textContent = `Solved in ${moves} move${moves === 1 ? '' : 's'}`
     + (stars === 3 ? ' — perfect!' : ` · par ${L.par}`)
     + (prev && prev < moves ? ` · your best ${prev}` : '');
-  if (!daily && (!prev || moves < prev)) { best[li] = moves; try { localStorage.setItem('ge_best', JSON.stringify(best)); } catch (e) {} }
+  if (!daily && !test && (!prev || moves < prev)) { best[li] = moves; try { localStorage.setItem('ge_best', JSON.stringify(best)); } catch (e) {} }
   // the day's record closes here, before the event goes out, so every listener
   // (and GE.dailyShareText) sees the resolved row rather than an open one
   if (daily) {
@@ -1066,7 +1163,7 @@ function win() {
   btnNext.disabled = btnReplay.disabled = !reduced;
   winTimers.push(setTimeout(() => { btnNext.disabled = btnReplay.disabled = false; }, delays[2] + 400 + 400));
   winModal.hidden = false;
-  window.dispatchEvent(new CustomEvent('ge:win', { detail: { lvl: li, stars, moves, last, par: L.par, blocks: pos.length, undos: winUndos, hints: winHints, daily, date: daily ? dailyDate : null } }));
+  window.dispatchEvent(new CustomEvent('ge:win', { detail: { lvl: li, stars, moves, last, par: L.par, blocks: pos.length, undos: winUndos, hints: winHints, daily, test, date: daily ? dailyDate : null } }));
   sound('win');
   haptic('win');
   track('win', daily ? { daily: dailyDate, moves, stars } : { lvl: li + 1, moves, stars });
@@ -1252,14 +1349,13 @@ btnRestart.onclick = () => { if (over || paused) return; track('restart', li + 1
 btnUndo.onclick = () => { audioInit(); undo(); };
 btnNext.onclick = () => {
   if (isDaily()) {
-    // Hand control back to the menu on the shared event, then put the resume
-    // pointer back: the campaign's own finish handler sends the player to level 1,
-    // which is right after the 30th sheet and wrong after a draft — the draft is
-    // not part of the campaign and must not move where "Play" resumes.
-    const back = resumeLevel;
-    window.dispatchEvent(new CustomEvent('ge:finished', { detail: { daily: true, date: dailyDate } }));
-    li = resumeLevel = back;
-    try { localStorage.setItem('ge_level', String(back)); } catch (e) {}
+    // Load FIRST, hand control to the menu second (r3-report §3). Loading the resume level
+    // hides the win card and restores `li` / `L` / `ge_level` together, so there is no window
+    // in which the board on screen disagrees with the level index; the menu's finish handler
+    // then only has to show itself, because a draft has no campaign reset to do.
+    const date = dailyDate;
+    loadLevel(resumeLevel);
+    window.dispatchEvent(new CustomEvent('ge:finished', { detail: { daily: true, date } }));
     return;
   }
   if (li === LEVELS.length - 1) { window.dispatchEvent(new CustomEvent('ge:finished')); return; }
@@ -1451,6 +1547,126 @@ function drawBlockShape(b, px, py, inset, st) {
   drawGlyph(st.glyph, px + gx2 * cell, py + gy2 * cell, gs, 'rgba(255,255,255,.92)');
 }
 
+// ---------- approval-chain rendering ----------
+// The order is carried by THREE SHAPE CHANNELS and zero colour, so it survives every
+// paper skin, every colour-vision deficiency and the 3-second sound-off read:
+//   next up  — a SOLID ink stamp (white numeral), a dashed on-deck ring around the whole
+//              block, and a double chevron beside the stamp;
+//   waiting  — the SAME numeral as an OUTLINE stamp (ink numeral, no fill), at reduced alpha.
+// Fill-vs-outline alone already separates them; the ring and the chevron are redundancy,
+// which is the point — a player who misses one still has two.
+const SEQ_INTRO_S = 3.2;   // how long the one-shot 1->2->3 overview stays up
+
+function seqBoxAt(b, px, py, inset) {
+  const [cx, cy] = b.cells[0];                       // the block's first cell, top-left corner
+  const s = Math.max(12, Math.round(cell * 0.30));
+  return [px + cx * cell + inset + 1, py + cy * cell + inset + 1, s];
+}
+function blockBoundsCells(b) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const [qx, qy] of b.cells) { x0 = Math.min(x0, qx); y0 = Math.min(y0, qy); x1 = Math.max(x1, qx + 1); y1 = Math.max(y1, qy + 1); }
+  return [x0, y0, x1, y1];
+}
+function drawSeqStamp(b, px, py, inset, next) {
+  const [x, y, s] = seqBoxAt(b, px, py, inset);
+  // next up is a WIDE ink tab carrying the numeral and a chevron; waiting is a NARROW paper
+  // label carrying the numeral alone. The two are tonal inverses as well as different widths,
+  // so they never have to be told apart by colour or by reading the number.
+  const w = next ? Math.round(s * 1.85) : s;
+  ctx.save();
+  if (!next) ctx.globalAlpha *= 0.82;
+  // channel 3 — the on-deck ring: dashed, inside the block's own outline, around the footprint
+  if (next) {
+    const [x0, y0, x1, y1] = blockBoundsCells(b), d = inset + 3.5;
+    const rx = px + x0 * cell + d, ry = py + y0 * cell + d;
+    const rw = (x1 - x0) * cell - d * 2, rh = (y1 - y0) * cell - d * 2;
+    if (rw > 6 && rh > 6) {
+      ctx.setLineDash([6, 4]);
+      ctx.lineDashOffset = reducedMotion() ? 0 : -hintT * 26; // static under reduced motion
+      ctx.strokeStyle = THEME.halo; ctx.lineWidth = 3.4;
+      rr(rx, ry, rw, rh, 5); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,.95)'; ctx.lineWidth = 1.7;
+      rr(rx, ry, rw, rh, 5); ctx.stroke();
+      ctx.setLineDash([]); ctx.lineDashOffset = 0;
+    }
+  }
+  // channel 1 — the revision stamp itself
+  rr(x, y, w, s, 3);
+  ctx.fillStyle = next ? THEME.halo : 'rgba(255,255,255,.92)';
+  ctx.fill();
+  ctx.strokeStyle = THEME.halo; ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fillStyle = next ? 'rgba(255,255,255,.97)' : THEME.halo;
+  ctx.font = '800 ' + Math.round(s * 0.66) + 'px ui-monospace, SFMono-Regular, Menlo, monospace';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(String(b.seq), x + s / 2, y + s / 2 + 0.5);
+  // channel 2 — the chevron, inside the tab beside the numeral: "this one is up"
+  if (next) {
+    const a = s * 0.22, mx = x + s + (w - s) / 2, my = y + s / 2;
+    ctx.strokeStyle = 'rgba(255,255,255,.97)'; ctx.lineWidth = 2;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(mx - a * 1.5, my - a); ctx.lineTo(mx - a * 0.4, my); ctx.lineTo(mx - a * 1.5, my + a);
+    ctx.moveTo(mx + a * 0.1, my - a); ctx.lineTo(mx + a * 1.2, my); ctx.lineTo(mx + a * 0.1, my + a);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+// The one-shot overview: a dashed line through the chain in order, drawn once on load so the
+// WHOLE order is a fact the player has before the first drag rather than something they learn
+// from a refusal. Each leg is TRIMMED to the two stamps it joins, so it connects the numbers
+// instead of running across them (which is what it looked like with the marching turned off).
+// It dies on the first pickup, and it never marks a route — it joins stamps, not cells.
+function drawSeqIntro(inset) {
+  const up = nextSeq();
+  const nodes = L.blocks
+    .map((b, i) => ({ b, i }))
+    .filter(o => o.b.seq && pos[o.i] && !exitAnim[o.i])
+    .sort((a, z) => a.b.seq - z.b.seq)
+    .map(({ b, i }) => {
+      const [x, y, sz] = seqBoxAt(b, bx + disp[i][0] * cell, by + disp[i][1] * cell, inset);
+      const w = b.seq === up ? Math.round(sz * 1.85) : sz;
+      return { c: [x + w / 2, y + sz / 2], r: Math.max(w, sz) / 2 + 5 };
+    });
+  if (nodes.length < 2) return;
+  const u = seqIntroT / SEQ_INTRO_S;
+  const alpha = reducedMotion() ? 1 : Math.min(1, u * 8) * Math.min(1, (1 - u) * 4);
+  if (alpha <= 0) return;
+  const legs = [];
+  for (let i = 1; i < nodes.length; i++) {
+    const a = nodes[i - 1], z = nodes[i];
+    const dx = z.c[0] - a.c[0], dy = z.c[1] - a.c[1], len = Math.hypot(dx, dy);
+    if (len <= a.r + z.r + 6) continue;                 // the two stamps are already touching
+    const ux = dx / len, uy = dy / len;
+    legs.push([[a.c[0] + ux * a.r, a.c[1] + uy * a.r], [z.c[0] - ux * z.r, z.c[1] - uy * z.r], ux, uy]);
+  }
+  if (!legs.length) return;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.setLineDash([7, 5]);
+  ctx.lineDashOffset = reducedMotion() ? 0 : -hintT * 30;  // static under reduced motion
+  for (const [col, wid] of [[THEME.halo, 6.5], ['rgba(255,255,255,.95)', 2.6]]) {
+    ctx.strokeStyle = col; ctx.lineWidth = wid;
+    ctx.beginPath();
+    for (const [p0, p1] of legs) { ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); }
+    ctx.stroke();
+  }
+  ctx.setLineDash([]); ctx.lineDashOffset = 0;
+  // arrowhead on the last leg: the line has a direction, and the direction IS the order
+  const [, end, ux, uy] = legs[legs.length - 1];
+  const ang = Math.atan2(uy, ux), h = Math.max(7, cell * 0.15);
+  for (const [col, wid] of [[THEME.halo, 6], ['rgba(255,255,255,.95)', 2.6]]) {
+    ctx.strokeStyle = col; ctx.lineWidth = wid;
+    ctx.beginPath();
+    ctx.moveTo(end[0] - Math.cos(ang - 0.5) * h, end[1] - Math.sin(ang - 0.5) * h);
+    ctx.lineTo(end[0], end[1]);
+    ctx.lineTo(end[0] - Math.cos(ang + 0.5) * h, end[1] - Math.sin(ang + 0.5) * h);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 // ghost route: a marching dashed finger path from the block's centre, around
 // corners, out past the gate, with an arrowhead and a travelling finger pip.
 // Without a side (a hint that parks a block) the path ends at the destination and
@@ -1564,6 +1780,8 @@ function frame(t) {
   for (let c = 0; c < gateFlash.length; c++) if (gateFlash[c] >= 0) gateFlash[c] += dt;
   for (let i = 0; i < settleT.length; i++) if (settleT[i] > 0) { settleT[i] += dt; if (settleT[i] > 0.4) settleT[i] = 0; }
   livesTick(dt);
+  if (seqIntroT >= 0) { seqIntroT += dt; if (seqIntroT >= SEQ_INTRO_S) seqIntroT = -1; }
+  if (seqBumpT > 0) { seqBumpT -= dt; if (seqBumpT <= 0) { seqBumpT = 0; if (hudSeq) hudSeq.classList.remove('bump'); } }
   hintT += dt;
   // a player who has done nothing for 20 s is stuck: the hint button beckons (the hint
   // itself is never shown unasked — that would give the level away)
@@ -1693,6 +1911,7 @@ function render() {
   // every block is inset from its cells so a gutter of paper always separates neighbours —
   // two red blocks side by side must never read as one slab (3-second rule)
   const inset = Math.max(4, Math.round(cell * 0.1));
+  const nextUp = hasChain(L) ? nextSeq() : Infinity; // one read for the whole frame
   for (let i = 0; i < L.blocks.length; i++) {
     if (!pos[i] && !exitAnim[i]) continue;
     const b = L.blocks[i], c = COLORS[b.color];
@@ -1725,8 +1944,12 @@ function render() {
       // on the fail card the stranded blocks breathe with a white edge so the rescue shows what it buys
       edge: stranded ? `rgba(${THEME.flash},${0.35 + pulse * 0.6})` : null,
     });
+    // the approval chain rides on the block, inside the same transform, so it presses,
+    // settles, glides and fades out with the block it belongs to
+    if (b.seq) drawSeqStamp(b, px, py, inset, b.seq === nextUp);
     ctx.restore();
   }
+  if (seqIntroT >= 0) drawSeqIntro(inset);
 
   // gate alignment flash: on the frame a block lands flush in its lane, the gate it is about to
   // leave by lights up — drawn OVER the block so the eye is told "it lined up" before it goes
@@ -1887,6 +2110,33 @@ window.GE = {
   // drawing helpers shared with menu.js (legend); ctx is swapped for the call
   draw(c, fn) { const o = ctx; ctx = c; try { fn({ rr, drawGlyph, drawBlockShape, COLORS }); } finally { ctx = o; } },
   load: loadLevel,
+  // ---- sequenced exits (the approval chain) ----
+  // The whole rule, readable from outside: which numbers are still on the board, which one
+  // may leave now, and per block its number and whether it is the one that is up. Derived
+  // fresh from `pos` on every read, exactly like the rule itself.
+  seqInfo() {
+    const n = hasChain(L) ? nextSeq() : Infinity;
+    return {
+      chained: hasChain(L),
+      next: n === Infinity ? null : n,
+      chain: L.blocks
+        .map((b, i) => ({ bi: i, seq: b.seq || null, out: !pos[i] }))
+        .filter(o => o.seq)
+        .sort((a, z) => a.seq - z.seq),
+      blocks: L.blocks.map((b, i) => ({ seq: b.seq || null, out: !pos[i], nextUp: !!b.seq && b.seq === n })),
+    };
+  },
+  // Load a synthetic board at TEST_INDEX (checks only). It is outside the campaign in every
+  // way the draft is — no resume pointer, no personal best, no `ge_level` write — so a rule
+  // can be verified on a purpose-built position without touching the 30 shipped sheets.
+  loadTest(level) {
+    testLevel = level ? JSON.parse(JSON.stringify(level)) : null;
+    if (!testLevel) return false;
+    loadLevel(TEST_INDEX);
+    return li === TEST_INDEX;
+  },
+  get isTest() { return isTest(); },
+  get testIndex() { return TEST_INDEX; },
   // ---- Daily Draft (the menu/index UI wires onto these; the engine owns the rules) ----
   loadDaily,                                  // (dateStr?) -> bool; defaults to today
   get isDaily() { return isDaily(); },        // the draft is the board on screen
@@ -1895,7 +2145,7 @@ window.GE = {
   get dailyIndex() { return DAILY_INDEX; },   // the virtual level index it lives at
   dailyShareText,                             // (dateStr?) -> the FIELD REPORT string, or null
   undo,
-  route: findRoute,
+  route: findRoute,   // (bi, {ignoreSeq}?) -> the drag out, or null; respects the chain by default
   solve: solveFrom,   // reference next move from any position (bots / reviewer console)
   showHint,           // show the hint directly (skips the ad stub; the button never does)
   // programmatic drag: mirrors player physics exactly
@@ -1903,7 +2153,7 @@ window.GE = {
     if (over || !pos[bi]) return false;
     beginDrag(bi, 0, 0);
     const side = stepToward(bi, tx, ty);
-    if (side) { const b = bi; drag = null; startExit(b, side); return 'exit'; }
+    if (side) { const b = bi; drag = null; return startExit(b, side) ? 'exit' : false; }
     endDrag(true);
     return true;
   },
@@ -1921,7 +2171,7 @@ window.GE = {
     if (exitSide) {
       const far = { top: [pos[bi][0], -9], bottom: [pos[bi][0], 99], left: [-9, pos[bi][1]], right: [99, pos[bi][1]] }[exitSide];
       const side = stepToward(bi, far[0], far[1]);
-      if (side) { drag = null; startExit(bi, side); return 'exit'; }
+      if (side) { drag = null; return startExit(bi, side) ? 'exit' : false; }
     }
     endDrag(true);
     return true;

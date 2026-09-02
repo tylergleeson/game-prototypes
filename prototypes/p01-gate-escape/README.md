@@ -84,6 +84,49 @@ Built to the hybrid-casual grammar:
   amber/red/green *text* inks darken on the two light papers so they still clear
   4.5:1. Persisted in `ge_prog` (`skin`, `skins`, `seen`); `cert_earned` /
   `skin_select` tracked.
+- **Daily Draft** (`dailies.js` + `ge_daily`, 2026-09-02): one solver-verified board a day, the
+  SAME board for every player, decoded from a precomputed table of a year of boards (365 rows,
+  ~19 KB, ~54 B/day, append-only and pinned by `tools/dailies.lock`). Nothing is generated in the
+  page — a generator in the page is a solver in the page, and par has to be a fact the player
+  cannot dial. It rides on a **virtual level index** (`DAILY_INDEX === LEVELS.length`), so it is
+  outside the campaign by construction: no star on a sheet, no unlock, no certification, no
+  personal best, no life spent, and the resume pointer never moves. Weekday curve rises to a
+  Saturday peak; the limit is par+3 every day.
+  - the sheet index carries a `DAILY DRAFT · <date>` row: **READY** while today's record is open
+    (a tap loads the board), then the day's result (`★★☆ FILED` / `NOT CLEARED`) with
+    `PRACTICE · NOT RECORDED` under it, and a tap opens the field report instead of the board.
+    The HUD and pause card name the draft by date — the virtual index never reaches the player
+    as "Level 31".
+  - **one recorded attempt a day.** The record opens on the first load and closes on the first
+    *resolution*: a clear, or a loss the player resolves by declining the rescue (Retry, leaving,
+    `pagehide`). The fail sheet decides nothing on its own — taking the rescue keeps the attempt
+    alive, and a rescue that leads to a clear is recorded as a fact (`rescued: true`), never
+    hidden. Everything after the close is practice and rewrites nothing.
+  - the **FIELD REPORT** (`GE.dailyShareText()`) is five lines — par bar, stars, moves/par, route
+    efficiency, undo/hint counts, `· rescued` — and carries **no route and no per-move grid**:
+    every player is on the same board, so a picture of the line would be a walkthrough. Two
+    different boards played to the same numbers produce the same report but for the date, and the
+    bot asserts exactly that (plus a pinned format regex and a `★☆■□·`+ASCII codepoint allowlist).
+    The win card and the result card show that string **verbatim** above the Share button — what
+    you send is what you see — and sharing falls through `navigator.share` → clipboard → a
+    selectable textarea. Tracked: `daily_started` / `daily_practice` / `daily_won` / `daily_lost` /
+    `daily_enter` / `daily_report` / `daily_share` / `daily_shared`.
+- **Staged disclosure** (the FTUE ladder, 2026-09-02): a new save opens **bare** — the sheet index
+  shows level, stars, the thirty tiles and Sound, and nothing else; no certification stamps, no
+  paper picker, no draft row, no survey row, no status line. Each system arrives on the win that
+  earns it: **certification (and the paper picker) after 2 cleared, the Daily Draft after 3, the
+  Field Survey after 5** — the last with the *easiest* of the week's four contracts already taken,
+  a worked example rather than two decisions about a system nobody has seen yet (swapping stays
+  free until progress). Each arrival is one quiet stamped `NEW` row on the win card, using the row
+  the survey beats already own, and it plays **once ever**. From the first **return** day the
+  landing gains `#menuStatus` — a passive `div`, never a button, so the landing stays exactly three
+  interactive elements — with at most two *finished* facts (`Today's draft is filed · 3 of 7 survey
+  days`); never a countdown, a CTA or a loss. The first time a player runs out of moves the fail
+  sheet gains one calm line naming what the rescue and Retry do (`ge:fail` → `#failTeach`), also
+  once ever. The gate is **derived** from cleared levels (`disclosure()` in `menu.js`); only
+  `prog.d0` (first-clear date; `'pre'` for a save that predates the ladder) and `prog.rv` (which
+  reveals have played) are stored, because neither can be derived. Tracked: `ftue_reveal`,
+  `contract_preselect`.
 - **Field Survey** (the one meta system, `ge_survey` — the 2026-09-02 research round merged
   the three daily quests, the streak card and the weekly ladder into it): the sheet index
   carries ONE row, `FIELD SURVEY · n/7 · N pts`, with a `SELECT 2` badge while the week's
@@ -188,6 +231,8 @@ Built to the hybrid-casual grammar:
 - [x] Native pass (`reviews/p01-par-20260831-0056-s1/native-report.md`): haptics via a native UIKit-generator driver (prepared/reused; selection ticks on pickup + rate-limited cell steps, light impact on settle, medium on gate exit with one Core Haptics signature whoosh, success/warning/error on win/low/fail; independent persisted Haptics toggle, native-only, web build byte-identical in behavior) + StatusBar tint and runtime `theme-color` meta following the paper skins (bot-asserted); blueprint launch screen (`tools/make-splash.mjs`); `PrivacyInfo.xcprivacy` in the app target; App Store metadata + 6.9" iPhone and 13" iPad store-size screenshots in `marketing/appstore/`
 - [x] Design-playbook pass (`reviews/p01-par-20260831-0056-s1/design-report.md`): feel beats (press dip / settle overshoot / unified button depth / audio pitch drift + 3 exit variants), canvas `prefers-reduced-motion` + pause-card Motion toggle, three deterministic daily quests replacing the single daily goal, streak freezes (banked by all-quests-done, auto-consumed with a calm notice) + "N of last 7 days" marks, Field Survey weekly ladder (3/7/12/20 stamps, surveyor's mark) — all three of those were merged into ONE weekly Field Survey sheet on 2026-09-02, see below — lives system (default ON, flag-gated: L1–5 free, Retry-after-fail costs one from L6, rescue preserves, 25-min anchor refill, calm empty-state card), colorblind/grayscale verification stills (`tools/capture-accessibility.mjs`)
 - [x] Field Survey merge (2026-09-02 research round, `reviews/p01-research-round/r2-report.md`): the three daily quests, the streak card and the weekly ladder became ONE weekly sheet (`ge_survey`) — a 7-day spine, two contracts chosen from four the ISO week offers (free to swap until one earns progress), the 3/7/12/20 marks and the week's seal; streak freezes renamed weather delays and stamped on the spine; `ge_streak` byte-identical, `ge_quests` / `ge_ladder` migrated once and removed
+- [x] Daily Draft (2026-09-02 research round, `reviews/p01-research-round/r3-report.md` engine + data, `r4-report.md` UI): a year of precomputed solver-verified boards (`dailies.js`, append-only, lock-pinned), a virtual level index outside the campaign, one recorded attempt a day that closes on the first resolution, the sheet-index row (READY → the day's result → practice), the FIELD REPORT result card and its spoiler-free share text (share → clipboard → selectable text)
+- [x] Staged FTUE disclosure (2026-09-02 research round, `reviews/p01-research-round/r4-report.md`): the sheet index opens bare and each meta system arrives on the win that earns it (certification at 2 cleared, the Daily Draft at 3, the Field Survey at 5 with one contract preselected), announced by one quiet `NEW` row on the win card; a passive landing status line from the first return day; a one-time rescue teach on the first fail
 - [ ] Web-portal upload (itch.io first — zip + copy ready, needs the account)
 - [ ] Beacon deployment (Cloudflare account; commands in `tools/beacon/README.md`), then paste the worker URL into `index.html`
 - [ ] Publisher packet (gameplay capture + KPI sheet)
