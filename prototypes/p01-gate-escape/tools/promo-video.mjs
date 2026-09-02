@@ -441,6 +441,7 @@ const F = await film('F-meta', async S => {
   await S.page.click('#btnPauseHome');
   S.mark('home'); // ALL DONE + streak "4 of last 7 days"
   await S.w(4100);
+  await S.page.click('#btnLevels'); // landing → sheet index (2026-09-02 cover-sheet menu)
   await S.page.click('#btnSurvey');
   S.mark('survey'); // the weekly ladder card
   await S.w(4700);

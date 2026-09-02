@@ -356,6 +356,7 @@ await w(600);
 await page.click('#btnPauseHome'); // back on the title block: ALL DONE + streak "4 of last 7 days"
 await w(2000);
 await caption(11, 'Field Survey — a weekly personal ladder with milestone stamps');
+await page.click('#btnLevels'); // landing → sheet index (2026-09-02 cover-sheet menu)
 await page.click('#btnSurvey');
 await w(2400); // 12 pts · stamps at 3 / 7 / 12
 await page.click('#btnSurveyClose');

@@ -49,6 +49,36 @@ let motionOn = true;
 const reducedMotion = () => !motionOn || !!(SYS_REDUCED && SYS_REDUCED.matches);
 function setMotion(on) { motionOn = !!on; try { document.body.classList.toggle('reduce-motion', !on); } catch (e) {} }
 
+// ---------- visual glide ----------
+// A drag walks the block one cell at a time (stepToward). At finger speed a whole multi-cell
+// walk used to collapse into ONE rendered frame, so a block still diagonal to its gate looked
+// like it teleported through it — the exit rule was right, the picture lied. So the RENDERED
+// position trails the logical one at a capped speed, walking the same breadcrumb cells the
+// finger did (never a straight line: that would cut through walls), and an exit flight is held
+// until the block is drawn flush in its aligned cell — with a gate flash on the frame it lands.
+// Nothing here touches the rules, move accounting, or the synchronous GE.drag/dragVia contract.
+const GLIDE_MS = 34;              // ms of visual travel per cell
+const GLIDE_MS_REDUCED = 13;
+const GLIDE_LAG_MS = 260;         // ...but the visual never trails the finger by more than this
+const GLIDE_LAG_MS_REDUCED = 100;
+const EXIT_HOLD_S = 0.09;         // beat held on the aligned cell before the flight
+const EXIT_HOLD_S_REDUCED = 0.04; // reduced motion shortens the beat; it never skips it
+const ALIGN_FLASH_S = 0.34, ALIGN_FLASH_S_REDUCED = 0.2;
+const glideMs = q => Math.min(
+  reducedMotion() ? GLIDE_MS_REDUCED : GLIDE_MS,
+  (reducedMotion() ? GLIDE_LAG_MS_REDUCED : GLIDE_LAG_MS) / Math.max(1, q));
+const exitHoldS = () => (reducedMotion() ? EXIT_HOLD_S_REDUCED : EXIT_HOLD_S);
+const alignFlashS = () => (reducedMotion() ? ALIGN_FLASH_S_REDUCED : ALIGN_FLASH_S);
+// how long the picture still owes the player for this block, in ms (bounded by GLIDE_LAG_MS)
+function visLagMs(bi) {
+  const q = (visQ[bi] || []).length;
+  return q * glideMs(q) + exitHoldS() * 1000;
+}
+const pushVis = (bi, x, y) => { (visQ[bi] || (visQ[bi] = [])).push([x, y]); };
+// the visual gives up and snaps (cancelled drag, undo, level change): a snap can never draw a
+// block inside a wall, an interpolation across an unwalked gap could
+function snapVis(bi) { visQ[bi] = []; pendingSettle[bi] = false; if (pos[bi]) disp[bi] = [pos[bi][0], pos[bi][1]]; }
+
 // ---------- paper skins (cosmetic, chest rewards) ----------
 // A skin changes ONLY the drafting sheet: page gradient, ink, rules, card tints, the canvas
 // paper/grid/border and the stones' ink. Block and gate colours, glyphs and the block halo are
@@ -287,8 +317,12 @@ let li = 0;
 try { li = Math.min(parseInt(localStorage.getItem('ge_level') || '0', 10) || 0, LEVELS.length - 1); } catch (e) {}
 let L = null;          // current level (positions mutated live)
 let pos = [];          // [x,y] per block, null = exited
-let disp = [];         // eased display positions
-let exitAnim = [];     // {dx,dy,t} per block or null
+let disp = [];         // rendered positions, capped-speed (see "visual glide")
+let visQ = [];         // per block: cells the RENDERED block still has to walk through
+let pendingSettle = []; // per block: a released drag whose settle beat waits for the visual
+let exitAnim = [];     // {dx,dy,t,from,side,gate,wait,hold} per block or null
+let gateAlign = [];    // {g,t} — the lane flash the frame a block lines up with the gate it leaves by
+let lastExit = null;   // {bi,side,cell,moves,visFrom,aligned,flew} — inspectable (GE.lastExit)
 let moves = 0, movesLeft = 0, rescued = false, over = false;
 let drag = null;       // {bi, pid, gx, gy, sx, sy, moved, counted} — one finger owns the board at a time
 let particles = [];
@@ -323,7 +357,10 @@ function loadLevel(i) {
   L = JSON.parse(JSON.stringify(LEVELS[li]));
   pos = L.blocks.map(b => [b.x, b.y]);
   disp = L.blocks.map(b => [b.x, b.y]);
+  visQ = L.blocks.map(() => []);
+  pendingSettle = L.blocks.map(() => false);
   exitAnim = L.blocks.map(() => null);
+  gateAlign = []; lastExit = null;
   settleT = L.blocks.map(() => 0);
   moves = 0; movesLeft = L.moves; rescued = false; over = false;
   attemptUndos = 0; attemptHints = 0;
@@ -584,6 +621,9 @@ function snapshot() {
   return { pos: pos.map(p => (p ? [p[0], p[1]] : null)), moves, movesLeft };
 }
 function beginDrag(bi, gx, gy, pid = -1) {
+  // a block still holding on its aligned cell has been waited on long enough: the player has
+  // moved on, so its flight starts now. Nothing on the board is ever drawn on top of it.
+  flushHeldExits();
   // t0 drives the pickup press beat: a 70 ms dip before the lift reads as started (render)
   drag = { bi, pid, gx, gy, sx: pos[bi][0], sy: pos[bi][1], moved: false, counted: false, t0: performance.now() };
   pendingSnap = snapshot();
@@ -601,7 +641,7 @@ function stepToward(bi, wantX, wantY) {
       if (mag < 0.51 || (sx === 0 && sy === 0)) continue;
       const nx = pos[bi][0] + sx, ny = pos[bi][1] + sy;
       if (fits(bi, nx, ny)) {
-        pos[bi] = [nx, ny]; drag.moved = true; stepped = true;
+        pos[bi] = [nx, ny]; pushVis(bi, nx, ny); drag.moved = true; stepped = true;
         // picker-style selection tick as the block walks cells under the finger (rate-limited)
         const tn = performance.now();
         if (tn - hapticStepT > 70) { hapticStepT = tn; haptic('step'); }
@@ -625,38 +665,77 @@ function wouldLeaveBoard(bi, sx, sy) {
   return false;
 }
 
+// The logical half of an exit: instant and synchronous, exactly as before (move counted, block
+// off the board, fail/win decided). The *picture* of it — burst, shake, sound, haptic, gate
+// close — is spent by beginFlight() once the rendered block has walked into the aligned cell.
 function startExit(bi, side) {
   const [dx, dy] = DIRS[side];
-  exitAnim[bi] = { dx, dy, t: 0 };
   const b = L.blocks[bi];
-  const cen = blockCenterPx(bi);
-  const NP = reducedMotion() ? 11 : 22; // reduced motion: half the burst
-  for (let i = 0; i < NP; i++) {
-    particles.push({
-      x: cen[0], y: cen[1],
-      vx: (Math.random() - 0.5) * 7 + dx * 4, vy: (Math.random() - 0.5) * 7 + dy * 4 - 2,
-      life: 1, color: Math.random() < 0.7 ? COLORS[b.color].main : THEME.spark,
-      r: 2 + Math.random() * 3.4,
-    });
-  }
-  shakeT = reducedMotion() ? 0 : 0.16;
+  const from = [pos[bi][0], pos[bi][1]]; // the flush, fully-covered cell the rule matched on
+  const gate = exitGateAt(bi, from[0], from[1], side);
   pos[bi] = null;
-  // last block of its color gone? the gate closes with a flash
-  if (!L.blocks.some((o, i) => pos[i] && o.color === b.color)) { gateFlash[b.color] = 0; sound('gate'); }
-  countMove();
+  pendingSettle[bi] = false;
+  // decided here (not at flight time): the gate closes only for the block that empties its colour
+  const closes = !L.blocks.some((o, i) => pos[i] && o.color === b.color);
   // each escape rings a step higher while the chain is alive; ~4 s without an exit resets the
   // pitch (a slow, thoughtful clear starts each escape fresh instead of climbing forever)
   const tex = performance.now();
   if (tex - lastExitAt > 4000) exitChain = 0;
   lastExitAt = tex;
-  sound('exit', exitChain++);
-  haptic('exit');
+  const chain = exitChain++;
+  exitAnim[bi] = { dx, dy, t: 0, from, side, gate, closes, chain, wait: true, hold: 0, flashed: false };
+  lastExit = { bi, side, cell: [from[0], from[1]], moves: moves + 1, visFrom: null, aligned: null, flew: false };
+  countMove();
   track('block_exit', li + 1);
   // lock the board while the last block flies out; the pending win dies with the level
   // (loadLevel clears winTimers) so a restart or level change in this window can never
-  // land a win card — and its stars — on a level that was not played
-  if (pos.every(p => !p)) { over = true; updateHud(); winTimers.push(setTimeout(win, 380)); }
+  // land a win card — and its stars — on a level that was not played. The wait the picture
+  // still owes is added on so the card never lands over a block that has not left yet.
+  if (pos.every(p => !p)) { over = true; updateHud(); winTimers.push(setTimeout(win, 380 + visLagMs(bi))); }
   else maybeFail();
+}
+
+// the rendered block has landed flush in its gate lane: spend the exit's feedback and let it fly
+function beginFlight(i) {
+  const a = exitAnim[i];
+  if (!a || !a.wait) return;
+  a.wait = false;
+  // record where the picture ACTUALLY was before anything snaps it — otherwise `aligned` would be
+  // vacuously true. In the normal path the glide has already landed on `from` and the frame loop
+  // has flashed; only an interrupted hold (flushHeldExits) can report false here.
+  if (lastExit && lastExit.bi === i) {
+    lastExit.visFrom = [disp[i][0], disp[i][1]];
+    lastExit.aligned = Math.abs(disp[i][0] - a.from[0]) < 1e-6 && Math.abs(disp[i][1] - a.from[1]) < 1e-6;
+    lastExit.flew = true;
+  }
+  alignFlash(i);
+  disp[i] = [a.from[0], a.from[1]]; // the flight ALWAYS starts from the aligned cell
+  visQ[i] = [];
+  const b = L.blocks[i], cen = blockCenterPx(i);
+  const NP = reducedMotion() ? 11 : 22; // reduced motion: half the burst
+  for (let k = 0; k < NP; k++) {
+    particles.push({
+      x: cen[0], y: cen[1],
+      vx: (Math.random() - 0.5) * 7 + a.dx * 4, vy: (Math.random() - 0.5) * 7 + a.dy * 4 - 2,
+      life: 1, color: Math.random() < 0.7 ? COLORS[b.color].main : THEME.spark,
+      r: 2 + Math.random() * 3.4,
+    });
+  }
+  shakeT = reducedMotion() ? 0 : 0.16;
+  if (a.closes) { gateFlash[b.color] = 0; sound('gate'); } // last block of its colour: the gate closes
+  sound('exit', a.chain);
+  haptic('exit');
+}
+// the lane flash on the frame of alignment: "it lined up, THEN left"
+function alignFlash(i) {
+  const a = exitAnim[i];
+  if (!a || a.flashed) return;
+  a.flashed = true;
+  disp[i] = [a.from[0], a.from[1]];
+  if (a.gate) gateAlign.push({ g: a.gate, bi: i, from: a.from, t: 0 });
+}
+function flushHeldExits() {
+  for (let i = 0; i < exitAnim.length; i++) if (exitAnim[i] && exitAnim[i].wait) { visQ[i] = []; beginFlight(i); }
 }
 
 function countMove() {
@@ -675,6 +754,9 @@ function undo() {
   pos = s.pos.map(p => (p ? [p[0], p[1]] : null));
   moves = s.moves; movesLeft = s.movesLeft;
   exitAnim = L.blocks.map(() => null);
+  visQ = L.blocks.map(() => []);
+  pendingSettle = L.blocks.map(() => false);
+  gateAlign = []; lastExit = null;
   gateFlash = COLORS.map(() => -1);
   settleT = L.blocks.map(() => 0);
   exitChain = 0; // an undone exit ends the pitch chain
@@ -857,10 +939,11 @@ function endDrag(count = true) {
   const d = drag; drag = null;
   if (!count) return;
   if (!pos[d.bi]) { pendingSnap = null; return; }
-  if (pos[d.bi][0] !== d.sx || pos[d.bi][1] !== d.sy) settleT[d.bi] = 0.0001; // settle overshoot beat (render)
+  // the settle overshoot beat + tick belong to the moment the block LANDS, which with a capped
+  // glide can be a few frames after the finger let go (frame() spends it when the queue drains)
+  if (pos[d.bi][0] !== d.sx || pos[d.bi][1] !== d.sy) pendingSettle[d.bi] = true;
   if ((pos[d.bi][0] !== d.sx || pos[d.bi][1] !== d.sy) && !d.counted) {
     countMove();
-    haptic('settle'); // the block snaps into its new cell
     maybeFail();
   } else pendingSnap = null;
 }
@@ -871,6 +954,7 @@ function cancelDrag() {
   if (!drag) return;
   const d = drag; drag = null;
   if (!d.counted && pos[d.bi]) pos[d.bi] = [d.sx, d.sy];
+  snapVis(d.bi); // the gesture never happened: the picture goes back with it, without interpolating
   pendingSnap = null;
 }
 const ownPointer = e => drag && (drag.pid < 0 || e.pointerId === drag.pid);
@@ -1148,19 +1232,52 @@ function drawRoute(bi, route, strength) {
   ctx.restore();
 }
 
+// Walk each block's RENDERED position along the breadcrumbs its logical position left behind,
+// at a capped speed. Two invariants: (1) the visual only ever sits between two cells the block
+// legitimately occupied, so it can never be drawn inside a wall or another block; (2) it never
+// trails the finger by more than GLIDE_LAG_MS — a long flick speeds the walk up, it never skips.
+function advanceGlide(dt) {
+  for (let i = 0; i < disp.length; i++) {
+    if (exitAnim[i] && !exitAnim[i].wait) continue; // the flight owns the position
+    const q = visQ[i];
+    if (q && q.length) {
+      let budget = (dt * 1000) / glideMs(q.length); // cells of travel available this frame
+      let guard = 0;
+      while (budget > 1e-9 && q.length && guard++ < 64) {
+        const dx = q[0][0] - disp[i][0], dy = q[0][1] - disp[i][1];
+        const d = Math.abs(dx) + Math.abs(dy); // steps are axis-aligned: manhattan IS the distance
+        if (d <= budget) { disp[i][0] = q[0][0]; disp[i][1] = q[0][1]; budget -= d; q.shift(); }
+        else { const k = budget / d; disp[i][0] += dx * k; disp[i][1] += dy * k; budget = 0; }
+      }
+      if (!q.length && pendingSettle[i]) { pendingSettle[i] = false; settleT[i] = 0.0001; haptic('settle'); }
+    } else if (pos[i]) { // no breadcrumbs (undo, restart, resize): ease home as before
+      disp[i][0] += (pos[i][0] - disp[i][0]) * Math.min(1, dt * 22);
+      disp[i][1] += (pos[i][1] - disp[i][1]) * Math.min(1, dt * 22);
+      if (pendingSettle[i]) { pendingSettle[i] = false; settleT[i] = 0.0001; haptic('settle'); }
+    }
+  }
+}
+
 let lastT = performance.now();
 function frame(t) {
   const dt = Math.min((t - lastT) / 1000, 0.05); lastT = t;
-  // ease display positions
-  for (let i = 0; i < disp.length; i++) {
-    if (exitAnim[i]) { exitAnim[i].t += dt * 4.5; continue; }
-    if (!pos[i]) continue;
-    disp[i][0] += (pos[i][0] - disp[i][0]) * Math.min(1, dt * 22);
-    disp[i][1] += (pos[i][1] - disp[i][1]) * Math.min(1, dt * 22);
+  advanceGlide(dt);
+  // exits waiting on the picture: the frame the block lands flush the gate flashes, and a short
+  // held beat later it flies. Everything logical about the exit already happened in startExit.
+  for (let i = 0; i < exitAnim.length; i++) {
+    const a = exitAnim[i];
+    if (!a) continue;
+    if (!a.wait) { a.t += dt * 4.5; continue; }
+    if ((visQ[i] || []).length) continue;   // still walking into the lane
+    alignFlash(i);
+    a.hold += dt;
+    if (a.hold >= exitHoldS()) beginFlight(i);
   }
   for (const p of particles) { p.x += p.vx; p.y += p.vy; p.vy += 0.22; p.life -= dt * 2.1; }
   particles = particles.filter(p => p.life > 0);
   if (shakeT > 0) shakeT -= dt;
+  for (const a of gateAlign) a.t += dt;
+  if (gateAlign.length) gateAlign = gateAlign.filter(a => a.t < alignFlashS());
   for (let c = 0; c < gateFlash.length; c++) if (gateFlash[c] >= 0) gateFlash[c] += dt;
   for (let i = 0; i < settleT.length; i++) if (settleT[i] > 0) { settleT[i] += dt; if (settleT[i] > 0.4) settleT[i] = 0; }
   livesTick(dt);
@@ -1297,7 +1414,7 @@ function render() {
     if (!pos[i] && !exitAnim[i]) continue;
     const b = L.blocks[i], c = COLORS[b.color];
     let ox = 0, oy = 0, alpha = 1;
-    if (exitAnim[i]) {
+    if (exitAnim[i] && !exitAnim[i].wait) {
       const a = exitAnim[i];
       if (a.t >= 1) { exitAnim[i] = null; continue; }
       ox = a.dx * a.t * cell * 3.2; oy = a.dy * a.t * cell * 3.2; alpha = 1 - a.t;
@@ -1325,6 +1442,42 @@ function render() {
       // on the fail card the stranded blocks breathe with a white edge so the rescue shows what it buys
       edge: stranded ? `rgba(255,255,255,${0.35 + pulse * 0.6})` : null,
     });
+    ctx.restore();
+  }
+
+  // gate alignment flash: on the frame a block lands flush in its lane, the gate it is about to
+  // leave by lights up — drawn OVER the block so the eye is told "it lined up" before it goes
+  for (const a of gateAlign) {
+    const g = a.g, u = Math.min(1, a.t / alignFlashS()), e = (1 - u) * (1 - u);
+    const th = cell * 0.42, along = g.len * cell;
+    let gx, gy, w, h;
+    if (g.side === 'top') { gx = bx + g.start * cell; gy = by - th - 3; w = along; h = th; }
+    if (g.side === 'bottom') { gx = bx + g.start * cell; gy = by + bh + 3; w = along; h = th; }
+    if (g.side === 'left') { gx = bx - th - 3; gy = by + g.start * cell; w = th; h = along; }
+    if (g.side === 'right') { gx = bx + bw + 3; gy = by + g.start * cell; w = th; h = along; }
+    ctx.save();
+    // the block, lit where it stands: the shape the player was dragging is the thing that lined up.
+    // It fades out well before the tab's ring does — by the time the block flies, only the gate glows
+    const bf = Math.max(0, 1 - a.t / (alignFlashS() * 0.42));
+    if (bf > 0 && a.from && L.blocks[a.bi]) {
+      ctx.fillStyle = `rgba(255,255,255,${bf * 0.6})`;
+      for (const [cx, cy] of L.blocks[a.bi].cells) {
+        rr(bx + (a.from[0] + cx) * cell + inset, by + (a.from[1] + cy) * cell + inset, cell - inset * 2, cell - inset * 2, 3);
+        ctx.fill();
+      }
+    }
+    // the gutter between the block and its gate: the lane, briefly open
+    ctx.fillStyle = `rgba(255,255,255,${e * 0.6})`;
+    if (g.side === 'top') ctx.fillRect(bx + g.start * cell, by - 3, along, 3);
+    if (g.side === 'bottom') ctx.fillRect(bx + g.start * cell, by + bh, along, 3);
+    if (g.side === 'left') ctx.fillRect(bx - 3, by + g.start * cell, 3, along);
+    if (g.side === 'right') ctx.fillRect(bx + bw, by + g.start * cell, 3, along);
+    // the gate tab itself, washed white and ringed
+    ctx.fillStyle = `rgba(255,255,255,${e * 0.6})`;
+    rr(gx, gy, w, h, 4); ctx.fill();
+    ctx.strokeStyle = `rgba(255,255,255,${e * 0.95})`; ctx.lineWidth = 3;
+    const grow = 2 + u * 12;
+    rr(gx - grow, gy - grow, w + grow * 2, h + grow * 2, 5 + grow); ctx.stroke();
     ctx.restore();
   }
 
@@ -1403,6 +1556,26 @@ window.GE = {
   get moves() { return moves; },
   get movesLeft() { return movesLeft; },
   get metrics() { return { cell, bx, by, w: L.w, h: L.h }; }, // board geometry in CSS px (for pointer-driven bots)
+  // the picture, as opposed to the rules: where each block is DRAWN this frame (fractional
+  // cells), whether the renderer still owes the player movement, and whether every drawn block
+  // is legal (an interpolated block must always lie between two cells it could really occupy)
+  get visPos() { return disp.map(p => [p[0], p[1]]); },
+  get gliding() { return visQ.some(q => q && q.length > 0) || exitAnim.some(a => a && a.wait); },
+  get visOk() {
+    for (let i = 0; i < L.blocks.length; i++) {
+      const a = exitAnim[i];
+      if (a && !a.wait) continue;      // flying out: off the board by design
+      if (!pos[i] && !a) continue;     // gone
+      const [fx, fy] = disp[i];
+      const xs = [...new Set([Math.floor(fx + 1e-6), Math.ceil(fx - 1e-6)])];
+      const ys = [...new Set([Math.floor(fy + 1e-6), Math.ceil(fy - 1e-6)])];
+      for (const x of xs) for (const y of ys) if (!fits(i, x, y)) return false;
+    }
+    return true;
+  },
+  // the last exit, for the bots: the cell the rule matched on, and the cell the flight actually
+  // started from (they must be the same — that is the whole point of the held alignment beat)
+  get lastExit() { return lastExit; },
   get over() { return over; },
   get paused() { return paused; }, set paused(v) { paused = !!v; if (paused) cancelDrag(); updateHud(); },
   get soundOn() { return soundOn; }, set soundOn(v) { soundOn = !!v; },

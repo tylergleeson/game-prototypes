@@ -22,23 +22,25 @@ block follows it cell by cell, around corners too, so a whole route (e.g. right,
 the gate) is a single move. Par and the move limit are computed on that rule, so plan complete
 routes rather than single steps. Clear all blocks within the move limit. Losing shows a rescue offer (+3 moves, once per attempt — a Restart is a fresh attempt).
 Both the rescue and the HUD hint are rewarded-ad slots: tapping one shows a ~1.2 s placeholder "ad" card first, then the grant lands (free in the prototype).
-The game opens on a main menu (title block) with Play / Levels / How to play; in-game the HUD has hint (?, ghosts the next reference move — an exit route,
+The game opens on a calm landing (the drawing's title block): the title treatment, one static stamp line (level / stars / streak) and exactly three
+taps — the primary CTA (Play / Continue - Level N / Resume level N), Levels and How to play. Everything else (stars, daily quests, streak, Field survey,
+Paper picker, Sound) lives on the Levels screen, the sheet index; in-game the HUD has hint (?, ghosts the next reference move — an exit route,
 or a dashed outline where a block should park; one per board position), undo (↶, one step, refunds the move), restart (↻) and pause (☰), shows the stars the
 current pace would earn, and an objective row of blocks left per color.
 Stars have a cosmetic sink: each sheet of ten levels on the level select has a chest that opens at 24 of its 30 stars and rewards a paper skin
 (Sepia draft / Night vellum / Whiteprint; Cyanotype is the default). Skins change only the drafting sheet (page, ink, grid, cards) — never block,
-gate or HUD state colours — and nothing is gated on a chest. The "Paper" picker on the main menu and the pause card lists the skins; a locked swatch
+gate or HUD state colours — and nothing is gated on a chest. The "Paper" picker on the sheet index and the pause card lists the skins; a locked swatch
 shows the chest it comes from. A win that opens a chest adds a "Chest opened — <paper>" row with a "Try it" button to the win card.
-Daily quests + streak (title block): THREE quests roll each local day, deterministically from the date (all players share the day's set), from safe
+Daily quests + streak (sheet index): THREE quests roll each local day, deterministically from the date (all players share the day's set), from safe
 telemetry templates (clear N levels / earn N stars / clear N at par / clear without undo / without hints / clear N blocks — never ad views or spending).
-Each shows a progress bar and a ✓ stamp on the title block; a quest completion adds a quiet stamped row to the win card. Completing ALL 3 banks one
+Each shows a progress bar and a ✓ stamp on the sheet index; a quest completion adds a quiet stamped row to the win card. Completing ALL 3 banks one
 STREAK FREEZE (max 2 held, shown on the streak row). The streak is consecutive calendar days with ≥1 clear; the row also shows "N of last 7 days".
 A missed day consumes a banked freeze automatically (calm "Freeze used — streak safe" notice at next launch); with no freeze, missing exactly one day
 offers ONE streak repair per streak at launch (rewarded-ad placeholder, free); declining or Escape starts fresh. Nothing is gated on any of it.
-Field Survey (weekly ladder, "Field survey" row on the title block opens the log card): 1 point per level clear, +1 bonus at par; milestone stamps at
+Field Survey (weekly ladder, "Field survey" row on the sheet index opens the log card): 1 point per level clear, +1 bonus at par; milestone stamps at
 3/7/12/20 points; the 20-point stamp is a surveyor's mark (⌖) shown next to the streak row for the rest of that week. Resets each ISO week; no
 leaderboard, only last week's result is kept. Dates all come from GE.now (overridable for testing).
-Lives (default ON, flag-gated via ?lives=0 / ge_flags / GE.livesEnabled): five hearts, HUD top-left and title block. Levels 1–5 NEVER cost a life.
+Lives (default ON, flag-gated via ?lives=0 / ge_flags / GE.livesEnabled): five hearts, HUD top-left and sheet index. Levels 1–5 NEVER cost a life.
 From L6 on, a failed attempt that ends in Retry costs one life; taking the rescue does NOT (it saves the attempt); Restart mid-level and winning cost
 nothing. Refill one life per 25 minutes (single anchor timestamp, GE.now-based); at zero lives, entering L6+ shows a calm card (refill timer + one
 rewarded +1 per appearance + Back to menu) — the menu and level browsing are never blocked, and L1–5 stay playable.
@@ -46,22 +48,22 @@ Motion toggle (pause card): forces the reduced-motion path (no shake, half parti
 Coordinates: (x,y) cells, x to the right, y downward, origin top-left. A block's position is its
 top-left origin; its cells are listed absolute.`,
   buttons: {
-    btnPlay: 'main menu: Play (resumes a paused attempt if one is on the board)', btnLevels: 'main menu: Levels', btnLegend: 'main menu: How to play',
-    btnSound: 'main menu: toggle sound', btnLevelsBack: 'levels: Back (returns to the pause card if opened from pause)', btnReset: 'levels: Reset progress (two-tap arm: first tap arms, second erases)', btnLegendBack: 'how-to-play: Back',
+    btnPlay: 'landing: the primary CTA — "Play" on a fresh install, "Continue — Level N", or "Resume level N" when a paused attempt is on the board', btnLevels: 'landing: Levels (the sheet index, which also carries the field log: stars, quests, streak, survey, paper, sound)', btnLegend: 'landing: How to play',
+    btnSound: 'sheet index: toggle sound', btnLevelsBack: 'levels: Back (returns to the pause card if opened from pause)', btnReset: 'levels: Reset progress (two-tap arm: first tap arms, second erases)', btnLegendBack: 'how-to-play: Back',
     btnHint: 'HUD: hint — show the next reference move (rewarded-ad placeholder, ~1.2 s, then a ghost route appears)',
     btnUndo: 'HUD: undo last move (one step)', btnRestart: 'HUD: restart level', btnMenu: 'HUD: pause / unpause',
     btnResume: 'pause: Resume', btnPauseRestart: 'pause: Restart level', btnPauseLegend: 'pause: How to play',
     btnPauseSound: 'pause: toggle sound', btnPauseLevels: 'pause: Levels', btnPauseHome: 'pause: Main menu',
     btnNext: 'win card: Next level', btnReplay: 'win card: Replay for three stars (sub-3-star wins only)', btnRetry: 'fail card: Retry level', btnRescue: 'fail card: +3 moves rescue',
     btnTrySkin: 'win card: Try it — apply the paper skin the chest just opened (only shown on a win that opened a chest)',
-    btnPaperCyan: 'main menu: Paper → Cyanotype (default)', btnPaperSepia: 'main menu: Paper → Sepia draft (Sheet 1 chest)', btnPaperNight: 'main menu: Paper → Night vellum (Sheet 2 chest)', btnPaperWhite: 'main menu: Paper → Whiteprint (Sheet 3 chest)',
+    btnPaperCyan: 'sheet index: Paper → Cyanotype (default)', btnPaperSepia: 'sheet index: Paper → Sepia draft (Sheet 1 chest)', btnPaperNight: 'sheet index: Paper → Night vellum (Sheet 2 chest)', btnPaperWhite: 'sheet index: Paper → Whiteprint (Sheet 3 chest)',
     btnPausePaperCyan: 'pause: Paper → Cyanotype', btnPausePaperSepia: 'pause: Paper → Sepia draft', btnPausePaperNight: 'pause: Paper → Night vellum', btnPausePaperWhite: 'pause: Paper → Whiteprint',
-    btnHaptics: 'main menu: toggle haptics (native app only — hidden in a browser)', btnPauseHaptics: 'pause: toggle haptics (native app only)',
+    btnHaptics: 'sheet index: toggle haptics (native app only — hidden in a browser)', btnPauseHaptics: 'pause: toggle haptics (native app only)',
     btnStreakRepair: 'streak-repair card: repair the streak (rewarded-ad placeholder, ~1.2 s; shown at launch only when exactly one day was missed, once per streak)',
     btnStreakDecline: 'streak-repair card: Start fresh — decline the repair; today\'s first clear starts a new streak at 1 (Escape does the same)',
     btnPauseMotion: 'pause: toggle Motion on/off — off forces the reduced-motion rendering path (persisted)',
     btnFreezeOk: 'freeze-notice card: Continue — dismiss the "Freeze used — streak safe" notice',
-    btnSurvey: 'main menu: Field survey row — open the weekly log card (points + milestone stamps)',
+    btnSurvey: 'sheet index: Field survey row — open the weekly log card (points + milestone stamps)',
     btnSurveyClose: 'survey card: Close',
     btnLifeRefill: 'out-of-lives card: +1 life (rewarded-ad placeholder; offered once per appearance of the card, never past 5)',
     btnLivesHome: 'out-of-lives card: Back to menu (Escape does the same; browsing is never blocked)',
@@ -106,8 +108,8 @@ top-left origin; its cells are listed absolute.`,
         ladder: window.GE_MENU ? { ...window.GE_MENU.ladder } : null,
         lives: { enabled: GE.livesEnabled, ...GE.livesInfo },
         winDaily: vis('winDaily') ? document.getElementById('winDaily').innerText.replace(/\s+/g, ' ').trim() : null,
-        menuDaily: vis('menu') ? (document.getElementById('fStreak').innerText + ' · survey ' + document.getElementById('fSurvey').textContent).replace(/\s+/g, ' ').trim() : null,
-        menuQuests: vis('menu') ? [...document.querySelectorAll('#menuQuests .q')].map(r => r.innerText.replace(/\s+/g, ' ').trim()) : null,
+        menuDaily: vis('levels') ? (document.getElementById('fStreak').innerText + ' · survey ' + document.getElementById('fSurvey').textContent).replace(/\s+/g, ' ').trim() : null,
+        menuQuests: vis('levels') ? [...document.querySelectorAll('#menuQuests .q')].map(r => r.innerText.replace(/\s+/g, ' ').trim()) : null,
         hint: GE.hint ? { block: GE.hint.bi, path: GE.hint.path, exit: GE.hint.side || null } : null,
         paper: GE.theme, skins: (window.GE_MENU && window.GE_MENU.prog.skins) || [],
         chestRow: vis('winChest') ? document.querySelector('#winChest').innerText.replace(/\s+/g, ' ').trim() : null,

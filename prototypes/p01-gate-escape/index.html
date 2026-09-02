@@ -234,6 +234,34 @@
   .gatebtn .chev { font-size:22px; line-height:1; margin-left:-4px; }
   @keyframes slide { 0%,55% { transform:translateX(0); } 75% { transform:translateX(9px); } 100% { transform:translateX(0); } }
   .row { display:flex; gap:10px; margin-top:12px; }
+  /* the cold-open landing: more air, a bigger title treatment, one static stamp line, three taps */
+  .tblock.landing { padding:30px 22px 24px; }
+  .landing .title { font-size:clamp(34px,10.6vw,48px); margin-top:10px; }
+  .landing .sub { margin-top:10px; font-size:14.5px; }
+  .landing .stamp {
+    margin-top:16px; padding:8px 8px 9px; border:1px solid var(--line2);
+    font:600 10.5px/1.4 var(--mono); letter-spacing:.16em; color:var(--dim); text-align:center; text-transform:uppercase;
+  }
+  .landing .stamp b { color:var(--ink); font-weight:800; }
+  .landing .stamp i { color:var(--amber-ink); font-style:normal; font-weight:800; }
+  .landing .gatebtn { margin-top:16px; }
+  /* entrance: the sheet arrives, then the title rule is drawn, then the controls rise */
+  .landing .title::after { animation:rule .5s .1s cubic-bezier(.22,.9,.3,1) both; }
+  @keyframes rule { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+  .landing .sub, .landing .stamp, .landing .row { animation:rise .42s cubic-bezier(.22,.9,.3,1) both; }
+  .landing .sub { animation-delay:.06s; }
+  .landing .stamp { animation-delay:.12s; }
+  .landing .row { animation-delay:.24s; }
+  /* the CTA rises in with the rest AND keeps its beckon pulse — this rule outranks .gatebtn, so it
+     has to carry both, and the reduced-motion lists below have to name it for the same reason */
+  .landing .gatebtn { animation:rise .42s cubic-bezier(.22,.9,.3,1) .18s both, beckon 2.2s ease-in-out .7s infinite; }
+  @keyframes rise { from { opacity:0; transform:translateY(9px); } }
+  /* the sheet index carries the field log above the grid and the settings below it */
+  #levels .fields { margin-top:0; }
+  #levels .div { margin:14px 0 8px; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); border-bottom:1px solid var(--line2); padding-bottom:5px; }
+  #levels .row.srow { margin-top:10px; }
+  .ghostbtn.tog { font-size:13.5px; padding:10px 8px; }
+  .ghostbtn.tog b { color:var(--amber-ink); }
   .ghostbtn {
     flex:1; background:none; border:1.5px dashed var(--line2); border-radius:8px; color:var(--ink);
     padding:12px 8px; font:700 15px system-ui,sans-serif; cursor:pointer;
@@ -322,9 +350,9 @@
   .mstones .ms .mark { display:block; font-size:15px; line-height:1; color:var(--amber-ink); margin-bottom:1px; }
   #surveyLast { font:600 11px var(--mono); color:var(--dim); margin-bottom:12px; }
   #surveyModal { z-index:25; } /* the survey card opens over the title block (screens are z-20) */
-  @media (prefers-reduced-motion: reduce) { .gatebtn, .gatebtn .blk, .tblock, .card, .card .stars span, #toast, #btnHint.nudge, .chest-ico, .card .chest-row, .card .daily-row, .card .daily-row .stamp { animation:none; } .chest-ico .lid { transition:none; } }
+  @media (prefers-reduced-motion: reduce) { .gatebtn, .gatebtn .blk, .tblock, .card, .card .stars span, #toast, #btnHint.nudge, .chest-ico, .card .chest-row, .card .daily-row, .card .daily-row .stamp, .landing .sub, .landing .stamp, .landing .row, .landing .gatebtn, .landing .title::after { animation:none; } .chest-ico .lid { transition:none; } }
   /* the Motion toggle (pause card) forces the same reduced path via body.reduce-motion */
-  body.reduce-motion .gatebtn, body.reduce-motion .gatebtn .blk, body.reduce-motion .tblock, body.reduce-motion .card, body.reduce-motion .card .stars span, body.reduce-motion #toast, body.reduce-motion #btnHint.nudge, body.reduce-motion .chest-ico, body.reduce-motion .card .chest-row, body.reduce-motion .card .daily-row, body.reduce-motion .card .daily-row .stamp { animation:none; }
+  body.reduce-motion .gatebtn, body.reduce-motion .gatebtn .blk, body.reduce-motion .tblock, body.reduce-motion .card, body.reduce-motion .card .stars span, body.reduce-motion #toast, body.reduce-motion #btnHint.nudge, body.reduce-motion .chest-ico, body.reduce-motion .card .chest-row, body.reduce-motion .card .daily-row, body.reduce-motion .card .daily-row .stamp, body.reduce-motion .landing .sub, body.reduce-motion .landing .stamp, body.reduce-motion .landing .row, body.reduce-motion .landing .gatebtn, body.reduce-motion .landing .title::after { animation:none; }
   body.reduce-motion .chest-ico .lid { transition:none; }
   body.reduce-motion #hud .moves.low { animation:none; }
   body.reduce-motion #hud .moves.shake, body.reduce-motion #hud .moves.boost { animation:none; }
@@ -457,12 +485,33 @@
     </div>
   </div>
 
-  <!-- title block: the main menu -->
+  <!-- title block: the cold-open landing. A drawing's cover sheet — the title treatment, one
+       primary CTA and two quiet entries, and nothing else to read. The stamp line is static text
+       (level, stars, streak); the whole field log — quests, streak, survey, paper, sound — lives
+       one tap deeper on the sheet index, and the legend one tap deeper behind How to play. -->
   <div class="screen" id="menu" hidden>
-    <div class="tblock">
-      <span class="no">NO. GE-01</span><button class="no r" id="btnHaptics" style="right:104px" aria-label="Toggle haptics" hidden>HAPTICS <b id="fHaptics">on</b></button><button class="no r" id="btnSound" aria-label="Toggle sound">SOUND <b id="fSound">on</b></button>
+    <div class="tblock landing">
+      <span class="no">NO. GE-01</span><span class="no r">SCALE 1:1</span>
       <div class="title">Gate Escape</div>
       <div class="sub">Drag every block out through the gate of its color.</div>
+      <div class="stamp" id="menuStamp">LEVEL 1 / 30</div>
+      <button class="gatebtn" id="btnPlay">
+        <svg class="blk" viewBox="0 0 22 22" aria-hidden="true"><defs><pattern id="h" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#ff8078"/><rect width="1.4" height="4" fill="#c24d46" opacity=".55"/></pattern></defs><rect x="1.5" y="1.5" width="19" height="19" fill="url(#h)" stroke="#c24d46" stroke-width="2"/><circle cx="11" cy="11" r="3" fill="#fff" opacity=".9"/></svg>
+        <span id="playLabel">Play</span>
+        <span class="chev">›</span>
+      </button>
+      <div class="row">
+        <button class="ghostbtn" id="btnLevels">Levels</button>
+        <button class="ghostbtn" id="btnLegend">How to play</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- sheet index: level select + the field log (progress, daily quests, streak, survey, paper,
+       sound) — everything the landing deliberately does not say on a cold open -->
+  <div class="screen" id="levels" hidden>
+    <div class="tblock">
+      <div class="shead"><h2>Levels</h2><button class="back" id="btnLevelsBack">Back</button></div>
       <div class="fields">
         <div><span class="k">Level</span><span class="v" id="fLevel">1 / 30</span></div>
         <div><span class="k">Stars</span><span class="v" id="fStars">0 / 90</span></div>
@@ -477,24 +526,13 @@
           <span class="k">Field survey</span><span class="v" id="fSurvey">0 pts</span><span class="chev">›</span>
         </button>
       </div>
-      <button class="gatebtn" id="btnPlay">
-        <svg class="blk" viewBox="0 0 22 22" aria-hidden="true"><defs><pattern id="h" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#ff8078"/><rect width="1.4" height="4" fill="#c24d46" opacity=".55"/></pattern></defs><rect x="1.5" y="1.5" width="19" height="19" fill="url(#h)" stroke="#c24d46" stroke-width="2"/><circle cx="11" cy="11" r="3" fill="#fff" opacity=".9"/></svg>
-        <span id="playLabel">Play level 1</span>
-        <span class="chev">›</span>
-      </button>
-      <div class="row">
-        <button class="ghostbtn" id="btnLevels">Levels</button>
-        <button class="ghostbtn" id="btnLegend">How to play</button>
-      </div>
-      <div class="papers" id="menuPapers" aria-label="Paper"><span class="k">Paper</span><div class="sw"></div><span class="cap"></span></div>
-    </div>
-  </div>
-
-  <!-- sheet index: level select -->
-  <div class="screen" id="levels" hidden>
-    <div class="tblock">
-      <div class="shead"><h2>Levels</h2><button class="back" id="btnLevelsBack">Back</button></div>
+      <div class="div">SHEET INDEX</div>
       <div class="grid" id="levelGrid"></div>
+      <div class="papers" id="menuPapers" aria-label="Paper"><span class="k">Paper</span><div class="sw"></div><span class="cap"></span></div>
+      <div class="row srow">
+        <button class="ghostbtn tog" id="btnSound" aria-label="Toggle sound">Sound <b id="fSound">on</b></button>
+        <button class="ghostbtn tog" id="btnHaptics" aria-label="Toggle haptics" hidden>Haptics <b id="fHaptics">on</b></button>
+      </div>
       <div class="foot"><span id="levelsNote"></span><button id="btnReset">Reset progress</button></div>
     </div>
   </div>

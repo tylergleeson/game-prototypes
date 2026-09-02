@@ -110,6 +110,7 @@
   $('btnHaptics').onclick = () => setHaptics(!GE.hapticsOn);
   $('btnPauseHaptics').onclick = () => setHaptics(!GE.hapticsOn);
   refreshHaptics();
+  refreshSound(); // the pause card's label must be right even if the sheet index is never opened
 
   // ---------- motion ----------
   // The OS "reduce motion" preference always wins (CSS media query + the canvas checks); this
@@ -130,18 +131,35 @@
     for (const k in screens) screens[k].hidden = k !== name;
     document.body.classList.toggle('menu-up', name === 'menu');
     if (name === 'menu') refreshMenu();
-    if (name === 'levels') buildGrid();
+    if (name === 'levels') { refreshLog(); buildGrid(); }
     if (name === 'legend') { const ll = document.getElementById('legendLives'); if (ll) ll.hidden = !GE.livesEnabled; drawSymbols(); if (!legendAnim) { legendAnim = true; demoT0 = 0; requestAnimationFrame(demoFrame); } }
     else legendAnim = false;
   }
   // an attempt the player walked away from (pause → Main menu) is still on the board behind
   // the title block; Play resumes it rather than silently restarting the level
   const resumable = () => GE.paused && !GE.over && GE.moves > 0;
+  // a save that has never cleared anything and sits on level 1: a fresh install, so the CTA is
+  // simply "Play" and the stamp does not report progress nobody has made yet
+  const freshInstall = () => GE.level === 0 && !prog.s.some(Boolean) && !resumable();
+  // the landing: title treatment, one static stamp line, one CTA, two quiet entries. Everything
+  // else the title block used to carry now lives on the sheet index (refreshLog).
   function refreshMenu() {
+    $('playLabel').textContent = resumable() ? 'Resume level ' + (GE.level + 1)
+      : freshInstall() ? 'Play' : 'Continue — Level ' + (GE.level + 1);
+    const today = dayStr(GE.now());
+    const live = streak.lastDate && streak.len > 0 && dayGap(streak.lastDate, today) <= 1 ? streak.len : 0;
+    $('menuStamp').innerHTML = freshInstall()
+      ? `New sheet · <b>${N}</b> levels`
+      : `Level <b>${GE.level + 1}</b> / ${N} · ★ <b>${starsTotal()}</b>`
+        + (live ? ` · <i>${live}-day streak</i>` : '');
+  }
+  // the sheet index's field log: progress, the day's quests, streak/lives, the survey row, the
+  // paper picker and the sound/haptics toggles
+  function refreshLog() {
     $('fLevel').textContent = (GE.level + 1) + ' / ' + N;
     $('fStars').textContent = starsTotal() + ' / ' + (N * 3);
-    $('playLabel').textContent = (resumable() ? 'Resume level ' : 'Play level ') + (GE.level + 1);
     refreshSound();
+    refreshHaptics();
     refreshPapers();
     refreshDaily();
   }
@@ -387,6 +405,7 @@
       + `<small>${wk} of last 7 days${streak.freezes ? ` · ${streak.freezes} freeze${streak.freezes > 1 ? 's' : ''} held` : ''}</small>`;
     $('fSurvey').textContent = `${lad.pts} pt${lad.pts === 1 ? '' : 's'}`;
     refreshLives();
+    if (!screens.menu.hidden) refreshMenu(); // the landing stamp carries the same streak
   }
   function refreshLives() {
     const on = GE.livesEnabled;
@@ -396,7 +415,7 @@
     $('fLives').innerHTML = `<span class="hearts">${'♥'.repeat(i.n)}<span class="off">${'♡'.repeat(i.max - i.n)}</span></span>`
       + (i.fullIn ? `<small>full in ${i.fullIn}</small>` : '');
   }
-  window.addEventListener('ge:lives', () => { if (!screens.menu.hidden) refreshLives(); });
+  window.addEventListener('ge:lives', () => { if (!screens.levels.hidden) refreshLives(); });
   // win-card beat: ONE quiet stamped row after the stars — all-quests-done (banks the freeze)
   // over a single quest, over a new best streak. A play beat, never a purchase event.
   let dailyTimer = 0;
@@ -643,6 +662,9 @@
   show('menu');
   checkStreak(); // the repair offer rides over the title block on launch (and only then)
   window.GE_MENU = { show, get prog() { return prog; }, setSkin, CHEST_STARS, CHEST_SKINS,
+    // the landing's whole interactive surface: Play + two quiet entries, nothing else
+    landing: () => [...screens.menu.querySelectorAll('button, a, input, select, textarea, [role="button"], [tabindex]')]
+      .filter(b => !b.hidden && b.getClientRects().length > 0).map(b => b.id || b.className),
     get streak() { return streak; }, checkStreak, refreshDaily,
     get quests() { return questsToday(); }, get ladder() { ladderWeek(); return lad; },
     questInfo: () => questsToday().ids.map(id => ({ id, label: QUEST_TEMPLATES[id].label, target: QUEST_TEMPLATES[id].target,

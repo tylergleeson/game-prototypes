@@ -114,7 +114,7 @@ const DEFAULT_PAPER = '[255,255,255,11]';
   const ink0 = await page.evaluate(() => getComputedStyle(document.body).color);
   const seen = {};
   for (const id of ['sepia', 'night', 'white', 'cyan']) {
-    await page.evaluate(() => window.GE_MENU.show('menu')); await page.waitForTimeout(60);
+    await page.evaluate(() => window.GE_MENU.show('levels')); await page.waitForTimeout(60);
     await page.click('#btnPaper' + id[0].toUpperCase() + id.slice(1));
     await page.evaluate(() => window.GE_MENU.show(null)); await page.waitForTimeout(120); // a frame on the new paper
     seen[id] = await page.evaluate(id => ({
@@ -625,7 +625,7 @@ const burnLevel = () => page.evaluate(() => {
   });
   await page.screenshot({ path: `${shotDir}/levels-chest-closed.png` });
   // a locked swatch explains itself instead of switching
-  await page.evaluate(() => window.GE_MENU.show('menu')); await page.waitForTimeout(60);
+  await page.evaluate(() => window.GE_MENU.show('levels')); await page.waitForTimeout(60);
   await page.click('#btnPaperSepia');
   const lockTap = await page.evaluate(() => ({ cap: document.querySelector('#menuPapers .cap').textContent, theme: window.GE.theme }));
   const okCopy = h0.text === '★ 21/30 · 3 to open' && !h0.open && h0.t2 === '★ 0/30 · 24 to open' && h0.theme === 'cyan' && h0.locked === 3 && h0.chestGlyphs === 3
@@ -734,7 +734,7 @@ const beatRow = () => page.evaluate(() => (document.getElementById('winDaily').h
   }
   const st1 = await S();
   const menuQ = await page.evaluate(() => {
-    window.GE_MENU.show('menu');
+    window.GE_MENU.show('levels');
     return { rows: [...document.querySelectorAll('#menuQuests .q')].map(r => ({ done: r.classList.contains('done'), stamp: !!r.querySelector('.qstamp') })),
       all: (document.querySelector('#menuQuests .qh b') || {}).textContent || null,
       streakCell: document.getElementById('fStreak').innerText.replace(/\s+/g, ' ').trim() };
@@ -823,7 +823,7 @@ const beatRow = () => page.evaluate(() => (document.getElementById('winDaily').h
   await page.evaluate(() => { for (const k of ['ge_streak', 'ge_quests']) localStorage.removeItem(k); });
   await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L);
   await page.waitForTimeout(400);
-  const rowFresh = await page.evaluate(() => ({ streak: document.getElementById('fStreak').innerText.replace(/\s+/g, ' ').trim(), rows: document.querySelectorAll('#menuQuests .q').length, done: document.querySelectorAll('#menuQuests .q.done').length, bars: [...document.querySelectorAll('#menuQuests .qbar i')].map(b => b.style.width) }));
+  const rowFresh = await page.evaluate(() => ({ streak: (window.GE_MENU.show('levels'), document.getElementById('fStreak').innerText).replace(/\s+/g, ' ').trim(), rows: document.querySelectorAll('#menuQuests .q').length, done: document.querySelectorAll('#menuQuests .q.done').length, bars: [...document.querySelectorAll('#menuQuests .qbar i')].map(b => b.style.width) }));
   await page.screenshot({ path: `${shotDir}/menu-quests-fresh.png` });
   await page.evaluate(() => {
     const day = o => { const x = new Date(Date.now() - o * 864e5); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
@@ -831,7 +831,7 @@ const beatRow = () => page.evaluate(() => (document.getElementById('winDaily').h
   });
   await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L);
   await page.waitForTimeout(400);
-  const row4 = await page.evaluate(() => document.getElementById('fStreak').innerText.replace(/\s+/g, ' ').trim());
+  const row4 = await page.evaluate(() => { window.GE_MENU.show('levels'); return document.getElementById('fStreak').innerText.replace(/\s+/g, ' ').trim(); });
   await page.screenshot({ path: `${shotDir}/menu-quests-live.png` });
   if (rowFresh.rows === 3 && rowFresh.done === 0 && /^—/.test(rowFresh.streak) && /0 of last 7 days/.test(rowFresh.streak) && rowFresh.bars.every(w => w === '0%')
     && /^4 days/.test(row4) && /4 of last 7 days/.test(row4) && /1 freeze held/.test(row4))
@@ -849,7 +849,7 @@ const beatRow = () => page.evaluate(() => (document.getElementById('winDaily').h
   const l1 = await page.evaluate(() => ({ ...window.GE_MENU.ladder }));
   await winL1(2); // 3 moves: sub-par, +1 → 3 → first milestone
   const l2 = await page.evaluate(() => ({ ...window.GE_MENU.ladder, stats: JSON.parse(localStorage.getItem('ge_stats')) }));
-  await page.evaluate(() => window.GE_MENU.show('menu'));
+  await page.evaluate(() => window.GE_MENU.show('levels'));
   await page.waitForTimeout(300);
   const mid = await page.evaluate(() => {
     document.getElementById('btnSurvey').click();
@@ -866,7 +866,7 @@ const beatRow = () => page.evaluate(() => (document.getElementById('winDaily').h
   for (let i = 0; i < 12; i++) { const pts = await page.evaluate(() => window.GE_MENU.ladder.pts); if (pts >= 20) break; await winL1(); }
   const l3 = await page.evaluate(() => ({ ...window.GE_MENU.ladder, stats: JSON.parse(localStorage.getItem('ge_stats')) }));
   const top = await page.evaluate(() => {
-    window.GE_MENU.show('menu');
+    window.GE_MENU.show('levels');
     document.getElementById('btnSurvey').click();
     return { mark: !!document.querySelector('#fStreak .mark'), got: [...document.querySelectorAll('#surveyTrack .ms.got')].map(m => m.dataset.ms),
       m20: !!document.querySelector('#surveyTrack .ms.got[data-ms="20"] .mark') };
@@ -1040,6 +1040,160 @@ const beatRow = () => page.evaluate(() => (document.getElementById('winDaily').h
   if (flagOk) console.log('lives ok: ?lives=0 removes every lives surface and consumes nothing (Retry free at "0"); GE.livesEnabled=true restores them live');
   else { failures++; console.error('lives flag FAIL:', JSON.stringify({ f0, f1lost: f1.stats.life_lost, f1lvl: f1.lvl, f1moves: f1.moves, f1card: f1.card, f2 })); }
   await lctx.close();
+}
+
+// ---------- visible alignment glide (2026-09-02) ----------
+// User report from a real iPhone: "you can move a block through a gate when it is not totally
+// lined up". The RULE was always right (exitGateAt needs flush contact + every occupied lane
+// covered); the PICTURE lied — a fast drag walked the block cell by cell into alignment and
+// exited inside a single rendered frame, so the eye saw a diagonal block teleport through.
+// The rendered position now trails the logical one at a capped speed along the same breadcrumb
+// cells the finger walked, and the exit flight is held until the block is drawn flush.
+// One fast flick from a misaligned start, driven with real pointer events, sampled every frame.
+const flick = async (lvl, bi) => {
+  await page.evaluate(i => window.GE.load(i), lvl);
+  // the menu -> board transform is a 300 ms CSS transition: measure the board only once it has
+  // settled, or every screen coordinate below lands on the wrong cell
+  await page.waitForTimeout(450);
+  const g = await geom();
+  const plan = await page.evaluate(b => window.GE.route(b), bi);
+  await page.evaluate(() => {
+    window.__log = [];
+    if (window.__glideTick) return;                 // one sampler per page, not one per flick
+    window.__glideTick = true;
+    const tick = () => { if (window.__log && window.GE.L) window.__log.push({ v: window.GE.visPos.map(p => p && [p[0], p[1]]), ok: window.GE.visOk }); requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  });
+  const [sx, sy] = cellPx(g, plan.path[0][0] + 0.5, plan.path[0][1] + 0.5);
+  await page.mouse.move(sx, sy); await page.mouse.down(); await page.waitForTimeout(50);
+  // two pointermoves only — the finger jumps the corner and shoots past the gate, exactly the
+  // gesture that used to collapse the whole walk into one rendered frame
+  const mid = plan.path[Math.floor(plan.path.length / 2)];
+  const [mx, my] = cellPx(g, mid[0] + 0.5, mid[1] + 0.5);
+  await page.mouse.move(mx, my, { steps: 1 });
+  const last = plan.path[plan.path.length - 1];
+  const far = { top: [last[0] + 0.5, -4], bottom: [last[0] + 0.5, g.h + 4], left: [-4, last[1] + 0.5], right: [g.w + 4, last[1] + 0.5] }[plan.side];
+  const [fx, fy] = cellPx(g, far[0], far[1]);
+  await page.mouse.move(fx, fy, { steps: 1 });
+  await page.mouse.up();
+  await page.waitForTimeout(900);
+  const r = await page.evaluate(bi => ({
+    moves: window.GE.moves, out: window.GE.pos[bi] === null, canUndo: window.GE.canUndo,
+    lastExit: window.GE.lastExit, gliding: window.GE.gliding,
+    frames: window.__log.length, bad: window.__log.filter(l => !l.ok).length,
+    trail: window.__log.map(l => l.v[bi]).filter(Boolean),
+  }), bi);
+  await page.evaluate(() => { window.__log = null; });
+  return { plan, ...r };
+};
+// distinct rendered positions, and the chain of cells they round to
+const trailOf = t => {
+  const uniq = [];
+  for (const p of t) if (!uniq.length || p[0] !== uniq[uniq.length - 1][0] || p[1] !== uniq[uniq.length - 1][1]) uniq.push(p);
+  let maxStep = 0;
+  for (let i = 1; i < uniq.length; i++) maxStep = Math.max(maxStep, Math.abs(uniq[i][0] - uniq[i - 1][0]) + Math.abs(uniq[i][1] - uniq[i - 1][1]));
+  const cells = [];
+  for (const p of uniq) { const c = [Math.round(p[0]), Math.round(p[1])]; if (!cells.length || c[0] !== cells[cells.length - 1][0] || c[1] !== cells[cells.length - 1][1]) cells.push(c); }
+  return { uniq, maxStep, cells };
+};
+{
+  const r = await flick(10, 3); // L11: the green block turns a corner and leaves by the left gate
+  // (a) rule and accounting untouched: one drag from a misaligned start, one move, block out
+  const moveOk = r.moves === 1 && r.out && r.canUndo && !r.gliding;
+  // (c) the flight started from the aligned, flush cell — never from the finger's diagonal
+  const le = r.lastExit || {};
+  const alignOk = le.flew && le.aligned === true && JSON.stringify(le.visFrom) === JSON.stringify(le.cell)
+    && JSON.stringify(le.cell) === JSON.stringify(r.plan.path[r.plan.path.length - 1]) && le.side === r.plan.side;
+  // (b) every rendered frame legal — an interpolated block never overlaps a wall, a stone or
+  // another block — the walk animated rather than teleporting, and it never cut a corner
+  const { uniq, maxStep, cells } = trailOf(r.trail);
+  let chainOk = cells.length >= 5 && JSON.stringify(cells[cells.length - 1]) === JSON.stringify(le.cell);
+  for (let i = 1; i < cells.length; i++) if (Math.abs(cells[i][0] - cells[i - 1][0]) + Math.abs(cells[i][1] - cells[i - 1][1]) > 2) chainOk = false;
+  const renderOk = r.bad === 0 && r.frames > 30 && uniq.length >= 8 && maxStep <= 1.6 && chainOk;
+  if (moveOk && alignOk && renderOk)
+    console.log('glide ok: a ' + r.plan.path.length + '-cell flick out of L11 costs 1 move and is drawn over '
+      + uniq.length + ' positions through ' + cells.length + ' cells (max step ' + maxStep.toFixed(2) + '), 0/'
+      + r.frames + ' frames illegal; the flight starts from the aligned cell ' + JSON.stringify(le.cell));
+  else { failures++; console.error('glide FAIL:', JSON.stringify({ moveOk, alignOk, renderOk, moves: r.moves, out: r.out, bad: r.bad, frames: r.frames, uniq: uniq.length, maxStep, cells, lastExit: le })); }
+}
+// the same gesture under reduced motion: the walk is SHORTER, never skipped — the alignment
+// frame and the flush start point survive with the Motion toggle off
+{
+  await page.evaluate(() => { window.GE.motionOn = false; });
+  const r = await flick(10, 3);
+  const le = r.lastExit || {};
+  const { uniq } = trailOf(r.trail);
+  await page.evaluate(() => { window.GE.motionOn = true; });
+  if (r.moves === 1 && r.out && r.bad === 0 && le.aligned === true && uniq.length >= 4)
+    console.log('glide ok: reduced motion shortens the walk (' + uniq.length + ' rendered positions) but still lands flush before the flight');
+  else { failures++; console.error('glide reduced FAIL:', JSON.stringify({ moves: r.moves, out: r.out, bad: r.bad, uniq: uniq.length, lastExit: le })); }
+}
+// a held exit is never left drawn over the next board: a level change drops it outright
+{
+  await page.evaluate(() => window.GE.load(0));
+  await page.waitForTimeout(80);
+  const r = await page.evaluate(() => {
+    window.GE.dragVia(0, [], 'right');          // exits; the picture still owes the walk
+    const held = window.GE.gliding;
+    window.GE.load(1);                          // a level change must clear it outright
+    return { held, gliding: window.GE.gliding, over: window.GE.over, lvl: window.GE.level };
+  });
+  if (r.held && !r.gliding && !r.over && r.lvl === 1) console.log('glide ok: a level change drops a held exit (no stale block drawn on the next board)');
+  else { failures++; console.error('glide held FAIL:', JSON.stringify(r)); }
+}
+
+// ---------- the landing (2026-09-02) ----------
+// User report: "the main menu when you open the app is too overwhelming". The cold open is now a
+// calm landing — the title treatment, ONE primary CTA and two quiet entries, and nothing else to
+// read; the field log (stars, quests, streak, survey, paper, sound) moved to the sheet index and
+// the legend stays behind How to play. A returning player still reaches play in one tap.
+{
+  await page.evaluate(() => localStorage.clear());
+  await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L);
+  await page.waitForTimeout(700);
+  const fresh = await page.evaluate(() => ({
+    up: !document.getElementById('menu').hidden,
+    landing: window.GE_MENU.landing(),
+    cta: document.getElementById('playLabel').textContent,
+    stamp: document.getElementById('menuStamp').textContent.replace(/\s+/g, ' ').trim(),
+    quiet: ['menuQuests', 'menuPapers', 'fStars', 'levelGrid', 'btnSurvey', 'btnSound'].every(id => !document.getElementById('menu').contains(document.getElementById(id))),
+    // the entrance animation must not have eaten the CTA's beckon pulse (.landing .gatebtn outranks .gatebtn)
+    ctaAnim: getComputedStyle(document.getElementById('btnPlay')).animationName,
+    levels: document.getElementById('levels').hidden, legend: document.getElementById('legend').hidden,
+  }));
+  await page.screenshot({ path: shotDir + '/landing-fresh.png' });
+  // one tap: Play → the board, on level 1, with the tutorial route still to be ghosted
+  await page.click('#btnPlay');
+  await page.waitForTimeout(200);
+  const played = await page.evaluate(() => ({ menu: !document.getElementById('menu').hidden, lvl: window.GE.level, moves: window.GE.moves, paused: window.GE.paused, route: !!window.GE.route(0) }));
+  // a returning player: the CTA names the level it continues, and one tap still lands on it
+  await page.evaluate(() => { localStorage.setItem('ge_prog', JSON.stringify({ u: 11, s: [3, 3, 2, 3, 3, 3, 2, 3, 3, 3, 1] })); localStorage.setItem('ge_level', '11'); });
+  await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L);
+  await page.waitForTimeout(700);
+  const back = await page.evaluate(() => ({ landing: window.GE_MENU.landing(), cta: document.getElementById('playLabel').textContent, stamp: document.getElementById('menuStamp').textContent.replace(/\s+/g, ' ').trim() }));
+  await page.screenshot({ path: shotDir + '/landing-continue.png' });
+  await page.click('#btnPlay');
+  await page.waitForTimeout(200);
+  const backPlayed = await page.evaluate(() => ({ menu: !document.getElementById('menu').hidden, lvl: window.GE.level }));
+  // and the two quiet entries still open the screens the landing no longer shows
+  await page.evaluate(() => window.GE_MENU.show('menu')); await page.waitForTimeout(120);
+  await page.click('#btnLevels'); await page.waitForTimeout(200);
+  const idx = await page.evaluate(() => ({ levels: !document.getElementById('levels').hidden, tiles: document.querySelectorAll('#levelGrid .tile').length,
+    log: ['fStars', 'menuQuests', 'fStreak', 'btnSurvey', 'menuPapers', 'btnSound'].every(id => document.getElementById('levels').contains(document.getElementById(id))) }));
+  await page.screenshot({ path: shotDir + '/levels-fieldlog.png' });
+  await page.click('#btnLevelsBack'); await page.waitForTimeout(120);
+  await page.click('#btnLegend'); await page.waitForTimeout(200);
+  const leg = await page.evaluate(() => !document.getElementById('legend').hidden);
+  await page.click('#btnLegendBack'); await page.waitForTimeout(120);
+  const ok = fresh.up && fresh.landing.length <= 3 && JSON.stringify(fresh.landing) === '["btnPlay","btnLevels","btnLegend"]'
+    && fresh.cta === 'Play' && /New sheet/i.test(fresh.stamp) && fresh.quiet && fresh.levels && fresh.legend
+    && /beckon/.test(fresh.ctaAnim) && /rise/.test(fresh.ctaAnim)
+    && !played.menu && played.lvl === 0 && played.moves === 0 && !played.paused && played.route
+    && back.landing.length === 3 && back.cta === 'Continue — Level 12' && /Level 12 \/ 30/i.test(back.stamp)
+    && !backPlayed.menu && backPlayed.lvl === 11
+    && idx.levels && idx.tiles === 30 && idx.log && leg;
+  if (ok) console.log('landing ok: 3 interactive elements (Play + Levels + How to play), stamp "' + back.stamp + '", "' + back.cta + '" lands on L12 in one tap; the field log and the 30-tile index live on the sheet index');
+  else { failures++; console.error('landing FAIL:', JSON.stringify({ fresh, played, back, backPlayed, idx, leg })); }
 }
 
 // ---------- beacon (2026-08-31) ----------

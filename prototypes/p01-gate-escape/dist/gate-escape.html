@@ -229,6 +229,34 @@
   .gatebtn .chev { font-size:22px; line-height:1; margin-left:-4px; }
   @keyframes slide { 0%,55% { transform:translateX(0); } 75% { transform:translateX(9px); } 100% { transform:translateX(0); } }
   .row { display:flex; gap:10px; margin-top:12px; }
+  /* the cold-open landing: more air, a bigger title treatment, one static stamp line, three taps */
+  .tblock.landing { padding:30px 22px 24px; }
+  .landing .title { font-size:clamp(34px,10.6vw,48px); margin-top:10px; }
+  .landing .sub { margin-top:10px; font-size:14.5px; }
+  .landing .stamp {
+    margin-top:16px; padding:8px 8px 9px; border:1px solid var(--line2);
+    font:600 10.5px/1.4 var(--mono); letter-spacing:.16em; color:var(--dim); text-align:center; text-transform:uppercase;
+  }
+  .landing .stamp b { color:var(--ink); font-weight:800; }
+  .landing .stamp i { color:var(--amber-ink); font-style:normal; font-weight:800; }
+  .landing .gatebtn { margin-top:16px; }
+  /* entrance: the sheet arrives, then the title rule is drawn, then the controls rise */
+  .landing .title::after { animation:rule .5s .1s cubic-bezier(.22,.9,.3,1) both; }
+  @keyframes rule { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+  .landing .sub, .landing .stamp, .landing .row { animation:rise .42s cubic-bezier(.22,.9,.3,1) both; }
+  .landing .sub { animation-delay:.06s; }
+  .landing .stamp { animation-delay:.12s; }
+  .landing .row { animation-delay:.24s; }
+  /* the CTA rises in with the rest AND keeps its beckon pulse — this rule outranks .gatebtn, so it
+     has to carry both, and the reduced-motion lists below have to name it for the same reason */
+  .landing .gatebtn { animation:rise .42s cubic-bezier(.22,.9,.3,1) .18s both, beckon 2.2s ease-in-out .7s infinite; }
+  @keyframes rise { from { opacity:0; transform:translateY(9px); } }
+  /* the sheet index carries the field log above the grid and the settings below it */
+  #levels .fields { margin-top:0; }
+  #levels .div { margin:14px 0 8px; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); border-bottom:1px solid var(--line2); padding-bottom:5px; }
+  #levels .row.srow { margin-top:10px; }
+  .ghostbtn.tog { font-size:13.5px; padding:10px 8px; }
+  .ghostbtn.tog b { color:var(--amber-ink); }
   .ghostbtn {
     flex:1; background:none; border:1.5px dashed var(--line2); border-radius:8px; color:var(--ink);
     padding:12px 8px; font:700 15px system-ui,sans-serif; cursor:pointer;
@@ -317,9 +345,9 @@
   .mstones .ms .mark { display:block; font-size:15px; line-height:1; color:var(--amber-ink); margin-bottom:1px; }
   #surveyLast { font:600 11px var(--mono); color:var(--dim); margin-bottom:12px; }
   #surveyModal { z-index:25; } /* the survey card opens over the title block (screens are z-20) */
-  @media (prefers-reduced-motion: reduce) { .gatebtn, .gatebtn .blk, .tblock, .card, .card .stars span, #toast, #btnHint.nudge, .chest-ico, .card .chest-row, .card .daily-row, .card .daily-row .stamp { animation:none; } .chest-ico .lid { transition:none; } }
+  @media (prefers-reduced-motion: reduce) { .gatebtn, .gatebtn .blk, .tblock, .card, .card .stars span, #toast, #btnHint.nudge, .chest-ico, .card .chest-row, .card .daily-row, .card .daily-row .stamp, .landing .sub, .landing .stamp, .landing .row, .landing .gatebtn, .landing .title::after { animation:none; } .chest-ico .lid { transition:none; } }
   /* the Motion toggle (pause card) forces the same reduced path via body.reduce-motion */
-  body.reduce-motion .gatebtn, body.reduce-motion .gatebtn .blk, body.reduce-motion .tblock, body.reduce-motion .card, body.reduce-motion .card .stars span, body.reduce-motion #toast, body.reduce-motion #btnHint.nudge, body.reduce-motion .chest-ico, body.reduce-motion .card .chest-row, body.reduce-motion .card .daily-row, body.reduce-motion .card .daily-row .stamp { animation:none; }
+  body.reduce-motion .gatebtn, body.reduce-motion .gatebtn .blk, body.reduce-motion .tblock, body.reduce-motion .card, body.reduce-motion .card .stars span, body.reduce-motion #toast, body.reduce-motion #btnHint.nudge, body.reduce-motion .chest-ico, body.reduce-motion .card .chest-row, body.reduce-motion .card .daily-row, body.reduce-motion .card .daily-row .stamp, body.reduce-motion .landing .sub, body.reduce-motion .landing .stamp, body.reduce-motion .landing .row, body.reduce-motion .landing .gatebtn, body.reduce-motion .landing .title::after { animation:none; }
   body.reduce-motion .chest-ico .lid { transition:none; }
   body.reduce-motion #hud .moves.low { animation:none; }
   body.reduce-motion #hud .moves.shake, body.reduce-motion #hud .moves.boost { animation:none; }
@@ -451,12 +479,33 @@
     </div>
   </div>
 
-  <!-- title block: the main menu -->
+  <!-- title block: the cold-open landing. A drawing's cover sheet — the title treatment, one
+       primary CTA and two quiet entries, and nothing else to read. The stamp line is static text
+       (level, stars, streak); the whole field log — quests, streak, survey, paper, sound — lives
+       one tap deeper on the sheet index, and the legend one tap deeper behind How to play. -->
   <div class="screen" id="menu" hidden>
-    <div class="tblock">
-      <span class="no">NO. GE-01</span><button class="no r" id="btnHaptics" style="right:104px" aria-label="Toggle haptics" hidden>HAPTICS <b id="fHaptics">on</b></button><button class="no r" id="btnSound" aria-label="Toggle sound">SOUND <b id="fSound">on</b></button>
+    <div class="tblock landing">
+      <span class="no">NO. GE-01</span><span class="no r">SCALE 1:1</span>
       <div class="title">Gate Escape</div>
       <div class="sub">Drag every block out through the gate of its color.</div>
+      <div class="stamp" id="menuStamp">LEVEL 1 / 30</div>
+      <button class="gatebtn" id="btnPlay">
+        <svg class="blk" viewBox="0 0 22 22" aria-hidden="true"><defs><pattern id="h" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#ff8078"/><rect width="1.4" height="4" fill="#c24d46" opacity=".55"/></pattern></defs><rect x="1.5" y="1.5" width="19" height="19" fill="url(#h)" stroke="#c24d46" stroke-width="2"/><circle cx="11" cy="11" r="3" fill="#fff" opacity=".9"/></svg>
+        <span id="playLabel">Play</span>
+        <span class="chev">›</span>
+      </button>
+      <div class="row">
+        <button class="ghostbtn" id="btnLevels">Levels</button>
+        <button class="ghostbtn" id="btnLegend">How to play</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- sheet index: level select + the field log (progress, daily quests, streak, survey, paper,
+       sound) — everything the landing deliberately does not say on a cold open -->
+  <div class="screen" id="levels" hidden>
+    <div class="tblock">
+      <div class="shead"><h2>Levels</h2><button class="back" id="btnLevelsBack">Back</button></div>
       <div class="fields">
         <div><span class="k">Level</span><span class="v" id="fLevel">1 / 30</span></div>
         <div><span class="k">Stars</span><span class="v" id="fStars">0 / 90</span></div>
@@ -471,24 +520,13 @@
           <span class="k">Field survey</span><span class="v" id="fSurvey">0 pts</span><span class="chev">›</span>
         </button>
       </div>
-      <button class="gatebtn" id="btnPlay">
-        <svg class="blk" viewBox="0 0 22 22" aria-hidden="true"><defs><pattern id="h" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#ff8078"/><rect width="1.4" height="4" fill="#c24d46" opacity=".55"/></pattern></defs><rect x="1.5" y="1.5" width="19" height="19" fill="url(#h)" stroke="#c24d46" stroke-width="2"/><circle cx="11" cy="11" r="3" fill="#fff" opacity=".9"/></svg>
-        <span id="playLabel">Play level 1</span>
-        <span class="chev">›</span>
-      </button>
-      <div class="row">
-        <button class="ghostbtn" id="btnLevels">Levels</button>
-        <button class="ghostbtn" id="btnLegend">How to play</button>
-      </div>
-      <div class="papers" id="menuPapers" aria-label="Paper"><span class="k">Paper</span><div class="sw"></div><span class="cap"></span></div>
-    </div>
-  </div>
-
-  <!-- sheet index: level select -->
-  <div class="screen" id="levels" hidden>
-    <div class="tblock">
-      <div class="shead"><h2>Levels</h2><button class="back" id="btnLevelsBack">Back</button></div>
+      <div class="div">SHEET INDEX</div>
       <div class="grid" id="levelGrid"></div>
+      <div class="papers" id="menuPapers" aria-label="Paper"><span class="k">Paper</span><div class="sw"></div><span class="cap"></span></div>
+      <div class="row srow">
+        <button class="ghostbtn tog" id="btnSound" aria-label="Toggle sound">Sound <b id="fSound">on</b></button>
+        <button class="ghostbtn tog" id="btnHaptics" aria-label="Toggle haptics" hidden>Haptics <b id="fHaptics">on</b></button>
+      </div>
       <div class="foot"><span id="levelsNote"></span><button id="btnReset">Reset progress</button></div>
     </div>
   </div>
@@ -567,6 +605,36 @@ const SYS_REDUCED = window.matchMedia ? window.matchMedia('(prefers-reduced-moti
 let motionOn = true;
 const reducedMotion = () => !motionOn || !!(SYS_REDUCED && SYS_REDUCED.matches);
 function setMotion(on) { motionOn = !!on; try { document.body.classList.toggle('reduce-motion', !on); } catch (e) {} }
+
+// ---------- visual glide ----------
+// A drag walks the block one cell at a time (stepToward). At finger speed a whole multi-cell
+// walk used to collapse into ONE rendered frame, so a block still diagonal to its gate looked
+// like it teleported through it — the exit rule was right, the picture lied. So the RENDERED
+// position trails the logical one at a capped speed, walking the same breadcrumb cells the
+// finger did (never a straight line: that would cut through walls), and an exit flight is held
+// until the block is drawn flush in its aligned cell — with a gate flash on the frame it lands.
+// Nothing here touches the rules, move accounting, or the synchronous GE.drag/dragVia contract.
+const GLIDE_MS = 34;              // ms of visual travel per cell
+const GLIDE_MS_REDUCED = 13;
+const GLIDE_LAG_MS = 260;         // ...but the visual never trails the finger by more than this
+const GLIDE_LAG_MS_REDUCED = 100;
+const EXIT_HOLD_S = 0.09;         // beat held on the aligned cell before the flight
+const EXIT_HOLD_S_REDUCED = 0.04; // reduced motion shortens the beat; it never skips it
+const ALIGN_FLASH_S = 0.34, ALIGN_FLASH_S_REDUCED = 0.2;
+const glideMs = q => Math.min(
+  reducedMotion() ? GLIDE_MS_REDUCED : GLIDE_MS,
+  (reducedMotion() ? GLIDE_LAG_MS_REDUCED : GLIDE_LAG_MS) / Math.max(1, q));
+const exitHoldS = () => (reducedMotion() ? EXIT_HOLD_S_REDUCED : EXIT_HOLD_S);
+const alignFlashS = () => (reducedMotion() ? ALIGN_FLASH_S_REDUCED : ALIGN_FLASH_S);
+// how long the picture still owes the player for this block, in ms (bounded by GLIDE_LAG_MS)
+function visLagMs(bi) {
+  const q = (visQ[bi] || []).length;
+  return q * glideMs(q) + exitHoldS() * 1000;
+}
+const pushVis = (bi, x, y) => { (visQ[bi] || (visQ[bi] = [])).push([x, y]); };
+// the visual gives up and snaps (cancelled drag, undo, level change): a snap can never draw a
+// block inside a wall, an interpolation across an unwalked gap could
+function snapVis(bi) { visQ[bi] = []; pendingSettle[bi] = false; if (pos[bi]) disp[bi] = [pos[bi][0], pos[bi][1]]; }
 
 // ---------- paper skins (cosmetic, chest rewards) ----------
 // A skin changes ONLY the drafting sheet: page gradient, ink, rules, card tints, the canvas
@@ -806,8 +874,12 @@ let li = 0;
 try { li = Math.min(parseInt(localStorage.getItem('ge_level') || '0', 10) || 0, LEVELS.length - 1); } catch (e) {}
 let L = null;          // current level (positions mutated live)
 let pos = [];          // [x,y] per block, null = exited
-let disp = [];         // eased display positions
-let exitAnim = [];     // {dx,dy,t} per block or null
+let disp = [];         // rendered positions, capped-speed (see "visual glide")
+let visQ = [];         // per block: cells the RENDERED block still has to walk through
+let pendingSettle = []; // per block: a released drag whose settle beat waits for the visual
+let exitAnim = [];     // {dx,dy,t,from,side,gate,wait,hold} per block or null
+let gateAlign = [];    // {g,t} — the lane flash the frame a block lines up with the gate it leaves by
+let lastExit = null;   // {bi,side,cell,moves,visFrom,aligned,flew} — inspectable (GE.lastExit)
 let moves = 0, movesLeft = 0, rescued = false, over = false;
 let drag = null;       // {bi, pid, gx, gy, sx, sy, moved, counted} — one finger owns the board at a time
 let particles = [];
@@ -842,7 +914,10 @@ function loadLevel(i) {
   L = JSON.parse(JSON.stringify(LEVELS[li]));
   pos = L.blocks.map(b => [b.x, b.y]);
   disp = L.blocks.map(b => [b.x, b.y]);
+  visQ = L.blocks.map(() => []);
+  pendingSettle = L.blocks.map(() => false);
   exitAnim = L.blocks.map(() => null);
+  gateAlign = []; lastExit = null;
   settleT = L.blocks.map(() => 0);
   moves = 0; movesLeft = L.moves; rescued = false; over = false;
   attemptUndos = 0; attemptHints = 0;
@@ -1103,6 +1178,9 @@ function snapshot() {
   return { pos: pos.map(p => (p ? [p[0], p[1]] : null)), moves, movesLeft };
 }
 function beginDrag(bi, gx, gy, pid = -1) {
+  // a block still holding on its aligned cell has been waited on long enough: the player has
+  // moved on, so its flight starts now. Nothing on the board is ever drawn on top of it.
+  flushHeldExits();
   // t0 drives the pickup press beat: a 70 ms dip before the lift reads as started (render)
   drag = { bi, pid, gx, gy, sx: pos[bi][0], sy: pos[bi][1], moved: false, counted: false, t0: performance.now() };
   pendingSnap = snapshot();
@@ -1120,7 +1198,7 @@ function stepToward(bi, wantX, wantY) {
       if (mag < 0.51 || (sx === 0 && sy === 0)) continue;
       const nx = pos[bi][0] + sx, ny = pos[bi][1] + sy;
       if (fits(bi, nx, ny)) {
-        pos[bi] = [nx, ny]; drag.moved = true; stepped = true;
+        pos[bi] = [nx, ny]; pushVis(bi, nx, ny); drag.moved = true; stepped = true;
         // picker-style selection tick as the block walks cells under the finger (rate-limited)
         const tn = performance.now();
         if (tn - hapticStepT > 70) { hapticStepT = tn; haptic('step'); }
@@ -1144,38 +1222,77 @@ function wouldLeaveBoard(bi, sx, sy) {
   return false;
 }
 
+// The logical half of an exit: instant and synchronous, exactly as before (move counted, block
+// off the board, fail/win decided). The *picture* of it — burst, shake, sound, haptic, gate
+// close — is spent by beginFlight() once the rendered block has walked into the aligned cell.
 function startExit(bi, side) {
   const [dx, dy] = DIRS[side];
-  exitAnim[bi] = { dx, dy, t: 0 };
   const b = L.blocks[bi];
-  const cen = blockCenterPx(bi);
-  const NP = reducedMotion() ? 11 : 22; // reduced motion: half the burst
-  for (let i = 0; i < NP; i++) {
-    particles.push({
-      x: cen[0], y: cen[1],
-      vx: (Math.random() - 0.5) * 7 + dx * 4, vy: (Math.random() - 0.5) * 7 + dy * 4 - 2,
-      life: 1, color: Math.random() < 0.7 ? COLORS[b.color].main : THEME.spark,
-      r: 2 + Math.random() * 3.4,
-    });
-  }
-  shakeT = reducedMotion() ? 0 : 0.16;
+  const from = [pos[bi][0], pos[bi][1]]; // the flush, fully-covered cell the rule matched on
+  const gate = exitGateAt(bi, from[0], from[1], side);
   pos[bi] = null;
-  // last block of its color gone? the gate closes with a flash
-  if (!L.blocks.some((o, i) => pos[i] && o.color === b.color)) { gateFlash[b.color] = 0; sound('gate'); }
-  countMove();
+  pendingSettle[bi] = false;
+  // decided here (not at flight time): the gate closes only for the block that empties its colour
+  const closes = !L.blocks.some((o, i) => pos[i] && o.color === b.color);
   // each escape rings a step higher while the chain is alive; ~4 s without an exit resets the
   // pitch (a slow, thoughtful clear starts each escape fresh instead of climbing forever)
   const tex = performance.now();
   if (tex - lastExitAt > 4000) exitChain = 0;
   lastExitAt = tex;
-  sound('exit', exitChain++);
-  haptic('exit');
+  const chain = exitChain++;
+  exitAnim[bi] = { dx, dy, t: 0, from, side, gate, closes, chain, wait: true, hold: 0, flashed: false };
+  lastExit = { bi, side, cell: [from[0], from[1]], moves: moves + 1, visFrom: null, aligned: null, flew: false };
+  countMove();
   track('block_exit', li + 1);
   // lock the board while the last block flies out; the pending win dies with the level
   // (loadLevel clears winTimers) so a restart or level change in this window can never
-  // land a win card — and its stars — on a level that was not played
-  if (pos.every(p => !p)) { over = true; updateHud(); winTimers.push(setTimeout(win, 380)); }
+  // land a win card — and its stars — on a level that was not played. The wait the picture
+  // still owes is added on so the card never lands over a block that has not left yet.
+  if (pos.every(p => !p)) { over = true; updateHud(); winTimers.push(setTimeout(win, 380 + visLagMs(bi))); }
   else maybeFail();
+}
+
+// the rendered block has landed flush in its gate lane: spend the exit's feedback and let it fly
+function beginFlight(i) {
+  const a = exitAnim[i];
+  if (!a || !a.wait) return;
+  a.wait = false;
+  // record where the picture ACTUALLY was before anything snaps it — otherwise `aligned` would be
+  // vacuously true. In the normal path the glide has already landed on `from` and the frame loop
+  // has flashed; only an interrupted hold (flushHeldExits) can report false here.
+  if (lastExit && lastExit.bi === i) {
+    lastExit.visFrom = [disp[i][0], disp[i][1]];
+    lastExit.aligned = Math.abs(disp[i][0] - a.from[0]) < 1e-6 && Math.abs(disp[i][1] - a.from[1]) < 1e-6;
+    lastExit.flew = true;
+  }
+  alignFlash(i);
+  disp[i] = [a.from[0], a.from[1]]; // the flight ALWAYS starts from the aligned cell
+  visQ[i] = [];
+  const b = L.blocks[i], cen = blockCenterPx(i);
+  const NP = reducedMotion() ? 11 : 22; // reduced motion: half the burst
+  for (let k = 0; k < NP; k++) {
+    particles.push({
+      x: cen[0], y: cen[1],
+      vx: (Math.random() - 0.5) * 7 + a.dx * 4, vy: (Math.random() - 0.5) * 7 + a.dy * 4 - 2,
+      life: 1, color: Math.random() < 0.7 ? COLORS[b.color].main : THEME.spark,
+      r: 2 + Math.random() * 3.4,
+    });
+  }
+  shakeT = reducedMotion() ? 0 : 0.16;
+  if (a.closes) { gateFlash[b.color] = 0; sound('gate'); } // last block of its colour: the gate closes
+  sound('exit', a.chain);
+  haptic('exit');
+}
+// the lane flash on the frame of alignment: "it lined up, THEN left"
+function alignFlash(i) {
+  const a = exitAnim[i];
+  if (!a || a.flashed) return;
+  a.flashed = true;
+  disp[i] = [a.from[0], a.from[1]];
+  if (a.gate) gateAlign.push({ g: a.gate, bi: i, from: a.from, t: 0 });
+}
+function flushHeldExits() {
+  for (let i = 0; i < exitAnim.length; i++) if (exitAnim[i] && exitAnim[i].wait) { visQ[i] = []; beginFlight(i); }
 }
 
 function countMove() {
@@ -1194,6 +1311,9 @@ function undo() {
   pos = s.pos.map(p => (p ? [p[0], p[1]] : null));
   moves = s.moves; movesLeft = s.movesLeft;
   exitAnim = L.blocks.map(() => null);
+  visQ = L.blocks.map(() => []);
+  pendingSettle = L.blocks.map(() => false);
+  gateAlign = []; lastExit = null;
   gateFlash = COLORS.map(() => -1);
   settleT = L.blocks.map(() => 0);
   exitChain = 0; // an undone exit ends the pitch chain
@@ -1376,10 +1496,11 @@ function endDrag(count = true) {
   const d = drag; drag = null;
   if (!count) return;
   if (!pos[d.bi]) { pendingSnap = null; return; }
-  if (pos[d.bi][0] !== d.sx || pos[d.bi][1] !== d.sy) settleT[d.bi] = 0.0001; // settle overshoot beat (render)
+  // the settle overshoot beat + tick belong to the moment the block LANDS, which with a capped
+  // glide can be a few frames after the finger let go (frame() spends it when the queue drains)
+  if (pos[d.bi][0] !== d.sx || pos[d.bi][1] !== d.sy) pendingSettle[d.bi] = true;
   if ((pos[d.bi][0] !== d.sx || pos[d.bi][1] !== d.sy) && !d.counted) {
     countMove();
-    haptic('settle'); // the block snaps into its new cell
     maybeFail();
   } else pendingSnap = null;
 }
@@ -1390,6 +1511,7 @@ function cancelDrag() {
   if (!drag) return;
   const d = drag; drag = null;
   if (!d.counted && pos[d.bi]) pos[d.bi] = [d.sx, d.sy];
+  snapVis(d.bi); // the gesture never happened: the picture goes back with it, without interpolating
   pendingSnap = null;
 }
 const ownPointer = e => drag && (drag.pid < 0 || e.pointerId === drag.pid);
@@ -1667,19 +1789,52 @@ function drawRoute(bi, route, strength) {
   ctx.restore();
 }
 
+// Walk each block's RENDERED position along the breadcrumbs its logical position left behind,
+// at a capped speed. Two invariants: (1) the visual only ever sits between two cells the block
+// legitimately occupied, so it can never be drawn inside a wall or another block; (2) it never
+// trails the finger by more than GLIDE_LAG_MS — a long flick speeds the walk up, it never skips.
+function advanceGlide(dt) {
+  for (let i = 0; i < disp.length; i++) {
+    if (exitAnim[i] && !exitAnim[i].wait) continue; // the flight owns the position
+    const q = visQ[i];
+    if (q && q.length) {
+      let budget = (dt * 1000) / glideMs(q.length); // cells of travel available this frame
+      let guard = 0;
+      while (budget > 1e-9 && q.length && guard++ < 64) {
+        const dx = q[0][0] - disp[i][0], dy = q[0][1] - disp[i][1];
+        const d = Math.abs(dx) + Math.abs(dy); // steps are axis-aligned: manhattan IS the distance
+        if (d <= budget) { disp[i][0] = q[0][0]; disp[i][1] = q[0][1]; budget -= d; q.shift(); }
+        else { const k = budget / d; disp[i][0] += dx * k; disp[i][1] += dy * k; budget = 0; }
+      }
+      if (!q.length && pendingSettle[i]) { pendingSettle[i] = false; settleT[i] = 0.0001; haptic('settle'); }
+    } else if (pos[i]) { // no breadcrumbs (undo, restart, resize): ease home as before
+      disp[i][0] += (pos[i][0] - disp[i][0]) * Math.min(1, dt * 22);
+      disp[i][1] += (pos[i][1] - disp[i][1]) * Math.min(1, dt * 22);
+      if (pendingSettle[i]) { pendingSettle[i] = false; settleT[i] = 0.0001; haptic('settle'); }
+    }
+  }
+}
+
 let lastT = performance.now();
 function frame(t) {
   const dt = Math.min((t - lastT) / 1000, 0.05); lastT = t;
-  // ease display positions
-  for (let i = 0; i < disp.length; i++) {
-    if (exitAnim[i]) { exitAnim[i].t += dt * 4.5; continue; }
-    if (!pos[i]) continue;
-    disp[i][0] += (pos[i][0] - disp[i][0]) * Math.min(1, dt * 22);
-    disp[i][1] += (pos[i][1] - disp[i][1]) * Math.min(1, dt * 22);
+  advanceGlide(dt);
+  // exits waiting on the picture: the frame the block lands flush the gate flashes, and a short
+  // held beat later it flies. Everything logical about the exit already happened in startExit.
+  for (let i = 0; i < exitAnim.length; i++) {
+    const a = exitAnim[i];
+    if (!a) continue;
+    if (!a.wait) { a.t += dt * 4.5; continue; }
+    if ((visQ[i] || []).length) continue;   // still walking into the lane
+    alignFlash(i);
+    a.hold += dt;
+    if (a.hold >= exitHoldS()) beginFlight(i);
   }
   for (const p of particles) { p.x += p.vx; p.y += p.vy; p.vy += 0.22; p.life -= dt * 2.1; }
   particles = particles.filter(p => p.life > 0);
   if (shakeT > 0) shakeT -= dt;
+  for (const a of gateAlign) a.t += dt;
+  if (gateAlign.length) gateAlign = gateAlign.filter(a => a.t < alignFlashS());
   for (let c = 0; c < gateFlash.length; c++) if (gateFlash[c] >= 0) gateFlash[c] += dt;
   for (let i = 0; i < settleT.length; i++) if (settleT[i] > 0) { settleT[i] += dt; if (settleT[i] > 0.4) settleT[i] = 0; }
   livesTick(dt);
@@ -1816,7 +1971,7 @@ function render() {
     if (!pos[i] && !exitAnim[i]) continue;
     const b = L.blocks[i], c = COLORS[b.color];
     let ox = 0, oy = 0, alpha = 1;
-    if (exitAnim[i]) {
+    if (exitAnim[i] && !exitAnim[i].wait) {
       const a = exitAnim[i];
       if (a.t >= 1) { exitAnim[i] = null; continue; }
       ox = a.dx * a.t * cell * 3.2; oy = a.dy * a.t * cell * 3.2; alpha = 1 - a.t;
@@ -1844,6 +1999,42 @@ function render() {
       // on the fail card the stranded blocks breathe with a white edge so the rescue shows what it buys
       edge: stranded ? `rgba(255,255,255,${0.35 + pulse * 0.6})` : null,
     });
+    ctx.restore();
+  }
+
+  // gate alignment flash: on the frame a block lands flush in its lane, the gate it is about to
+  // leave by lights up — drawn OVER the block so the eye is told "it lined up" before it goes
+  for (const a of gateAlign) {
+    const g = a.g, u = Math.min(1, a.t / alignFlashS()), e = (1 - u) * (1 - u);
+    const th = cell * 0.42, along = g.len * cell;
+    let gx, gy, w, h;
+    if (g.side === 'top') { gx = bx + g.start * cell; gy = by - th - 3; w = along; h = th; }
+    if (g.side === 'bottom') { gx = bx + g.start * cell; gy = by + bh + 3; w = along; h = th; }
+    if (g.side === 'left') { gx = bx - th - 3; gy = by + g.start * cell; w = th; h = along; }
+    if (g.side === 'right') { gx = bx + bw + 3; gy = by + g.start * cell; w = th; h = along; }
+    ctx.save();
+    // the block, lit where it stands: the shape the player was dragging is the thing that lined up.
+    // It fades out well before the tab's ring does — by the time the block flies, only the gate glows
+    const bf = Math.max(0, 1 - a.t / (alignFlashS() * 0.42));
+    if (bf > 0 && a.from && L.blocks[a.bi]) {
+      ctx.fillStyle = `rgba(255,255,255,${bf * 0.6})`;
+      for (const [cx, cy] of L.blocks[a.bi].cells) {
+        rr(bx + (a.from[0] + cx) * cell + inset, by + (a.from[1] + cy) * cell + inset, cell - inset * 2, cell - inset * 2, 3);
+        ctx.fill();
+      }
+    }
+    // the gutter between the block and its gate: the lane, briefly open
+    ctx.fillStyle = `rgba(255,255,255,${e * 0.6})`;
+    if (g.side === 'top') ctx.fillRect(bx + g.start * cell, by - 3, along, 3);
+    if (g.side === 'bottom') ctx.fillRect(bx + g.start * cell, by + bh, along, 3);
+    if (g.side === 'left') ctx.fillRect(bx - 3, by + g.start * cell, 3, along);
+    if (g.side === 'right') ctx.fillRect(bx + bw, by + g.start * cell, 3, along);
+    // the gate tab itself, washed white and ringed
+    ctx.fillStyle = `rgba(255,255,255,${e * 0.6})`;
+    rr(gx, gy, w, h, 4); ctx.fill();
+    ctx.strokeStyle = `rgba(255,255,255,${e * 0.95})`; ctx.lineWidth = 3;
+    const grow = 2 + u * 12;
+    rr(gx - grow, gy - grow, w + grow * 2, h + grow * 2, 5 + grow); ctx.stroke();
     ctx.restore();
   }
 
@@ -1922,6 +2113,26 @@ window.GE = {
   get moves() { return moves; },
   get movesLeft() { return movesLeft; },
   get metrics() { return { cell, bx, by, w: L.w, h: L.h }; }, // board geometry in CSS px (for pointer-driven bots)
+  // the picture, as opposed to the rules: where each block is DRAWN this frame (fractional
+  // cells), whether the renderer still owes the player movement, and whether every drawn block
+  // is legal (an interpolated block must always lie between two cells it could really occupy)
+  get visPos() { return disp.map(p => [p[0], p[1]]); },
+  get gliding() { return visQ.some(q => q && q.length > 0) || exitAnim.some(a => a && a.wait); },
+  get visOk() {
+    for (let i = 0; i < L.blocks.length; i++) {
+      const a = exitAnim[i];
+      if (a && !a.wait) continue;      // flying out: off the board by design
+      if (!pos[i] && !a) continue;     // gone
+      const [fx, fy] = disp[i];
+      const xs = [...new Set([Math.floor(fx + 1e-6), Math.ceil(fx - 1e-6)])];
+      const ys = [...new Set([Math.floor(fy + 1e-6), Math.ceil(fy - 1e-6)])];
+      for (const x of xs) for (const y of ys) if (!fits(i, x, y)) return false;
+    }
+    return true;
+  },
+  // the last exit, for the bots: the cell the rule matched on, and the cell the flight actually
+  // started from (they must be the same — that is the whole point of the held alignment beat)
+  get lastExit() { return lastExit; },
   get over() { return over; },
   get paused() { return paused; }, set paused(v) { paused = !!v; if (paused) cancelDrag(); updateHud(); },
   get soundOn() { return soundOn; }, set soundOn(v) { soundOn = !!v; },
@@ -2100,6 +2311,7 @@ requestAnimationFrame(frame);
   $('btnHaptics').onclick = () => setHaptics(!GE.hapticsOn);
   $('btnPauseHaptics').onclick = () => setHaptics(!GE.hapticsOn);
   refreshHaptics();
+  refreshSound(); // the pause card's label must be right even if the sheet index is never opened
 
   // ---------- motion ----------
   // The OS "reduce motion" preference always wins (CSS media query + the canvas checks); this
@@ -2120,18 +2332,35 @@ requestAnimationFrame(frame);
     for (const k in screens) screens[k].hidden = k !== name;
     document.body.classList.toggle('menu-up', name === 'menu');
     if (name === 'menu') refreshMenu();
-    if (name === 'levels') buildGrid();
+    if (name === 'levels') { refreshLog(); buildGrid(); }
     if (name === 'legend') { const ll = document.getElementById('legendLives'); if (ll) ll.hidden = !GE.livesEnabled; drawSymbols(); if (!legendAnim) { legendAnim = true; demoT0 = 0; requestAnimationFrame(demoFrame); } }
     else legendAnim = false;
   }
   // an attempt the player walked away from (pause → Main menu) is still on the board behind
   // the title block; Play resumes it rather than silently restarting the level
   const resumable = () => GE.paused && !GE.over && GE.moves > 0;
+  // a save that has never cleared anything and sits on level 1: a fresh install, so the CTA is
+  // simply "Play" and the stamp does not report progress nobody has made yet
+  const freshInstall = () => GE.level === 0 && !prog.s.some(Boolean) && !resumable();
+  // the landing: title treatment, one static stamp line, one CTA, two quiet entries. Everything
+  // else the title block used to carry now lives on the sheet index (refreshLog).
   function refreshMenu() {
+    $('playLabel').textContent = resumable() ? 'Resume level ' + (GE.level + 1)
+      : freshInstall() ? 'Play' : 'Continue — Level ' + (GE.level + 1);
+    const today = dayStr(GE.now());
+    const live = streak.lastDate && streak.len > 0 && dayGap(streak.lastDate, today) <= 1 ? streak.len : 0;
+    $('menuStamp').innerHTML = freshInstall()
+      ? `New sheet · <b>${N}</b> levels`
+      : `Level <b>${GE.level + 1}</b> / ${N} · ★ <b>${starsTotal()}</b>`
+        + (live ? ` · <i>${live}-day streak</i>` : '');
+  }
+  // the sheet index's field log: progress, the day's quests, streak/lives, the survey row, the
+  // paper picker and the sound/haptics toggles
+  function refreshLog() {
     $('fLevel').textContent = (GE.level + 1) + ' / ' + N;
     $('fStars').textContent = starsTotal() + ' / ' + (N * 3);
-    $('playLabel').textContent = (resumable() ? 'Resume level ' : 'Play level ') + (GE.level + 1);
     refreshSound();
+    refreshHaptics();
     refreshPapers();
     refreshDaily();
   }
@@ -2377,6 +2606,7 @@ requestAnimationFrame(frame);
       + `<small>${wk} of last 7 days${streak.freezes ? ` · ${streak.freezes} freeze${streak.freezes > 1 ? 's' : ''} held` : ''}</small>`;
     $('fSurvey').textContent = `${lad.pts} pt${lad.pts === 1 ? '' : 's'}`;
     refreshLives();
+    if (!screens.menu.hidden) refreshMenu(); // the landing stamp carries the same streak
   }
   function refreshLives() {
     const on = GE.livesEnabled;
@@ -2386,7 +2616,7 @@ requestAnimationFrame(frame);
     $('fLives').innerHTML = `<span class="hearts">${'♥'.repeat(i.n)}<span class="off">${'♡'.repeat(i.max - i.n)}</span></span>`
       + (i.fullIn ? `<small>full in ${i.fullIn}</small>` : '');
   }
-  window.addEventListener('ge:lives', () => { if (!screens.menu.hidden) refreshLives(); });
+  window.addEventListener('ge:lives', () => { if (!screens.levels.hidden) refreshLives(); });
   // win-card beat: ONE quiet stamped row after the stars — all-quests-done (banks the freeze)
   // over a single quest, over a new best streak. A play beat, never a purchase event.
   let dailyTimer = 0;
@@ -2633,6 +2863,9 @@ requestAnimationFrame(frame);
   show('menu');
   checkStreak(); // the repair offer rides over the title block on launch (and only then)
   window.GE_MENU = { show, get prog() { return prog; }, setSkin, CHEST_STARS, CHEST_SKINS,
+    // the landing's whole interactive surface: Play + two quiet entries, nothing else
+    landing: () => [...screens.menu.querySelectorAll('button, a, input, select, textarea, [role="button"], [tabindex]')]
+      .filter(b => !b.hidden && b.getClientRects().length > 0).map(b => b.id || b.className),
     get streak() { return streak; }, checkStreak, refreshDaily,
     get quests() { return questsToday(); }, get ladder() { ladderWeek(); return lad; },
     questInfo: () => questsToday().ids.map(id => ({ id, label: QUEST_TEMPLATES[id].label, target: QUEST_TEMPLATES[id].target,

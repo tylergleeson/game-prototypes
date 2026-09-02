@@ -1,5 +1,5 @@
-// cache-first service worker, v20260831
-const CACHE = 'gate-escape-v20260831';
+// cache-first service worker, v20260902
+const CACHE = 'gate-escape-v20260902';
 const ASSETS = ['.', 'index.html', 'game.js', 'levels.js', 'menu.js', 'beacon.js', 'bot.js', 'manifest.webmanifest',
   'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png'];
 self.addEventListener('install', e => {
