@@ -1,0 +1,124 @@
+# Gate Escape — reviewer session
+
+iPhone 17 · 18 min, from level 1 · turns: 69 · levels won: 6 · started at level 1
+
+## Review
+
+# Gate Escape — meta-round review
+
+**Juno Adler · first play of the 2026-09-02 build · levels 1–6 + today's Daily Draft · 7/10**
+
+## Verdict
+
+The most *disciplined* hybrid-casual build I have played this year, and the round's research shows:
+a landing that is a drafting title block with three taps and no badges, a fail sheet that labels its
+ad `AD` and never celebrates, a field report that shares the exact text on screen, a survey that
+refuses to sell a repair at the moment of loss. The core is good too — "one drag, around corners,
+out the gate" is a real verb, and the gate-lane constraint (only rows 3–5 are a legal exit) turns a
+Rush-Hour derivative into a routing puzzle by level 5. **7/10, and a 9 with a week of fixes**,
+because almost everything wrong here is wiring, not design.
+
+But the headline finding is blunt: **the staged first-run does not work as built.** Two of the three
+reveals fire in total silence. Only the Daily Draft (L3) renders its stamped NEW row — and it is
+lovely, a green stamp and one plain line, no CTA. Sheet Certification (L2) and the Field Survey (L5)
+both flipped `disclosed` on their win cards with nothing on the card at all. So the answer to the
+studio's question — do the reveals read as earned discoveries or as things being withheld? — is
+**one of three reads as earned; the other two read as things that were switched on behind my back.**
+That is the exact failure mode the round was built to avoid, and it is one component call away from
+being fixed.
+
+## What is genuinely good
+
+- **The landing.** Title block, one-line premise, three taps. I knew what the game was before I
+  pressed anything. Protect it.
+- **The fail sheet's architecture.** The near-miss line is state truth and the ghosted route is
+  *drawn on the board* — I could see the red L one drag from its gate. The teach line ("out of moves
+  is not the end of the level") is calm and factual, shown once. The grant is labelled AD. No confetti.
+  This is a rescue surface a regulator could read without flinching.
+- **The sheet index.** Four named sheets (Foundations / Corked / The Spike / Sign-off) with dashed
+  pending stamps and "18 to certify". The whole 120-star arc in 3 seconds, and nothing gated behind it.
+- **The survey reads as a state, not a chore list.** "1 of 7 days · 10 pts" — because clearing a
+  level already stamped today, it greets you having *already started*. That single decision does more
+  for the tone than any copy on the sheet.
+- **The error strings.** When I misread L6, the game told me *why* the drag failed. Most puzzle
+  games just refuse.
+
+## Top improvements, ranked
+
+1. **Emit the NEW row for the certification and survey reveals** (onboarding, critical). What I saw:
+   `disclosed.cert` and `disclosed.survey` flipped on the L2 and L5 win cards; neither card carried a
+   row. Why: the FTUE thesis is the round. As shipped, the Field Survey — with a `SELECT 2` badge and a
+   contract already taken — simply materialises on a screen the player has not opened. Change: wire both
+   gates to the component the daily already uses, and assert in the playtest bot that clearing 1–6
+   produces exactly three NEW rows.
+2. **The Daily Draft never tells you the first attempt is the recorded one** (onboarding, critical),
+   and its fail sheet then offers "Retry level" — the free, familiar word from forty campaign levels —
+   as the button that *permanently closes the day*. Why: the rescue becomes the only way to keep the day
+   alive while the card hides that fact. That is the silhouette of a dark pattern in a build that is
+   otherwise scrupulous. Change: a one-tap confirm before the recorded board loads; a RECORDED chip in
+   the HUD; and on the daily, relabel to "+3 moves — keep today's record open" / "End today's attempt —
+   record NOT CLEARED".
+3. **The daily moves the campaign pointer** (bug, critical). After one draft attempt the sheet index
+   header read **Level 41/40** on a save with five levels cleared. The spec says the draft never touches
+   the pointer. This will drive the landing CTA. Change: give the draft its own slot; assert
+   unlock/resume are unchanged across a daily attempt.
+
+Also filed: the survey's preselected contract is "Clear 8 levels at par" — the **hardest** of the four,
+not the easiest, and progress locks the pair for the week. The 7-day spine marks pre-install days with
+the *miss* ring (Mon and Tue stamped as failures on a Wednesday install). The words "weather delay"
+appear nowhere on the survey sheet, so the first time a player meets the concept is the notice telling
+them it has been spent. The fail headline says "So close!" over "0 of 5 blocks escaped". And the win
+card's star tally is a count-up tween that, on the very first card of a new install, reads **0 / 120**
+under three freshly-awarded stars.
+
+## Fail/rescue, curve, retention
+
+The rescue surface is the strongest part of the build and I have nothing to add beyond the honesty of
+its headline. The **curve** is where the tightened economy misfires: slack runs *backwards* against
+teaching load. L1–4 (drag it out) get par+4; the **approval chain at L31** — numbered blocks, exit
+order, out-of-turn blocks that move but park, the hardest cognitive addition in the game — gets par+2,
+the tightest limit the game ever uses. That makes the level that teaches the rule also the level most
+likely to end in a loss. Give L31–32 par+4 and L33–34 par+3. Separately, at par+2 with 2★ at par+1, a
+1★ clear *is* the rescued clear, so 24-of-30 certification asks a median player to hit par on most of a
+sheet; the number to move is the threshold, not the limits. Retention is otherwise well-shaped: stars,
+papers, the stamp, a weekly seal — all cosmetic, nothing gated, no timers anywhere.
+
+## Originality
+
+Against Color Block Jam the mechanical delta is modest — gate lanes and the approval chain are the two
+real ideas, and the chain is genuinely novel. The *durable* differentiator is the register: a blueprint
+that behaves like a blueprint, a daily that shares text rather than a walkthrough, a streak that lapses
+in silence rather than selling you a repair. A publisher will not pick this up for the puzzle. They will
+pick it up because it is the only game in the category whose meta layer can be shipped in the EU
+without a legal review. Ship the three fixes above and that argument is airtight.
+
+
+## Improvement notes (as they happened)
+
+- **t3 · L1 · nit · ui** — Landing is genuinely calm and legible — title block, one-line premise, three taps, no badges or red dots · why it matters: hybrid-casual landings usually leak six competing CTAs and train players to ignore the screen; this one earns the first tap · what I would change: nothing yet, but protect this — the status line arriving on return day is the only thing that should ever join it.
+- **t4 · L1 · minor · onboarding** — How to play, opened cold from the landing on a fresh save, ends with an Approval chain card — a Sheet 4 (L31+) mechanic with numbered stamps and NEXT chips · why it matters: the studio just built staged disclosure so meta systems arrive when earned, then the legend hands a new player the hardest rule in the game before level 1; it is the one screen that contradicts the FTUE thesis · what I would change: gate the Approval chain card on cleared>=30 (or first entry to L31) exactly like the sheet-index reveals, so the legend grows with the player.
+- **t7 · L1 · major · bug** — Win card shows three stars awarded and immediately below reads Stars 0 / 120 — the running total renders before the level award commits (still 0/120 after a 3-star L1 clear) · why it matters: the star tally is the entire cosmetic-sink economy and the certification ladder hangs off it; a player reading zero after a perfect clear either thinks stars are fake or thinks they were robbed, on the very first card of the game · what I would change: commit the award before painting the card so it reads 3 / 120, and consider animating the number up from the previous total so the card teaches that stars accumulate.
+- **t10 · L2 · major · onboarding** — The Sheet Certification reveal fires on the L2 clear (state disclosed.cert goes true) but the win card carries NO stamped NEW row — the spec's one-quiet-announcement is missing, so the paper picker and certification ladder simply materialise on a screen the player has not opened yet · why it matters: a reveal nobody is told about is not a staged discovery, it is a feature that was hidden and then unhidden; the whole point of the ladder is that the player feels it arrive · what I would change: actually render the NEW row on the win card that crosses the gate ("NEW · Sheet certification" + one line of what it is), and verify the same for the daily and survey gates.
+- **t10 · L2 · minor · ui** — Win-card headline reads "Sheet approved!" as a random flavour variant on an ordinary level clear (L2, 3 stars banked) · why it matters: "approved", "certified" and "approval stamp" are the exact words this build uses for the real 24-star certification and the Sheet 4 reward; spending them as a generic congratulation trains the player to ignore the words on the one card where they will carry actual meaning · what I would change: reserve approved/certified/stamp strictly for certification events and use neutral drafting flavour ("Sheet filed!", "Checked and filed") for ordinary clears.
+- **t13 · L3 · nit · retention** — The sheet index communicates the certification ladder well — dashed pending frames, per-sheet star count and an explicit "18 to certify", four named sheets (Foundations / Corked / The Spike / Sign-off) that preview the difficulty arc · why it matters: it gives a 3-second answer to "what am I playing toward" without gating anything behind it, which is the right shape for a cosmetic sink · what I would change: nothing about the design; only that the row arrived unannounced (see the missing NEW row note).
+- **t19 · L3 · major · onboarding** — CORRECTION/REFINEMENT of the earlier reveal note: the Daily Draft reveal at 3 clears DOES render a proper stamped NEW row on the win card (green stamp + one plain-language line, no CTA) and it lands beautifully — but the Sheet Certification reveal at 2 clears rendered NO such row on its win card, even though disclosed.cert flipped true on that clear · why it matters: two of the three staged reveals need to feel identical in kind; the first one a player meets is the one that is missing, so the pattern is never established before the second fires · what I would change: wire the certification gate to the same NEW-row component the daily uses ("NEW · Sheet certification — 24 stars in a sheet earns its paper"), and add a regression check that each of the three gates emits exactly one row.
+- **t19 · L3 · minor · bug** — Addendum to the Stars 0/120 bug: the running star total on the win card is inconsistent, not uniformly stale — L1's card read 0/120 and L2's read 3/120 (both one level behind), while L3's card read the correct 9/120 · why it matters: it looks like a race between the award commit and the card paint, so it will reproduce intermittently in the store build and QA may not catch it; the worst instance is the very first card a new player ever sees · what I would change: await the award/persist step before painting, and assert on the win card in the playtest bot that the printed total equals levels-cleared stars.
+- **t30 · L5 · critical · onboarding** — TWO of the three staged reveals fire silently: disclosed.cert flipped on the L2 win card and disclosed.survey flipped on the L5 win card, and NEITHER card rendered a NEW row — only the Daily Draft (L3) did · why it matters: this is the whole thesis of the round. As shipped, a player clears L5, sees an ordinary win card, and the next time they open Levels a Field Survey row with a SELECT 2 badge and a preselected contract is simply sitting there. That is the exact feeling the staged rollout was built to avoid — not an earned discovery but a thing that had been withheld and was switched on behind their back · what I would change: this is the single highest-value fix in the build. Emit the same NEW row for cert ("NEW · Sheet certification") and survey ("NEW · Field survey — a week's sheet, two contracts") that the daily already emits, and add an assertion to the playtest bot that clears 1-6 and fails if any of the three gates produces a win card without exactly one NEW row.
+- **t30 · L5 · minor · feedback** — REVISION of my earlier "Stars 0/120" bug note: the star total is a count-up tween, not a stale value (I caught it at 0, 3, 9 and 13 across five cards where the true totals were 3, 6, 9, 12, 15) · why it matters: the tween itself is good juice, but on the FIRST win card of a new install it starts from zero, so the number a player's eye lands on under three freshly-awarded stars is literally "0 / 120" — the one card where the tally has to teach that stars accumulate is the one where it teaches the opposite · what I would change: keep the tween but start it at the pre-clear total and hold the final value for a beat; on the very first card, seed it at 0 only after the stars land, or just print the final value there.
+- **t34 · L6 · major · retention** — On a brand-new save the 7-day spine marks every day BEFORE the install date with the "no clear" ring (M and T show the empty ring on a Wednesday first session), identical to the mark a lapsed day gets · why it matters: the first time a player opens the survey they are shown two days they supposedly missed before they owned the game; that is the precise flavour of manufactured guilt this sheet is otherwise so careful to avoid, and it makes the very first weekly seal look already spoiled · what I would change: days before the recorded first-clear date should render as the neutral "still to come" dot (or a dimmed hatch), never the miss ring — the sheet only starts counting from the day the player arrived.
+- **t34 · L6 · major · onboarding** — The Field Survey is revealed with one contract already taken as a worked example, and the one taken is "Clear 8 levels at par" — which is by some distance the HARDEST of the four on offer (the others are clear 20 levels, clear 12 levels, clear 8 without hints; only this one requires a par-perfect solve, eight times, under the new par+2 limits) · why it matters: the demonstration is meant to show a new player what a contract feels like and give them an easy first fill; instead the preselected one is the slowest to move and the only one they can permanently fail at, and because progress locks the pair, a player who clears one level at par before reading the sheet is married to it for the week · what I would change: preselect the genuinely easiest by expected completion (a plain "clear N levels" contract), and pick it by a difficulty rank rather than by list order.
+- **t34 · L6 · major · legibility** — The weather-delay mechanic is invisible on the survey sheet: the words never appear, the 7-day spine uses four glyphs (check / tilde / ring / dot) with no key, and the seal row says only "File both contracts to seal the week - 0/2" without saying that filing ONE banks a weather delay · why it matters: a streak insurance token the player cannot see, cannot count and has never had named is not a safety net - it is a surprise notice at next launch ("Weather delay used"), which is the first time the concept is ever introduced, at the exact moment it has already been spent · what I would change: put a held-delays chip on the sheet header ("Weather delays held: 0 of 2") that is visible at zero, change the seal row to "File 1 contract - bank a weather delay - File 2 - seal the week", and add a one-line legend under the spine for the four glyphs.
+- **t36 · L41 · critical · onboarding** — Tapping the Daily draft row loads the board immediately with NO statement that the first attempt is the recorded one - the HUD reads only "DAILY DRAFT - 2 Sep", there is no card, chip or line before the first move · why it matters: the one-recorded-attempt rule is the entire design of the mode and the only reason its result means anything; a player who idly taps the row, fumbles two moves and then discovers the record is closed has been penalised by a rule they were never shown, and the mode's fairness (same board for everyone) is what makes that feel worse, not better · what I would change: a one-tap confirm sheet before the board loads on the recorded attempt only - "Today's draft - same board for everyone - your FIRST attempt is the one recorded. [Start] [Back]" - and a persistent RECORDED chip in the HUD beside the date while the record is open, swapping to PRACTICE afterwards.
+- **t36 · L41 · minor · ui** — On the taller Daily Draft board (6x8) the grid renders flush to the bottom of the safe area with roughly a third of the screen left empty between the objective row and the top of the grid, and the bottom green gate very nearly touches the home indicator · why it matters: it reads as a layout bug rather than a composition, it wastes the thumb-comfortable zone, and the bottom gate is where drags terminate - putting it under the gesture bar invites accidental app switches · what I would change: vertically centre the grid in the space between the objective row and the safe-area bottom inset, with a minimum bottom margin large enough to clear the home indicator.
+- **t46 · L41 · major · feedback** — The fail sheet headline is "So close!" regardless of progress - it printed over "0 of 5 blocks escaped" · why it matters: the rest of this card is unusually honest (a real state-truth near-miss with the route ghosted on the board, a plain teach line, an AD-labelled grant, no celebration) and one false headline undoes that; a player who escaped nothing and is told they were close learns the game's encouragement is decoration, which is exactly the credibility this build spends everywhere else buying · what I would change: make the headline a function of the state - "So close!" only when a block is genuinely one drag out, "Out of moves" at zero escaped, "Nearly there" in between; the honest version is also the more motivating one here because the near-miss line right below it is doing the real work.
+- **t46 · L41 · critical · monetization** — On the Daily Draft the fail sheet is the generic campaign card: "+3 moves - watch to continue" and "Retry level", with no statement that declining the rescue CLOSES today's record permanently (spec: the record closes on the first resolution - a clear, or a loss resolved by retrying or leaving) · why it matters: the two buttons have wildly different stakes here and the card presents them as equals; "Retry level" is the safe, free, familiar word from 40 campaign levels, and on this one screen it is the irreversible one. Worse, it makes the rewarded ad the only way to keep the day alive while hiding that fact - which is the shape of a dark pattern even though the intent is plainly the opposite · what I would change: on the daily, relabel and re-order: rescue reads "+3 moves - keep today's record open", the second button reads "End today's attempt - record NOT CLEARED", and add a third quiet "Back" that also closes it and says so. The player must be told the cost of the free button before they press it.
+- **t50 · L41 · critical · bug** — Playing the Daily Draft moves the campaign progress pointer: after one daily attempt the sheet index header reads "Level 41/40" on a save with five campaign levels cleared (star count correctly unchanged at 15/120) · why it matters: the spec is explicit that the draft lives outside the campaign and never moves the unlock or resume pointer; as built it appears to treat the draft as level index 41, which will also drive the landing CTA ("Continue - Level 41") and any next-level logic. A returning player's Continue button now points at nothing · what I would change: give the draft its own board slot rather than the next campaign index, and add a playtest assertion that levelsUnlocked/resume are byte-identical before and after a daily attempt (recorded and practice).
+- **t50 · L41 · major · ui** — On the NOT CLEARED field report, "Share field report" is the primary (filled yellow) CTA and "Play again - not recorded" is a dashed secondary; the share text itself leads with an ASCII par bar that renders six filled cells of nine · why it matters: two problems. First, the loudest button on a loss card asks the player to broadcast the loss - nobody sends "NOT CLEARED, 0 of 5 out" to a group chat, so the button will read as tone-deaf and the mode will look like it wants virality more than it wants the player. Second, the bar is a par MARKER but reads as a PROGRESS bar, so a run that escaped zero blocks appears two-thirds complete - in a share text stripped of all other context that is the one glyph a reader will interpret, and it is wrong · what I would change: on a not-cleared report demote Share to the dashed style and promote "Play again - not recorded"; and either label the bar ("par 6 of 9 moves") or drop it entirely from a report where nothing was cleared.
+- **t52 · L41 · minor · ui** — The Daily draft row on the sheet index right-aligns three separate facts (empty star rack, NOT CLEARED, PRACTICE - NOT RECORDED) which wrap to three ragged lines and crowd the chevron, and the PRACTICE line is ambiguous - it reads as a label on the result just shown rather than a statement about future plays · why it matters: this row is the daily mode's only permanent surface and a returning player parses it in about a second; as laid out it looks like an error state · what I would change: one line for the result ("NOT CLEARED - 0 of 5 out") with the star rack removed when zero, and the second line rephrased to the forward-looking "today's record is closed - replays are practice".
+- **t66 · L6 · major · difficulty** — The slack policy runs backwards against the teaching load: L1-4 (one obstacle, trivial) get par+4, L5-10 get par+3, and L11-40 get par+2 - which means the APPROVAL CHAIN, the only genuinely new rule in the back half and the hardest cognitive addition in the game (numbered blocks, exit order, out-of-turn blocks that still move but park), is introduced at the tightest limit the game ever uses · why it matters: every other new idea in this build gets extra room while it is being learned; the chain gets none, so the level that teaches it is also the level most likely to end in the fail sheet, and a player meets a brand-new rule and a loss in the same thirty seconds. CrazyLabs-curve orthodoxy is a no-fail teach followed by a spike, not a spike as the teach · what I would change: give L31-32 par+4 and L33-34 par+3, returning to par+2 from L35 - the chain then gets exactly the same courtesy L1-6 got, and the sheet still tightens well before the final run.
+- **t66 · L6 · minor · monetization** — With 2 stars now requiring par+1 and the limit at par+2 from L11, a 1-star clear is arithmetically identical to "the rescued clear" - so from Sheet 2 onward the star rack encodes almost no information (3 = par, 2 = one over, 1 = you took the ad) · why it matters: the certification ladder needs 24 of 30 stars per sheet, which means an average of 2.4 stars per level, which under these limits means a player must hit par on most levels of a sheet to earn its paper; that is a tight ask for a hybrid-casual audience and it will quietly make the cosmetic sink feel unreachable rather than aspirational · what I would change: model it - if the median player finishes a sheet on 18-20 stars, the certification threshold, not the move limits, is the number to move; 21 of 30 keeps the ladder meaningful without making par mandatory.
+- **t68 · L7 · nit · ui** — The pause card's paper label truncates to "Cyanoty..." and the three locked swatches read as three near-identical grey squares - the pending stamp inside them is too small to distinguish which sheet pays which skin · why it matters: the paper picker is the visible half of the certification sink; if a player cannot tell the locked skins apart there is nothing to want · what I would change: drop the inline name to a second line so "Cyanotype" fits, and put the sheet number (1/2/3) inside each locked swatch.
+
+## Play-by-play
+
+See live.md (commentary) and log.json (every action and result).

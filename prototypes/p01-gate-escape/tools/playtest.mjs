@@ -644,7 +644,10 @@ const burnLevel = () => page.evaluate(() => {
 // (par > blocks) is L6; new shapes debut one at a time (L14 one L, L15 two, L16 the square); Sheet 4
 // and ONLY Sheet 4 carries chains.
 {
-  const slack = i => (i <= 4 ? 4 : i <= 10 ? 3 : 2);
+  // par+4 L1-4, par+3 L5-10, par+2 L11-30, then the APPROVAL CHAIN's teaching band (L31-32 par+4,
+  // L33-34 par+3 — critic session 2026-09-02: the game's hardest new rule was being taught at its
+  // tightest limit), and par+2 again from L35.
+  const slack = i => (i <= 4 ? 4 : i <= 10 ? 3 : i === 31 || i === 32 ? 4 : i === 33 || i === 34 ? 3 : 2);
   const r = await page.evaluate(() => LEVELS.map(l => ({
     par: l.par, limit: l.moves, n: l.blocks.length, stones: l.stones.length,
     L: l.blocks.filter(b => b.cells.length === 3 && !(b.cells.every(c => c[0] === 0) || b.cells.every(c => c[1] === 0))).length,
@@ -662,7 +665,7 @@ const burnLevel = () => page.evaluate(() => {
   const seqOk = chains.slice(0, 30).every(k => k === 0) && chains.slice(30).every(k => k >= 2 && k <= 4)
     && chains[30] === 2 && Math.max(...chains.slice(30)) === 4 && wellFormed;
   if (!badLimit.length && firstTwice === 6 && firstStone === 5 && shapesOk && deadlocks.includes(12) && deadlocks.includes(15) && deadlocks.includes(16) && seqOk)
-    console.log(`curve ok: limits follow the schedule on ${r.length}/${r.length} (par+2 from L11 to L40); first stone L5, first deadlock L6; deadlocks at L${deadlocks.join(',')}; L14 one L, L15 two Ls, L16 the square alone; chains on L31–40 only — ${chains.slice(30).join('')}, opening at 2, never past 4, every one a clean 1..k`);
+    console.log(`curve ok: limits follow the schedule on ${r.length}/${r.length} (par+2 from L11, with the chain's teaching band at L31-34); first stone L5, first deadlock L6; deadlocks at L${deadlocks.join(',')}; L14 one L, L15 two Ls, L16 the square alone; chains on L31–40 only — ${chains.slice(30).join('')}, opening at 2, never past 4, every one a clean 1..k`);
   else { failures++; console.error('curve FAIL:', JSON.stringify({ badLimit, firstTwice, firstStone, shapesOk, deadlocks, chains })); }
 
   // LIMITS SCHEDULE (pass 7). `badLimit` above proves the shipped limits match the formula;
@@ -671,11 +674,18 @@ const burnLevel = () => page.evaluate(() => {
   // move every limit in the game and nothing would go red.
   const sl = r.map(l => l.limit - l.par);
   const band = (a, b) => sl.slice(a - 1, b).every(v => v === sl[a - 1]) ? sl[a - 1] : `mixed(${sl.slice(a - 1, b).join(',')})`;
-  const bands = { 'L1-4': band(1, 4), 'L5-10': band(5, 10), 'L11-40': band(11, 40) };
-  const scheduleOk = bands['L1-4'] === 4 && bands['L5-10'] === 3 && bands['L11-40'] === 2
+  const bands = { 'L1-4': band(1, 4), 'L5-10': band(5, 10), 'L11-30': band(11, 30),
+    'L31-32': band(31, 32), 'L33-34': band(33, 34), 'L35-40': band(35, 40) };
+  // The teaching exception is an EXCEPTION and has to be spelled out as one, or the next retune
+  // reads a par+4 at L31 as drift. It is legal only where a new rule is being taught: L31 is the
+  // first chained board in the game, and the band is over by L35.
+  const chainAt = (await page.evaluate(() => LEVELS.findIndex(l => l.blocks.some(b => b.seq)))) + 1;
+  const scheduleOk = bands['L1-4'] === 4 && bands['L5-10'] === 3 && bands['L11-30'] === 2
+    && bands['L31-32'] === 4 && bands['L33-34'] === 3 && bands['L35-40'] === 2
     && sl[4] === 3 && sl[10] === 2               // the two boundaries, named: L5 relaxes, L11 tightens
-    && sl.slice(10).every(v => v === 2);         // and nothing after Sheet 1 is ever looser again
-  if (scheduleOk) console.log(`limits schedule ok: par+4 on L1-4, par+3 on L5-10 (the rest of Sheet 1 - stone and first deadlock debut there), par+2 on L11-L40 with no relaxation anywhere after it`);
+    && chainAt === 31                            // ...and the exception sits exactly on the rule it teaches
+    && sl.slice(10, 30).every(v => v === 2) && sl.slice(34).every(v => v === 2);
+  if (scheduleOk) console.log(`limits schedule ok: par+4 on L1-4, par+3 on L5-10 (the rest of Sheet 1 - stone and first deadlock debut there), par+2 on L11-30; the approval chain debuts at L${chainAt} and gets the same teaching slack the opening did (L31-32 par+4, L33-34 par+3) before the sheet closes at par+2 from L35`);
   else { failures++; console.error('limits schedule FAIL:', JSON.stringify({ bands, sl })); }
 
   // SAWTOOTH (pass 7). The difficulty of a board is par - blockCount: the number of drags the
@@ -1202,7 +1212,8 @@ const pickTwo = () => page.evaluate(() => {
   await page.screenshot({ path: `${shotDir}/survey-row.png` });
   const ok = unchosen.badge && unchosen.row === '0/7 · 0 pts' && !chosen.badge
     && row.gone.length === 0 && row.surveyRows === 2 && !row.livesRow
-    && /^DAILY DRAFT · \d{1,2} [A-Z]{3} READY › FIELD SURVEY 0\/7 · 0 pts ›$/.test(row.text);
+    // the draft row's second line is the one-recorded-attempt rule, stated before the tap (t36)
+    && /^DAILY DRAFT · \d{1,2} [A-Z]{3} READY FIRST ATTEMPT IS RECORDED › FIELD SURVEY 0\/7 · 0 pts ›$/.test(row.text);
   if (ok) console.log(`survey row ok: the sheet index carries exactly the two staged meta rows — "${row.text}" — with the SELECT 2 badge up only while the contracts are unchosen; #menuQuests and the streak field are gone from the DOM`);
   else { failures++; console.error('survey row FAIL:', JSON.stringify({ unchosen: { badge: unchosen.badge, row: unchosen.row }, chosenBadge: chosen.badge, row })); }
 }
@@ -2155,7 +2166,13 @@ const pixelOf = async (sel, fx, fy) => {
   //    same report but for the date. If any board detail leaked in, they would differ.
   {
     const ALLOWED = /^[\x20-\x7e\n★☆■□·]*$/;
-    const PINNED = /^GATE ESCAPE · FIELD REPORT\n\d{1,2} [A-Z][a-z]{2} \d{4} · (CLEARED|NOT CLEARED)\n[■]{0,20}[□]{0,20}(?: \+\d+)?\n[★☆]{3} · (?:\d+\/\d+ moves · route \d{1,3}%|\d+ of \d+ out · \d+\/\d+ moves)\nundo \d+ · hint \d+(?: · rescued)?$/;
+    // The bar is a par MARKER, and it only reads as one beside a cleared board: on a NOT CLEARED
+    // report, stripped of every other cue in a group chat, six filled cells of nine read as a
+    // progress bar two-thirds of the way to a clear (t50). So a cleared report carries the bar and
+    // a lost one carries none — pinned here in both directions.
+    const PINNED_WON = /^GATE ESCAPE · FIELD REPORT\n\d{1,2} [A-Z][a-z]{2} \d{4} · CLEARED\n[■]{0,20}[□]{0,20}(?: \+\d+)?\n[★☆]{3} · \d+\/\d+ moves · route \d{1,3}%\nundo \d+ · hint \d+(?: · rescued)?$/;
+    const PINNED_LOST = /^GATE ESCAPE · FIELD REPORT\n\d{1,2} [A-Z][a-z]{2} \d{4} · NOT CLEARED\n[★☆]{3} · \d+ of \d+ out · \d+\/\d+ moves\nundo \d+ · hint \d+(?: · rescued)?$/;
+    const PINNED = t => (/· CLEARED\n/.test(t) ? PINNED_WON : PINNED_LOST).test(t);
     const { ctx, pg, errs } = await openDaily(DT.dateAt(200));
     const texts = await pg.evaluate(() => {
       const mk = (date, over) => Object.assign({ date, state: 'won', moves: 8, par: 6, stars: 2, undos: 1, hints: 0, rescued: false, cleared: 6, blocks: 6 }, over);
@@ -2170,17 +2187,19 @@ const pixelOf = async (sel, fx, fy) => {
     });
     await ctx.close();
     const all = [texts.a, texts.b, texts.lost, texts.long];
-    const pinned = all.every(t => PINNED.test(t));
+    const pinned = all.every(t => PINNED(t));
     const allowed = all.every(t => ALLOWED.test(t));
     // spoiler assertion: identical numbers on two different boards → identical report
     const stripDate = t => t.split('\n').filter((_, i) => i !== 1).join('\n');
     const spoilerFree = stripDate(texts.a) === stripDate(texts.b)
-      && all.every(t => t.split('\n').length === 5 && t.length <= 160 && !/[,()\[\]{}]/.test(t) && !/\d+\s*[,.]\s*\d+/.test(t));
+      && all.every(t => t.split('\n').length === (/· CLEARED\n/.test(t) ? 5 : 4) && t.length <= 160 && !/[,()\[\]{}]/.test(t) && !/\d+\s*[,.]\s*\d+/.test(t));
     const capOk = /\n■{6}□{14} \+10\n/.test(texts.long) && / · rescued$/.test(texts.long);
-    const lostOk = /NOT CLEARED/.test(texts.lost) && /☆☆☆ · 4 of 6 out · 9\/6 moves/.test(texts.lost) && !/route/.test(texts.lost);
+    // ...and the one glyph that could be misread as progress is simply absent from a loss
+    const lostOk = /NOT CLEARED/.test(texts.lost) && /☆☆☆ · 4 of 6 out · 9\/6 moves/.test(texts.lost)
+      && !/route/.test(texts.lost) && !/[■□]/.test(texts.lost);
     const winOk = /★★☆ · 8\/6 moves · route 75%/.test(texts.a) && /^■{6}□{2}$/m.test(texts.a);
     if (pinned && allowed && spoilerFree && capOk && lostOk && winOk && texts.none === null && !errs.length)
-      console.log('field report ok: format pinned, codepoints limited to ASCII + ★☆■□·, bar capped at 20 with +n, a loss reads as a loss — and two different boards played to the same numbers produce the same report, so nothing about the board leaks');
+      console.log('field report ok: format pinned, codepoints limited to ASCII + ★☆■□·, bar capped at 20 with +n (and absent entirely from a NOT CLEARED report, where a par marker would read as progress), a loss reads as a loss — and two different boards played to the same numbers produce the same report, so nothing about the board leaks');
     else { failures++; console.error('field report FAIL:', JSON.stringify({ pinned, allowed, spoilerFree, capOk, lostOk, winOk, none: texts.none, errs, sample: texts.a })); }
   }
 
@@ -2561,15 +2580,25 @@ const pixelOf = async (sel, fx, fy) => {
   }, d);
   const reload4 = async (pg, d) => { await pg.reload(); await pg.waitForFunction(() => window.GE && window.GE.L); await day4(pg, d); };
   // clear a campaign level through the real engine and report the quiet win-card row it produced
+  // Clear a campaign level through the real engine and report the quiet win-card row it produced —
+  // read TWICE. `now` is the card the instant it opens; `settled` is the card after every scheduled
+  // beat has landed. A staged reveal must be in `now`: the critic's session found `disclosed.cert`
+  // and `disclosed.survey` flipped true on cards that (at the moment anyone looked at them) carried
+  // no row at all, because the beat was scheduled 1.15 s out — long enough that the card a player
+  // reads first, and the card a screenshot catches, was an ordinary clear. A system introducing
+  // itself does not get to be late.
+  const readRow4 = pg => pg.evaluate(() => (document.getElementById('winDaily').hidden ? null
+    : { stamp: document.getElementById('winDailyStamp').textContent, k: document.getElementById('winDailyK').textContent,
+        v: document.getElementById('winDailyV').textContent }));
   const winLevel4 = async (pg, i) => {
     await pg.evaluate(i => window.GE.load(i), i);
     await pg.waitForTimeout(50);
     await pg.evaluate(sol => { for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side); }, solutions[i]);
     await pg.waitForSelector('#winModal:not([hidden])', { timeout: 3000 });
-    await pg.waitForTimeout(90);
-    return pg.evaluate(() => (document.getElementById('winDaily').hidden ? null
-      : { stamp: document.getElementById('winDailyStamp').textContent, k: document.getElementById('winDailyK').textContent,
-          v: document.getElementById('winDailyV').textContent }));
+    const now = await readRow4(pg);
+    await pg.waitForTimeout(1400);
+    const settled = await readRow4(pg);
+    return settled ? { ...settled, now: !!now } : null;
   };
   // everything staged disclosure can hide, read off the three screens in one round trip
   const look4 = pg => pg.evaluate(() => {
@@ -2613,7 +2642,13 @@ const pixelOf = async (sel, fx, fy) => {
     const afterL2 = seen[1], afterL3 = seen[2], afterL4 = seen[3], afterL5 = seen[4];
     // the survey arrives with the EASIEST offered contract already taken — a worked example, not a
     // demand for two decisions about a system the player has never seen
-    const easiest = await pg.evaluate(o => o.slice().sort((a, b) => window.GE_MENU.CONTRACTS[a].ease - window.GE_MENU.CONTRACTS[b].ease)[0], afterL5.offered);
+    // The rule, asked of the code that implements it: the demonstration contract is the cheapest
+    // UNCONDITIONAL one the week offers. Ranking by the number in the label used to hand a new
+    // player "Clear 8 levels at par" — the hardest contract in the catalog — as their worked
+    // example (t34), so the ranking is now expected clears and a failable contract is never the demo.
+    const easiest = await pg.evaluate(o => window.GE_MENU.demoContract(o), afterL5.offered);
+    const CONTRACTS4 = await pg.evaluate(() => window.GE_MENU.CONTRACTS && Object.fromEntries(
+      Object.entries(window.GE_MENU.CONTRACTS).map(([k, v]) => [k, { ease: v.ease, cond: !!v.cond, target: v.target }])));
     const stored = await pg.evaluate(() => JSON.parse(localStorage.getItem('ge_prog')));
     // a replay never re-announces: prog.rv is the record that the beat has been played
     const replay = await winLevel4(pg, 1);
@@ -2627,13 +2662,14 @@ const pixelOf = async (sel, fx, fy) => {
     const clauses = back.status.text.split('·').length;
     const ok = hiddenAll(fresh) && fresh.status.hidden && JSON.stringify(fresh.landing) === '["btnPlay","btnLevels","btnLegend"]'
       && hiddenAll(seen[0]) && !beats[0]                                            // L1 reveals nothing
-      && beats[1] && beats[1].stamp === 'NEW' && beats[1].k === 'Sheet certification'
+      && beats[1] && beats[1].stamp === 'NEW' && beats[1].k === 'Sheet certification' && beats[1].now
       && !afterL2.papers && afterL2.chaps >= 3 && afterL2.certChips === afterL2.chaps && !afterL2.legend.cert && afterL2.draft.hidden && afterL2.survey
-      && beats[2] && beats[2].stamp === 'NEW' && beats[2].k === 'Daily draft'
-      && !afterL3.draft.hidden && /^Daily draft · \d{1,2} Sep$/.test(afterL3.draft.k) && afterL3.draft.v === 'READY' && afterL3.survey
+      && beats[2] && beats[2].stamp === 'NEW' && beats[2].k === 'Daily draft' && beats[2].now
+      && !afterL3.draft.hidden && /^Daily draft · \d{1,2} Sep$/.test(afterL3.draft.k) && /^READY/.test(afterL3.draft.v) && afterL3.survey
       && !beats[3] && afterL4.survey                                                // L4 reveals nothing
-      && beats[4] && beats[4].stamp === 'NEW' && beats[4].k === 'Field survey'
+      && beats[4] && beats[4].stamp === 'NEW' && beats[4].k === 'Field survey' && beats[4].now
       && !afterL5.survey && !afterL5.legend.survey && afterL5.chosen.length === 1 && afterL5.chosen[0] === easiest
+      && !CONTRACTS4[easiest].cond      // ...and never a contract a player can fail at (see below)
       && stored.d0 === D0 && JSON.stringify(stored.rv) === '["cert","daily","survey"]'
       && !replay                                                                    // and never again
       && !back.status.hidden && back.status.tag === 'DIV' && clauses <= 2
@@ -2723,10 +2759,24 @@ const pixelOf = async (sel, fx, fy) => {
     await pg.waitForTimeout(200);
     const ready = await pg.evaluate(() => window.GE_MENU.draftRow());
     await pg.screenshot({ path: `${shotDir}/draft-row-ready.png` });
-    // the row loads today's board (no level index anywhere in sight), and the pause card names it
+    // the row leads to ONE card that states the one-recorded-attempt rule, and only then the board
     await pg.click('#btnDaily');
     await pg.waitForTimeout(160);
-    const loaded = await pg.evaluate(() => ({ daily: window.GE.isDaily, date: window.GE.dailyDate, hud: document.getElementById('hudLevel').textContent }));
+    const rec = await pg.evaluate(() => ({ up: !document.getElementById('recModal').hidden,
+      board: window.GE.isDaily,
+      body: document.querySelector('#recModal .card').innerText.replace(/\s+/g, ' ').trim() }));
+    await pg.screenshot({ path: `${shotDir}/draft-recorded-card.png` });
+    // Back is a real way out: it does not start the day
+    await pg.click('#btnRecBack');
+    await pg.waitForTimeout(120);
+    const backed = await pg.evaluate(() => ({ up: !document.getElementById('recModal').hidden, board: window.GE.isDaily,
+      openStill: !window.GE.dailyInfo.done }));
+    await pg.click('#btnDaily');
+    await pg.waitForTimeout(120);
+    await pg.click('#btnRecStart');
+    await pg.waitForTimeout(160);
+    const loaded = await pg.evaluate(() => ({ daily: window.GE.isDaily, date: window.GE.dailyDate, hud: document.getElementById('hudLevel').textContent,
+      chip: document.getElementById('hudRec').hidden ? null : document.getElementById('hudRec').textContent }));
     await pg.evaluate(() => document.getElementById('btnMenu').click());
     await pg.waitForTimeout(120);
     const paused = await pg.evaluate(() => document.getElementById('pauseSub').textContent);
@@ -2791,21 +2841,25 @@ const pixelOf = async (sel, fx, fy) => {
       cur: window.GE.dailyInfo.cur, plays: window.GE.dailyInfo.plays }));
     await ctx.close();
     const rep = won.report.split('\n');
-    const ok = !ready.hidden && ready.v === 'READY' && /^Daily draft · /.test(ready.k)
-      && loaded.daily && loaded.date === DATE && /^DAILY DRAFT · /.test(loaded.hud)
+    const ok = !ready.hidden && /^READY/.test(ready.v) && /first attempt is recorded/i.test(ready.v)
+      && /^Daily draft · /.test(ready.k)
+      && rec.up && !rec.board && /first attempt is the one recorded/i.test(rec.body)
+      && /same board for everyone/i.test(rec.body) && /back/i.test(rec.body)
+      && !backed.up && !backed.board && backed.openStill
+      && loaded.daily && loaded.date === DATE && /^DAILY DRAFT · /.test(loaded.hud) && loaded.chip === 'RECORDED'
       && /^Daily draft · /.test(paused) && !/Level 31/.test(paused)
       && won.no === 'DAILY DRAFT' && won.meta && won.block && won.verbatim && rep.length === 5
       && viaShare.sent.length === 1 && viaShare.same && viaClip.sent.length === 1 && viaClip.same
       && viaText.up && viaText.same && /select and copy/i.test(viaText.label)
       && out.menu && !out.win && out.lvl === 12 && /Level 13/.test(out.cta) && /draft is filed/.test(out.status.text)
-      && /FILED/.test(filed.v) && /PRACTICE · NOT RECORDED/i.test(filed.v)
+      && /FILED/.test(filed.v) && /record closed/i.test(filed.v) && /replays are practice/i.test(filed.v)
       && card.up && card.title === 'Draft filed' && card.stars === 3 && card.moves === '7 / 7'
       && card.routeK === 'Route' && card.route === '100%' && card.rescue && card.verbatim
       && prac.card && /^PRACTICE · NOT RECORDED/.test(prac.hud) && /^Practice · not recorded/.test(pracPause)
       && pracWin.no === 'PRACTICE · NOT RECORDED' && !pracWin.block && pracWin.cur.moves === 7 && pracWin.plays === 1
       && !errs.length;
-    if (ok) console.log(`daily draft ui ok: the row reads "${ready.k} — ${ready.v}" and loads today's board (pause card: "${paused}"); the clear files it and the win card carries the FIELD REPORT verbatim (share → clipboard → selectable text, all three sent the identical string); the row then states "${filed.v.replace(/\s+/g, ' ')}" and opens the report card instead of the board, and a second run is practice on every surface and rewrites nothing`);
-    else { failures++; console.error('daily draft ui FAIL:', JSON.stringify({ ready, loaded, paused, won: { ...won, report: rep }, viaShare, viaClip, viaText, out, filed, card, prac, pracPause, pracWin, errs })); }
+    if (ok) console.log(`daily draft ui ok: the row reads "${ready.k} — ${ready.v.replace(/\s+/g, ' ')}" and leads to the RECORDED card ("${rec.body}") before today's board (pause card: "${paused}"); the clear files it and the win card carries the FIELD REPORT verbatim (share → clipboard → selectable text, all three sent the identical string); the row then states "${filed.v.replace(/\s+/g, ' ')}" and opens the report card instead of the board, and a second run is practice on every surface and rewrites nothing`);
+    else { failures++; console.error('daily draft ui FAIL:', JSON.stringify({ ready, rec, backed, loaded, paused, won: { ...won, report: rep }, viaShare, viaClip, viaText, out, filed, card, prac, pracPause, pracWin, errs })); }
   }
 
   // 5. a day that was LOST is still a result: the row states it plainly (never "you failed", never a
@@ -2829,6 +2883,8 @@ const pixelOf = async (sel, fx, fy) => {
       route: document.getElementById('draftRoute').textContent, rescue: !document.getElementById('draftRescue').hidden,
       report: document.getElementById('draftReport').textContent,
       verbatim: document.getElementById('draftReport').textContent === window.GE.dailyShareText(),
+      shareCls: document.getElementById('btnDraftShare').className,
+      againCls: document.getElementById('btnDraftPractice').className,
       body: document.querySelector('#draftModal .card').innerText.replace(/\s+/g, ' ').trim() }));
     await pg.screenshot({ path: `${shotDir}/draft-card-lost.png` });
     // the sheet can be put down by its scrim like every other safe sheet
@@ -2837,10 +2893,12 @@ const pixelOf = async (sel, fx, fy) => {
     await pg.waitForTimeout(160);
     const dismissed = await pg.evaluate(() => document.getElementById('draftModal').hidden);
     await ctx.close();
-    const ok = /NOT CLEARED/.test(row.v) && /PRACTICE · NOT RECORDED/i.test(row.v)
+    const ok = /NOT CLEARED · 4 of 6 out/.test(row.v) && /record closed/i.test(row.v) && !/★|☆/.test(row.v)
       && card.title === 'Draft not cleared' && card.stars === 0 && card.moves === '9 / 6'
       && card.routeK === 'Blocks out' && card.route === '4 / 6' && card.rescue && card.verbatim
       && /NOT CLEARED/.test(card.report) && /rescued/.test(card.report) && !/route/.test(card.report)
+      // the loudest button on a loss card is another go, never "broadcast this" (t50)
+      && card.shareCls === 'ghost' && card.againCls === 'primary'
       && !/(try again|second chance|buy|lost your)/i.test(card.body) && dismissed && !errs.length;
     if (ok) console.log(`daily loss ui ok: a lost day reads "${row.v.replace(/\s+/g, ' ')}" on the row and opens as "${card.title}" (${card.moves} moves, ${card.route} blocks out, rescue stated as a fact) with the loss form of the report — nothing is sold at that moment, and the sheet closes on its scrim`);
     else { failures++; console.error('daily loss ui FAIL:', JSON.stringify({ row, card, dismissed, errs })); }
@@ -2883,9 +2941,10 @@ const pixelOf = async (sel, fx, fy) => {
   // 7. the approval chain's legend drawing (pass 5 added the canvas and the row; the legend's ink
   //    is menu.js). The two states must be told apart WITHOUT colour: a wide filled tab against a
   //    narrow paper label, a dashed on-deck ring on the next one only, and a chevron in the tab.
-  //    The row is gated on a chained sheet EXISTING (derived from levels.js, so it turns itself on
-  //    when pass 6 ships one and needs no second edit) — this asserts the gate against the shipped
-  //    levels either way, then forces the row open to look at the drawing.
+  //    The row is gated on a chained sheet EXISTING *and* the player having reached it (critic
+  //    session t4: on a cold open How to play ended with the hardest rule in the game, which is the
+  //    one screen that contradicted staged disclosure) — both halves are asserted here against the
+  //    shipped levels, then the row is forced open to look at the drawing.
   {
     const LV = new Function(fs.readFileSync(root + 'levels.js', 'utf8') + '\nreturn LEVELS;')();
     const chained = LV.some(l => l.blocks.some(b => b.seq));
@@ -2893,17 +2952,22 @@ const pixelOf = async (sel, fx, fy) => {
     const px = await pg.evaluate(() => {
       window.GE_MENU.show('legend');
       const row = document.getElementById('liSeq');
-      const gated = row.hidden;                       // hidden exactly while no chained level ships
+      const gated = row.hidden;                       // cold open: no chained sheet reached yet
       row.hidden = !row.hidden;
       window.GE_MENU.refreshLegendRows();             // the gate is derived: it re-decides every open
       const stillGated = row.hidden;
+      // ...and a player standing on the chained sheet gets it (the gate is progress, not a flag)
+      const chainIdx = LEVELS.findIndex(l => l.blocks.some(b => b.seq));
+      window.GE_MENU.prog.u = chainIdx < 0 ? 0 : chainIdx;
+      window.GE_MENU.refreshLegendRows();
+      const reached = !row.hidden;
       row.hidden = false;
       const c = document.getElementById('symSeq').getContext('2d');
       const lum = ([r, g, b]) => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
       const at = (x, y) => lum([...c.getImageData(x, y, 1, 1).data]);
       const runAt = (y, x0, x1, test) => { let n = 0; for (let x = x0; x <= x1; x++) if (test(at(x, y))) n++; return n; };
       return {
-        gated, stillGated,
+        gated, stillGated, reached,
         // the stamp bodies, sampled two pixels below their top edge (above the numeral)
         tabDark: runAt(24, 10, 56, v => v < 0.3),      // the NEXT UP tab: filled ink, ~37 wide
         labelLight: runAt(24, 70, 116, v => v > 0.6),  // the WAITING label: paper, ~20 wide
@@ -2919,12 +2983,12 @@ const pixelOf = async (sel, fx, fy) => {
     await pg.screenshot({ path: `${shotDir}/legend-seq.png` });
     await (await pg.$('#liSeq')).screenshot({ path: `${shotDir}/legend-seq-row.png` });
     await ctx.close();
-    const ok = px.gated === !chained && px.stillGated === !chained  // gated on the shipped levels
+    const ok = px.gated && px.stillGated && px.reached === chained  // gated cold, shown on the sheet that teaches it
       && px.tabDark >= 30 && px.labelLight >= 14 && px.labelLight <= 26
       && px.tabDark > px.labelLight * 1.4                      // channel: width
       && px.chevron > 0 && px.ringLeft > 0 && px.ringRight === 0 // channels: chevron, on-deck ring
       && !errs.length;
-    if (ok) console.log(`legend approval chain ok: the row is ${chained ? 'shown (a chained sheet ships)' : 'gated (no chained sheet ships yet)'} and the gate re-derives on every open; "next up" is a ${px.tabDark}px inked tab with a chevron and a dashed on-deck ring, "waiting" a ${px.labelLight}px paper label with neither — tonal inverses, different widths, three shape channels, zero colour dependence`);
+    if (ok) console.log(`legend approval chain ok: the row is absent on a cold open and ${chained ? 'arrives with the chained sheet that teaches it' : 'stays absent (no chained sheet ships yet)'}, re-derived on every open; "next up" is a ${px.tabDark}px inked tab with a chevron and a dashed on-deck ring, "waiting" a ${px.labelLight}px paper label with neither — tonal inverses, different widths, three shape channels, zero colour dependence`);
     else { failures++; console.error('legend approval chain FAIL:', JSON.stringify({ chained, px, errs })); }
   }
 }
@@ -3131,6 +3195,333 @@ const pixelOf = async (sel, fx, fy) => {
     await ctx.close();
     if (chip.up && /①/.test(chip.text)) console.log(`sheet 4 shots ok: L${SHEET4[0] + 1} (the lesson) and L${mixed + 1} (a 4-long chain among unchained blocks) captured; the HUD chip reads "${chip.text.trim()}"`);
     else { failures++; console.error('sheet 4 shots FAIL:', JSON.stringify(chip)); }
+  }
+}
+
+// ---- critic session, 2026-09-02: the meta round, read by a stranger ----
+// Every check here exists because a reviewer playing this build cold reached a WRONG conclusion
+// from something true on screen. They are honesty checks: what the game says has to be what the
+// game's state is.
+{
+  const openC = async (day, seed) => {
+    const ctx = await browser.newContext({ viewport: { width: 420, height: 780 } });
+    const pg = await ctx.newPage();
+    const errs = [];
+    pg.on('pageerror', e => errs.push(e.message));
+    await pg.goto('file://' + root + 'index.html');
+    await pg.waitForFunction(() => window.GE && window.GE.L);
+    await pg.evaluate(st => { localStorage.clear(); for (const k in st) localStorage.setItem(k, st[k]); }, seed || {});
+    await pg.reload();
+    await pg.waitForFunction(() => window.GE && window.GE.L);
+    await pg.evaluate(d => { const t = new Date(d + 'T10:00:00').getTime(); window.GE.now = () => t; }, day);
+    return { ctx, pg, errs };
+  };
+
+  // 1. THE DRAFT IS NOT LEVEL 41. It rides on a virtual index one past the campaign, and the whole
+  //    landing/sheet-index surface used to read that index straight off the engine — so one daily
+  //    attempt printed "Level 41/40" on a five-level save and pointed Continue at a level that does
+  //    not exist (t50). Every campaign-facing number is snapshotted, a whole recorded attempt is
+  //    played and lost and left, and the numbers must be byte-identical on the other side.
+  {
+    const DAY = '2026-09-16';
+    const { ctx, pg, errs } = await openC(DAY, { ge_prog: JSON.stringify({ u: 5, s: [3, 3, 2, 3, 3], d0: '2026-09-14', rv: ['cert', 'daily', 'survey'] }), ge_level: '5' });
+    const snap = () => pg.evaluate(() => {
+      window.GE_MENU.show('menu');
+      const menu = { cta: document.getElementById('playLabel').textContent, stamp: document.getElementById('menuStamp').innerText.replace(/\s+/g, ' ').trim() };
+      window.GE_MENU.show('levels');
+      const cur = document.querySelector('#levelGrid .tile.cur');
+      return { ...menu, fLevel: document.getElementById('fLevel').textContent, cur: cur ? cur.dataset.level : null,
+        stored: localStorage.getItem('ge_level'), u: JSON.parse(localStorage.getItem('ge_prog')).u,
+        stars: document.getElementById('fStars').textContent };
+    });
+    const before = await snap();
+    // a full recorded attempt: enter, burn every move, decline the rescue, leave
+    const entered = await pg.evaluate(() => window.GE.loadDaily());
+    await pg.waitForTimeout(120);
+    const during = await snap();
+    await pg.evaluate(() => window.GE.load(window.GE.dailyIndex));
+    await pg.waitForTimeout(80);
+    await pg.evaluate(() => {
+      // burn moves without clearing: shuffle blocks between in-board cells, one cell at a time
+      const L = window.GE.L;
+      for (let m = 0; m < L.moves + 3 && window.GE.movesLeft > 0; m++) {
+        let done = false;
+        for (let bi = 0; bi < L.blocks.length && !done; bi++) {
+          const p = window.GE.pos[bi]; if (!p) continue;
+          for (const [tx, ty] of [[p[0] + 1, p[1]], [p[0] - 1, p[1]], [p[0], p[1] + 1], [p[0], p[1] - 1]]) {
+            const b = JSON.stringify(window.GE.pos[bi]); window.GE.dragVia(bi, [[tx, ty]], null);
+            if (JSON.stringify(window.GE.pos[bi]) !== b) { done = true; break; }
+          }
+        }
+        if (!done) break;
+      }
+    });
+    await pg.waitForSelector('#failModal:not([hidden])', { timeout: 4000 });
+    await pg.screenshot({ path: `${shotDir}/critic-daily-fail.png` });
+    await pg.click('#btnRetry');                       // declines the rescue: the day is filed
+
+    await pg.waitForTimeout(200);
+    await pg.evaluate(() => window.GE.load(window.GE.dailyIndex)); // ...and a practice run too
+    await pg.waitForTimeout(120);
+    await pg.evaluate(() => window.GE_MENU.show('menu'));
+    await pg.waitForTimeout(120);
+    const after = await snap();
+    await ctx.close();
+    const same = JSON.stringify(before) === JSON.stringify(after);
+    const ok = entered && same && before.cta === 'Continue — Level 6' && before.fLevel === '6 / 40'
+      && before.cur === '6' && before.stored === '5' && before.u === 5
+      && JSON.stringify(during) === JSON.stringify(before)   // ...not even WHILE the draft is loaded
+      && !errs.length;
+    if (ok) console.log(`draft pointer ok: a recorded daily attempt (played, lost, filed) and a practice run leave the campaign pointer exactly where it was — CTA "${after.cta}", header ${after.fLevel}, current tile ${after.cur}, ge_level ${after.stored}, unlocked ${after.u} — before, during and after`);
+    else { failures++; console.error('draft pointer FAIL:', JSON.stringify({ entered, before, during, after, errs })); }
+  }
+
+  // 2. THE FAIL HEADLINE IS A READING OF THE POSITION. "So close!" printed over "0 of 5 blocks
+  //    escaped" (t46) taught a reviewer that the game's encouragement is decoration — on the one
+  //    card that is otherwise scrupulously honest. Near-miss language means ONE thing: one drag
+  //    from a cleared board. Three purpose-built positions, one per band.
+  {
+    const { ctx, pg, errs } = await openC('2026-09-16');
+    // (a) nothing escaped, but a block IS one drag from its gate — the critic's exact position
+    const NONE_OUT = { w: 4, h: 4, par: 2, moves: 1, stones: [],
+      blocks: [{ color: 0, cells: [[0, 0]], x: 0, y: 1 }, { color: 0, cells: [[0, 0]], x: 2, y: 1 }],
+      gates: [{ color: 0, side: 'top', start: 0, len: 4 }] };
+    // (b) one out, and what is left cannot reach a gate at all
+    const SOME_OUT = { w: 4, h: 4, par: 2, moves: 1, stones: [[3, 2], [2, 3]],
+      blocks: [{ color: 0, cells: [[0, 0]], x: 0, y: 0 }, { color: 0, cells: [[0, 0]], x: 3, y: 3 }],
+      gates: [{ color: 0, side: 'top', start: 0, len: 1 }] };
+    // (c) the real thing: one block left, one drag from its gate
+    const LAST_ONE = { w: 4, h: 4, par: 2, moves: 1, stones: [],
+      blocks: [{ color: 0, cells: [[0, 0]], x: 0, y: 1 }],
+      gates: [{ color: 0, side: 'top', start: 0, len: 4 }] };
+    const bandOf = async (lv, mv) => {
+      await pg.evaluate(lv => window.GE.loadTest(lv), lv);
+      await pg.waitForTimeout(60);
+      await pg.evaluate(m => window.GE.dragVia(m[0], [m[1]], m[2] || null), mv);
+      await pg.waitForSelector('#failModal:not([hidden])', { timeout: 4000 });
+      await pg.waitForTimeout(80);
+      return pg.evaluate(() => ({ title: document.getElementById('failTitle').textContent,
+        sub: document.getElementById('failSub').textContent,
+        route: !!window.GE.failRoute, left: window.GE.pos.filter(p => p).length }));
+    };
+    const a = await bandOf(NONE_OUT, [0, [1, 1]]);           // shuffle sideways, do not exit
+    await pg.screenshot({ path: `${shotDir}/critic-fail-band-none.png` });
+    const b = await bandOf(SOME_OUT, [0, [0, 0], 'top']);    // exit the one that can
+    const c = await bandOf(LAST_ONE, [0, [1, 1]]);
+    await pg.screenshot({ path: `${shotDir}/critic-fail-band-close.png` });
+    await ctx.close();
+    const ok = a.title === 'Out of moves' && /0 of 2 blocks escaped/.test(a.sub) && a.route && a.left === 2
+      && b.title === 'Nearly there' && /1 of 2 blocks escaped/.test(b.sub) && !b.route
+      && c.title === 'So close!' && c.route && c.left === 1
+      && !errs.length;
+    if (ok) console.log(`fail headline ok: state truth in three bands — "${a.title}" with nothing escaped (even with a block one drag from its gate), "${b.title}" with progress but no route, "${c.title}" only when the last block is genuinely one drag out`);
+    else { failures++; console.error('fail headline FAIL:', JSON.stringify({ a, b, c, errs })); }
+  }
+
+  // 3. ON THE RECORDED DRAFT, THE FREE BUTTON IS THE IRREVERSIBLE ONE. "Retry level" is the safe,
+  //    familiar word from forty campaign levels; on this one card it permanently closes the day,
+  //    which made the rewarded ad the only way to keep the record alive while the card hid that
+  //    fact (t46). Both buttons now state their cost, and the line above them covers every other
+  //    way out. A practice run has nothing at stake and says nothing.
+  {
+    const DAY = '2026-09-16';
+    const { ctx, pg, errs } = await openC(DAY, { ge_prog: JSON.stringify({ u: 12, s: Array(12).fill(3), d0: '2026-09-10', rv: ['rescue', 'cert', 'daily', 'survey'] }) });
+    const burn = () => pg.evaluate(() => {
+      // burn moves without clearing: shuffle blocks between in-board cells, one cell at a time
+      const L = window.GE.L;
+      for (let m = 0; m < L.moves + 3 && window.GE.movesLeft > 0; m++) {
+        let done = false;
+        for (let bi = 0; bi < L.blocks.length && !done; bi++) {
+          const p = window.GE.pos[bi]; if (!p) continue;
+          for (const [tx, ty] of [[p[0] + 1, p[1]], [p[0] - 1, p[1]], [p[0], p[1] + 1], [p[0], p[1] - 1]]) {
+            const b = JSON.stringify(window.GE.pos[bi]); window.GE.dragVia(bi, [[tx, ty]], null);
+            if (JSON.stringify(window.GE.pos[bi]) !== b) { done = true; break; }
+          }
+        }
+        if (!done) break;
+      }
+    });
+    const readCard = () => pg.evaluate(() => ({
+      rescue: document.getElementById('btnRescue').innerText.replace(/\s+/g, ' ').trim(),
+      retry: document.getElementById('btnRetry').textContent,
+      rule: document.getElementById('failDaily').hidden ? null : document.getElementById('failDaily').textContent,
+      chip: document.getElementById('hudRec').hidden ? null : document.getElementById('hudRec').textContent,
+    }));
+    await pg.evaluate(() => window.GE.loadDaily());
+    await pg.waitForTimeout(120);
+    await burn();
+    await pg.waitForSelector('#failModal:not([hidden])', { timeout: 4000 });
+    await pg.waitForTimeout(80);
+    const recCard = await readCard();
+    await pg.screenshot({ path: `${shotDir}/critic-daily-fail-card.png` });
+    await pg.click('#btnRetry');                    // files the day
+    await pg.waitForTimeout(250);
+    await burn();
+    await pg.waitForSelector('#failModal:not([hidden])', { timeout: 4000 });
+    await pg.waitForTimeout(80);
+    const pracCard = await readCard();
+    // ...and a campaign level is a campaign level: nothing about days on it
+    await pg.evaluate(() => window.GE.load(11));
+    await pg.waitForTimeout(80);
+    await burn();
+    await pg.waitForSelector('#failModal:not([hidden])', { timeout: 4000 });
+    await pg.waitForTimeout(80);
+    const campCard = await readCard();
+    await ctx.close();
+    const ok = /keep today.s record open/i.test(recCard.rescue) && /^AD /.test(recCard.rescue)
+      && /^End today.s attempt — record NOT CLEARED$/.test(recCard.retry)
+      && recCard.rule && /rescue keeps it open/i.test(recCard.rule) && /leaving the board/i.test(recCard.rule)
+      && recCard.chip === 'RECORDED'
+      && /watch to continue/.test(pracCard.rescue) && pracCard.retry === 'Retry level' && !pracCard.rule && !pracCard.chip
+      && /watch to continue/.test(campCard.rescue) && campCard.retry === 'Retry level' && !campCard.rule && !campCard.chip
+      && !errs.length;
+    if (ok) console.log(`daily fail honesty ok: on the recorded attempt the two buttons read "${recCard.rescue}" / "${recCard.retry}" over "${recCard.rule}" with a RECORDED chip on the board; practice and campaign losses carry the plain pair and no day language at all`);
+    else { failures++; console.error('daily fail honesty FAIL:', JSON.stringify({ recCard, pracCard, campCard, errs })); }
+  }
+
+  // 4. THE SURVEY SHEET COUNTS FROM THE DAY THE PLAYER ARRIVED, and names what it is counting.
+  //    A Wednesday install was shown Monday and Tuesday stamped with the MISS ring — two days
+  //    missed before they owned the game (t34) — and the weather delay, a streak cover, appeared
+  //    nowhere on the sheet that banks it (t34), so the first time the concept was ever named was
+  //    the notice saying it had been spent.
+  {
+    const D0 = '2026-09-16'; // a Wednesday
+    const { ctx, pg, errs } = await openC(D0, { ge_prog: JSON.stringify({ u: 6, s: [3, 3, 3, 3, 3, 3], d0: D0, rv: ['cert', 'daily', 'survey'] }) });
+    const sheet = await pg.evaluate(d => {
+      // this week's live sheet, under the overridden clock, with today already stamped: a player
+      // who installed on Wednesday and has cleared a level. Mon and Tue are days they did not own
+      // the game — the sheet must not mark them as days they missed.
+      const wk = window.GE_MENU.survey;
+      wk.offered = ['clear12', 'clear20', 'par8', 'nohint8'];
+      wk.chosen = ['clear12']; wk.days = [d]; wk.pts = 2;
+      window.GE_MENU.renderSurvey();
+      document.getElementById('surveyModal').hidden = false;
+      return { days: [...document.querySelectorAll('#surveySpine .d')].map(d => ({ cls: d.className, mark: d.querySelector('.dm').textContent, title: d.title })),
+        key: document.getElementById('surveyKey').textContent,
+        delays: document.getElementById('surveyDelays').innerText.replace(/\s+/g, ' ').trim(),
+        seal: document.getElementById('surveySeal').innerText.replace(/\s+/g, ' ').trim(),
+        body: document.querySelector('#surveyModal .card').innerText.replace(/\s+/g, ' ').trim() };
+    }, D0);
+    await pg.waitForTimeout(200);
+    await pg.screenshot({ path: `${shotDir}/critic-survey-sheet.png` });
+    await ctx.close();
+    const miss = sheet.days.filter(d => d.mark === '○');
+    const pre = sheet.days.filter(d => /\bpre\b/.test(d.cls));
+    const ok = pre.length === 2 && miss.length === 0                      // Mon+Tue are blank, not missed
+      && pre.every(d => d.mark === '·' && /before this sheet/.test(d.title))
+      && sheet.days[2].cls.includes('on') && sheet.days[3].mark === '·'
+      && /weather delay/i.test(sheet.key) && /no clear/.test(sheet.key)   // the four glyphs, named
+      && /Weather delays held/i.test(sheet.delays) && /0 of 2/.test(sheet.delays)  // ...stated at zero
+      && /file a contract to bank one/i.test(sheet.delays)
+      && /bank a weather delay/i.test(sheet.seal) && /seal the week/i.test(sheet.seal)
+      && (sheet.body.match(/weather delay/gi) || []).length >= 3
+      && !errs.length;
+    if (ok) console.log(`survey sheet ok: on a Wednesday install the two days before the player arrived render blank ("·", dotted) rather than missed, the spine carries a key for all four glyphs, weather delays are stated at zero ("${sheet.delays}") and the seal row says what each filing pays ("${sheet.seal}")`);
+    else { failures++; console.error('survey sheet FAIL:', JSON.stringify({ days: sheet.days, key: sheet.key, delays: sheet.delays, seal: sheet.seal, errs })); }
+  }
+
+  // 5. THE DEMONSTRATION CONTRACT IS NEVER ONE THE PLAYER CAN FAIL AT. The survey arrives with one
+  //    contract already taken as a worked example; ranked by the number in its label, that example
+  //    was "Clear 8 levels at par" — the hardest in the catalog, the only one requiring a par-perfect
+  //    solve eight times, and progress LOCKS the pair for the week (t34). Checked over a year of
+  //    real weekly rolls, not one hand-picked set.
+  {
+    const { ctx, pg, errs } = await openC('2026-09-16');
+    const r = await pg.evaluate(() => {
+      const M = window.GE_MENU, C = M.CONTRACTS, out = [];
+      // walk a year on the engine's own clock: each week's four are rolled deterministically from
+      // its ISO stamp, so this is the real offer sequence a player would meet, not a made-up one
+      const t0 = new Date('2026-01-07T10:00:00').getTime();
+      for (let w = 0; w < 52; w++) {
+        const t = t0 + w * 7 * 864e5;
+        window.GE.now = () => t;
+        const week = M.isoWeek(), offered = M.survey.offered;
+        if (!offered || offered.length !== 4) continue;
+        const pick = M.demoContract(offered);
+        const plain = offered.filter(id => !C[id].cond);
+        out.push({ week, offered, pick, cond: !!C[pick].cond, hadPlain: plain.length > 0,
+          minEase: Math.min(...(plain.length ? plain : offered).map(id => C[id].ease)), pickEase: C[pick].ease });
+      }
+      return out;
+    });
+    await ctx.close();
+    const weeks = r.length;
+    const bad = r.filter(x => (x.hadPlain && x.cond) || x.pickEase !== x.minEase);
+    const par8 = r.filter(x => x.pick === 'par8');
+    const ok = weeks >= 40 && !bad.length && !par8.length && !errs.length;
+    if (ok) console.log(`demo contract ok: across ${weeks} weekly rolls the preselected contract is always the cheapest UNCONDITIONAL one on offer (never "at par", never "without undo/hints" while a plain clear is available) — a worked example is not something you can fail at`);
+    else { failures++; console.error('demo contract FAIL:', JSON.stringify({ weeks, bad: bad.slice(0, 4), par8: par8.slice(0, 2), errs })); }
+  }
+
+  // 6. THE FIRST CARD OF A NEW INSTALL PRINTS THE STARS IT JUST AWARDED. The running total is a
+  //    count-up tween, which is good juice everywhere except the one card where it starts at zero:
+  //    the figure under three freshly-awarded stars read "0 / 120" (t7/t30), so the card that has to
+  //    teach that stars accumulate taught the opposite.
+  {
+    const { ctx, pg, errs } = await openC('2026-09-16');
+    await pg.evaluate(sol => { window.GE.load(0); for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side); }, solutions[0]);
+    await pg.waitForSelector('#winModal:not([hidden])', { timeout: 3000 });
+    const now = await pg.evaluate(() => document.getElementById('winTotal').textContent.replace(/\s+/g, ' ').trim());
+    await pg.waitForTimeout(1500);
+    const settled = await pg.evaluate(() => ({ total: document.getElementById('winTotal').textContent.replace(/\s+/g, ' ').trim(),
+      stars: document.querySelectorAll('#winStars span.on').length }));
+    await pg.screenshot({ path: `${shotDir}/critic-first-win-card.png` });
+    // ...and the tween itself still runs on a later card, from the total the player actually had
+    await pg.click('#btnNext');
+    await pg.waitForTimeout(120);
+    await pg.evaluate(sol => { for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side); }, solutions[1]);
+    await pg.waitForSelector('#winModal:not([hidden])', { timeout: 3000 });
+    const second = await pg.evaluate(() => document.getElementById('winTotal').textContent.replace(/\s+/g, ' ').trim());
+    await pg.waitForTimeout(1500);
+    const secondSettled = await pg.evaluate(() => document.getElementById('winTotal').textContent.replace(/\s+/g, ' ').trim());
+    await ctx.close();
+    const ok = settled.stars === 3 && now === '★ 3 / 120' && settled.total === '★ 3 / 120'
+      && second === '★ 3 / 120' && secondSettled === '★ 6 / 120'   // starts at what they had, lands on what they have
+      && !errs.length;
+    if (ok) console.log(`first win card ok: three stars awarded and the total reads "${settled.total}" from the moment the card opens; the second card still tweens, from ${second} up to ${secondSettled}`);
+    else { failures++; console.error('first win card FAIL:', JSON.stringify({ now, settled, second, secondSettled, errs })); }
+  }
+
+  // 7. THE LEGEND GROWS WITH THE PLAYER. "How to play", opened cold from the landing on a fresh
+  //    save, ended with the APPROVAL CHAIN card — a Sheet 4 rule with numbered stamps and NEXT
+  //    chips, handed to a player before level 1 (t4). It is the one screen that contradicted the
+  //    staged FTUE the whole round was built on.
+  {
+    const chainAt = await page.evaluate(() => LEVELS.findIndex(l => l.blocks.some(b => b.seq)));
+    const seqRow = pg => pg.evaluate(() => { window.GE_MENU.refreshLegendRows(); return document.getElementById('liSeq').hidden; });
+    const a = await openC('2026-09-16');
+    const cold = await seqRow(a.pg);
+    await a.pg.evaluate(() => { window.GE_MENU.show('legend'); });
+    await a.pg.waitForTimeout(250);
+    await a.pg.screenshot({ path: `${shotDir}/critic-legend-cold.png` });
+    await a.ctx.close();
+    const b = await openC('2026-09-16', { ge_prog: JSON.stringify({ u: chainAt, s: Array(chainAt).fill(3), d0: 'pre', rv: ['rescue', 'cert', 'daily', 'survey'] }) });
+    const reached = await seqRow(b.pg);
+    await b.ctx.close();
+    const ok = cold === true && reached === false && !a.errs.length && !b.errs.length;
+    if (ok) console.log(`legend staging ok: the approval-chain card is absent from How to play on a cold open and arrives with the sheet that teaches it (L${chainAt + 1} unlocked)`);
+    else { failures++; console.error('legend staging FAIL:', JSON.stringify({ cold, reached, chainAt })); }
+  }
+
+  // 8. A REVEAL IS SPENT WHEN IT IS SEEN. `disclosed.cert` and `disclosed.survey` flipped true on
+  //    win cards that carried no row (t10/t19/t30) — a system switched on behind the player's back,
+  //    which is the exact failure the staged rollout exists to avoid. The record that the beat played
+  //    can only be written by the code that paints it, so asking for a reveal must write nothing.
+  {
+    const { ctx, pg, errs } = await openC('2026-09-16', { ge_prog: JSON.stringify({ u: 2, s: [3, 3] }) });
+    const r = await pg.evaluate(() => {
+      const before = JSON.parse(localStorage.getItem('ge_prog') || '{}').rv || null;
+      const took = window.GE_MENU.takeReveal();
+      const after = JSON.parse(localStorage.getItem('ge_prog') || '{}').rv || null;
+      const again = window.GE_MENU.takeReveal();
+      return { before, took: took && took.id, after, again: again && again.id };
+    });
+    await ctx.close();
+    // a save seeded with two clears is a legacy save (seedDisclosure marks it seen), so nothing is
+    // pending — the invariant under test is that ASKING never writes, in either state
+    const ok = JSON.stringify(r.before) === JSON.stringify(r.after) && r.took === r.again && !errs.length;
+    if (ok) console.log(`reveal accounting ok: takeReveal() never writes prog.rv (${JSON.stringify(r.after)} before and after) — only the row landing on the card marks a reveal as played`);
+    else { failures++; console.error('reveal accounting FAIL:', JSON.stringify({ r, errs })); }
   }
 }
 

@@ -212,6 +212,11 @@ const winStars = document.getElementById('winStars');
 const winSub = document.getElementById('winSub');
 const failSub = document.getElementById('failSub');
 const failHint = document.getElementById('failHint');
+const failTitle = document.getElementById('failTitle');
+const failDaily = document.getElementById('failDaily');
+const btnRescueEl = document.getElementById('btnRescue');
+const btnRetryEl = document.getElementById('btnRetry');
+const hudRec = document.getElementById('hudRec');
 const toastEl = document.getElementById('toast');
 
 // ---------- telemetry (local only for the prototype) ----------
@@ -539,9 +544,14 @@ function dailyShareText(dateStr) {
   const p = row.date.split('-');
   const stars = '★'.repeat(row.stars || 0) + '☆'.repeat(3 - (row.stars || 0));
   const won = row.state === 'won';
+  // The bar is a PAR MARKER (filled = moves up to par, hollow = the ones over) and it only reads
+  // that way next to a cleared board. On a NOT CLEARED report — stripped of every other cue in a
+  // group chat — six filled cells of nine read as a progress bar two-thirds of the way to a clear,
+  // which is the one glyph in the report that would then be a lie (t50). A loss states its numbers
+  // in words on the line below and carries no bar at all.
   const head = 'GATE ESCAPE · FIELD REPORT\n'
     + (+p[2]) + ' ' + MON[+p[1] - 1] + ' ' + p[0] + ' · ' + (won ? 'CLEARED' : 'NOT CLEARED') + '\n'
-    + parBar(row.moves, row.par) + '\n';
+    + (won ? parBar(row.moves, row.par) + '\n' : '');
   const line = won
     ? stars + ' · ' + row.moves + '/' + row.par + ' moves · route ' + Math.round(row.par / Math.max(1, row.moves) * 100) + '%'
     : stars + ' · ' + row.cleared + ' of ' + row.blocks + ' out · ' + row.moves + '/' + row.par + ' moves';
@@ -580,6 +590,10 @@ function loadLevel(i) {
     ? (dailyPractice ? 'PRACTICE \u00b7 NOT RECORDED' : 'DAILY DRAFT \u00b7 ' + dayLabel(dailyDate))
     : isTest() ? 'TEST BOARD' : 'Level ' + (li + 1);
   hudLevel.classList.toggle('daily', isDaily());
+  // the one-recorded-attempt rule, stated on the board itself for as long as it is true. The label
+  // beside it already says PRACTICE · NOT RECORDED once the day has closed, so the chip is the
+  // positive half of that pair and nothing else needs to change to swap it.
+  if (hudRec) { hudRec.hidden = !(isDaily() && !dailyPractice); hudRec.textContent = 'RECORDED'; }
   hudPar.textContent = 'par ' + L.par;
   winModal.hidden = true; failModal.hidden = true;
   document.body.classList.remove('fail-up'); cv.style.transform = '';
@@ -1079,6 +1093,23 @@ function maybeFail() {
       failHint.textContent = failRoute
         ? (left === 1 ? 'The last block is one drag from its gate.' : `${left} left — one is a single drag from its gate.`)
         : `${left} block${left > 1 ? 's' : ''} left to clear.`;
+      // The headline is a READING of the position, never encouragement laid over it (t46: "So
+      // close!" printed above "0 of 5 blocks escaped"). Near-miss language is state truth and
+      // means one thing only — one drag from a cleared board, which is exactly what failRoute
+      // proves when a single block is left. Everything else says what happened.
+      failTitle.textContent = (failRoute && left === 1) ? 'So close!'
+        : out === 0 ? 'Out of moves' : 'Nearly there';
+      // The draft's fail sheet is the one screen in the game where the free, familiar button is
+      // the irreversible one: declining the rescue — by retrying, by leaving, by closing the tab —
+      // files today's record as NOT CLEARED. So on a RECORDED attempt both buttons say what they
+      // cost before they are pressed, and the line above them states the rule for every other exit.
+      const recorded = isDaily() && !!dailyPending;
+      btnRescueEl.innerHTML = recorded
+        ? '<span class="ad">AD</span> +3 moves <small>· keep today\u2019s record open</small>'
+        : '<span class="ad">AD</span> +3 moves <small>· watch to continue</small>';
+      btnRetryEl.textContent = recorded ? 'End today\u2019s attempt — record NOT CLEARED' : 'Retry level';
+      failDaily.hidden = !recorded;
+      if (recorded) failDaily.textContent = 'This is today\u2019s recorded attempt. The rescue keeps it open — retrying, or leaving the board, files it as NOT CLEARED.';
       document.getElementById('btnRescue').hidden = rescued;
       // the board rises and shrinks so the sheet never covers the position it asks you to bet on
       document.body.classList.add('fail-up');
@@ -1093,7 +1124,10 @@ function maybeFail() {
 }
 
 // win-card titles rotate so the reward line never reads as a receipt; milestones get their own
-const WIN_TITLES = ['Level clear!', 'Sheet approved!', 'Cleared to par!', 'Drawing done!', 'Board cleared!'];
+// "Approved", "certified" and "stamp" are the words the 24-star certification and the Sheet 4 seal
+// use. Spending them on an ordinary clear (t10: "Sheet approved!" on L2) teaches the player to skim
+// exactly the words that will later carry meaning, so the rotation stays neutral drafting flavour.
+const WIN_TITLES = ['Level clear!', 'Sheet filed!', 'Cleared to par!', 'Drawing done!', 'Checked and filed!'];
 function winTitleFor(stars) {
   if (isDaily()) return dailyPractice ? 'Practice run cleared' : 'Daily draft filed!';
   const n = li + 1;
@@ -2058,11 +2092,19 @@ function sound(kind, n = 0) {
 // ---------- test hooks (used by the automated playtest bot) ----------
 window.GE = {
   get level() { return li; },
+  // The CAMPAIGN pointer, and the only number a campaign-facing surface may read. `level` is the
+  // board on screen, which — while a Daily Draft or a test board is up — is a VIRTUAL index past
+  // the end of LEVELS. Reading `level` there is what produced "Level 41/40" on a five-level save
+  // (t50): the landing CTA, the sheet-index header and the current-tile highlight all asked the
+  // engine which board was loaded when what they meant was which level the player is up to.
+  get resume() { return resumeLevel; },
   get pos() { return pos; },
   get L() { return L; },
   get moves() { return moves; },
   get movesLeft() { return movesLeft; },
   get metrics() { return { cell, bx, by, w: L.w, h: L.h }; }, // board geometry in CSS px (for pointer-driven bots)
+  // the ghosted route the fail sheet draws — the state truth its headline is a reading of
+  get failRoute() { return failRoute; },
   // the picture, as opposed to the rules: where each block is DRAWN this frame (fractional
   // cells), whether the renderer still owes the player movement, and whether every drawn block
   // is legal (an interpolated block must always lie between two cells it could really occupy)

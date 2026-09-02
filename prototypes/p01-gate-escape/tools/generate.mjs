@@ -203,15 +203,31 @@ const LEVEL_SEEDS = [
 //                 first time should not also be meeting the fail sheet. The plan pinned
 //                 L1-5; L6-10 keep par+3 with them so the rule lands on a sheet edge
 //                 rather than mid-sheet, which is also what the level grid shows.
-//   L11+   par+2  Sheet 2 onward, all the way through Sheet 4. From here a sloppy route
-//                 costs stars and the fail/rescue surface actually appears in normal play.
+//   L11-30 par+2  Sheet 2 onward. From here a sloppy route costs stars and the fail/rescue
+//                 surface actually appears in normal play.
+//   L31-32 par+4  THE TEACHING EXCEPTION (critic session, 2026-09-02). The approval chain -
+//   L33-34 par+3  numbered blocks, a fixed exit order, out-of-turn blocks that still move but
+//                 park - is the hardest cognitive addition in the game and the only genuinely
+//                 new rule in the back half. Shipped at par+2 it was introduced at the
+//                 TIGHTEST limit the game uses, so the level that teaches the rule was also
+//                 the level most likely to end in the fail sheet: a spike as the teach, which
+//                 is the inverse of the curve every other idea in this build gets. L31-32 now
+//                 get exactly the courtesy L1-4 got and L33-34 the courtesy of L5-10.
+//   L35-40 par+2  and the sheet tightens again well before its final run.
 //
 // This REPLACES the old schedule, which relaxed back to par+3 for L26-30 "as relief after
 // the spike". Pass 7 puts the relief in the BOARDS instead (the sawtooth: L21 and L26 and
 // L29 are genuinely easier puzzles), which is the honest version of the same idea - the
 // old one told the player the levels were easier by handing them slack on boards that were
-// exactly as hard.
-function slackFor(idx) { return idx <= 4 ? 4 : idx <= 10 ? 3 : 2; }
+// exactly as hard. The L31-34 band above is not that mistake in reverse: it is slack while a
+// NEW RULE is being learned, which is the same reason L1-10 have it, and it ends at L35.
+function slackFor(idx) {
+  if (idx <= 4) return 4;
+  if (idx <= 10) return 3;
+  if (idx === 31 || idx === 32) return 4;   // the chain's teaching levels
+  if (idx === 33 || idx === 34) return 3;
+  return 2;
+}
 
 const levels = [];
 for (let i = 0; i < CURVE.length; i++) {

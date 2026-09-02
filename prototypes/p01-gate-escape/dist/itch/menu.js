@@ -87,7 +87,9 @@
       b.dataset.skin = id;
       b.style.setProperty('--p1', t.swatch[0]); b.style.setProperty('--p2', t.swatch[1]); b.style.setProperty('--pl', t.swatch[2]);
       b.setAttribute('aria-label', 'Paper: ' + t.name + (lock ? ', locked. ' + certLabel(id) : ''));
-      if (lock) b.innerHTML = CERT_SVG(false);
+      // three near-identical grey squares with a stamp too small to tell apart is nothing to want
+      // (t68): the locked swatch carries the number of the sheet that pays it
+      if (lock) b.innerHTML = CERT_SVG(false) + `<span class="sh">${CERT_SKINS.indexOf(id) + 1 || ''}</span>`;
       b.onclick = () => { if (lock) caption(host, certLabel(id), true); else setSkin(id, prefix === 'btnPaper' ? 'menu' : 'pause'); };
       sw.appendChild(b);
     }
@@ -194,17 +196,19 @@
   const resumable = () => GE.paused && !GE.over && GE.moves > 0;
   // a save that has never cleared anything and sits on level 1: a fresh install, so the CTA is
   // simply "Play" and the stamp does not report progress nobody has made yet
-  const freshInstall = () => GE.level === 0 && !prog.s.some(Boolean) && !resumable();
+  // GE.resume, not GE.level: while a Daily Draft is on the board GE.level is a virtual index
+  // one past the campaign, and every line below is a statement about the CAMPAIGN (t50).
+  const freshInstall = () => GE.resume === 0 && !prog.s.some(Boolean) && !resumable();
   // the landing: title treatment, one static stamp line, one CTA, two quiet entries. Everything
   // else the title block used to carry now lives on the sheet index (refreshLog).
   function refreshMenu() {
-    $('playLabel').textContent = resumable() ? 'Resume level ' + (GE.level + 1)
-      : freshInstall() ? 'Play' : 'Continue — Level ' + (GE.level + 1);
+    $('playLabel').textContent = resumable() ? 'Resume level ' + (GE.resume + 1)
+      : freshInstall() ? 'Play' : 'Continue — Level ' + (GE.resume + 1);
     const today = dayStr(GE.now());
     const live = streak.lastDate && streak.len > 0 && dayGap(streak.lastDate, today) <= 1 ? streak.len : 0;
     $('menuStamp').innerHTML = freshInstall()
       ? `New sheet · <b>${N}</b> levels`
-      : `Level <b>${GE.level + 1}</b> / ${N} · ★ <b>${starsTotal()}</b>`
+      : `Level <b>${GE.resume + 1}</b> / ${N} · ★ <b>${starsTotal()}</b>`
         + (live ? ` · <i>${live}-day streak</i>` : '');
     refreshStatus();
   }
@@ -226,7 +230,7 @@
   // the sheet index's field log: progress, the field-survey row (the week's sheet is one tap
   // deeper), the lives row when the economy is on, the paper picker and the sound/haptics toggles
   function refreshLog() {
-    $('fLevel').textContent = (GE.level + 1) + ' / ' + N;
+    $('fLevel').textContent = (GE.resume + 1) + ' / ' + N;
     $('fStars').textContent = starsTotal() + ' / ' + (N * 3);
     refreshSound();
     refreshHaptics();
@@ -259,7 +263,7 @@
       }
       const locked = i > prog.u;
       const b = document.createElement('button');
-      b.className = 'tile' + (locked ? ' locked' : '') + (prog.s[i] ? ' done' : '') + (i === GE.level ? ' cur' : '');
+      b.className = 'tile' + (locked ? ' locked' : '') + (prog.s[i] ? ' done' : '') + (i === GE.resume ? ' cur' : '');
       b.setAttribute('aria-label', 'Level ' + (i + 1) + (locked ? ', locked' : ''));
       b.dataset.level = i + 1; // tiles are addressed by level, not by grid position (headers are children too)
       b.disabled = locked;
@@ -328,6 +332,7 @@
   }
   dismissOnScrim(pauseModal, () => { if (!pauseModal.hidden) resume(); });          // resume play
   dismissOnScrim($('draftModal'), () => $('btnDraftClose').click());
+  dismissOnScrim($('recModal'), () => $('btnRecBack').click());                    // Back, not Start
   dismissOnScrim($('surveyModal'), () => $('btnSurveyClose').click());
   dismissOnScrim($('freezeModal'), () => $('btnFreezeOk').click());
   dismissOnScrim($('livesModal'), () => $('btnLivesHome').click());                 // browsing is never blocked
@@ -336,6 +341,7 @@
 
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
+    if (!$('recModal').hidden) { $('btnRecBack').click(); return; }
     if (!$('draftModal').hidden) { $('btnDraftClose').click(); return; }
     if (!$('surveyModal').hidden) { $('btnSurveyClose').click(); return; }
     if (!$('freezeModal').hidden) { $('btnFreezeOk').click(); return; }
@@ -348,8 +354,8 @@
   // ---------- title block buttons ----------
   $('btnPlay').onclick = () => {
     if (resumable()) { show(null); resume(); return; }
-    if (!GE.livesGate(GE.level)) return; // out of lives on L6+: the calm card, browsing never blocked
-    GE.load(GE.level);
+    if (!GE.livesGate(GE.resume)) return; // out of lives on L6+: the calm card, browsing never blocked
+    GE.load(GE.resume);
   };
   $('btnLivesHome').onclick = () => { $('livesModal').hidden = true; show('menu'); };
   $('btnLevels').onclick = () => { levelsFrom = 'menu'; show('levels'); };
@@ -413,16 +419,26 @@
     d.status = !!prog.d0 && prog.d0 !== dayStr(GE.now());
     return d;
   }
-  // the reveal this win has just earned, if any — marked seen here, so the beat plays exactly once
+  // The reveal this win has earned, if any. It is NOT marked seen here: a reveal is spent when the
+  // row is actually on the card (commitReveal), never when it is merely queued. The critic's finding
+  // (t10/t19/t30) was exactly this failure in its worst form — `disclosed.cert` and `disclosed.survey`
+  // flipped true on a win card that carried no row, so a system the player was never told about was
+  // simply switched on behind them. Whatever else goes wrong with the timing of the beat, the record
+  // that it played can now only be written by the code that paints it.
   function takeReveal() {
     const d = disclosure();
     const r = REVEALS.find(x => d[x.id] && !seenReveal(x.id));
     if (!r) return null;
-    prog.rv = [...(prog.rv || []), r.id];
+    // the survey becomes VISIBLE on this clear whether or not the row lands, so its worked example
+    // has to be in place with it — the announcement is what is deferred, never the state
     if (r.id === 'survey') preselectContract();
-    save();
-    track('ftue_reveal', { id: r.id, cleared: d.cleared });
     return r;
+  }
+  function commitReveal(id) {
+    if (seenReveal(id)) return;
+    prog.rv = [...(prog.rv || []), id];
+    save();
+    track('ftue_reveal', { id, cleared: clearedCount() });
   }
   // A save that already had progress when staged disclosure shipped belongs to someone who has met
   // all of this already: mark what they can see as seen rather than replaying three tutorials at
@@ -439,9 +455,12 @@
     const d = disclosure(), g = (id, on) => { const el = $(id); if (el) el.hidden = !on; };
     g('legendLives', GE.livesEnabled);
     g('legendCert', d.cert); g('legendDaily', d.daily && draftReady());
-    // the approval chain explains itself only once a chained sheet exists (pass 6 adds one);
-    // derived from the shipped levels, so it turns itself on with no second edit
-    g('liSeq', LEVELS.some(l => l.blocks.some(b => b.seq)));
+    // The approval chain is the hardest rule in the game and it lives on Sheet 4. Handing it to a
+    // player who has not cleared level 1 — which is what "How to play" did, cold, from the landing
+    // (t4) — is the one screen that contradicted staged disclosure. It is gated on the same derived
+    // rule everything else uses: the sheet that teaches it must be in reach.
+    const chainAt = LEVELS.findIndex(l => l.blocks.some(b => b.seq));
+    g('liSeq', chainAt >= 0 && (d.cleared >= chainAt || prog.u >= chainAt));
     g('legendSurvey', d.survey); g('legendContracts', d.survey); g('legendStreak', d.survey);
     // the divider is a heading for a list that can be empty on a cold open
     g('legendMetaDiv', GE.livesEnabled || d.cert || d.daily || d.survey);
@@ -466,19 +485,35 @@
   // to buy, no card at the moment of loss. All dates flow through GE.now() so bots simulate days.
   // State: ge_streak (unchanged) + ge_survey (new). ge_quests / ge_ladder are migrated once, then
   // removed. Nothing here is ever gated on — the funnel test needs every level reachable.
-  // `ease` ranks the catalog by roughly how many clears the contract asks for, lowest first. It is
-  // used for ONE thing: which contract the survey arrives with already taken when it is first
-  // revealed. Nothing else reads it, and it never changes what a contract is worth.
+  // `ease` is the ONE number that decides which contract the survey arrives with already taken, so
+  // it has to mean something real. It used to rank the catalog by the raw number in the label —
+  // which put "Clear 8 levels at par" (8) above "Clear 12 levels" (12) and handed a brand-new player
+  // the single hardest contract in the game as their worked example (t34). It is now the expected
+  // number of CLEARS the contract takes to file: target divided by the average it earns per clear,
+  // measured against the shipped curve (a clear is 1; ~2.2 stars; ~4 blocks; par is hit on roughly a
+  // third of clears at the tightened limits; undo-free ~0.6; hint-free ~0.85).
+  //
+  // `cond` marks a contract whose gain can be ZERO on a clear — one you can play a whole session
+  // without moving, and the only kind you can feel you have failed at. A demonstration is never one
+  // of those while the week offers an alternative, however cheap its arithmetic looks.
   const CONTRACTS = {
-    clear12:  { label: 'Clear 12 levels',             target: 12, ease: 5, gain: d => 1 },
-    clear20:  { label: 'Clear 20 levels',             target: 20, ease: 8, gain: d => 1 },
-    stars30:  { label: 'Earn 30 stars',               target: 30, ease: 4, gain: d => d.stars },
-    stars45:  { label: 'Earn 45 stars',               target: 45, ease: 7, gain: d => d.stars },
-    par8:     { label: 'Clear 8 levels at par',       target: 8,  ease: 2, gain: d => (d.moves <= d.par ? 1 : 0) },
-    noundo5:  { label: 'Clear 5 levels without undo', target: 5,  ease: 1, gain: d => (d.undos === 0 ? 1 : 0) },
-    nohint8:  { label: 'Clear 8 levels without hints',target: 8,  ease: 3, gain: d => (d.hints === 0 ? 1 : 0) },
-    blocks60: { label: 'Clear 60 blocks',             target: 60, ease: 6, gain: d => d.blocks },
+    clear12:  { label: 'Clear 12 levels',             target: 12, ease: 12, gain: d => 1 },
+    clear20:  { label: 'Clear 20 levels',             target: 20, ease: 20, gain: d => 1 },
+    stars30:  { label: 'Earn 30 stars',               target: 30, ease: 14, gain: d => d.stars },
+    stars45:  { label: 'Earn 45 stars',               target: 45, ease: 21, gain: d => d.stars },
+    par8:     { label: 'Clear 8 levels at par',       target: 8,  ease: 23, cond: 1, gain: d => (d.moves <= d.par ? 1 : 0) },
+    noundo5:  { label: 'Clear 5 levels without undo', target: 5,  ease: 8,  cond: 1, gain: d => (d.undos === 0 ? 1 : 0) },
+    nohint8:  { label: 'Clear 8 levels without hints',target: 8,  ease: 9,  cond: 1, gain: d => (d.hints === 0 ? 1 : 0) },
+    blocks60: { label: 'Clear 60 blocks',             target: 60, ease: 15, gain: d => d.blocks },
   };
+  // the demonstration contract: the cheapest UNCONDITIONAL one the week offers, and only if the week
+  // offers none does it fall back to the cheapest overall. Exported so the bot checks the rule
+  // rather than re-deriving a guess at it.
+  function demoContract(offered) {
+    const rank = ids => ids.slice().sort((a, b) => CONTRACTS[a].ease - CONTRACTS[b].ease)[0];
+    const plain = offered.filter(id => !CONTRACTS[id].cond);
+    return rank(plain.length ? plain : offered) || null;
+  }
   const OFFERED = 4, PICKS = 2, DELAY_MAX = 2, MILESTONES = [3, 7, 12, 20];
   const DAY_INITIALS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   const dayStr = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
@@ -579,7 +614,7 @@
   function preselectContract() {
     const s = surveyWeek();
     if (s.chosen.length || contractsLocked()) return null;
-    const id = s.offered.slice().sort((a, b) => CONTRACTS[a].ease - CONTRACTS[b].ease)[0];
+    const id = demoContract(s.offered);
     if (!id || !chooseContract(id)) return null;
     track('contract_preselect', { id });
     return id;
@@ -668,14 +703,30 @@
     $('surveySub').innerHTML = (live ? `<b>${live}-day streak</b>` : 'No streak running')
       + ` · ${stamped} of 7 days · ${s.pts} point${s.pts === 1 ? '' : 's'}`
       + (streak.freezes ? `<small>${streak.freezes} weather delay${streak.freezes > 1 ? 's' : ''} held</small>` : '');
+    // A day before the player owned the game is not a day they missed. The sheet starts counting
+    // from the first clear (prog.d0), so Monday and Tuesday of a Wednesday install render as blank
+    // paper — the same neutral dot the days still to come get, dimmed and dotted — never the ring a
+    // lapsed day is marked with (t34). 'pre' is a save that predates the field survey: it belongs to
+    // a player who was here already, so nothing on their week is inapplicable.
+    const d0 = prog.d0 && prog.d0 !== 'pre' ? prog.d0 : null;
     $('surveySpine').innerHTML = dates.map((d, i) => {
       // today is not a missed day until it is over, so it reads "to come" until it is stamped
       const on = s.days.includes(d), delay = !on && s.delays.includes(d), ahead = d >= today;
-      const mark = on ? '✓' : delay ? '~' : ahead ? '·' : '○';
-      const what = on ? 'stamped' : delay ? 'weather delay' : ahead ? 'to come' : 'no clear';
-      return `<div class="d${on ? ' on' : delay ? ' delay' : ''}${d === today ? ' today' : ''}" data-day="${d}" title="${d} — ${what}">`
+      const pre = !on && !delay && !ahead && !!d0 && d < d0;
+      const mark = on ? '✓' : delay ? '~' : ahead || pre ? '·' : '○';
+      const what = on ? 'stamped' : delay ? 'weather delay' : pre ? 'before this sheet' : ahead ? 'to come' : 'no clear';
+      return `<div class="d${on ? ' on' : delay ? ' delay' : pre ? ' pre' : ''}${d === today ? ' today' : ''}" data-day="${d}" title="${d} — ${what}">`
         + `<span class="dn">${DAY_INITIALS[i]}</span><span class="dm">${mark}</span></div>`;
     }).join('');
+    // the four glyphs, named on the sheet that uses them
+    $('surveyKey').textContent = '✓ day stamped   ~ weather delay   ○ no clear   · to come'
+      + (dates.some((d) => d0 && d < d0 && !s.days.includes(d)) ? '   (dotted = before you started)' : '');
+    // Weather delays, stated at zero and named as what they are. The mechanic was invisible until
+    // the notice that one had been spent (t34) — a safety net nobody can see is only ever a surprise.
+    const held = streak.freezes;
+    $('surveyDelays').className = 'delayrow' + (held ? ' held' : '');
+    $('surveyDelays').innerHTML = `<span class="k">Weather delays held</span>`
+      + `<span class="v">${held} of ${DELAY_MAX} · ${held ? 'covers a missed day automatically' : 'file a contract to bank one'}</span>`;
     const locked = contractsLocked();
     const rows = s.offered.filter(id => !locked || s.chosen.includes(id)).map(id => {
       const t = CONTRACTS[id], on = s.chosen.includes(id), filed = s.filed.includes(id);
@@ -701,7 +752,8 @@
     $('surveySeal').innerHTML = SEAL_SVG(s.seal)
       + `<div><span class="k">Weekly seal</span><span class="v">`
       + (s.seal ? `Sealed · ${s.frags} fragment${s.frags === 1 ? '' : 's'} held`
-        : `File both contracts to seal the week · ${s.filed.length}/${PICKS}`)
+        // what each filing actually pays, said before it is earned rather than after it is spent
+        : `File 1 · bank a weather delay — file both · seal the week · ${s.filed.length}/${PICKS}`)
       + '</span></div>';
     $('surveyLast').textContent = s.last
       ? `Last week: ${s.last.pts} point${s.last.pts === 1 ? '' : 's'} · ${s.last.filed || 0}/${PICKS} filed${s.last.seal ? ' · sealed' : ''}`
@@ -752,10 +804,17 @@
     if (!on) return;
     const i = GE.dailyInfo, cur = i.done ? i.cur : null;
     $('fDailyK').textContent = 'Daily draft · ' + dateLabel(i.today);
-    $('fDaily').innerHTML = !cur ? 'READY'
-      : (cur.state === 'won' ? starRow(cur.stars || 0) + 'FILED' : starRow(0) + 'NOT CLEARED')
-        + '<small>Practice · not recorded</small>';
-    $('btnDaily').setAttribute('aria-label', !cur ? 'Daily draft — today’s board, ready to play'
+    // Three facts right-aligned on one row wrapped into three ragged lines and read as an error
+    // state (t52). One line for the result — no star rack on a day that scored none, since an empty
+    // rack is not information — and one forward-looking line about what a tap gives you NOW. While
+    // the day is open that second line is the one-recorded-attempt rule, stated before the tap.
+    $('fDaily').innerHTML = !cur
+      ? 'READY<small>First attempt is recorded</small>'
+      : (cur.state === 'won'
+          ? starRow(cur.stars || 0) + 'FILED'
+          : `NOT CLEARED · ${cur.cleared} of ${cur.blocks} out`)
+        + '<small>Record closed · replays are practice</small>';
+    $('btnDaily').setAttribute('aria-label', !cur ? 'Daily draft — today’s board. Your first attempt is the one recorded'
       : 'Daily draft — today’s result, open the field report');
   }
   // the result card. It only ever renders a CLOSED record: an open day has no result to state.
@@ -772,6 +831,11 @@
     $('draftRoute').textContent = won ? Math.round(row.par / Math.max(1, row.moves) * 100) + '%'
       : row.cleared + ' / ' + row.blocks;
     $('draftRescue').hidden = !row.rescued;
+    // On a NOT CLEARED report the primary action is another go, not a broadcast: nobody sends
+    // "0 of 5 out" to a group chat, and a filled CTA asking them to reads as a mode that wants
+    // virality more than it wants the player (t50). Share stays available, quietly.
+    $('btnDraftShare').className = won ? 'primary' : 'ghost';
+    $('btnDraftPractice').className = won ? 'ghost' : 'primary';
     const text = GE.dailyShareText(row.date) || '';
     $('draftReport').textContent = text;
     const fb = $('draftReportFb'); fb.hidden = true; fb.value = text;
@@ -808,13 +872,24 @@
     $('btnWinShare').textContent = SHARE_LABEL;
     $('winDraft').hidden = !text;
   }
+  // The one-recorded-attempt rule is the entire design of the mode and the only reason its result
+  // means anything — and it was nowhere on screen before the first move (t36). A player who idly
+  // tapped the row, fumbled two moves and then found the day closed was penalised by a rule they
+  // had never been shown. So the recorded attempt gets one card first, with a real way back; a
+  // practice run gets nothing, because it has nothing to warn about.
+  const recModal = $('recModal');
+  function startDraft(from) { if (GE.loadDaily()) track('daily_enter', { from }); } // ge:load puts the screens down
   $('btnDaily').onclick = () => {
     if (!draftReady()) return;
     if (GE.dailyInfo.done) { openDraft(); return; }
-    if (GE.loadDaily()) track('daily_enter', { from: 'index' }); // ge:load puts the screens down
+    $('recNo').textContent = 'DAILY DRAFT · ' + dateLabel(GE.dailyInfo.today).toUpperCase();
+    recModal.hidden = false;
+    track('daily_confirm', { date: GE.dailyInfo.today });
   };
+  $('btnRecStart').onclick = () => { recModal.hidden = true; startDraft('index'); };
+  $('btnRecBack').onclick = () => { recModal.hidden = true; track('daily_confirm_back', { date: GE.dailyInfo.today }); };
   $('btnDraftClose').onclick = () => { draftModal.hidden = true; };
-  $('btnDraftPractice').onclick = () => { draftModal.hidden = true; GE.loadDaily(); };
+  $('btnDraftPractice').onclick = () => { draftModal.hidden = true; startDraft('report'); };
   $('btnDraftShare').onclick = () => shareReport($('draftReport').textContent, $('btnDraftShare'), $('draftReportFb'));
   $('btnWinShare').onclick = () => shareReport($('winReport').textContent, $('btnWinShare'), $('winReportFb'));
   // the record closing is the only moment the row's state changes without a screen change
@@ -840,14 +915,22 @@
   // listener offers its row first, the progress listener (which runs second, once prog is updated)
   // overrides it with a staged-disclosure reveal when there is one. A reveal outranks a survey beat
   // because it is the only time that system will ever introduce itself.
+  // A survey beat is a reward for something the player already understands, so it lands AFTER the
+  // stars as one quiet beat. A staged REVEAL is the opposite: it is the only time that system will
+  // ever introduce itself, and a card whose first second does not carry it is a card a player (or a
+  // reviewer taking the screen at face value) reads as an ordinary clear. Reveals therefore render
+  // with the card, and only their landing writes them down.
   function queueQuietRow(row) {
     clearTimeout(dailyTimer); winDaily.hidden = true;
     if (!row) return;
-    dailyTimer = setTimeout(() => {
+    const paint = () => {
       $('winDailyStamp').textContent = row.stamp; $('winDailyK').textContent = row.k; $('winDailyV').textContent = row.v;
       winDaily.hidden = false;
       GE.sound('gate');
-    }, GE.reduced ? 0 : 1150);
+      if (row.reveal) commitReveal(row.reveal);
+    };
+    if (row.reveal || GE.reduced) paint();
+    else dailyTimer = setTimeout(paint, 1150);
   }
   // launch check: banked weather delays cover the missed day(s) automatically and each covered day
   // is stamped WEATHER DELAY on the survey spine (calm notice, nothing to buy). Otherwise the
@@ -931,15 +1014,22 @@
     const total = $('winTotal');
     const paint = n => { total.innerHTML = `<b>★</b> ${n} / ${N * 3}`; };
     paint(before);
-    if (after > before) {
-      const t0 = performance.now() + 700, dur = 420;
+    // The tween teaches that stars accumulate — but on the FIRST card of a new install the number
+    // it counts up FROM is 0, so the figure printed under three freshly-awarded stars is "0 / 120"
+    // (t7/t30). There is nothing to accumulate from on that card, so it prints the total it earned.
+    if (after > before && before === 0) paint(after);
+    else if (after > before) {
+      // the hold used to be 700 ms, which is most of the time anyone looks at the card: the critic
+      // caught the pre-clear figure on four cards out of five and read the tally as broken. The
+      // stars land at 440 ms, so the count-up now starts as soon as they have
+      const t0 = performance.now() + 500, dur = 420;
       const tick = t => { const u = Math.min(1, Math.max(0, (t - t0) / dur)); paint(Math.round(before + (after - before) * u)); if (u < 1) requestAnimationFrame(tick); };
       requestAnimationFrame(tick);
     }
     // staged disclosure: this win may have earned a system. One quiet stamped row introduces it —
     // the same row the survey beats use, so the FTUE adds no new surface of its own.
     const rev = takeReveal();
-    if (rev) queueQuietRow({ stamp: 'NEW', k: rev.k, v: rev.v });
+    if (rev) queueQuietRow({ stamp: 'NEW', k: rev.k, v: rev.v, reveal: rev.id });
   });
   // The campaign's finish means "you cleared the last sheet" and sends the player back to level 1.
   // A draft is not part of the campaign: its finish is simply the way out, and GE.load(0) would move
@@ -1144,7 +1234,7 @@
       .filter(b => !b.hidden && b.getClientRects().length > 0).map(b => b.id || b.className),
     get streak() { return streak; }, checkStreak, refreshSurvey, renderSurvey,
     get survey() { return surveyWeek(); }, weekDates: () => weekDates(GE.now()), isoWeek: () => isoWeek(GE.now()),
-    contractsLocked, chooseContract, preselectContract,
+    contractsLocked, chooseContract, preselectContract, demoContract,
     disclosure, REVEALS, takeReveal, refreshStatus, refreshDraft, openDraft, refreshLegendRows,
     draftRow: () => ({ hidden: $('btnDaily').hidden, k: $('fDailyK').textContent, v: $('fDaily').innerText.replace(/\s+/g, ' ').trim() }),
     status: () => ({ hidden: $('menuStatus').hidden, tag: $('menuStatus').tagName, text: $('menuStatus').innerText.replace(/\s+/g, ' ').trim() }),
