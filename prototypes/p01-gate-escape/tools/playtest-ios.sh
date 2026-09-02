@@ -1,9 +1,10 @@
 #!/bin/bash
 # iOS playtest: rebuild the app web bundle, sync it into the Xcode project, and
-# run the AppUITests autoplay bot on a simulator. The bot beats all 30 levels
-# through the real engine inside iOS WebKit and exercises fail/rescue; the
+# run the AppUITests autoplay bot on a simulator. The bot beats all 40 levels
+# through the real engine inside iOS WebKit — Sheet 4's approval chain included,
+# so the order rule is certified on-device too — and exercises fail/rescue; the
 # XCUITest asserts the verdict and attaches screenshots, which this script
-# exports to shots/ios/ (L1, L12, L22, their win screens, fail-offer, final).
+# exports to shots/ios/ (L1, L12, L22, L31, their win screens, fail-offer, final).
 #
 #   tools/playtest-ios.sh                 # iPhone 17 simulator
 #   SIM="iPhone 16e" tools/playtest-ios.sh

@@ -3,10 +3,11 @@
 Drag colored blocks out of the board through gates of the same color. Clear
 the board within the move limit.
 
-**Play it:** open `index.html` in any browser (no build, no dependencies,
-~35 KB total). Works with touch and mouse. `game.js` is the engine; `menu.js`
-is every screen around it (title block, levels, legend, pause) and talks to the
-engine only via `window.GE` + `ge:load`/`ge:win`/`ge:finished` events.
+**Play it:** open `index.html` in any browser (no build, no dependencies, ~283 KB of
+source — of which `dailies.js` is 19 KB of precomputed daily boards). Works with touch and
+mouse. `game.js` is the engine; `menu.js` is every screen around it (title block, levels,
+legend, pause) and talks to the engine only via `window.GE` +
+`ge:load`/`ge:win`/`ge:fail`/`ge:finished` events.
 
 ## Design intent
 
@@ -50,6 +51,23 @@ Built to the hybrid-casual grammar:
   without ever settling into one rhythm. The shape is legible before a drag —
   relief beats are roomy 7×9s or short-handed boards, rises are tight 6×8s —
   and the bot asserts the profile so it cannot drift back to flat.
+- **The approval chain (Sheet 4, L31–40)** — the first mechanic extension: a block may carry
+  a revision-stamp number (`blocks[i].seq`) and a numbered block may leave **only while its
+  number is the lowest still on the board**. The rule is **derived**, not stored
+  (`seqOk(bi) = !seq || seq === min(remaining seqs)`), so undo is correct for free and the
+  solver's state space is unchanged. Unchained blocks are never gated and **movement is never
+  gated**: an out-of-turn block still slides anywhere, it simply parks flush against its gate
+  instead of leaving — and the drag is charged. Three shape channels carry the order and no
+  colour: the solid stamp with a chevron (next up), the dashed on-deck ring, the `NEXT ▸`
+  HUD chip, plus a one-shot 1→2→3 polyline on load so the whole order is legible before the
+  first move. `exitGateAt` stays purely geometric; the single player-facing gate is in
+  `stepToward`, and `findRoute`/`solveFrom` respect the order, so the hint, the opening ghost
+  route and the fail card's rescue preview can never propose an illegal exit. The generator
+  solves every chained board twice — bare and numbered — and ships it only if the numbers are
+  worth a stated minimum of extra drags (`sequence` / `seqCost` in the CURVE), so a chain is
+  never decoration; L31 is the one exception at `seqCost 0`, the board that teaches the rule.
+  Chains are capped at 4 because the in-engine hint solver has to keep answering, and the
+  generator measures that cost before shipping a board.
 - **Moves are the score**: limit = par+4 on L1–4, par+3 on L5–10 (the rest of
   Sheet 1 — the stone and the first deadlock debut there), par+2 from L11 to
   L40 and never looser again. Relief after the spike is now carried by the
@@ -215,17 +233,43 @@ Built to the hybrid-casual grammar:
 
 ## Toolchain (the moat)
 
-- `tools/generate.mjs` — level generator + A* solver. Guarantees solvability,
-  computes par (minimum drags), grades difficulty by par-vs-block-count, and
-  emits `levels.js` for the whole 30-level curve in one run.
+- `tools/gen-core.mjs` — the generator/solver core: board generation, the A* solver, the
+  exit rule and the approval-chain rule live here ONCE, tool-side, and `generate.mjs` and
+  `solve-paths.mjs` are both consumers. The playtest bot's parity check pins it against the
+  engine's own rule on 200 random positions.
+- `tools/generate.mjs` — level generator + A* solver on top of gen-core. Guarantees
+  solvability, computes par (minimum drags), grades difficulty by par-vs-block-count,
+  enforces the sawtooth and the chain-cost floor, and emits `levels.js` for the whole
+  40-level curve in one run.
 - `tools/solve-paths.mjs` — re-solves each level recording the optimal drag
   sequence (`tools/solutions.json`).
+- `tools/generate-dailies.mjs` — emits a year of date-seeded Daily Draft boards as compact
+  row strings (`dailies.js`) plus `tools/daily-solutions.json`; the table is **append-only**,
+  enforced by the SHA-256 prefix hash in `tools/dailies.lock` which the bot re-checks.
+- `tools/build-single.mjs` / `tools/build-itch.mjs` / `tools/build-app.mjs` — the three
+  bundles (one-file HTML for artifacts/portals, the itch zip, and `app/www/` = the PWA and
+  Capacitor webDir). The playtest bot's `bundles fresh` check is a byte-exact comparison, so
+  any source edit means rebuilding all three BEFORE the bot runs.
+- `tools/reviewer-adapter.mjs` — what the reviewer/breaker personas see and can do
+  (`tools/reviewer.mjs` at the repo root drives it). Its rules text is the game's own
+  contract in prose, and its solver obeys the approval chain, so a persona's hint is never
+  an illegal exit.
 - `tools/playtest-ios.sh` — builds the iOS app, runs the in-app bot (`tools/bot-runtime.js`)
   through XCUITest on a simulator, exports screenshots to `shots/ios/`.
-- `tools/feature-tour.mjs` — the feature-tour video (`tour`): from the repo root run
+- `tools/feature-tour.mjs` — the feature-tour video: from the repo root run
   `node prototypes/p01-gate-escape/tools/feature-tour.mjs` to re-render
-  `marketing/feature-tour.webm` + `.mp4` (one continuous ~2:40 scripted tour of every
-  feature at iPhone size, chaptered captions) and `marketing/tour-stills/`.
+  `marketing/videos/feature-tour.webm` + `.mp4` (one continuous ~3:20 scripted tour of every
+  feature at iPhone size in 17 captioned chapters — the bare FTUE index, the Daily Draft and
+  its field report, the Field Survey sheet, the four-sheet index and the Sheet 4 approval
+  chain) and `marketing/tour-stills/`.
+- `tools/promo-video.mjs` — three narrated portrait cuts (30 s / ~60 s / ~2 min) filmed
+  through the same rig. Narration is cached in `marketing/narration/`; a line whose mp3 is
+  missing is **not** fatal — that beat runs on its burned caption and the run prints the
+  outstanding lines. The opening seconds are the store creative: a corner-turning one-drag
+  route, then a win card stating PAR with the no-clock promise beside it.
+- `tools/capture-vertical.mjs` — native 1080×1920 captures for TikTok creatives (real game
+  audio tapped in-page, safe-zone layout, marks written to `marketing/vertical/index.json`);
+  `tools/tiktok-batch.mjs` cuts batches from them.
 - `tools/playtest.mjs` — headless-Chromium bot that beats every level through
   the real game engine using player-identical physics, verifies move limits
   and the fail/rescue flow, and captures store screenshots into `shots/`.
@@ -249,6 +293,9 @@ Built to the hybrid-casual grammar:
 - [x] Design-playbook pass (`reviews/p01-par-20260831-0056-s1/design-report.md`): feel beats (press dip / settle overshoot / unified button depth / audio pitch drift + 3 exit variants), canvas `prefers-reduced-motion` + pause-card Motion toggle, three deterministic daily quests replacing the single daily goal, streak freezes (banked by all-quests-done, auto-consumed with a calm notice) + "N of last 7 days" marks, Field Survey weekly ladder (3/7/12/20 stamps, surveyor's mark) — all three of those were merged into ONE weekly Field Survey sheet on 2026-09-02, see below — lives system (default ON, flag-gated: L1–5 free, Retry-after-fail costs one from L6, rescue preserves, 25-min anchor refill, calm empty-state card), colorblind/grayscale verification stills (`tools/capture-accessibility.mjs`)
 - [x] Field Survey merge (2026-09-02 research round, `reviews/p01-research-round/r2-report.md`): the three daily quests, the streak card and the weekly ladder became ONE weekly sheet (`ge_survey`) — a 7-day spine, two contracts chosen from four the ISO week offers (free to swap until one earns progress), the 3/7/12/20 marks and the week's seal; streak freezes renamed weather delays and stamped on the spine; `ge_streak` byte-identical, `ge_quests` / `ge_ladder` migrated once and removed
 - [x] Daily Draft (2026-09-02 research round, `reviews/p01-research-round/r3-report.md` engine + data, `r4-report.md` UI): a year of precomputed solver-verified boards (`dailies.js`, append-only, lock-pinned), a virtual level index outside the campaign, one recorded attempt a day that closes on the first resolution, the sheet-index row (READY → the day's result → practice), the FIELD REPORT result card and its spoiler-free share text (share → clipboard → selectable text)
+- [x] Sequenced exits — the approval chain (2026-09-02 research round, `reviews/p01-research-round/r5-report.md` engine + rendering, `r6-report.md` generator + Sheet 4): the derived order rule with three shape channels and the 1→2→3 overview, hint/solver/rescue-preview all order-aware, a rule-parity oracle against `gen-core`, then ten appended chained levels (L31–40) whose numbers are proven worth 1–3 extra drags each (L31 teaches at cost 0), a fourth sheet in the index and the approval stamp as its certification reward
+- [x] The sawtooth (2026-09-02 research round, `reviews/p01-research-round/r7-report.md`): L16–30 reshaped into a real curve (L20 the exam, L21–22 relief, a second rise at 23–25 cresting below it), move limits tightened to par+2 from Sheet 2 on, 2★ tightened to par+1 — with a bot check that asserts the profile so it cannot flatten back out
+- [x] Collateral + iOS pass (2026-09-02 research round, `reviews/p01-research-round/r8-report.md`): reviewer-adapter rules and solver made chain-aware, feature tour re-scripted to 17 chapters, promo cuts re-cut around the new meta with the store-creative opening, verticals re-rendered, README/brief/store copy brought to post-round truth, `cap sync ios` and the simulator bot
 - [x] Staged FTUE disclosure (2026-09-02 research round, `reviews/p01-research-round/r4-report.md`): the sheet index opens bare and each meta system arrives on the win that earns it (certification at 2 cleared, the Daily Draft at 3, the Field Survey at 5 with one contract preselected), announced by one quiet `NEW` row on the win card; a passive landing status line from the first return day; a one-time rescue teach on the first fail
 - [ ] Web-portal upload (itch.io first — zip + copy ready, needs the account)
 - [ ] Beacon deployment (Cloudflare account; commands in `tools/beacon/README.md`), then paste the worker URL into `index.html`

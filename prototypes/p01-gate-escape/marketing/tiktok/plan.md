@@ -226,7 +226,8 @@ generate the evidence a publisher pays for.
   Gate Escape twist ("ride trends fast with your own twist").
 - **Three Pillars of Viral Content** (Relatability, Relevance, Shareability) — the
   relatability hooks (H18–H25), the challenge/shareability hooks (H10–H17); relevance
-  through the daily-quest/streak moments tied to "today".
+  through the moments tied to "today" — the Daily Draft (the same board for everyone that
+  day) and the Field Survey's day stamp.
 - **Top 5 Hacks to Get More Shares** (teach, laugh, ask, challenge a belief, shock) — the
   "ask a question" caption rule and the challenge-format concept family.
 - **4 Thumbnail Tips** (Stop the Scroll, Busy Is Bad, Less Text, Increase Curiosity)

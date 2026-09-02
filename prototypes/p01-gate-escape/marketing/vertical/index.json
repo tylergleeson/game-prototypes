@@ -3,30 +3,30 @@
   "captures": {
     "v-fail-retry": {
       "file": "marketing/vertical/v-fail-retry.mp4",
-      "seconds": 38.47,
+      "seconds": 38.73,
       "marks": {
         "board": 1.11,
-        "fail": 16.3,
-        "retry": 23.55,
-        "win": 35.74
+        "fail": 16.31,
+        "retry": 23.56,
+        "win": 35.99
       },
       "stills": [
         "v-fail-retry-fail-sheet.png"
       ],
-      "note": "L6: 5 of par 6 played, 4 moves burned with real drags → fail sheet (last block one drag from its gate) → Retry → the reference line → 1-star clear.",
+      "note": "L6: 5 of par 6 played, 4 moves burned with real drags → fail sheet (last block one drag from its gate) → Retry (costs nothing — lives are off by default) → the reference line → 1-star clear.",
       "vp": "540x960@2",
       "sync": {
         "flash": 0.72,
-        "beep": 0.74
+        "beep": 0.735
       }
     },
     "v-solve-l14": {
       "file": "marketing/vertical/v-solve-l14.mp4",
-      "seconds": 18.52,
+      "seconds": 18.59,
       "marks": {
-        "board": 1.08,
-        "solve": 4.81,
-        "win": 15.62
+        "board": 1.1,
+        "solve": 4.85,
+        "win": 15.68
       },
       "stills": [
         "v-solve-l14-board.png"
@@ -35,35 +35,35 @@
       "vp": "540x960@2",
       "sync": {
         "flash": 0.72,
-        "beep": 0.719
+        "beep": 0.735
       }
     },
     "v-asmr-l8": {
       "file": "marketing/vertical/v-asmr-l8.mp4",
-      "seconds": 15.19,
+      "seconds": 15.17,
       "marks": {
-        "board": 1.18,
-        "win": 9.97,
-        "chest": 10.75
+        "board": 1.21,
+        "win": 9.99,
+        "cert": 10.77
       },
       "stills": [
-        "v-asmr-l8-chest.png"
+        "v-asmr-l8-cert.png"
       ],
-      "note": "L8: six par drags in one take with the engine's exit whoosh chain, stars, then the 24★ chest (Sepia draft) — audio is the game's generated synth.",
+      "note": "L8: six par drags in one take with the engine's exit whoosh chain, stars, then the 24★ sheet certification (Sepia draft) — audio is the game's generated synth.",
       "vp": "540x960@2",
       "sync": {
         "flash": 0.72,
-        "beep": 0.719
+        "beep": 0.74
       }
     },
     "v-legend-l3": {
       "file": "marketing/vertical/v-legend-l3.mp4",
-      "seconds": 16.91,
+      "seconds": 17.05,
       "marks": {
         "title": 0.15,
-        "legend": 1.01,
-        "play": 6.94,
-        "win": 14.34
+        "legend": 1.02,
+        "play": 7.12,
+        "win": 14.52
       },
       "stills": [
         "v-legend-l3-legend.png"
@@ -72,21 +72,21 @@
       "vp": "540x960@2",
       "sync": {
         "flash": 0.72,
-        "beep": 0.713
+        "beep": 0.74
       }
     },
     "v-day1": {
       "file": "marketing/vertical/v-day1.mp4",
-      "seconds": 8.18,
+      "seconds": 9.03,
       "marks": {
         "title": 0.15,
-        "play": 3.5,
-        "win": 5.82
+        "play": 4.29,
+        "win": 6.68
       },
       "stills": [
         "v-day1-title.png"
       ],
-      "note": "Fresh save: title block (Level 1/30, Stars 0/90, no streak) → Play → L1 ghost route → one drag out → 3-star card.",
+      "note": "Fresh save: title block (Level 1/40, Stars 0/120, no streak, no meta rows — staged disclosure) → Play → L1 ghost route → one drag out → 3-star card.",
       "vp": "540x960@2",
       "sync": {
         "flash": 0.72,
@@ -95,20 +95,40 @@
     },
     "v-day7": {
       "file": "marketing/vertical/v-day7.mp4",
-      "seconds": 11.95,
+      "seconds": 12.29,
       "marks": {
         "title": 0.15,
-        "play": 6.08,
-        "played": 10.4
+        "play": 6.4,
+        "played": 10.73
       },
       "stills": [
         "v-day7-title.png"
       ],
-      "note": "Save built by the engine itself: 12 levels cleared over 7 simulated consecutive days (GE.now), so the streak, quests, survey and 24★ chest are the engine's own bookkeeping; then title block → Play → L13 first two real drags.",
+      "note": "Save built by the engine itself: 12 levels cleared over 7 simulated consecutive days (GE.now), so the streak, the Field Survey sheet and the 24★ certification are the engine's own bookkeeping; then title block → Play → L13 first two real drags.",
       "vp": "540x960@2",
       "sync": {
         "flash": 0.72,
-        "beep": 0.724
+        "beep": 0.719
+      }
+    },
+    "v-chain-l31": {
+      "file": "marketing/vertical/v-chain-l31.mp4",
+      "seconds": 20.65,
+      "marks": {
+        "board": 1.19,
+        "park": 5.5,
+        "solve": 9.66,
+        "win": 17.69
+      },
+      "stills": [
+        "v-chain-l31-chain-intro.png",
+        "v-chain-l31-parked.png"
+      ],
+      "note": "L31, the approval chain: the 1→2→3 overview on load → an out-of-turn numbered block dragged to its own open gate, where it PARKS instead of leaving (one drag charged, the NEXT chip unchanged) → undo → the chain cleared in order at par.",
+      "vp": "540x960@2",
+      "sync": {
+        "flash": 0.72,
+        "beep": 0.729
       }
     }
   }

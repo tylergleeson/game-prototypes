@@ -23,21 +23,28 @@ route — around corners, past stones, through the gap that only just opened —
 a single move. Par is tight, the board is small, and the drawing isn't approved
 until every block is out.
 
-Thirty hand-tuned blueprint sheets, difficulty rising one idea at a time:
-corners, ordering, stones, corked boards where a block has to step aside and
-come back, new shapes, four colours — and a proper spike in the twenties.
+Forty hand-tuned blueprint levels across four sheets, difficulty rising one idea at a
+time: corners, ordering, stones, corked boards where a block has to step aside and come
+back, new shapes, four colours — a proper spike in the twenties — and then Sheet 4, where
+some blocks carry a revision stamp and have to leave in numbered order.
 
-- **One drag = one move.** Plan complete routes, not steps. ★★★ at par.
+- **One drag = one move.** Plan complete routes, not steps. ★★★ at par, ★★ one over.
+- **No timer anywhere.** Thinking is free; only drags are spent.
 - **Every level machine-verified solvable** — when you're stuck, that's the puzzle, not a bug.
+- **The approval chain** (Sheet 4): numbered blocks leave in order. Out of turn, a block
+  still slides anywhere — it just parks at its gate instead of leaving.
 - **Undo, hints, and a rescue** when you're one move short. (In this prototype
   the ad slots are free placeholders — nothing is sold, nothing is gated.)
 - **A drafting-table world**: cyanotype blueprint art, stamped gates, generated
   audio, colour-blind-safe glyphs on every block and gate.
-- **Daily goal and streaks** — no repair to buy, no card at the moment of loss; a
-  missed day just starts the count again.
-- **Sheet certification**: 24★ on a sheet certifies it and unlocks a paper skin
-  (Sepia draft, Night vellum, Whiteprint). Cosmetic only.
-- Works with touch or mouse. ~40 KB, loads instantly, fully offline.
+- **A daily draft**: one board a day, the same board for every player, with its own par —
+  and a spoiler-free field report you can share (the numbers, never the route).
+- **A field survey**, one sheet a week: a day stamp for every day you clear a level, two
+  contracts picked from the four the week offers, point marks along the way. No repair to
+  buy, no card at the moment of loss; a missed day just starts the count again.
+- **Sheet certification**: 24★ on a sheet certifies it. Sheets 1–3 unlock a paper skin
+  (Sepia draft, Night vellum, Whiteprint); Sheet 4 earns the approval stamp. Cosmetic only.
+- Works with touch or mouse. ~280 KB in one file, loads instantly, fully offline.
 
 *This is a prototype in live testing — telemetry is anonymous (no accounts, no
 personal data) and is only used to tune the difficulty curve.*

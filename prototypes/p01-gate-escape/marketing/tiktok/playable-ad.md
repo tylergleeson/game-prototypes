@@ -16,7 +16,7 @@ validator in TikTok Ads Manager → Creative → Playable before submission) | o
 | Audio only after a user gesture; must respect the network's mute | `AudioContext` created lazily, `resume()` on gesture; no autoplay | add the network's volume hook (below) |
 | Both orientations / any viewport | responsive canvas layout (verified 412×732 and 960×720 for itch) | none |
 | A clear CTA that calls the network's open-store hook | none — the game has no store CTA | **add**: CTA overlay + hook call |
-| Short guided experience (15–30 s) ending in the CTA | the game opens on the title block and runs 30 levels | **add**: auto-start on L1, cap at L3, timed CTA |
+| Short guided experience (15–30 s) ending in the CTA | the game opens on the title block and runs 40 levels | **add**: auto-start on L1, cap at L3, timed CTA |
 | No ad-in-ad surfaces | hint/rescue show an "AD · REWARDED" placeholder card | **remove** in the slice (grant instantly or hide the buttons) |
 | No copy that misrepresents gameplay (Apple 2.3.1 / ASA) | the slice *is* the game | none |
 

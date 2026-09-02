@@ -2,13 +2,17 @@
 
 Conventions: 9:16, 1080×1920, 9–15 s. Timings are from the footage recipes in
 `tools/showcase.json` (m1–m4), the promo edit (`reviews/.../promo-report.md`, "promo
-main" timestamps) and the feature tour chapters (`tour-report.md`, t01–t14). Hook IDs are
-from `hooks.md`. Narration lines N1–N9 are the cached ElevenLabs lines in
-`marketing/narration/` (N1 `01-hook` "One drag. One move. Any route." · N2 `02-title` ·
-N3 `03-hint` "Ghost routes show the way in. A hint when you're stuck. A rescue when you're
-one drag from freedom." · N4 `04-cert` "Earn stars. Certify the sheet. Change the paper." ·
-N5 `05-meta` · N6 `06-tag` "Gate Escape. Draw your way out." · N7 `07-legend` · N8
-`08-survey` · N9 `09-lives`). "Trending-sound placeholder" = the founder picks a current
+main" timestamps) and the feature tour chapters (t01–t17 as printed by
+`tools/feature-tour.mjs` — the tour was re-scripted 2026-09-02 for the 40-level game, so the
+old tour-report numbering no longer applies). Hook IDs are from `hooks.md`.
+Narration: only FOUR lines are cached and usable — N1 `01-hook` "One drag. One move. Any
+route.", N2 `02-title`, N3 `03-hint` "Ghost routes show the way in…", N6 `06-tag` "Gate
+Escape. Draw your way out.", plus N7 `07-legend` and N8 `08-survey`. **N4 `04-cert`,
+N5 `05-week` and N9 `10-chain` are NOT recorded yet** — any concept citing them must run on
+its burned caption until a narration session records them (`tools/promo-video.mjs` prints
+the outstanding list on every run). The old N4 `04-chest`, N5 `05-meta` ("Daily quests…
+Thirty levels") and `09-lives` mp3s are RETIRED: they describe systems the game no longer
+has and must never be used. "Trending-sound placeholder" = the founder picks a current
 sound **only if** the account's sound library allows it and it is used purely as a bed
 under our own footage; caption must credit it; never a third-party clip. Default sound is
 our bed + narration. Every concept ends on the CTA card (promo end card, 1.6 s) with the
@@ -59,8 +63,10 @@ from freedom); formats marked ◎ are UGC concepts the founder films on a phone.
   (36.1–38.6) → CTA.
 - **Sound:** N4 at 1.2, N6 at CTA; bed.
 - **Honesty:** caption states "cosmetic paper skins; nothing is locked behind certification".
-- **Stale footage (2026-09-02):** the promo cut and `m4-chest.webm` still show the old
-  treasure-chest glyph and "Chest opened" copy. Re-shoot before this concept runs again.
+- **Footage status (2026-09-02, pass 8):** the promo cuts were re-rendered against the
+  current build, so their certification beat is correct ("Sheet certified · Sepia draft ·
+  Try it"). `m4-chest.webm` was NOT re-shot and still shows the old treasure-chest glyph —
+  cite the promo cut or the feature tour (t11) instead until `tools/capture.mjs` is re-run.
 
 ## 05 ★ Rescued with 3 moves. Still failed. (batch-01 v05)
 - **Format:** raw gameplay, honest fail · **Phase:** A/B/C · **Hook:** H18 (Context)
@@ -174,9 +180,9 @@ from freedom); formats marked ◎ are UGC concepts the founder films on a phone.
 
 ## 17 What happens at 24 stars?
 - **Format:** curiosity / reveal · **Phase:** A/B/C · **Hook:** H08 (Question)
-- **Shots:** 0–3 level select, sheet 1 header "★ 23/30 · 1 to certify" (tour t12 or
-  re-capture seeded 23★) → 3–7 the crossing win (`m4-chest.webm` 8.5–12.0 — STALE, shows
-  the old chest glyph; re-capture) → 7–11 the stamp lands, sparks, "Sepia draft · Try it"
+- **Shots:** 0–3 level select, sheet 1 header "★ 23/30 · 1 to certify" (tour t14 or
+  re-capture seeded 23★) → 3–7 the crossing win (feature tour t11, or `promo.mp4` 31.0–36.5;
+  `m4-chest.webm` is STALE — it still shows the old chest glyph) → 7–11 the stamp lands, sparks, "Sepia draft · Try it"
   (12.0–14.8) → 11–13 Try it tapped, the sheet turns
   sepia (promo 36.1 region for Whiteprint; re-capture for Sepia) → CTA.
 - **Sound:** N4 at 3.0; N6 at CTA.

@@ -21,6 +21,10 @@ KEY RULE — ONE DRAG = ONE MOVE, no matter how far the block travels: while the
 block follows it cell by cell, around corners too, so a whole route (e.g. right, then down, then out
 the gate) is a single move. Par and the move limit are computed on that rule, so plan complete
 routes rather than single steps. Clear all blocks within the move limit. Losing shows a rescue offer (+3 moves, once per attempt — a Restart is a fresh attempt).
+THERE IS NO CLOCK ANYWHERE — no timer, no countdown, no move regenerating in real time. Thinking is free; only drags are spent.
+STARS (tightened 2026-09-02): 3 at par, 2 at par+1, 1 beyond. MOVE LIMITS: par+4 on L1-4, par+3 for the rest of Sheet 1
+(L5-10), and par+2 from L11 to L40 and never looser again — so from Sheet 2 on, a 1-star clear IS the rescued clear and the
+fail surface is a normal part of play, not an edge case. FORTY levels in four sheets of ten; 120 stars in total.
 Both the rescue and the HUD hint are rewarded-ad slots: tapping one shows a ~1.2 s placeholder "ad" card first, then the grant lands (free in the prototype).
 The game opens on a calm landing (the drawing's title block): the title treatment, one static stamp line (level / stars / streak) and exactly three
 taps — the primary CTA (Play / Continue - Level N / Resume level N), Levels and How to play. Everything else (stars, the Field survey,
@@ -66,13 +70,15 @@ that rewrites nothing. The field report is five lines — a par bar, stars, move
 rescue was taken — and deliberately contains NO route or grid: every player is on the same board, so a picture of the line would be a walkthrough.
 The card shows that exact text in a block above the Share button (what you send is what you see); sharing tries navigator.share, then the
 clipboard, then hands the text over in a selectable box. Nothing about the draft is ever sold, and a skipped day is simply a day that went by.
-STAGED DISCLOSURE (FTUE) — the sheet index opens BARE on a new save: level, stars, the thirty tiles, sound. Each meta system arrives on the win
+STAGED DISCLOSURE (FTUE) — the sheet index opens BARE on a new save: level, stars, the forty tiles, sound. Each meta system arrives on the win
 that earns it — sheet certification (and the paper picker) after 2 levels cleared, the Daily Draft after 3, the Field Survey after 5 (revealed
 with the easiest of the week's four contracts ALREADY taken, as a worked example; swapping stays free until progress). Each reveal is announced
 by ONE quiet stamped NEW row on the win card, once ever. The gate is derived from cleared levels; only the first-clear date and which reveals
 have played are stored. From the first RETURN day the landing gains a passive status line (a div, never a button — the landing is exactly three
 taps) of at most two finished facts, e.g. "Today's draft is filed · 3 of 7 survey days"; it may never carry a countdown, a CTA or a loss.
 The first time a player runs out of moves the fail sheet gains one calm line naming what the rescue and Retry do — shown once, ever.
+NOTE FOR A JUMPED-IN SESSION: starting at level N seeds N-1 clears, and the ladder is derived from that count — so a session
+started at L3 or L4 genuinely opens on a bare sheet index with no survey row. That is the real FTUE, not a missing feature.
 Lives (DEFAULT OFF — flag-gated via ?lives=1 / ge_flags / GE.livesEnabled): the shipped game has NO energy gate; there are no hearts anywhere and a
 failed level can be retried forever. Everything in this paragraph therefore describes what ?lives=1 turns on, and is not what a normal session shows:
 five hearts, HUD top-left and sheet index. Levels 1–5 NEVER cost a life.
@@ -98,6 +104,7 @@ top-left origin; its cells are listed absolute.`,
     btnFreezeOk: 'weather-delay notice: Continue — dismiss the "Weather delay used — survey day covered" notice',
     btnSurvey: "sheet index: Field survey row — open this week's sheet (day spine, contracts, marks, seal)",
     btnSurveyClose: 'survey sheet: Close',
+    btnAppr: 'sheet index: the Stamp shelf beside the paper picker — a tap names the approval stamp, or (while pending) the sheet that pays it. There is nothing to select: the stamp is on the win card or it is not',
     btnDaily: "sheet index: Daily draft row — loads today's board while the day is READY; once the record has closed it opens the field report card instead (hidden until 3 levels are cleared)",
     btnDraftShare: 'field report card: Share field report (navigator.share → clipboard → a selectable text box; the string is exactly what the card shows)',
     btnDraftPractice: "field report card: Play again · not recorded — reload today's board as practice",
@@ -105,6 +112,9 @@ top-left origin; its cells are listed absolute.`,
     btnWinShare: 'win card (recorded daily draft only): Share field report',
     btnLifeRefill: 'out-of-lives card: +1 life (rewarded-ad placeholder; offered once per appearance of the card, never past 5)',
     btnLivesHome: 'out-of-lives card: Back to menu (Escape does the same; browsing is never blocked)',
+    // pseudo-buttons (not element ids): the level tiles and the survey's contract rows
+    'level:N': 'levels: tap the tile for level N (1-40) — use the literal form "level:12"',
+    'contract:ID': 'survey sheet: take or drop the offered contract with that id (e.g. "contract:par8"; ids come from summarize().survey.contracts) — refused once the pair is locked',
   },
 
   async ready(page) {
@@ -155,6 +165,8 @@ top-left origin; its cells are listed absolute.`,
         failTeach: vis('failModal') && !document.getElementById('failTeach').hidden ? document.getElementById('failTeach').textContent : null,
         surveySheet: vis('surveyModal') ? document.querySelector('#surveyModal .card').innerText.replace(/\s+/g, ' ').trim() : null,
         hint: GE.hint ? { block: GE.hint.bi, path: GE.hint.path, exit: GE.hint.side || null } : null,
+        seq: GE.seqInfo ? GE.seqInfo() : null,
+        hudSeq: (() => { const el = document.getElementById('hudSeq'); return el && !el.hidden ? el.textContent.replace(/\s+/g, ' ').trim() : null; })(),
         paper: GE.theme, skins: (window.GE_MENU && window.GE_MENU.prog.skins) || [],
         certRow: vis('winCert') ? document.querySelector('#winCert').innerText.replace(/\s+/g, ' ').trim() : null,
         winText: vis('winModal') ? document.querySelector('#winModal .card').innerText.replace(/\s+/g, ' ').trim() : null,
@@ -174,8 +186,12 @@ top-left origin; its cells are listed absolute.`,
       blocks: L.blocks.map((b, i) => ({
         id: i, color: COLOR[b.color], escaped: !raw.pos[i],
         origin: raw.pos[i], cells: raw.pos[i] ? b.cells.map(([cx, cy]) => [raw.pos[i][0] + cx, raw.pos[i][1] + cy]) : null,
+        // the approval chain (Sheet 4): a numbered block may EXIT only while it is next up. It can always MOVE.
+        ...(b.seq ? { seq: b.seq, mayExitNow: !!(raw.seq && b.seq === raw.seq.next) } : {}),
       })),
       gates: L.gates.map(g => ({ color: COLOR[g.color], side: g.side, lanes: `${g.start}..${g.start + g.len - 1}` })),
+      // null on an unchained board; on Sheet 4, `next` is the only number allowed out right now
+      chain: raw.seq && raw.seq.chained ? { next: raw.seq.next, order: raw.seq.chain, hudChip: raw.hudSeq } : null,
       winCard: raw.winText, failCard: raw.failText, rescueAvailable: raw.screens.fail && !raw.rescueHidden, hintShown: raw.hint,
       paper: raw.paper, skinsUnlocked: raw.skins, sheetCertified: raw.certRow,
       streak: raw.streak ? { days: raw.streak.len, best: raw.streak.best, weekMarks: (raw.streak.marks || []).length, weatherDelays: raw.streak.freezes || 0 } : null,
@@ -204,6 +220,15 @@ top-left origin; its cells are listed absolute.`,
         const n = parseInt(id.slice(6), 10);
         await page.click(`#levelGrid .tile[data-level="${n}"]`);
         return `tapped level tile ${n}`;
+      }
+      // the survey's contract rows are data-bound buttons, not fixed ids
+      if (id.startsWith('contract:')) {
+        const cid = id.slice(9);
+        const el = page.locator(`#surveyContracts button[data-contract="${cid}"]`);
+        if (!(await el.count()) || !(await el.first().isVisible())) return `error: contract "${cid}" is not on the sheet right now (open the Field survey first; ids come from summarize().survey.contracts)`;
+        if (await el.first().isDisabled()) return `tapped contract ${cid} — the week's pair is SET (a chosen contract has earned progress), so it is disabled`;
+        await el.first().click();
+        return `tapped contract ${cid}`;
       }
       if (!this.buttons[id]) return `error: unknown button "${id}"`;
       const el = page.locator('#' + id);
@@ -256,13 +281,24 @@ top-left origin; its cells are listed absolute.`,
     const mv = solveNext(raw);
     if (!mv) return 'The solver found no solution from this position within a few extra moves — consider restarting the level.';
     const b = raw.L.blocks[mv.bi];
-    return `Designer's reference solution from here: drag block #${mv.bi} (${COLOR[b.color]})` +
+    const chain = raw.seq && raw.seq.chained ? ` (the approval chain is on: stamp ${raw.seq.next} is next out)` : '';
+    return `Designer's reference solution from here${chain}: drag block #${mv.bi} (${COLOR[b.color]}${b.seq ? `, stamp ${b.seq}` : ''})` +
       (mv.side ? ` and push it out through the ${mv.side} gate` : ` to origin (${mv.to[0]},${mv.to[1]})`) +
       `. ${mv.remaining} drag(s) remain in that line.`;
   },
 };
 
 // ---------- board logic (mirrors the engine) ----------
+// The approval chain, derived exactly as game.js derives it (`seqOkIn`): a numbered block may
+// EXIT only while its number is the lowest still on the board. It is computed from the
+// hypothetical position, not the live one, so the solver stays correct several plies deep.
+function seqOkIn(raw, ps, bi) {
+  const s = raw.L.blocks[bi].seq;
+  if (!s) return true;
+  let m = Infinity;
+  for (let i = 0; i < raw.L.blocks.length; i++) { const t = raw.L.blocks[i].seq; if (ps[i] && t && t < m) m = t; }
+  return s === m;
+}
 function occ(raw, skip) {
   const L = raw.L, g = Array.from({ length: L.h }, () => Array(L.w).fill(-1));
   for (const [x, y] of L.stones) g[y][x] = -2;
@@ -332,6 +368,11 @@ async function dragBlock(page, raw, bi, to, exitSide) {
     waypoints = R.path(t).slice(1);
   }
   let exitFrom = null;
+  if (exitSide && !seqOkIn(raw, raw.pos, bi)) {
+    const up = raw.seq && raw.seq.next;
+    return `error: block #${bi} carries revision stamp ${L.blocks[bi].seq} and stamp ${up} is next — it may MOVE anywhere, but it cannot leave yet. ` +
+      `Drag it without an exit side to reposition it, or clear the lower numbers first.`;
+  }
   if (exitSide) {
     const start = to || raw.pos[bi];
     // nearest reachable spot (from where the block will be) that can exit that side
@@ -405,7 +446,8 @@ function solveNext(raw) {
           const nf = ng + np.filter(Boolean).length;
           if (nf <= cap) buckets[nf].push(nk);
         };
-        for (const p of R.order) {
+        // the chain gates the EXIT branch only — an out-of-turn block still repositions freely
+        if (seqOkIn(raw, node.pos, bi)) for (const p of R.order) {
           const side = ['top', 'bottom', 'left', 'right'].find(s => canExit(snap, g, bi, p[0], p[1], s));
           if (side) { const np = node.pos.slice(); np[bi] = null; push(np, { bi, to: p, side }); break; }
         }

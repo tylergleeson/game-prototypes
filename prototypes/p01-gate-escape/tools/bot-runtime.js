@@ -10,7 +10,7 @@
    window.GE_BOT_SOLUTIONS. */
 (function () {
   const SOLUTIONS = window.GE_BOT_SOLUTIONS || [];
-  const SHOT_LEVELS = new Set([1, 12, 22]);
+  const SHOT_LEVELS = new Set([1, 12, 22, 31]); // one per sheet; L31 is the approval chain's teaching board
   const SHOT_HOLD = 1500; // ms the bot pauses so the test can grab a screenshot
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const status = s => { window.__botStatus = s; try { console.log('[bot] ' + s); } catch (e) {} };
@@ -67,10 +67,23 @@
     return { failShown, adShown, rescued: GE.movesLeft === 3 && !visible('failModal'), movesLeft: GE.movesLeft };
   }
 
+  // A launch-time notice (the weather-delay card, when a banked delay covered a missed day)
+  // is the first thing a real player taps through. The bot drives the engine directly, so
+  // without this the card sits over the board for the entire run and lands in every exported
+  // screenshot. Dismissing it is exactly the tap a player makes, not a state being hidden.
+  async function dismissLaunchNotice() {
+    const b = document.getElementById('btnFreezeOk');
+    if (!b || !visible('freezeModal')) return false;
+    b.click();
+    await waitFor(() => !visible('freezeModal'), 1500);
+    return true;
+  }
+
   async function run() {
     if (!window.GE || !SOLUTIONS.length) { status('BOT FAIL no engine or no solutions'); return null; }
     const resumeLevel = GE.level;
-    status('BOT running');
+    const notice = await dismissLaunchNotice();
+    status('BOT running' + (notice ? ' (launch notice dismissed)' : ''));
     const levels = [];
     for (let i = 0; i < SOLUTIONS.length; i++) {
       const r = await playLevel(i);

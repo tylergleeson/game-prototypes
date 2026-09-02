@@ -268,9 +268,9 @@ const tipsSeen = () => localStorage.setItem('ge_tips', JSON.stringify({ corner: 
 // ================================ recipes ================================
 const recipes = {
   // L6 played to four of five out, the last four moves burned for real → the fail sheet ("The last
-  // block is one drag from its gate") → Retry (costs a life, honestly shown) → the par line → win.
+  // block is one drag from its gate") → Retry (free: lives are off by default) → the par line → win.
   'v-fail-retry': {
-    note: 'L6: 5 of par 6 played, 4 moves burned with real drags → fail sheet (last block one drag from its gate) → Retry → the reference line → 1-star clear.',
+    note: 'L6: 5 of par 6 played, 4 moves burned with real drags → fail sheet (last block one drag from its gate) → Retry (costs nothing — lives are off by default) → the reference line → 1-star clear.',
     seed: () => { localStorage.setItem('ge_prog', JSON.stringify({ u: 5, s: [3, 3, 3, 3, 3] })); localStorage.setItem('ge_level', '5'); localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1, twice: 1, undo: 1 })); },
     async run(h) {
       await h.click('#btnPlay'); await h.w(900);
@@ -338,7 +338,7 @@ const recipes = {
   },
   // Day 1: a fresh install — the empty title block, L1's ghost route, one drag out.
   'v-day1': {
-    note: 'Fresh save: title block (Level 1/30, Stars 0/90, no streak) → Play → L1 ghost route → one drag out → 3-star card.',
+    note: 'Fresh save: title block (Level 1/40, Stars 0/120, no streak, no meta rows — staged disclosure) → Play → L1 ghost route → one drag out → 3-star card.',
     async run(h) {
       h.mark('title'); await h.still('title');
       await h.w(3200);
@@ -350,11 +350,57 @@ const recipes = {
       await h.w(2000);
     },
   },
+  // Sheet 4 (L31): the approval chain. The 1→2→3 overview plays on load, then the whole rule in
+  // one gesture — a numbered block that is NOT next up slides the length of the board to its own
+  // open gate and parks flush against it instead of leaving. Undo gives the drag back; the chain
+  // then clears in order. (Nothing is staged: the out-of-turn block is found through GE.route
+  // with {ignoreSeq:true}, which asks the purely geometric question the engine then refuses.)
+  'v-chain-l31': {
+    note: 'L31, the approval chain: the 1→2→3 overview on load → an out-of-turn numbered block dragged to its own open gate, where it PARKS instead of leaving (one drag charged, the NEXT chip unchanged) → undo → the chain cleared in order at par.',
+    seed: () => {
+      const s = []; for (let i = 0; i < 30; i++) s[i] = 3;
+      localStorage.setItem('ge_prog', JSON.stringify({ u: 30, s, skins: ['sepia', 'night', 'white'], seen: [0, 1, 2], rv: ['rescue', 'cert', 'daily', 'survey'], d0: 'pre' }));
+      localStorage.setItem('ge_level', '30');
+      localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1, twice: 1, undo: 1, seq: 1 }));
+    },
+    async run(h) {
+      await h.click('#btnPlay'); await h.w(1000);
+      h.mark('board'); await h.still('chain-intro');
+      await h.w(3200); // the one-shot 1→2→3 polyline, then the stamps and the NEXT chip hold
+      const oot = await h.page.evaluate(() => {
+        const info = window.GE.seqInfo();
+        for (let i = 0; i < info.blocks.length; i++) {
+          const b = info.blocks[i];
+          if (!b.seq || b.out || b.nextUp) continue;
+          const r = window.GE.route(i, { ignoreSeq: true });
+          if (r) return { bi: i, path: r.path.slice(1), side: r.side };
+        }
+        return null;
+      });
+      if (oot) {
+        await h.drag(oot.bi, oot.path, oot.side, 300);
+        h.mark('park');
+        await h.w(2600); await h.still('parked');
+        await h.click('#btnUndo');
+        await h.w(1400);
+      }
+      h.mark('solve');
+      for (let i = 0; i < 8; i++) {
+        const mv = await h.page.evaluate(() => (window.GE.movesLeft > 0 && !window.GE.over ? window.GE.solve(window.GE.pos) : null));
+        if (!mv) break;
+        await h.drag(mv.bi, mv.path.slice(1), mv.side, 240);
+        await h.w(340);
+        if (await h.page.evaluate(() => window.GE.over)) break;
+      }
+      await h.winUp(); h.mark('win');
+      await h.w(2600);
+    },
+  },
   // Day 7: the state the ENGINE builds when a player clears 12 levels over seven consecutive days
   // (GE.now, the engine's own test clock, advances the day between sessions; every clear is the
   // solver's route through GE.dragVia). Filmed on a fresh page with the real clock.
   'v-day7': {
-    note: 'Save built by the engine itself: 12 levels cleared over 7 simulated consecutive days (GE.now), so the streak, quests, survey and 24★ certification are the engine\'s own bookkeeping; then title block → Play → L13 first two real drags.',
+    note: 'Save built by the engine itself: 12 levels cleared over 7 simulated consecutive days (GE.now), so the streak, the Field Survey sheet and the 24★ certification are the engine\'s own bookkeeping; then title block → Play → L13 first two real drags.',
     async prepare(h) {
       const plan = [2, 2, 1, 2, 2, 1, 2]; // levels cleared per day (12 total)
       const base = Date.now();

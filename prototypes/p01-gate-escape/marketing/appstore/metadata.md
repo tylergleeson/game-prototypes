@@ -21,8 +21,8 @@ listing content only.
 
 ## Promotional text (170 chars, editable without review)
 
-> 30 hand-drafted blueprint puzzles. Every level is machine-verified solvable —
-> when you're stuck, that's the puzzle talking. New sheets in every update.
+> 40 hand-drafted blueprint puzzles across four sheets. Every level is machine-verified
+> solvable — when you're stuck, that's the puzzle talking. No timer, ever.
 
 ## Description
 
@@ -31,21 +31,29 @@ around corners, past stones, through the gap that only just opened — is a sing
 move. Par is tight, the board is small, and the drawing isn't approved until
 every block is out.
 
-Thirty hand-tuned blueprint sheets, difficulty rising one idea at a time:
-corners, ordering, stones, corked boards where a block has to step aside and
-come back, new shapes, a fourth colour — and a proper spike in the twenties.
+Forty hand-tuned blueprint levels across four sheets, difficulty rising one idea at a
+time: corners, ordering, stones, corked boards where a block has to step aside and come
+back, new shapes, a fourth colour — a proper spike in the twenties — and then Sheet 4,
+where some blocks carry a revision stamp and have to leave in numbered order.
 
-- ONE DRAG = ONE MOVE. Plan complete routes, not steps. Three stars at par.
+- ONE DRAG = ONE MOVE. Plan complete routes, not steps. Three stars at par, two at one over.
+- NO TIMER ANYWHERE. Thinking is free; only drags are spent.
 - EVERY LEVEL PROVED SOLVABLE by the same solver that sets par. No unfair boards.
+- THE APPROVAL CHAIN (Sheet 4): numbered blocks leave in order. Out of turn, a block still
+  slides anywhere — it just parks at its gate instead of leaving.
 - UNDO, HINTS AND A RESCUE when you're one move short.
 - A DRAFTING-TABLE WORLD: cyanotype blueprint art, stamped gates, generated
   audio, and a shape stamped on every block and gate so colour is never the
   only cue.
-- DAILY GOAL AND STREAKS with nothing to buy back. A missed day simply starts
-  the count again — no card, no ad, no pressure at the moment you lose it.
-- SHEET CERTIFICATION: 24 stars on a sheet certifies it and unlocks a paper
-  skin (Sepia draft, Night vellum, Whiteprint). Cosmetic only; nothing is ever
-  locked behind them.
+- A DAILY DRAFT: one board a day, the same board for every player, with its own par. Share
+  a spoiler-free field report — the numbers, never the route.
+- A FIELD SURVEY, one sheet a week: a stamp for every day you clear a level, two contracts
+  you pick from the four the week offers, and point marks along the way. Nothing to buy
+  back — a missed day simply starts the count again, with no card, no ad and no pressure
+  at the moment you lose it.
+- SHEET CERTIFICATION: 24 stars on a sheet certifies it. Sheets 1–3 unlock a paper skin
+  (Sepia draft, Night vellum, Whiteprint); Sheet 4 earns the approval stamp on every win
+  card after it. Cosmetic only; nothing is ever locked behind them.
 - Small, fast, offline. No account, no sign-in.
 
 ## Keywords (100 chars max, comma-separated, no spaces)

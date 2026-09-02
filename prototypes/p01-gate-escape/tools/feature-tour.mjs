@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 // Feature-tour video for Gate Escape (p01): ONE continuous, fully scripted recording of the
 // real game at iPhone size (402×874 @2x) walking through every feature — menu, legend, first
-// wins, corners, stones, hint, fail/rescue, undo + star meter, certification + paper skins, daily
-// quests + streak freezes, Field Survey, level select, lives — with a slim blueprint caption
-// strip rendered INTO the film (a flex footer below the game, never over the board).
+// wins, the staged FTUE reveal, corners, stones, hint, fail/rescue, undo + star meter, sheet
+// certification + paper skins, the Daily Draft and its field report, the weekly Field Survey,
+// the four-sheet index and the Sheet 4 approval chain — with a slim blueprint caption strip
+// rendered INTO the film (a flex footer below the game, never over the board).
+// Re-scripted 2026-09-02 for the post-research-round game (40 levels, survey merge, draft,
+// staged disclosure, sequenced exits). Lives are off by default now, so there is no lives
+// chapter: a tour of a surface no player sees would be a lie about the product.
 //
 // Nothing in the game source changes: every state is staged through the shipped hooks
 // (localStorage seeding, GE.* getters) and all play happens through real pointer gestures.
@@ -153,31 +157,64 @@ const winUp = () => page.waitForSelector('#winModal:not([hidden])', { timeout: 6
 const adDone = () => page.waitForFunction(() => !window.GE.adUp, null, { timeout: 9000 });
 
 // ================================ the tour ================================
+// Fifteen chapters over the post-research-round game: 40 levels in four sheets, the staged
+// FTUE, the Field Survey, the Daily Draft and the Sheet 4 approval chain. Lives are OFF by
+// default now, so there is no lives chapter — a chapter about a surface a player never sees
+// would be a lie about the product.
 t0 = Date.now();
 await page.goto('file://' + p01 + 'index.html');
 await page.waitForFunction(() => window.GE && window.GE.L);
 await w(300);
 
+// Shape this week's survey the way a real week of play does — two of the four offered
+// contracts taken, one of them filed (which is what banks the weather delay), the days
+// stamped and the point marks earned. Written to ge_survey and reloaded, so every screen
+// re-derives it exactly as it would from a week actually played.
+async function surveyState({ take = 2, fileFirst = true, days = 4, pts = 12 } = {}) {
+  await page.evaluate(([take, fileFirst, days, pts]) => {
+    const M = window.GE_MENU, S = M.survey;
+    const s = JSON.parse(localStorage.getItem('ge_survey') || 'null') || {};
+    const offered = (S.offered || []).slice();
+    const wk = M.weekDates(), today = new Date(window.GE.now());
+    const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+    const past = wk.filter(d => d <= todayStr);
+    s.week = M.isoWeek();
+    s.offered = offered;
+    s.chosen = offered.slice(0, take);
+    s.prog = {}; s.filed = [];
+    if (s.chosen[0]) {
+      const t = M.CONTRACTS[s.chosen[0]].target;
+      s.prog[s.chosen[0]] = fileFirst ? t : Math.max(1, Math.round(t * 0.6));
+      if (fileFirst) s.filed = [s.chosen[0]];
+    }
+    if (s.chosen[1]) s.prog[s.chosen[1]] = Math.max(1, Math.round(M.CONTRACTS[s.chosen[1]].target * 0.45));
+    s.days = past.slice(0, Math.min(days, past.length));
+    s.pts = pts;
+    s.ms = M.MILESTONES.filter(n => pts >= n);
+    s.seal = false; s.frags = 0; s.last = null;
+    localStorage.setItem('ge_survey', JSON.stringify(s));
+  }, [take, fileFirst, days, pts]);
+  await page.reload();
+  await page.waitForFunction(() => window.GE && window.GE.L);
+  await w(400);
+}
+const day = n => { const d = new Date(Date.now() - n * 864e5); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+// every reveal already played + a first-clear date in the past: a returning player, not a
+// tutorial. (The same two facts `seedDisclosure` writes for a save that predates the ladder.)
+const SEEN = { rv: ['rescue', 'cert', 'daily', 'survey'], d0: 'pre' };
+
 // ---- SEG A · ch 01–02: title block + how to play -----------------------------------------
-// A lively mid-game save: sheet 1 certified (Sepia owned), a 4-day streak with a banked
-// freeze, one quest stamped, Field Survey mid-week — every row on the title block has content.
+// A lively mid-game save: sheet 1 certified (Sepia owned), a 4-day streak with a weather delay
+// banked, the survey mid-week with one contract filed — every row on the title block has content.
 await seed(() => {
   const day = n => { const d = new Date(Date.now() - n * 864e5); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-  const isoWeek = t => { const d = new Date(t), th = new Date(d.getFullYear(), d.getMonth(), d.getDate()); th.setDate(th.getDate() + 3 - ((th.getDay() + 6) % 7)); const wk1 = new Date(th.getFullYear(), 0, 4); return th.getFullYear() + '-W' + String(1 + Math.round(((th - wk1) / 864e5 - 3 + ((wk1.getDay() + 6) % 7)) / 7)).padStart(2, '0'); };
-  // the day's real deterministic quest roll (same FNV-1a + PRNG as menu.js)
-  const seedOf = s => { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
-  const prng = sd => () => { sd = (sd + 0x6D2B79F5) | 0; let t = Math.imul(sd ^ (sd >>> 15), 1 | sd); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-  const roll = date => { const r = prng(seedOf('ge-quests-' + date)), pool = ['clear3', 'clear5', 'stars6', 'stars9', 'par2', 'noundo1', 'nohint2', 'blocks12'], ids = []; while (ids.length < 3) { const id = pool[Math.floor(r() * pool.length)]; if (!ids.includes(id)) ids.push(id); } return ids; };
-  const T = { clear3: 3, clear5: 5, stars6: 6, stars9: 9, par2: 2, noundo1: 1, nohint2: 2, blocks12: 12 };
-  const ids = roll(day(0));
-  const half = t => Math.max(1, Math.floor(t / 2));
-  localStorage.setItem('ge_prog', JSON.stringify({ u: 11, s: [3, 3, 2, 3, 3, 2, 3, 3, 3, 1, 2, 3], skins: ['sepia'], seen: [0] }));
-  localStorage.setItem('ge_level', '11');
+  const s = [3, 3, 2, 3, 3, 2, 3, 3, 3, 3]; for (let i = 10; i < 24; i++) s[i] = 3;
+  localStorage.setItem('ge_prog', JSON.stringify({ u: 24, s, skins: ['sepia'], seen: [0], rv: ['rescue', 'cert', 'daily', 'survey'], d0: 'pre' }));
+  localStorage.setItem('ge_level', '24');
   localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1, twice: 1, undo: 1 }));
   localStorage.setItem('ge_streak', JSON.stringify({ len: 4, best: 6, lastDate: day(1), freezes: 1, marks: [day(1), day(2), day(3), day(5)] }));
-  localStorage.setItem('ge_quests', JSON.stringify({ date: day(0), ids, prog: { [ids[0]]: T[ids[0]], [ids[1]]: half(T[ids[1]]) }, done: [ids[0]], all: false }));
-  localStorage.setItem('ge_ladder', JSON.stringify({ week: isoWeek(Date.now()), pts: 8, ms: [3, 7], last: { week: 'last', pts: 14 } }));
 });
+await surveyState({ take: 2, fileFirst: true, days: 4, pts: 12 });
 await caption(1, 'GATE ESCAPE — drag every block out through the gate of its color');
 await w(3400);
 await still('01-title-block');
@@ -186,26 +223,57 @@ await page.click('#btnLegend');
 await w(2600); // the corner-route demo animates at the top of the legend
 await page.evaluate(() => { const el = document.querySelector('#legend .tblock'); el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }); });
 await w(1400);
-await w(2000); // the "Around the game" rows: quests, streak, survey, certification
+await w(2400); // "Around the game": survey, daily draft, certification, approval chain
 await still('02-around-the-game');
 await page.click('#btnLegendBack');
 await w(500);
 
-// ---- SEG B · ch 03–04: fresh save — L1 ghost route, star drop, then the corner clear -----
+// ---- SEG B · ch 03–04: fresh save — L1 ghost route, then the BARE sheet index -------------
 await seed(() => {}); // a truly fresh install: L1 with the built-in ghost-route overlay
-await caption(3, 'Level 1 — the ghost route teaches the rule; stars drop at par');
+await caption(3, 'Level 1 — the ghost route teaches the rule; ★★★ lands at par');
 await page.click('#btnPlay');
 await w(1300); // the L1 teaching route pulses on the board
 await drag(solutions[0][0].bi, solutions[0][0].path, solutions[0][0].side, 400);
 await winUp();
 await w(1800); // stars land, the running total ticks up
-await page.click('#btnNext'); // L2: two colors, straight out
-await w(1000);
+await caption(4, 'Nothing is on the sheet you have not earned — the index opens bare');
+await page.click('#btnNext'); // the win card owns the screen; step to L2 first, then pause out
+await w(900);
+await page.click('#btnMenu');
+await w(500);
+await page.click('#btnPauseLevels'); // one clear in: level, stars, forty tiles, sound. Nothing else.
+await w(2600);
+await still('03-bare-index');
+await page.click('#btnLevelsBack');
+await w(400);
+await page.click('#btnResume');
+await w(500);
+
+// ---- SEG C · ch 05: the first reveal — clearing L2 earns certification --------------------
+await seed(() => {
+  const d = new Date();
+  const today = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  // one clear, made today, and only the rescue teach spent: the state a real player is in
+  // one level before certification is revealed to them
+  localStorage.setItem('ge_prog', JSON.stringify({ u: 1, s: [3], rv: ['rescue'], d0: today }));
+  localStorage.setItem('ge_level', '1');
+});
+await caption(5, 'Each system arrives on the win that earns it — one quiet NEW row');
+await page.click('#btnPlay');
+await w(900);
 for (const mv of solutions[1]) { await drag(mv.bi, mv.path, mv.side, 280); await w(300); }
 await winUp();
-await w(1500);
-await caption(4, 'One drag turns corners — a whole route is a single move');
-await page.click('#btnNext'); // L3: the corner lesson (ghost route + one-line tip)
+await w(2600); // "NEW · Sheet certification — 24 ★ on a sheet earns its paper"
+await still('04-ftue-reveal');
+await w(500);
+
+// ---- SEG D · ch 06: one drag turns corners (L3, the corner lesson) ------------------------
+await seed(() => {
+  localStorage.setItem('ge_prog', JSON.stringify({ u: 2, s: [3, 3], rv: ['rescue', 'cert'], d0: 'pre' }));
+  localStorage.setItem('ge_level', '2');
+});
+await caption(6, 'One drag turns corners — a whole route is a single move');
+await page.click('#btnPlay');
 await w(1200);
 await drag(solutions[2][0].bi, solutions[2][0].path, solutions[2][0].side, 400); // the corner drag, slow
 await w(300);
@@ -213,31 +281,31 @@ for (const mv of solutions[2].slice(1)) { await drag(mv.bi, mv.path, mv.side, 28
 await winUp();
 await w(1500);
 
-// ---- SEG C · ch 05–06: stones + tip strip, then the hint on the same board ---------------
+// ---- SEG E · ch 07–08: stones + tip strip, then the hint on the same board ---------------
 await seed(() => {
-  localStorage.setItem('ge_prog', JSON.stringify({ u: 4, s: [3, 3, 3, 3] }));
+  localStorage.setItem('ge_prog', JSON.stringify({ u: 4, s: [3, 3, 3, 3], rv: ['rescue', 'cert', 'daily'], d0: 'pre' }));
   localStorage.setItem('ge_level', '4');
   localStorage.setItem('ge_tips', JSON.stringify({ corner: 1 })); // the stone tip is the subject
 });
 // the reload auto-loaded L5 once and consumed the one-time stone tip — re-arm it so the
 // on-camera entry shows the strip exactly as a player's first L5 does
 await page.evaluate(() => localStorage.setItem('ge_tips', JSON.stringify({ corner: 1 })));
-await caption(5, 'Level 5 — the first stone; a one-line tip, never a tutorial');
+await caption(7, 'Level 5 — the first stone; a one-line tip, never a tutorial');
 await page.click('#btnPlay');
 await w(1000); // "Stones never move" tip strip is up
-await still('03-stone-tip');
+await still('05-stone-tip');
 await w(1000);
 await drag(solutions[4][0].bi, solutions[4][0].path, solutions[4][0].side, 280);
 await w(400);
 await drag(solutions[4][1].bi, solutions[4][1].path, solutions[4][1].side, 280);
 await w(500);
-await caption(6, "Stuck? The hint ghosts the designer's next move (rewarded ad)");
+await caption(8, "Stuck? The hint ghosts the designer's next move (rewarded ad)");
 await page.click('#btnHint');
 await w(700); // AD placeholder card
 await adDone();
 await page.waitForFunction(() => window.GE.hint, null, { timeout: 4000 });
 await w(1500); // the dashed route marches to the gate
-await still('04-hint-route');
+await still('06-hint-route');
 const hintMv = await page.evaluate(() => ({ bi: window.GE.hint.bi, path: window.GE.hint.path, side: window.GE.hint.side || null }));
 await drag(hintMv.bi, hintMv.path.slice(1), hintMv.side, 300); // follow it
 await w(400);
@@ -245,13 +313,13 @@ await solveOut(4, 280);
 await winUp();
 await w(1500);
 
-// ---- SEG D · ch 07: the star meter (amber → red) and undo --------------------------------
+// ---- SEG F · ch 09: the star meter (amber → red) and undo --------------------------------
 await seed(() => {
-  localStorage.setItem('ge_prog', JSON.stringify({ u: 3, s: [3, 3, 3] }));
+  localStorage.setItem('ge_prog', JSON.stringify({ u: 3, s: [3, 3, 3], rv: ['rescue', 'cert'], d0: 'pre' }));
   localStorage.setItem('ge_level', '3'); // L4: par 4, limit 8 — room to be wasteful
   localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1 }));
 });
-await caption(7, 'The meter shows the stars this pace still earns — undo refunds a move');
+await caption(9, '★★★ at par, ★★ one over — the meter shows what this pace still earns');
 await page.click('#btnPlay');
 await w(1000);
 await wasteMove(); await w(700);  // 3-star pace gone: the meter turns amber
@@ -264,20 +332,21 @@ await solveOut(6, 260); // and the level still falls
 await winUp();
 await w(1400);
 
-// ---- SEG E · ch 08: the deliberate fail on L6 → fail sheet → AD rescue → win -------------
+// ---- SEG G · ch 10: the deliberate fail on L6 → fail sheet → AD rescue → win -------------
 await seed(() => {
-  localStorage.setItem('ge_prog', JSON.stringify({ u: 5, s: [3, 3, 3, 3, 3] }));
+  localStorage.setItem('ge_prog', JSON.stringify({ u: 5, s: [3, 3, 3, 3, 3], rv: ['cert', 'daily', 'survey'], d0: 'pre' }));
   localStorage.setItem('ge_level', '5'); // L6: the first deadlock (par 6 > 5 blocks, budget 9)
   localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1, twice: 1, undo: 1 }));
 });
-await caption(8, 'Out of moves — the sheet keeps the board in view; the rescue is +3');
+await caption(10, 'Out of moves — the sheet keeps the board in view; the rescue is +3');
 await page.click('#btnPlay');
 await w(1000);
 for (const mv of solutions[5].slice(0, 5)) { await drag(mv.bi, mv.path, mv.side, 240); await w(280); } // 5 of par 6
 for (let i = 0; i < 4; i++) { await wasteMove(220); await w(380); } // burn the last 4 moves for real
 await page.waitForSelector('#failModal:not([hidden])', { timeout: 9000 });
 await w(1400); // the board rises above the sheet; the last block pulses with its route
-await still('05-fail-sheet');
+await still('07-fail-sheet');
+await w(1600); // the one-time rescue teach line (rv omits 'rescue' on this save) gets read
 await page.click('#btnRescue');
 await w(700); // AD placeholder
 await adDone();
@@ -286,24 +355,24 @@ await solveOut(4, 280);
 await winUp();
 await w(1500);
 
-// ---- SEG F · ch 09: a win crosses 24★ → certification → Try it → skin cycle mid-game ------
+// ---- SEG H · ch 11: a win crosses 24★ → certification → Try it → skin cycle mid-game ------
 // A late-game player: sheets 2 and 3 long since cleared (their papers owned), sheet 1 at 21★
 // with L8 uncleared — this par win carries sheet 1 across its certification threshold.
 await seed(() => {
   const s = [3, 3, 3, 3, 3, 3, 3, 0, 0, 0]; for (let i = 10; i < 30; i++) s[i] = 3;
-  localStorage.setItem('ge_prog', JSON.stringify({ u: 29, s, skins: ['night', 'white'], seen: [1, 2] }));
+  localStorage.setItem('ge_prog', JSON.stringify({ u: 29, s, skins: ['night', 'white'], seen: [1, 2], rv: ['rescue', 'cert', 'daily', 'survey'], d0: 'pre' }));
   localStorage.setItem('ge_level', '7');
   localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1, twice: 1, undo: 1 }));
 });
-await caption(9, '24★ certifies the sheet — a new paper for the drawing');
+await caption(11, '24★ certifies the sheet — a new paper for the drawing');
 await page.click('#btnPlay');
 await w(900);
 for (const mv of solutions[7]) { await drag(mv.bi, mv.path, mv.side, 240); await w(280); }
 await winUp();
 await w(1300); // stars land…
 await page.waitForSelector('#winCert:not([hidden])', { timeout: 9000 });
-await w(1400); // …the lid swings open with sparks
-await still('06-sheet-certified');
+await w(1400); // …the stamp comes down with sparks
+await still('08-sheet-certified');
 await page.click('#btnTrySkin'); // Sepia draft applies instantly, mid-win-card
 await w(1400);
 await page.click('#btnNext'); // L9 on Sepia paper
@@ -317,89 +386,96 @@ await w(1300);
 await page.click('#btnResume');
 await w(1100); // the same board on Whiteprint
 
-// ---- SEG G · ch 10–12: quests → ALL DONE + freeze banked; Field Survey; level select -----
-// Today's real quest roll, each quest one par-win from done (progress a player earns in a
-// normal session); streak at 3 with marks; ladder at 10 pts — the on-camera win completes
-// all three quests (banks the freeze), extends the streak, and stamps the 12-pt milestone.
+// ---- SEG I · ch 12: the Daily Draft — one board a day, the same for everyone --------------
 await seed(() => {
-  const day = n => { const d = new Date(Date.now() - n * 864e5); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-  const isoWeek = t => { const d = new Date(t), th = new Date(d.getFullYear(), d.getMonth(), d.getDate()); th.setDate(th.getDate() + 3 - ((th.getDay() + 6) % 7)); const wk1 = new Date(th.getFullYear(), 0, 4); return th.getFullYear() + '-W' + String(1 + Math.round(((th - wk1) / 864e5 - 3 + ((wk1.getDay() + 6) % 7)) / 7)).padStart(2, '0'); };
-  const seedOf = s => { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
-  const prng = sd => () => { sd = (sd + 0x6D2B79F5) | 0; let t = Math.imul(sd ^ (sd >>> 15), 1 | sd); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-  const roll = date => { const r = prng(seedOf('ge-quests-' + date)), pool = ['clear3', 'clear5', 'stars6', 'stars9', 'par2', 'noundo1', 'nohint2', 'blocks12'], ids = []; while (ids.length < 3) { const id = pool[Math.floor(r() * pool.length)]; if (!ids.includes(id)) ids.push(id); } return ids; };
-  const T = { clear3: 3, clear5: 5, stars6: 6, stars9: 9, par2: 2, noundo1: 1, nohint2: 2, blocks12: 12 };
-  // what ONE par 3★ win of L3 (3 blocks) contributes to each template
-  const G = { clear3: 1, clear5: 1, stars6: 3, stars9: 3, par2: 1, noundo1: 1, nohint2: 1, blocks12: 3 };
-  const ids = roll(day(0)), prog = {};
-  for (const id of ids) prog[id] = Math.max(0, T[id] - G[id]);
-  const s = [3, 3, 3, 3, 3, 3, 2, 3, 3, 2]; for (let i = 10; i < 25; i++) s[i] = 3; // sheet 3 at 15★
-  localStorage.setItem('ge_prog', JSON.stringify({ u: 29, s, skins: ['sepia', 'night'], seen: [0, 1] }));
-  localStorage.setItem('ge_level', '2');
+  const s = [3, 3, 3, 3, 3, 3, 2, 3, 3, 2]; for (let i = 10; i < 25; i++) s[i] = 3;
+  localStorage.setItem('ge_prog', JSON.stringify({ u: 25, s, skins: ['sepia'], seen: [0], rv: ['rescue', 'cert', 'daily', 'survey'], d0: 'pre' }));
+  localStorage.setItem('ge_level', '25');
   localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1, twice: 1, undo: 1 }));
-  localStorage.setItem('ge_quests', JSON.stringify({ date: day(0), ids, prog, done: [], all: false }));
+  const day = n => { const d = new Date(Date.now() - n * 864e5); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
   localStorage.setItem('ge_streak', JSON.stringify({ len: 3, best: 5, lastDate: day(1), freezes: 0, marks: [day(1), day(3), day(5)] }));
-  localStorage.setItem('ge_ladder', JSON.stringify({ week: isoWeek(Date.now()), pts: 10, ms: [3, 7], last: { week: 'last', pts: 14 } }));
 });
-await caption(10, "Three daily quests, shared by all — this clear finishes today's set");
-await w(2200); // quest bars one win from done on the title block
-await page.click('#btnPlay'); // a quick par replay of L3
-await w(1000);
-for (const mv of solutions[2]) { await drag(mv.bi, mv.path, mv.side, 260); await w(300); }
-await winUp();
-await w(2000); // the stamped DONE row: "Streak freeze banked · 1 held"
-await still('07-quests-done');
-await w(400);
-await page.click('#btnNext');
-await w(800);
-await page.click('#btnMenu');
-await w(600);
-await page.click('#btnPauseHome'); // back on the title block: ALL DONE + streak "4 of last 7 days"
-await w(2000);
-await caption(11, 'Field Survey — a weekly personal ladder with milestone stamps');
-await page.click('#btnLevels'); // landing → sheet index (2026-09-02 cover-sheet menu)
-await page.click('#btnSurvey');
-await w(2400); // 12 pts · stamps at 3 / 7 / 12
-await page.click('#btnSurveyClose');
-await w(400);
-await caption(12, 'Three sheets of ten — stars, certifications and papers at a glance');
+await surveyState({ take: 2, fileFirst: false, days: 3, pts: 8 });
+await caption(12, "Daily draft — one solver-verified board a day, the same for every player");
 await page.click('#btnLevels');
-await w(1500);
+await w(1500); // the "DAILY DRAFT · <date> — READY" row on the sheet index
+await still('09-draft-ready');
+await page.click('#btnDaily'); // the day's board loads: named by date, never by a level number
+await w(1800);
+await solveOut(12, 240); // the recorded attempt, played on the solver's own line
+await winUp();
+await w(2600); // the win card carries the FIELD REPORT verbatim above Share
+await still('10-draft-report');
+await page.click('#btnNext');
+await w(900);
+await page.click('#btnLevels');
+await w(1400); // the row now states the result with "practice · not recorded" under it
+await page.click('#btnDaily'); // …and opens the field report card instead of the board
+await w(2400);
+await still('11-draft-card');
+await page.click('#btnDraftClose');
+await w(500);
+
+// ---- SEG J · ch 13: the Field Survey — one sheet a week ----------------------------------
+await caption(13, 'Field survey — one sheet a week: days, two contracts, point marks, the seal');
+await page.click('#btnSurvey');
+await w(3000); // the 7-day spine, the contracts, the 3/7/12/20 marks
+await still('12-field-survey');
+await page.click('#btnSurveyClose');
+await w(500);
+await caption(14, 'Four sheets of ten — stars, certifications and the approval stamp');
+await w(1400);
 await page.evaluate(() => { const el = document.querySelector('#levels .tblock'); el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }); });
-await w(1300);
-await w(1300); // sheet 3: "★ 15/30 · 9 to open"
+await w(2600); // sheet 4: "SIGN-OFF · ★ … · N to certify"
+await still('13-sheet-index');
 await page.click('#btnLevelsBack');
 await w(500);
 
-// ---- SEG H · ch 13: lives — hearts, the calm out-of-lives card, the rewarded refill ------
-await seed(() => {
-  localStorage.setItem('ge_prog', JSON.stringify({ u: 9, s: [3, 3, 3, 3, 3, 3, 3, 3, 3] }));
-  localStorage.setItem('ge_level', '8'); // L9 (L1–5 never cost a life)
-  localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1, twice: 1, undo: 1 }));
-  localStorage.setItem('ge_lives', JSON.stringify({ n: 0, anchor: Date.now() - 6 * 60000 }));
-});
-await caption(13, 'Lives — levels 1–5 are free; a calm timer, never a blocked menu');
-await w(1900); // the title block's Lives row: five hollow hearts + "full in …"
-await page.click('#btnPlay'); // entering L6+ at zero lives: the calm card
-await page.waitForSelector('#livesModal:not([hidden])', { timeout: 4000 });
-await w(2100);
-await still('08-lives-card');
-await page.click('#btnLifeRefill');
-await w(700); // AD placeholder
-await adDone();
-await w(800); // +1 heart, the card stands down
-await page.click('#btnPlay');
-await w(1200); // in play on L9 — ♥♡♡♡♡ under the level label
-await drag(solutions[8][0].bi, solutions[8][0].path, solutions[8][0].side, 280);
-await w(800);
-
-// ---- SEG I · ch 14: closing — the cover composition --------------------------------------
+// ---- SEG K · ch 15: Sheet 4 — the approval chain -----------------------------------------
+// L31, the teaching board: the numbers name the order the level would have needed anyway, so it
+// costs nothing. The out-of-turn block below has a clear lane to its own gate and still cannot
+// leave — it parks flush instead, which is the whole rule in one gesture.
 await seed(() => {
   const s = []; for (let i = 0; i < 30; i++) s[i] = 3;
-  localStorage.setItem('ge_prog', JSON.stringify({ u: 29, s, skins: ['sepia', 'night', 'white'], seen: [0, 1, 2] }));
+  localStorage.setItem('ge_prog', JSON.stringify({ u: 30, s, skins: ['sepia', 'night', 'white'], seen: [0, 1, 2], rv: ['rescue', 'cert', 'daily', 'survey'], d0: 'pre' }));
+  localStorage.setItem('ge_level', '30');
+  localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1, twice: 1, undo: 1 }));
+});
+await caption(15, 'Sheet 4 — numbered blocks leave in order; the solid stamp is next');
+await page.click('#btnPlay');
+await w(2600); // the one-shot 1→2→3 polyline plays over the board on load
+await still('14-approval-chain');
+const oot = await page.evaluate(() => {
+  const info = window.GE.seqInfo();
+  for (let i = 0; i < info.blocks.length; i++) {
+    const b = info.blocks[i];
+    if (!b.seq || b.out || b.nextUp) continue;
+    const r = window.GE.route(i, { ignoreSeq: true }); // the purely geometric question
+    if (r) return { bi: i, path: r.path.slice(1), side: r.side, seq: b.seq };
+  }
+  return null;
+});
+if (oot) {
+  await caption(16, 'Out of turn: it slides the whole way to its gate — and parks instead');
+  await drag(oot.bi, oot.path, oot.side, 300); // movement is never gated; only the exit is
+  await w(2100); // the chip flicks and still names the block that IS next; the drag was charged
+  await still('15-out-of-turn');
+  await page.click('#btnUndo'); // the drag it cost comes back
+  await w(1200);
+}
+await solveOut(8, 280); // the chain, in order
+await winUp();
+await w(2200);
+await still('16-chain-cleared');
+
+// ---- SEG L · ch 16: closing — the cover composition --------------------------------------
+await seed(() => {
+  const s = []; for (let i = 0; i < 40; i++) s[i] = 3;
+  localStorage.setItem('ge_prog', JSON.stringify({ u: 39, s, skins: ['sepia', 'night', 'white'], seen: [0, 1, 2, 3], rv: ['rescue', 'cert', 'daily', 'survey'], d0: 'pre' }));
   localStorage.setItem('ge_level', '11');
   localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1, twice: 1, undo: 1 }));
 });
-await caption(14, '30 machine-verified levels · Gate Escape');
+await caption(17, '40 machine-verified levels · no clock, ever · Gate Escape');
 await page.click('#btnPlay'); // L12, two real moves in…
 await w(800);
 for (const mv of solutions[11].slice(0, 2)) { await drag(mv.bi, mv.path, mv.side, 260); await w(300); }

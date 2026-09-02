@@ -1,9 +1,10 @@
 import XCTest
 
 /// Launches Gate Escape with `-autoplay` and lets the in-app bot (bot.js)
-/// beat all 30 levels through the real engine inside iOS WebKit, then
-/// exercise the fail/rescue flow. The bot reports through an accessibility
-/// label the native shell keeps in sync with window.__botStatus.
+/// beat all 40 levels through the real engine inside iOS WebKit — including
+/// Sheet 4's approval chain, whose numbered blocks the engine only releases in
+/// order — then exercise the fail/rescue flow. The bot reports through an
+/// accessibility label the native shell keeps in sync with window.__botStatus.
 ///
 /// Screenshots are attached to the result bundle; tools/playtest-ios.sh
 /// exports them to shots/ios/.
@@ -21,7 +22,8 @@ final class GateEscapeBotTests: XCTestCase {
         let status = app.staticTexts["botStatus"]
         XCTAssertTrue(status.waitForExistence(timeout: 30), "bot status label never appeared — is bot.js in the build?")
 
-        let deadline = Date().addingTimeInterval(300)
+        // 40 levels (up from 30 on 2026-09-02) plus four screenshot holds per sheet
+        let deadline = Date().addingTimeInterval(480)
         var last = ""
         var shots = Set<String>()
         while Date() < deadline {
@@ -41,7 +43,7 @@ final class GateEscapeBotTests: XCTestCase {
         snap(app, name: "final")
 
         XCTAssertTrue(last.hasPrefix("BOT PASS"), "iOS autoplay verdict: \(last)")
-        XCTAssertGreaterThanOrEqual(shots.count, 4, "expected screenshots at L1, L12, L22 and the fail offer; got \(shots)")
+        XCTAssertGreaterThanOrEqual(shots.count, 4, "expected screenshots at L1, L12, L22, L31 and the fail offer; got \(shots)")
     }
 
     private func snap(_ app: XCUIApplication, name: String) {

@@ -3,9 +3,14 @@
 // filming pass (H.264 + AAC, 30 fps):
 //
 //   marketing/videos/promo-30s.mp4   ~30 s teaser — hook, plan, certification, flourish, end card
-//   marketing/videos/promo.mp4       ~55 s main cut — + hint, rescue, papers, meta montage
+//   marketing/videos/promo.mp4       ~55 s main cut — + hint, rescue, papers, the week (draft +
+//                             survey), the Sheet 4 approval chain
 //   marketing/videos/promo-2min.mp4  ~1:55 extended — + legend, L2, meter/undo, stones→hint
-//                             continuity, longer holds, Field Survey, lives card
+//                             continuity, longer holds, the four-sheet index
+//
+// STORE-CREATIVE RULE (2026-09-02 research round): the opening seconds must carry the three
+// things the research says sell this game — a one-drag route that TURNS A CORNER, the word PAR,
+// and the no-clock promise. Shot A opens on the corner drag and its win card states both.
 //
 // READABILITY IS A HARD RULE on every cut: any shot bearing text the viewer should read
 // (win cards, quest rows, certification reveal, fail sheet, captions, end card) holds at least
@@ -59,35 +64,54 @@ const ff = args => execFileSync(FF, ['-hide_banner', '-y', ...args], { stdio: ['
 const probeDur = f => parseFloat(execFileSync(FPROBE, ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString());
 
 // ================================ narration ================================
-// Lines 1–6 drive every cut; 7–9 exist for the extended cut's extra chapters. Every
-// claim is on screen when spoken (the "machine-verified" claim rides its beat caption).
-const VOICE = 'IRHApOXLvnW57QJPQH2P'; // "Adam - American, Dark and Tough" (shared, added to the account)
-const LINES = [
-  { f: '01-hook.mp3',   text: 'One drag. One move. Any route.' },
-  { f: '02-title.mp3',  text: 'This is Gate Escape — the blueprint puzzle where every level is a machine-verified plan.' },
-  { f: '03-hint.mp3',   text: "Ghost routes show the way in. A hint when you're stuck. A rescue when you're one drag from freedom." },
-  { f: '04-cert.mp3',   text: 'Earn stars. Certify the sheet. Change the paper.' },
-  { f: '05-meta.mp3',   text: 'Daily quests. A streak worth keeping. Thirty levels of pure routing.' },
-  { f: '06-tag.mp3',    text: 'Gate Escape. Draw your way out.' },
-  { f: '07-legend.mp3', text: 'Learn it in one screen. Blocks, gates, stones — one rule.' },
-  { f: '08-survey.mp3', text: 'A weekly field survey stamps your progress.' },
-  { f: '09-lives.mp3',  text: 'Out of lives? A calm timer — or watch to refill.' },
-];
+// Lines 1-6 drive every cut; 7-9 are the extended cut's extra chapters. Every claim is on
+// screen when it is spoken (the "machine-verified" claim rides its beat caption).
 async function elevenlabs(path, body, out) {
   const key = process.env.ELEVENLABS_API_KEY;
-  if (!key) { console.error(`FATAL: ${out} missing and ELEVENLABS_API_KEY not set`); process.exit(1); }
+  if (!key) return; // callers only reach here with a key; a missing line simply stays silent
   const r = await fetch('https://api.elevenlabs.io' + path, {
     method: 'POST', headers: { 'xi-api-key': key, 'Content-Type': 'application/json' }, body: JSON.stringify(body),
   });
   if (!r.ok) { console.error(`FATAL: ElevenLabs ${path} → ${r.status}: ${(await r.text()).slice(0, 300)}`); process.exit(1); }
   fs.writeFileSync(out, Buffer.from(await r.arrayBuffer()));
 }
-for (const l of LINES) {
-  if (fs.existsSync(narDir + l.f)) continue;
-  console.log('generating narration ' + l.f);
-  await elevenlabs(`/v1/text-to-speech/${VOICE}?output_format=mp3_44100_128`,
-    { text: l.text, model_id: 'eleven_multilingual_v2', voice_settings: { stability: 0.38, similarity_boost: 0.8, style: 0.5, use_speaker_boost: true } },
-    narDir + l.f);
+const VOICE = 'IRHApOXLvnW57QJPQH2P'; // "Adam - American, Dark and Tough" (shared, added to the account)
+// The cached mp3s in marketing/narration/ are the record of what was RECORDED. After the
+// research round several lines describe a game that no longer exists (daily quests, thirty
+// levels, lives), so they were retired rather than reused — a narrator asserting a deleted
+// system over footage of the new one is the one thing a promo may never do.
+// A line whose file is missing is NOT fatal: the beat plays on its burned caption alone (the
+// cuts are built to the 3-second sound-off rule anyway) and the missing lines are printed at
+// the end of the run for a later narration session with ELEVENLABS_API_KEY set.
+const LINES = [
+  { f: '01-hook.mp3',      text: 'One drag. One move. Any route.' },
+  { f: '02-title.mp3',     text: 'This is Gate Escape — the blueprint puzzle where every level is a machine-verified plan.' },
+  { f: '03-hint.mp3',      text: "Ghost routes show the way in. A hint when you're stuck. A rescue when you're one drag from freedom." },
+  { f: '04-cert.mp3',      text: 'Earn stars. Certify the sheet. Change the paper.' },
+  { f: '05-week.mp3',      text: 'A board a day, the same for everyone. A survey sheet every week. Forty levels of pure routing.' },
+  { f: '06-tag.mp3',       text: 'Gate Escape. Draw your way out.' },
+  { f: '07-legend.mp3',    text: 'Learn it in one screen. Blocks, gates, stones — one rule.' },
+  { f: '08-survey.mp3',    text: 'A weekly field survey stamps your progress.' },
+  { f: '10-chain.mp3',     text: 'Sheet four: some blocks have to leave in order.' },
+];
+// retired with the systems they described: 04-chest.mp3 (chests), 05-meta.mp3 ("Daily quests…
+// Thirty levels"), 09-lives.mp3 (lives are off by default). Left on disk as a record; never used.
+const RETIRED = ['04-chest.mp3', '05-meta.mp3', '09-lives.mp3'];
+const missing = [];
+if (process.env.ELEVENLABS_API_KEY) {
+  for (const l of LINES) {
+    if (fs.existsSync(narDir + l.f)) continue;
+    console.log('generating narration ' + l.f);
+    await elevenlabs(`/v1/text-to-speech/${VOICE}?output_format=mp3_44100_128`,
+      { text: l.text, model_id: 'eleven_multilingual_v2', voice_settings: { stability: 0.38, similarity_boost: 0.8, style: 0.5, use_speaker_boost: true } },
+      narDir + l.f);
+  }
+}
+for (const l of LINES) if (!fs.existsSync(narDir + l.f)) { l.silent = true; missing.push(l); }
+if (missing.length) {
+  console.log(`\nNOTE: ${missing.length} narration line(s) are not cached; those beats run on their burned caption alone.`);
+  for (const l of missing) console.log(`  MISSING ${l.f}  "${l.text}"`);
+  console.log('  (export ELEVENLABS_API_KEY and re-run to record them)\n');
 }
 const BED = narDir + 'bed.mp3';
 let hasBed = fs.existsSync(BED);
@@ -148,6 +172,14 @@ async function film(name, scenario) {
     },
     seed: async fn => {
       await page.evaluate(src => { localStorage.clear(); new Function('return ' + src)()(); }, fn.toString());
+      await page.reload();
+      await page.waitForFunction(() => window.GE && window.GE.L);
+      await S.w(400);
+    },
+    // shape an existing save further (with GE_MENU in hand — contract ids, week dates, targets
+    // are all read from the shipped code rather than guessed), then reload into it
+    tweak: async fn => {
+      await page.evaluate(src => new Function('return ' + src)()(), fn.toString());
       await page.reload();
       await page.waitForFunction(() => window.GE && window.GE.L);
       await S.w(400);
@@ -228,16 +260,21 @@ console.log('filming shots…');
 // -- A · hook: L3, the corner-turn tip + the slow one-drag corner escape (fresh player at L3)
 const A = await film('A-hook', async S => {
   await S.seed(() => {
-    localStorage.setItem('ge_prog', JSON.stringify({ u: 2, s: [3, 3] }));
+    // reveals already spent: the hook's win card must carry stars and PAR and nothing else —
+    // a staged-disclosure NEW row is true, but it is not what these three seconds are selling
+    localStorage.setItem('ge_prog', JSON.stringify({ u: 2, s: [3, 3], rv: ['rescue', 'cert', 'daily', 'survey'], d0: 'pre' }));
     localStorage.setItem('ge_level', '2');
   });
-  await S.caption('ONE DRAG <b>·</b> ONE MOVE <b>·</b> ANY ROUTE');
+  await S.caption('ONE DRAG <b>·</b> ONE MOVE <b>·</b> AROUND THE CORNER');
   await S.page.click('#btnPlay');
   await S.w(1600); // corner tip + teaching route up
   S.mark('drag');
   await S.drag(solutions[2][0].bi, solutions[2][0].path, solutions[2][0].side, 400); // the corner drag
   for (const mv of solutions[2].slice(1)) { await S.drag(mv.bi, mv.path, mv.side, 300); await S.w(250); }
   await S.winUp();
+  // the other two things the opening seconds have to carry: the word PAR (it is on the card
+  // beside the moves) and the promise that nothing is being timed
+  await S.caption('★★★ AT <b>PAR</b> <b>·</b> AND THERE IS <b>NO CLOCK</b>');
   S.mark('win');
   await S.w(4300);
 });
@@ -270,13 +307,13 @@ const L = await film('L-legend', async S => {
     localStorage.setItem('ge_level', '11');
     localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1, twice: 1, undo: 1 }));
   });
-  await S.caption('LEARN IT IN <b>ONE SCREEN</b>');
+  await S.caption('LEARN IT IN <b>ONE SCREEN</b> — NO TUTORIAL, NO TIMER');
   await S.page.click('#btnLegend');
   S.mark('legend'); // the corner-route demo animates at the top
   await S.w(4800);
   S.mark('scroll');
   await S.page.evaluate(() => { const el = document.querySelector('#legend .tblock'); el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }); });
-  await S.w(5000); // the quests/streak/survey/certification rows
+  await S.w(5000); // the approval-chain, daily-draft, survey and certification rows
 });
 
 // -- M · the star meter turns amber → red, undo refunds the move (tour ch07)
@@ -286,7 +323,7 @@ const M = await film('M-meter', async S => {
     localStorage.setItem('ge_level', '3'); // L4: par 4, limit 8 — room to be wasteful
     localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1 }));
   });
-  await S.caption('<b>UNDO</b> IS FREE — IT GIVES THE MOVE BACK');
+  await S.caption('★★★ AT PAR <b>·</b> ★★ ONE OVER <b>·</b> <b>UNDO</b> GIVES THE MOVE BACK');
   await S.page.click('#btnPlay');
   await S.w(900);
   await S.wasteMove(); await S.w(650);  // 3-star pace gone: amber
@@ -374,7 +411,7 @@ const D = await film('D-rescue', async S => {
 const E = await film('E-cert', async S => {
   await S.seed(() => {
     const s = [3, 3, 3, 3, 3, 3, 3, 0, 0, 0]; for (let i = 10; i < 30; i++) s[i] = 3;
-    localStorage.setItem('ge_prog', JSON.stringify({ u: 29, s, skins: ['night', 'white'], seen: [1, 2] }));
+    localStorage.setItem('ge_prog', JSON.stringify({ u: 29, s, skins: ['night', 'white'], seen: [1, 2], rv: ['rescue', 'cert', 'daily', 'survey'], d0: 'pre' }));
     localStorage.setItem('ge_level', '7');
     localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1, twice: 1, undo: 1 }));
   });
@@ -405,81 +442,108 @@ const E = await film('E-cert', async S => {
   await S.w(2900);
 });
 
-// -- F · meta montage: quests one-win-away → all done + freeze banked → streak → survey → levels
-const F = await film('F-meta', async S => {
+// -- W · the week: the sheet index's two rows — the Daily Draft played and filed, then the
+// weekly Field Survey sheet it stamped, then the four-sheet index. (The old quests/ladder
+// montage is gone with the systems it filmed; this is the merged Field Survey. The lives shot
+// went with it: lives are OFF by default now, so filming that card would sell a surface no
+// player sees.)
+const W = await film('W-week', async S => {
   await S.seed(() => {
     const day = n => { const d = new Date(Date.now() - n * 864e5); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-    const isoWeek = t => { const d = new Date(t), th = new Date(d.getFullYear(), d.getMonth(), d.getDate()); th.setDate(th.getDate() + 3 - ((th.getDay() + 6) % 7)); const wk1 = new Date(th.getFullYear(), 0, 4); return th.getFullYear() + '-W' + String(1 + Math.round(((th - wk1) / 864e5 - 3 + ((wk1.getDay() + 6) % 7)) / 7)).padStart(2, '0'); };
-    const seedOf = s => { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
-    const prng = sd => () => { sd = (sd + 0x6D2B79F5) | 0; let t = Math.imul(sd ^ (sd >>> 15), 1 | sd); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-    const roll = date => { const r = prng(seedOf('ge-quests-' + date)), pool = ['clear3', 'clear5', 'stars6', 'stars9', 'par2', 'noundo1', 'nohint2', 'blocks12'], ids = []; while (ids.length < 3) { const id = pool[Math.floor(r() * pool.length)]; if (!ids.includes(id)) ids.push(id); } return ids; };
-    const T = { clear3: 3, clear5: 5, stars6: 6, stars9: 9, par2: 2, noundo1: 1, nohint2: 2, blocks12: 12 };
-    const G = { clear3: 1, clear5: 1, stars6: 3, stars9: 3, par2: 1, noundo1: 1, nohint2: 1, blocks12: 3 };
-    const ids = roll(day(0)), prog = {};
-    for (const id of ids) prog[id] = Math.max(0, T[id] - G[id]);
     const s = [3, 3, 3, 3, 3, 3, 2, 3, 3, 2]; for (let i = 10; i < 25; i++) s[i] = 3;
-    localStorage.setItem('ge_prog', JSON.stringify({ u: 29, s, skins: ['sepia', 'night'], seen: [0, 1] }));
-    localStorage.setItem('ge_level', '2');
+    localStorage.setItem('ge_prog', JSON.stringify({ u: 25, s, skins: ['sepia'], seen: [0], rv: ['rescue', 'cert', 'daily', 'survey'], d0: 'pre' }));
+    localStorage.setItem('ge_level', '25');
     localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1, twice: 1, undo: 1 }));
-    localStorage.setItem('ge_quests', JSON.stringify({ date: day(0), ids, prog, done: [], all: false }));
     localStorage.setItem('ge_streak', JSON.stringify({ len: 3, best: 5, lastDate: day(1), freezes: 0, marks: [day(1), day(3), day(5)] }));
-    localStorage.setItem('ge_ladder', JSON.stringify({ week: isoWeek(Date.now()), pts: 10, ms: [3, 7], last: { week: 'last', pts: 14 } }));
   });
-  await S.caption('DAILY <b>QUESTS</b> · A <b>STREAK</b> WORTH KEEPING');
-  S.mark('title'); // quest bars each one win from done
-  await S.w(4100);
-  await S.page.click('#btnPlay');
-  await S.w(800);
-  for (const mv of solutions[2]) { await S.drag(mv.bi, mv.path, mv.side, 240); await S.w(260); }
-  await S.winUp();
-  S.mark('done'); // the stamped DONE row + "streak freeze banked"
-  await S.w(4700);
-  await S.page.click('#btnNext');
-  await S.w(700);
-  await S.page.click('#btnMenu');
-  await S.w(500);
-  await S.page.click('#btnPauseHome');
-  S.mark('home'); // ALL DONE + streak "4 of last 7 days"
-  await S.w(4100);
-  await S.page.click('#btnLevels'); // landing → sheet index (2026-09-02 cover-sheet menu)
-  await S.page.click('#btnSurvey');
-  S.mark('survey'); // the weekly ladder card
-  await S.w(4700);
-  await S.page.click('#btnSurveyClose');
-  await S.w(300);
-  await S.caption('THREE SHEETS · <b>THIRTY LEVELS</b>');
+  // a mid-week survey: two contracts taken and part-filed, three days stamped, 8 points banked
+  // — exactly the sheet a week of ordinary play produces (ids, targets and week dates all read
+  // out of the shipped code rather than guessed)
+  await S.tweak(() => {
+    const M = window.GE_MENU, cur = M.survey;
+    const s = JSON.parse(localStorage.getItem('ge_survey') || '{}');
+    const off = (cur.offered || []).slice();
+    const d = new Date(window.GE.now());
+    const today = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    s.week = M.isoWeek(); s.offered = off; s.chosen = off.slice(0, 2); s.filed = []; s.prog = {};
+    for (const id of s.chosen) s.prog[id] = Math.max(1, Math.round(M.CONTRACTS[id].target * 0.55));
+    s.days = M.weekDates().filter(x => x <= today).slice(0, 3);
+    s.pts = 8; s.ms = M.MILESTONES.filter(n => 8 >= n); s.seal = false; s.frags = 0; s.last = null;
+    localStorage.setItem('ge_survey', JSON.stringify(s));
+  });
+  await S.caption('A BOARD <b>A DAY</b> — THE SAME BOARD FOR EVERYONE');
+  S.mark('title');
+  await S.w(3400);
   await S.page.click('#btnLevels');
-  S.mark('levels');
-  await S.w(2400);
+  S.mark('index'); // DAILY DRAFT · <date> READY, FIELD SURVEY n/7 · N pts
+  await S.w(3600);
+  await S.page.click('#btnDaily');
+  await S.w(1500);
+  S.mark('draft');
+  await S.solveOut(12, 240);
+  await S.winUp();
+  S.mark('report'); // the FIELD REPORT, verbatim above Share — no route, no grid
+  await S.w(5200);
+  await S.caption('ONE <b>SURVEY SHEET</b> A WEEK — DAYS, CONTRACTS, MARKS');
+  await S.page.click('#btnNext');
+  await S.w(900);
+  await S.page.click('#btnLevels');
+  await S.w(1000);
+  await S.page.click('#btnSurvey');
+  S.mark('survey');
+  await S.w(5000);
+  await S.page.click('#btnSurveyClose');
+  await S.w(400);
+  await S.caption('<b>FOUR SHEETS</b> OF TEN <b>·</b> 40 LEVELS');
   await S.page.evaluate(() => { const el = document.querySelector('#levels .tblock'); el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }); });
-  await S.w(2600);
+  S.mark('levels');
+  await S.w(4200);
 });
 
-// -- V · lives: the calm out-of-lives card and the rewarded refill (tour ch13)
-const V = await film('V-lives', async S => {
+// -- Q · Sheet 4, the approval chain: the 1→2→3 overview, then the whole rule in one gesture —
+// an out-of-turn block slides the length of the board and PARKS against its own open gate.
+const Q = await film('Q-chain', async S => {
   await S.seed(() => {
-    localStorage.setItem('ge_prog', JSON.stringify({ u: 9, s: [3, 3, 3, 3, 3, 3, 3, 3, 3] }));
-    localStorage.setItem('ge_level', '8'); // L9 (L1–5 never cost a life)
+    const s = []; for (let i = 0; i < 30; i++) s[i] = 3;
+    localStorage.setItem('ge_prog', JSON.stringify({ u: 30, s, skins: ['sepia', 'night', 'white'], seen: [0, 1, 2], rv: ['rescue', 'cert', 'daily', 'survey'], d0: 'pre' }));
+    localStorage.setItem('ge_level', '30');
     localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1, twice: 1, undo: 1 }));
-    localStorage.setItem('ge_lives', JSON.stringify({ n: 0, anchor: Date.now() - 6 * 60000 }));
   });
-  await S.caption('A <b>CALM TIMER</b> — NEVER A BLOCKED MENU');
-  await S.w(600);
-  await S.page.click('#btnPlay'); // entering L6+ at zero lives: the calm card
-  await S.page.waitForSelector('#livesModal:not([hidden])', { timeout: 4000 });
-  S.mark('card');
-  await S.w(5200); // hold — the card copy gets read
-  await S.page.click('#btnLifeRefill');
-  await S.adDone();
-  S.mark('refill'); // +1 heart, the card stands down
-  await S.w(2300);
+  await S.caption('SHEET 4 — NUMBERED BLOCKS LEAVE <b>IN ORDER</b>');
+  await S.page.click('#btnPlay');
+  S.mark('intro'); // the one-shot 1→2→3 polyline plays over the board
+  await S.w(3400);
+  const oot = await S.page.evaluate(() => {
+    const info = window.GE.seqInfo();
+    for (let i = 0; i < info.blocks.length; i++) {
+      const b = info.blocks[i];
+      if (!b.seq || b.out || b.nextUp) continue;
+      const r = window.GE.route(i, { ignoreSeq: true }); // the purely geometric question
+      if (r) return { bi: i, path: r.path.slice(1), side: r.side };
+    }
+    return null;
+  });
+  if (oot) {
+    await S.caption('OUT OF TURN? IT STILL MOVES — IT JUST <b>PARKS</b>');
+    await S.drag(oot.bi, oot.path, oot.side, 320);
+    S.mark('park');
+    await S.w(3000);
+    await S.page.click('#btnUndo');
+    await S.w(1400);
+  }
+  await S.caption('SHEET 4 — NUMBERED BLOCKS LEAVE <b>IN ORDER</b>');
+  S.mark('chain');
+  await S.solveOut(8, 260);
+  await S.winUp();
+  S.mark('win');
+  await S.w(3600);
 });
 
 // -- G · flourish: L12 mid-game, three brisk real moves — pure routing, no card, no modal
 const G = await film('G-play', async S => {
   await S.seed(() => {
-    const s = []; for (let i = 0; i < 30; i++) s[i] = 3;
-    localStorage.setItem('ge_prog', JSON.stringify({ u: 29, s, skins: ['sepia', 'night', 'white'], seen: [0, 1, 2] }));
+    const s = []; for (let i = 0; i < 40; i++) s[i] = 3;
+    localStorage.setItem('ge_prog', JSON.stringify({ u: 39, s, skins: ['sepia', 'night', 'white'], seen: [0, 1, 2, 3], rv: ['rescue', 'cert', 'daily', 'survey'], d0: 'pre' }));
     localStorage.setItem('ge_level', '11');
     localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1, twice: 1, undo: 1 }));
   });
@@ -530,7 +594,7 @@ const endcardHtml = `<!doctype html><meta charset="utf-8">
   <h1>GATE<br>ESCAPE</h1>
   <div class="rule"></div><div class="rule thin"></div>
   <p class="tag">Draw your way out.</p>
-  <div class="sub">30 MACHINE-VERIFIED LEVELS</div>
+  <div class="sub">40 MACHINE-VERIFIED LEVELS &middot; NO CLOCK</div>
   <div class="blocks"><span class="bl r"></span><span class="bl b"></span><span class="bl g"></span></div>
   <span class="play">&#9654;&nbsp; PLAY</span>
 </div>`;
@@ -562,20 +626,23 @@ const clip = (shot, from, to, opts = {}) => ({
 });
 
 // ---- 30 s teaser: fewer beats, never faster ones ----
+// The opening 8 s are the store creative the research asked for: a corner-turning one-drag
+// route, then a win card that says PAR with the no-clock promise burned beside it.
 const CUT_30 = [
   clip(A, A.at.drag - 0.35, A.at.win + 0.02, { narLine: 0, tdur: 0, label: 'hook corner drag' }),
-  clip(A, A.at.win + 0.02, A.at.win + 3.4, { trans: 'cut', label: 'hook win card' }),
-  clip(B, B.at.board - 0.1, B.at.win + 3.4, { narLine: 1, label: 'L1 ghost plan + stars' }),
+  clip(A, A.at.win + 0.02, A.at.win + 3.2, { trans: 'cut', label: 'hook win card: par + no clock' }),
+  clip(B, B.at.board - 0.1, B.at.win + 2.7, { narLine: 1, label: 'L1 ghost plan + stars' }),
   clip(E, E.at.lastMove - 0.25, E.at.win + 0.02, { narLine: 3, speed: 1.1, label: 'L8 final drags' }),
-  clip(E, E.at.win + 0.02, E.at.cert + 4.4, { trans: 'cut', label: 'stars + certification' }),
-  clip(G, G.at.board + 0.25, G.at.board + 3.55, { speed: 1.1, label: 'flourish' }),
-  clip(H, 0.6, 6.8, { narLine: 5, trans: 'circleopen', tdur: 0.4, endcard: true, label: 'end card' }),
+  clip(E, E.at.win + 0.02, E.at.cert + 4.2, { trans: 'cut', label: 'stars + certification' }),
+  clip(Q, Q.at.park - 1.6, Q.at.park + 2.2, { narLine: 8, label: 'approval chain: parks' }),
+  clip(G, G.at.board + 0.25, G.at.board + 2.9, { speed: 1.1, label: 'flourish' }),
+  clip(H, 0.6, 6.0, { narLine: 5, trans: 'circleopen', tdur: 0.4, endcard: true, label: 'end card' }),
 ];
 
-// ---- main cut (~55 s) ----
+// ---- main cut (~60 s) ----
 const CUT_MAIN = [
   clip(A, A.at.drag - 0.35, A.at.win + 0.02, { narLine: 0, tdur: 0, label: 'hook corner drag' }),
-  clip(A, A.at.win + 0.02, A.at.win + 3.4, { trans: 'cut', label: 'hook win card' }),
+  clip(A, A.at.win + 0.02, A.at.win + 3.6, { trans: 'cut', label: 'hook win card: par + no clock' }),
   clip(B, B.at.board - 0.1, B.at.win + 3.4, { narLine: 1, label: 'L1 ghost plan + stars' }),
   clip(C, C.at.route - 0.05, C.at.followed + 0.6, { narLine: 2, label: 'hint route + follow' }),
   clip(D, D.at.fail - 1.0, D.at.fail + 3.6, { tdur: 0.25, label: 'fail sheet' }),
@@ -584,18 +651,20 @@ const CUT_MAIN = [
   clip(E, E.at.lastMove - 0.25, E.at.win + 0.02, { narLine: 3, speed: 1.1, label: 'L8 final drags' }),
   clip(E, E.at.win + 0.02, E.at.cert + 4.4, { trans: 'cut', label: 'stars + certification' }),
   clip(E, E.at.white + 0.05, E.at.white + 2.8, { trans: 'slideleft', tdur: 0.25, label: 'whiteprint paper' }),
-  clip(F, F.at.title + 0.1, F.at.title + 3.8, { narLine: 4, label: 'quest rows' }),
-  clip(F, F.at.done + 0.3, F.at.done + 4.0, { trans: 'slideleft', tdur: 0.25, label: 'quests DONE + freeze' }),
-  clip(F, F.at.survey + 0.2, F.at.survey + 3.7, { trans: 'slideleft', tdur: 0.25, label: 'field survey' }),
-  clip(F, F.at.levels + 0.3, F.at.levels + 3.6, { trans: 'slideleft', tdur: 0.25, label: 'level select' }),
+  clip(Q, Q.at.intro + 0.2, Q.at.intro + 3.4, { narLine: 8, label: 'approval chain: 1-2-3' }),
+  clip(Q, Q.at.park - 1.6, Q.at.park + 2.8, { trans: 'cut', label: 'approval chain: parks' }),
+  clip(W, W.at.index + 0.3, W.at.index + 3.7, { narLine: 4, trans: 'slideleft', tdur: 0.25, label: 'draft READY + survey row' }),
+  clip(W, W.at.report + 0.3, W.at.report + 4.4, { trans: 'slideleft', tdur: 0.25, label: 'field report' }),
+  clip(W, W.at.survey + 0.2, W.at.survey + 3.9, { trans: 'slideleft', tdur: 0.25, label: 'field survey' }),
+  clip(W, W.at.levels + 0.4, W.at.levels + 3.6, { trans: 'slideleft', tdur: 0.25, label: 'four-sheet index' }),
   clip(G, G.at.board + 0.25, G.at.board + 3.25, { speed: 1.1, label: 'flourish' }),
   clip(H, 0.6, 6.6, { narLine: 5, trans: 'circleopen', tdur: 0.4, endcard: true, label: 'end card' }),
 ];
 
-// ---- extended cut (~1:55): room to breathe, extra tour chapters, 3 extra lines ----
+// ---- extended cut (~2:00): room to breathe, extra chapters, 3 extra lines ----
 const CUT_2MIN = [
   clip(A, A.at.drag - 1.5, A.at.win + 0.02, { narLine: 0, tdur: 0, label: 'hook corner drag' }),
-  clip(A, A.at.win + 0.02, A.at.win + 3.9, { trans: 'cut', label: 'hook win card' }),
+  clip(A, A.at.win + 0.02, A.at.win + 3.9, { trans: 'cut', label: 'hook win card: par + no clock' }),
   clip(B, B.at.board - 0.1, B.at.win + 3.9, { narLine: 1, label: 'L1 ghost plan + stars' }),
   clip(B, B.at.l2 - 0.3, B.at.l2win + 3.1, { label: 'L2 two colors' }),
   clip(L, L.at.legend + 0.2, L.at.legend + 4.6, { narLine: 6, label: 'legend: rules' }),
@@ -611,13 +680,14 @@ const CUT_2MIN = [
   clip(E, E.at.sepia + 0.05, E.at.sepia + 2.75, { trans: 'slideleft', tdur: 0.25, label: 'sepia paper' }),
   clip(E, E.at.night + 0.05, E.at.night + 2.65, { trans: 'slideleft', tdur: 0.25, label: 'night paper' }),
   clip(E, E.at.white + 0.05, E.at.white + 2.9, { trans: 'slideleft', tdur: 0.25, label: 'whiteprint paper' }),
-  clip(F, F.at.title + 0.1, F.at.title + 4.1, { narLine: 4, label: 'quest rows' }),
-  clip(F, F.at.done + 0.3, F.at.done + 4.4, { trans: 'slideleft', tdur: 0.25, label: 'quests DONE + freeze' }),
-  clip(F, F.at.home + 0.3, F.at.home + 3.8, { trans: 'slideleft', tdur: 0.25, label: 'ALL DONE + streak' }),
-  clip(F, F.at.survey + 0.2, F.at.survey + 4.4, { narLine: 7, label: 'field survey' }),
-  clip(F, F.at.levels + 0.3, F.at.levels + 4.4, { trans: 'slideleft', tdur: 0.25, label: 'level select' }),
-  clip(V, V.at.card - 1.1, V.at.card + 4.3, { narLine: 8, label: 'out-of-lives card' }),
-  clip(V, V.at.refill, V.at.refill + 2.5, { trans: 'cut', label: 'refill +1 heart' }),
+  clip(Q, Q.at.intro + 0.2, Q.at.intro + 3.9, { narLine: 8, label: 'approval chain: 1-2-3' }),
+  clip(Q, Q.at.park - 2.0, Q.at.park + 3.4, { trans: 'cut', label: 'approval chain: parks' }),
+  clip(Q, Q.at.win + 0.02, Q.at.win + 3.3, { trans: 'cut', label: 'chain cleared' }),
+  clip(W, W.at.index + 0.3, W.at.index + 4.1, { narLine: 4, label: 'draft READY + survey row' }),
+  clip(W, W.at.draft + 0.3, W.at.draft + 3.4, { trans: 'slideleft', tdur: 0.25, label: "today's board" }),
+  clip(W, W.at.report + 0.3, W.at.report + 4.8, { trans: 'slideleft', tdur: 0.25, label: 'field report' }),
+  clip(W, W.at.survey + 0.2, W.at.survey + 4.6, { narLine: 7, label: 'field survey' }),
+  clip(W, W.at.levels + 0.4, W.at.levels + 4.2, { trans: 'slideleft', tdur: 0.25, label: 'four-sheet index' }),
   clip(G, G.at.board + 0.25, G.at.board + 3.85, { label: 'flourish' }),
   clip(H, 0.4, 7.6, { narLine: 5, trans: 'circleopen', tdur: 0.4, endcard: true, label: 'end card' }),
 ];
@@ -661,7 +731,12 @@ function assemble(cutName, cuts, outFile) {
 
   // narration: line k starts at its beat's first frame (+0.15 s breath)
   const narAt = [];
-  for (const p of parts) if (p.narLine != null) narAt.push({ file: narDir + LINES[p.narLine].f, line: p.narLine, t: Math.max(0, p.start + 0.15) });
+  for (const p of parts) {
+    if (p.narLine == null) continue;
+    const l = LINES[p.narLine];
+    if (l.silent) { p.silentLine = l.f; continue; } // the beat plays on its burned caption alone
+    narAt.push({ file: narDir + l.f, line: p.narLine, t: Math.max(0, p.start + 0.15) });
+  }
 
   const NV = parts.length;
   const args = [];
@@ -672,7 +747,8 @@ function assemble(cutName, cuts, outFile) {
     graph.push(`[${NV + k}:a]aresample=44100,volume=-1.5dB,adelay=${Math.round(n.t * 1000)}:all=1[n${k}]`);
     return `[n${k}]`;
   }).join('');
-  graph.push(`${narL}amix=inputs=${narAt.length}:duration=longest:normalize=0,asplit=2[narA][narB]`);
+  if (narAt.length) graph.push(`${narL}amix=inputs=${narAt.length}:duration=longest:normalize=0,asplit=2[narA][narB]`);
+  else graph.push(`anullsrc=r=44100:cl=mono,atrim=0:${vDur.toFixed(2)},asplit=2[narA][narB]`);
   if (hasBed) {
     graph.push(`[${NV + narAt.length}:a]aresample=44100,volume=-5dB,afade=t=in:st=0:d=0.8,atrim=0:${vDur.toFixed(2)}[bed]`);
     graph.push(`[bed][narA]sidechaincompress=threshold=0.015:ratio=10:attack=25:release=500[duck]`);
@@ -691,9 +767,10 @@ function assemble(cutName, cuts, outFile) {
     const tin = p.trans === 'cut' ? 0 : (i === 0 ? 0 : p.tdur);
     const tout = i + 1 < parts.length && parts[i + 1].trans !== 'cut' ? parts[i + 1].tdur : 0;
     const readable = p.pdur - tin - tout;
-    console.log(`  ${p.start.toFixed(1).padStart(6)}s  +${p.pdur.toFixed(1)}s  read ${readable.toFixed(1)}s  ${p.trans.padEnd(10)} ${p.speed !== 1 ? p.speed + 'x ' : '   '} ${p.label}${p.narLine != null ? `  ← N${p.narLine + 1}` : ''}`);
+    const nar = p.narLine == null ? '' : p.silentLine ? `  ← N${p.narLine + 1} SILENT (${p.silentLine} not recorded)` : `  ← N${p.narLine + 1}`;
+    console.log(`  ${p.start.toFixed(1).padStart(6)}s  +${p.pdur.toFixed(1)}s  read ${readable.toFixed(1)}s  ${p.trans.padEnd(10)} ${p.speed !== 1 ? p.speed + 'x ' : '   '} ${p.label}${nar}`);
   });
-  console.log(`  narration: ${narAt.map(n => `N${n.line + 1}@${n.t.toFixed(1)}s`).join('  ')}`);
+  console.log(`  narration: ${narAt.length ? narAt.map(n => `N${n.line + 1}@${n.t.toFixed(1)}s`).join('  ') : '(none cached — captions carry every beat)'}`);
   return { parts, vDur };
 }
 
@@ -716,4 +793,9 @@ for (const [cut, file, R] of [['30s', vid + 'promo-30s.mp4', R30], ['main', vid 
 }
 
 console.log('\nstills → ' + stillsDir);
+if (missing.length) {
+  console.log(`\nNARRATION STILL TO RECORD (${missing.length}):`);
+  for (const l of missing) console.log(`  ${l.f}  "${l.text}"`);
+}
+console.log('retired narration (on disk, never used): ' + RETIRED.join(', '));
 fs.rmSync(tmp, { recursive: true, force: true });

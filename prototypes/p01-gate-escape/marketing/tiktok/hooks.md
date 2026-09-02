@@ -2,8 +2,10 @@
 
 Rules applied to every hook: **≤ 8 words**, true of the game as it exists today, and
 paired with a real moment we can film through the engine (`m1`–`m4` from
-`tools/showcase.json`, or a feature-tour chapter `t01`–`t14` from
-`reviews/p01-par-20260831-0056-s1/tour-report.md`). Frameworks: the hook is the
+`tools/showcase.json`, a native 9:16 capture `cap <id>` from `marketing/vertical/index.json`,
+or a feature-tour chapter `t01`–`t17` — the tour was re-scripted on 2026-09-02 for the
+40-level game, so the chapter numbers below are the CURRENT ones printed by
+`tools/feature-tour.mjs`, not the ones in the older tour report). Frameworks: the hook is the
 *packaging* on short-form ("The Hook Is the Package in Short Form", `01_packaging`);
 each hook is one of the **Three Types of Hooks** (Question / Context / Statement,
 `03_video_formula`) and must earn the view inside the **2–3 second decision window**
@@ -54,9 +56,9 @@ Hook IDs are stable and referenced by file names (`b01-v01_H01_m2_raw.mp4`) and 
 | H20 | The meter went red. I kept going. (7) | t07 meter amber → red (shake) | Context | ✓ |
 | H21 | Undo is free. My pride isn't. (6) | t07 undo refund | Statement | ✓ |
 | H22 | Level 1 takes one drag. Then... (6) | m1 L1 → t04 L3 | Context | ✓ |
-| H23 | Out of lives at 1am again. (6) | t13 out-of-lives card | Context | ✓* |
+| H23 | ~~Out of lives at 1am again.~~ RETIRED 2026-09-02 | `?lives=1` only — never against the shipped build | — | — |
 | H24 | The stone doesn't move. I forgot. (7) | t05 first stone (L5) | Context | ✓ |
-| H25 | One more sheet, then bed. (5) | t12 level select (three sheets) | Statement | ✓* |
+| H25 | One more sheet, then bed. (5) | t14 sheet index (four sheets) | Statement | ✓* |
 
 ## Satisfying / ASMR — H26–H33
 
@@ -90,13 +92,13 @@ Hook IDs are stable and referenced by file names (`b01-v01_H01_m2_raw.mp4`) and 
 | id | hook (words) | moment | type | sound-off |
 |---|---|---|---|---|
 | H43 | Every 24 stars certifies a sheet (6) | m4 certification reveal | Statement | ✓* |
-| H44 | Certification is cosmetic. Still want it. (6) | m4 certification → Try it (Sepia) | Statement | ✓* |
-| H45 | Three quests a day. Freeze banked. (6) | t10 quests DONE row | Statement | ✓* |
-| H46 | Day 4 of the streak. Don't break it. (8) | t01 streak row | Statement | ✓* |
-| H47 | Miss a day? A freeze saves it. (7) | t10 freeze banked / t01 notice | Question | ✓* |
-| H48 | 30 levels. Three sheets. Two to certify. (7) | t12 level select | Statement | ✓* |
-| H49 | Weekly survey stamp at 20 points. (6) | t11 Field Survey card | Statement | ✓* |
-| H50 | Lives refill. The puzzle waits. (5) | t13 lives card (calm timer) | Statement | ✓* |
+| H44 | Certification is cosmetic. Still want it. (6) | m4 / t11 certification → Try it (Sepia) | Statement | ✓* |
+| H45 | ~~Three quests a day. Freeze banked.~~ RETIRED 2026-09-02 | the daily quests were merged into the Field Survey | — | — |
+| H46 | Day 4 of the streak. Don't break it. (8) | t01 title block streak stamp | Statement | ✓* |
+| H47 | Miss a day? A weather delay covers it. (8) | t13 survey spine (`~` stamp) / launch notice | Question | ✓* |
+| H48 | 40 levels. Four sheets. Six to certify. (7) | t14 sheet index | Statement | ✓* |
+| H49 | Weekly survey stamp at 20 points. (6) | t13 Field Survey sheet | Statement | ✓* |
+| H50 | ~~Lives refill. The puzzle waits.~~ RETIRED 2026-09-02 | lives are OFF by default; there is no card to film | — | — |
 
 ## Batch-02 additions — H51
 *Minted 2026-08-31 for batch-02 (the "day 1 vs day 7" POV cut). `cap` = a native 9:16 capture from `tools/capture-vertical.mjs` (`marketing/vertical/index.json` lists the recipe and its marks).*
@@ -104,6 +106,21 @@ Hook IDs are stable and referenced by file names (`b01-v01_H01_m2_raw.mp4`) and 
 | id | hook (words) | moment | type | sound-off |
 |---|---|---|---|---|
 | H51 | Day 1 vs day 7. Same one rule. (7) | cap v-day1 (fresh title block → L1) + v-day7 (a save the engine built over 7 simulated days → L13) | Context | ✓* |
+
+## Research-round additions — H52–H58
+*Minted 2026-09-02 for the post-round game: the Sheet 4 approval chain, the Daily Draft and
+the no-clock promise the research says to lead with. `cap v-chain-l31` is the native 9:16
+capture of the chain; `t15`/`t16` are the tour's chain chapters.*
+
+| id | hook (words) | moment | type | sound-off |
+|---|---|---|---|---|
+| H52 | It slid all the way. It parked. (7) | cap v-chain-l31 `park` / t16 out-of-turn | Statement | ✓ |
+| H53 | The gate was open. It still waited. (7) | cap v-chain-l31 `park` | Statement | ✓ |
+| H54 | Block two cannot go before block one. (7) | t15 chain intro (1→2→3 overview) | Statement | ✓ |
+| H55 | Same board. Every player. Today only. (6) | t12 daily draft READY → board | Statement | ✓* |
+| H56 | I share the score, never the route. (7) | t12 field report card | Statement | ✓* |
+| H57 | No timer. Only the moves you spend. (7) | promo-30s hook card (par + no clock) | Statement | ✓ |
+| H58 | Three stars is par. Nothing else. (6) | t09 star meter amber → red | Statement | ✓ |
 
 ## Honesty notes (why some obvious hooks are missing)
 
@@ -113,10 +130,20 @@ Hook IDs are stable and referenced by file names (`b01-v01_H01_m2_raw.mp4`) and 
 - H15 asserts the *design* (spike at L20–25 per the CrazyLabs curve in the README), not
   player behaviour — we have no quit data yet. Once the beacon is live, level-funnel data
   may earn a "most people stall here" hook; not before.
-- H23 ("Out of lives") is only usable in the `?lives=1` build. Lives are OFF by default
-  as of 2026-09-02, so this hook must never run against the shipped build — it would
-  advertise a gate the player will not meet.
-- H51 ("Day 7") shows a save the engine itself built — twelve levels cleared through the solver's own drag physics across seven consecutive days advanced with `GE.now`, the engine's test clock — so the streak, quests, survey points and sheet certification are the game's own bookkeeping, not typed-in numbers. It is still a simulated week, and the report says so; swap in the founder's real day-7 save when one exists.
+- **Retired hooks are struck through, not deleted**, because the batch manifests cite hook
+  ids and the record of what ran has to keep resolving. H23 and H50 (lives) went with the
+  2026-09-02 default-off decision — filming a gate the player never meets would advertise a
+  product that does not exist. H45 (three daily quests) went with the Field Survey merge.
+  H47 survived the merge with new language: the freeze is a *weather delay* and it is stamped
+  on the survey's day spine.
+- H55/H56 are the Daily Draft. The share text is deliberately spoiler-free — a par bar,
+  stars, moves and route efficiency, never a grid — because every player is on the same
+  board that day, so a picture of the line would be a walkthrough. A creative may show the
+  report card; it may never show the solved board of a live day.
+- H52–H54 are the approval chain. The out-of-turn park is real engine behaviour reached
+  through `GE.route(bi, {ignoreSeq:true})` — the geometric question the engine then refuses
+  — and the drag it costs is charged on camera. Nothing about it is staged.
+- H51 ("Day 7") shows a save the engine itself built — twelve levels cleared through the solver's own drag physics across seven consecutive days advanced with `GE.now`, the engine's test clock — so the streak, survey points and sheet certification are the game's own bookkeeping, not typed-in numbers. It is still a simulated week, and the report says so; swap in the founder's real day-7 save when one exists.
 - Hooks that name a moment inside a rewarded slot (hint, rescue, refill) must show the
   game's own AD tag when the tap is on screen, or cut around the placeholder card as the
   promo does — never imply the reward is free once monetized.
