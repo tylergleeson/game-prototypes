@@ -120,3 +120,12 @@ reset — critic session validates the copy; solver caps on chained boards.
 ## Round follow-ups (lead-maintained)
 - [ ] Beacon pass: add streak-lapse telemetry (`streak_reset` event) — pass 1 deleted the repair surface, so there is currently zero signal on lapse frequency; the critic session will want it (r1-report).
 - [ ] Pass 8: `cap sync ios` (app/ios public/ is the pre-pass-1 mirror); re-render stale marketing footage when ELEVENLABS_API_KEY is provided.
+
+## Star/difficulty tightening (user decision 2026-09-02)
+3★ already requires exactly par (optimal) — unchanged. Tighten the padding:
+- Pass 5 (game.js owner): `starsFor` 2★ band par+2 → **par+1**; update the star-meter
+  check and win-card copy; adapter rules text.
+- Pass 7: move limits tighten to **par+2 from Sheet 2 onward** (L1–5 keep par+3/+4 —
+  the no-fail tutorial rule holds); sawtooth as planned. Playtest fail/rescue checks
+  gain a "limits schedule" assertion; expect the rescue surface to actually appear in
+  normal play now.
