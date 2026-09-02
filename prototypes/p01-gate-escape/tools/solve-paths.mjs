@@ -2,30 +2,18 @@
 // Re-solves every level in levels.js recording the actual move sequence
 // (block, cell-by-cell drag path, exit side). Output: tools/solutions.json.
 // Used by playtest.mjs to beat the real game engine within par.
+//
+// The board rules (occupancy, fit, exit) come from `tools/gen-core.mjs` — the
+// same code the generator proved par with, so a replay can never disagree with
+// the level it is replaying. Only the path-recording variant of reachability
+// lives here (the core's `reachable` returns spots without parent pointers).
 
 import fs from 'fs';
+import { makeOcc, fits, canExit } from './gen-core.mjs';
 
 const src = fs.readFileSync(new URL('../levels.js', import.meta.url), 'utf8');
 const LEVELS = JSON.parse(src.replace(/^const LEVELS = /, '').replace(/;\s*$/, ''));
 
-function makeOcc(level, positions) {
-  const occ = Array.from({ length: level.h }, () => Array(level.w).fill(-1));
-  for (const [sx, sy] of level.stones) occ[sy][sx] = -2;
-  positions.forEach((pos, i) => {
-    if (!pos) return;
-    for (const [cx, cy] of level.blocks[i].cells) occ[pos[1] + cy][pos[0] + cx] = i;
-  });
-  return occ;
-}
-function fits(level, occ, bi, x, y) {
-  for (const [cx, cy] of level.blocks[bi].cells) {
-    const gx = x + cx, gy = y + cy;
-    if (gx < 0 || gy < 0 || gx >= level.w || gy >= level.h) return false;
-    const o = occ[gy][gx];
-    if (o !== -1 && o !== bi) return false;
-  }
-  return true;
-}
 // reachable positions + parent pointers for path reconstruction
 function reachableWithPaths(level, occ, bi, from) {
   const seen = new Map([[from[0] + ',' + from[1], null]]);
@@ -50,49 +38,15 @@ function pathTo(parents, target) {
   }
   return path.reverse();
 }
-function canExit(level, occ, bi, x, y) {
-  const b = level.blocks[bi];
-  const cols = new Map(), rows = new Map();
-  for (const [cx, cy] of b.cells) {
-    const gx = x + cx, gy = y + cy;
-    if (!cols.has(gx)) cols.set(gx, { min: gy, max: gy });
-    else { const c = cols.get(gx); c.min = Math.min(c.min, gy); c.max = Math.max(c.max, gy); }
-    if (!rows.has(gy)) rows.set(gy, { min: gx, max: gx });
-    else { const r = rows.get(gy); r.min = Math.min(r.min, gx); r.max = Math.max(r.max, gx); }
-  }
-  for (const g of level.gates) {
-    if (g.color !== b.color) continue;
-    const span = new Set();
-    for (let i = 0; i < g.len; i++) span.add(g.start + i);
-    if (g.side === 'top' || g.side === 'bottom') {
-      if (![...cols.keys()].every(c => span.has(c))) continue;
-      let clear = true;
-      for (const [c, mm] of cols) {
-        if (g.side === 'top') { for (let yy = mm.min - 1; yy >= 0 && clear; yy--) { const o = occ[yy][c]; if (o !== -1 && o !== bi) clear = false; } }
-        else { for (let yy = mm.max + 1; yy < level.h && clear; yy++) { const o = occ[yy][c]; if (o !== -1 && o !== bi) clear = false; } }
-        if (!clear) break;
-      }
-      if (clear) return g.side;
-    } else {
-      if (![...rows.keys()].every(r => span.has(r))) continue;
-      let clear = true;
-      for (const [r, mm] of rows) {
-        if (g.side === 'left') { for (let xx = mm.min - 1; xx >= 0 && clear; xx--) { const o = occ[r][xx]; if (o !== -1 && o !== bi) clear = false; } }
-        else { for (let xx = mm.max + 1; xx < level.w && clear; xx++) { const o = occ[r][xx]; if (o !== -1 && o !== bi) clear = false; } }
-        if (!clear) break;
-      }
-      if (clear) return g.side;
-    }
-  }
-  return null;
-}
 
 function stateKey(positions) {
   return positions.map(p => (p ? p[0] + '.' + p[1] : 'X')).join('|');
 }
 
-// A* with parent pointers, cap = par (known optimal from generation)
-function solveWithPath(level) {
+// A* with parent pointers, cap = par (known optimal from generation).
+// `opts` is the core's reserved exit-rule options bag (see gen-core.mjs) —
+// threaded so sequenced-exit levels can be replayed without touching this file.
+function solveWithPath(level, opts = {}) {
   const n = level.blocks.length;
   const cap = level.par;
   const start = level.blocks.map(b => [b.x, b.y]);
@@ -129,10 +83,10 @@ function solveWithPath(level) {
       };
       // exit moves
       for (const [x, y] of spots) {
-        const side = canExit(level, occ, bi, x, y);
-        if (side) {
+        const gate = canExit(level, occ, bi, x, y, opts);
+        if (gate) {
           const np = positions.slice(); np[bi] = null;
-          push(np, { bi, path: pathTo(parents, [x, y]), side });
+          push(np, { bi, path: pathTo(parents, [x, y]), side: gate.side });
           break; // one exit route suffices
         }
       }
