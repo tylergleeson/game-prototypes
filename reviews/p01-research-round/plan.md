@@ -116,3 +116,7 @@ Rule drift between gen-core and game.js (parity check is the guard); solutions/s
 churn on 6–7 (separate commits); bundle size at 3 and 6; append-only dailies is an
 invariant (lock + check); repair-ad removal leaves zero-delay players with a silent
 reset — critic session validates the copy; solver caps on chained boards.
+
+## Round follow-ups (lead-maintained)
+- [ ] Beacon pass: add streak-lapse telemetry (`streak_reset` event) — pass 1 deleted the repair surface, so there is currently zero signal on lapse frequency; the critic session will want it (r1-report).
+- [ ] Pass 8: `cap sync ios` (app/ios public/ is the pre-pass-1 mirror); re-render stale marketing footage when ELEVENLABS_API_KEY is provided.
