@@ -1,5 +1,7 @@
 {
   "_comment": "Gate Escape (p01) — curated ad/creative moments. Every entry is REAL gameplay reachable by any player at the stated level; tools/capture.mjs plays each recipe through the shipped engine with real pointer gestures and records stills + a short webm into prototypes/p01-gate-escape/marketing/. ASA 'core experience' compliance: nothing shown here is staged, sped up, or exclusive to the capture build — the honest-claim note on each moment says where it lives in the game.",
+  "_updated": "2026-09-02 — post-research-round: 40 levels in four sheets, lives off by default, chests renamed Sheet Certification. The Sheet 4 approval chain and the Daily Draft are NOT in this manifest because tools/capture.mjs has no scenario for them; that footage lives in prototypes/p01-gate-escape/marketing/vertical/ (v-chain-l31) and the feature tour instead.",
+  "_stale_renders": "m4's rendered files on disk (m4-chest.webm, m4-chest-opening.png, m4-chest-open-try-it.png) predate the rename and still show the chest glyph and 'Chest opened'. The id is kept because tools/capture.mjs keys its scenarios on it; re-run tools/capture.mjs to refresh the footage under the current copy.",
   "viewport": { "width": 390, "height": 844, "deviceScaleFactor": 2 },
   "moments": [
     {
@@ -13,7 +15,7 @@
         "hold on the win card through the star drop"
       ],
       "console": "GE.load(0); then GE.dragVia(0, [], 'right')",
-      "honest_claim": "Level 1 exactly as every new player sees it; the ghost route on the board is the built-in L1 teaching overlay, shown to everyone."
+      "honest_claim": "Level 1 exactly as every new player sees it; the ghost route on the board is the built-in L1 teaching overlay, shown to everyone. The title block reads Level 1 / 40 and Stars 0 / 120, and the sheet index behind it is bare — staged disclosure means a new save has no meta rows yet."
     },
     {
       "id": "m2-rescue",
@@ -26,7 +28,7 @@
         "play the solver's reference moves with the rescued budget"
       ],
       "console": "GE.load(5); shuffle any block until movesLeft is 0; btnRescue",
-      "honest_claim": "Level 6 is the first level whose par exceeds its block count; every player who runs out of moves sees exactly this sheet, route and rescue (rescue is once per attempt)."
+      "honest_claim": "Level 6 is the first level whose par exceeds its block count; every player who runs out of moves sees exactly this sheet, route and rescue (rescue is once per attempt). Retrying costs nothing — lives are off by default since 2026-09-02."
     },
     {
       "id": "m3-hint",
@@ -44,14 +46,14 @@
     {
       "id": "m4-chest",
       "level": 8,
-      "film": "A par (3-star) clear of level 8 that carries Sheet 1 across 24★: stars drop with the spark burst, then the chest row pops — lid swings open, sparks, chime — naming the Sepia draft paper with its Try it button.",
+      "film": "A par (3-star) clear of level 8 that carries Sheet 1 across 24★: stars drop with the spark burst, then the certification row lands — the stamp comes down with sparks and a chime — naming the Sepia draft paper with its Try it button.",
       "recipe": [
-        "seed L1–7 at 3★ (21★, chest at 24★ needs this win), start level 8",
+        "seed L1–7 at 3★ (21★; certification at 24★ needs this win), start level 8",
         "pointer-drag the par solution (solutions[7])",
-        "hold through stars → chest reveal → Try it"
+        "hold through stars → the certification stamp → Try it"
       ],
       "console": "seed ge_prog {u:29, s:[3,3,3,3,3,3,3]}; GE.load(7); play solutions[7]",
-      "honest_claim": "Chests open at 24 of a sheet's 30 stars and reward a cosmetic paper skin only; nothing is gated on them. Any player crossing 24★ on Sheet 1 sees exactly this reveal."
+      "honest_claim": "A sheet is certified at 24 of its 30 stars and rewards a cosmetic paper skin only (Sheet 4 rewards the approval stamp instead of a fourth paper); nothing is gated on any of it. Any player crossing 24★ on Sheet 1 sees exactly this reveal."
     }
   ]
 }
