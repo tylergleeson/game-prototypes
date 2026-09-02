@@ -6,6 +6,7 @@ import fs from 'fs';
 const root = new URL('..', import.meta.url).pathname;
 const html = fs.readFileSync(root + 'index.html', 'utf8');
 const levels = fs.readFileSync(root + 'levels.js', 'utf8');
+const dailies = fs.readFileSync(root + 'dailies.js', 'utf8'); // Daily Draft table (generated)
 const game = fs.readFileSync(root + 'game.js', 'utf8');
 const menu = fs.readFileSync(root + 'menu.js', 'utf8');
 const beacon = fs.readFileSync(root + 'beacon.js', 'utf8');
@@ -18,6 +19,7 @@ ${style}
 ${body}<script>
 window.BEACON_URL = window.BEACON_URL || ''; // '' = beacon disabled (zero network) — artifact builds stay offline
 ${levels}
+${dailies}
 ${game}
 ${menu}
 ${beacon}

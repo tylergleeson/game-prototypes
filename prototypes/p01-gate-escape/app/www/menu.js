@@ -156,15 +156,15 @@
       : `Level <b>${GE.level + 1}</b> / ${N} · ★ <b>${starsTotal()}</b>`
         + (live ? ` · <i>${live}-day streak</i>` : '');
   }
-  // the sheet index's field log: progress, the day's quests, streak/lives, the survey row, the
-  // paper picker and the sound/haptics toggles
+  // the sheet index's field log: progress, the field-survey row (the week's sheet is one tap
+  // deeper), the lives row when the economy is on, the paper picker and the sound/haptics toggles
   function refreshLog() {
     $('fLevel').textContent = (GE.level + 1) + ' / ' + N;
     $('fStars').textContent = starsTotal() + ' / ' + (N * 3);
     refreshSound();
     refreshHaptics();
     refreshPapers();
-    refreshDaily();
+    refreshSurvey();
   }
   function buildGrid() {
     const g = $('levelGrid');
@@ -303,73 +303,129 @@
   }
   btnTry.onclick = () => { if (certSkin && setSkin(certSkin, 'win')) { btnTry.disabled = true; btnTry.textContent = 'On'; } };
 
-  // ---------- daily quests + streak (freezes, week marks) + weekly ladder ----------
-  // Three quests roll each local day, deterministically from the date (every player shares the
-  // day's set); the templates are safe telemetry facts — never ad views, boosters or spending,
-  // and nothing a content change could make impossible. Completing all three banks ONE streak
-  // freeze (max 2 held). The streak day-mark stays "≥1 level cleared"; a missed day consumes a
-  // banked freeze automatically (calm notice at next launch). With no freeze banked the streak
-  // simply starts again — there is NO repair surface: nothing to watch, nothing to buy, no card
-  // at the moment of loss (2026-09-02: the streak-repair ad was deleted, not disabled). The Field Survey is a weekly
-  // personal ladder: 1 point per clear, +1 at par, stamps at 3/7/12/20 — no leaderboard, no
-  // comparison, everyone can finish. All dates flow through GE.now() so bots simulate days;
-  // state lives in separate keys: ge_streak / ge_quests / ge_ladder.
-  const QUEST_TEMPLATES = {
-    clear3:   { label: 'Clear 3 levels',               target: 3,  gain: d => 1 },
-    clear5:   { label: 'Clear 5 levels',               target: 5,  gain: d => 1 },
-    stars6:   { label: 'Earn 6 stars',                 target: 6,  gain: d => d.stars },
-    stars9:   { label: 'Earn 9 stars',                 target: 9,  gain: d => d.stars },
-    par2:     { label: 'Clear 2 levels at par',        target: 2,  gain: d => (d.moves <= d.par ? 1 : 0) },
-    noundo1:  { label: 'Clear a level without undo',   target: 1,  gain: d => (d.undos === 0 ? 1 : 0) },
-    nohint2:  { label: 'Clear 2 levels without hints', target: 2,  gain: d => (d.hints === 0 ? 1 : 0) },
-    blocks12: { label: 'Clear 12 blocks',              target: 12, gain: d => d.blocks },
+  // ---------- Field Survey: ONE weekly sheet (day spine + contracts + marks + seal) ----------
+  // The 2026-09-02 research round merged three overlapping meta systems — daily quests, the
+  // streak card and the weekly ladder — into a single sheet the surveyor fills in over a week:
+  //   * a 7-day spine, Mon–Sun: any level clear stamps today (a Daily Draft clear counts too —
+  //     this listens to ge:win and asks no questions about which board it was);
+  //   * two CONTRACTS chosen from the four the week offers (rolled deterministically from the ISO
+  //     week, so everyone sees the same four). Swapping is free until a chosen contract earns its
+  //     first progress; after that the pair is set for the week — a choice you can undo forever is
+  //     not a choice, and one you can never revisit punishes a blind first tap;
+  //   * point MARKS at 3/7/12/20 on the same sheet, on the ladder's own rule (1 per clear, +1 at par);
+  //   * filing ONE contract banks a WEATHER DELAY (max 2 — the same ge_streak.freezes field, same
+  //     shape, renamed only in the language); filing BOTH seals the week and yields a fragment.
+  // The streak itself is unchanged and its state key is byte-identical (zero-risk preservation of
+  // real streaks): consecutive calendar days with >=1 clear, best kept, rolling 7-day marks. A
+  // missed day covered by a banked delay is stamped WEATHER DELAY on the spine; with nothing
+  // banked the streak simply starts again — there is NO repair surface, nothing to watch, nothing
+  // to buy, no card at the moment of loss. All dates flow through GE.now() so bots simulate days.
+  // State: ge_streak (unchanged) + ge_survey (new). ge_quests / ge_ladder are migrated once, then
+  // removed. Nothing here is ever gated on — the funnel test needs every level reachable.
+  const CONTRACTS = {
+    clear12:  { label: 'Clear 12 levels',             target: 12, gain: d => 1 },
+    clear20:  { label: 'Clear 20 levels',             target: 20, gain: d => 1 },
+    stars30:  { label: 'Earn 30 stars',               target: 30, gain: d => d.stars },
+    stars45:  { label: 'Earn 45 stars',               target: 45, gain: d => d.stars },
+    par8:     { label: 'Clear 8 levels at par',       target: 8,  gain: d => (d.moves <= d.par ? 1 : 0) },
+    noundo5:  { label: 'Clear 5 levels without undo', target: 5,  gain: d => (d.undos === 0 ? 1 : 0) },
+    nohint8:  { label: 'Clear 8 levels without hints',target: 8,  gain: d => (d.hints === 0 ? 1 : 0) },
+    blocks60: { label: 'Clear 60 blocks',             target: 60, gain: d => d.blocks },
   };
-  const FREEZE_MAX = 2, MILESTONES = [3, 7, 12, 20];
+  const OFFERED = 4, PICKS = 2, DELAY_MAX = 2, MILESTONES = [3, 7, 12, 20];
+  const DAY_INITIALS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  const dayStr = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const dayGap = (a, b) => Math.round((new Date(b + 'T12:00') - new Date(a + 'T12:00')) / 864e5); // noon-anchored: DST-safe
+  // deterministic roll: FNV-1a of the ISO week seeds a tiny PRNG — every player, same four contracts
+  const seedOf = s => { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+  const prng = seed => () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  function isoWeek(t) {
+    const d = new Date(t), th = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    th.setDate(th.getDate() + 3 - ((th.getDay() + 6) % 7)); // the week's Thursday decides the ISO year
+    const wk1 = new Date(th.getFullYear(), 0, 4);
+    const w = 1 + Math.round(((th - wk1) / 864e5 - 3 + ((wk1.getDay() + 6) % 7)) / 7);
+    return th.getFullYear() + '-W' + String(w).padStart(2, '0');
+  }
+  // the seven local dates of t's ISO week, Monday first (built from Y/M/D, so DST never shifts one)
+  function weekDates(t) {
+    const d = new Date(t), mon = new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 6) % 7));
+    return Array.from({ length: 7 }, (_, i) => dayStr(new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + i).getTime()));
+  }
+  function rollContracts(week) {
+    const r = prng(seedOf('ge-survey-' + week)), pool = Object.keys(CONTRACTS), ids = [];
+    while (ids.length < OFFERED) { const id = pool[Math.floor(r() * pool.length)]; if (!ids.includes(id)) ids.push(id); }
+    return ids;
+  }
+
+  // ---------- state ----------
   let streak = { len: 0, best: 0, lastDate: null, freezes: 0, marks: [] };
   try { const s = JSON.parse(localStorage.getItem('ge_streak') || 'null'); if (s && typeof s.len === 'number') streak = { ...streak, ...s }; } catch (e) {}
   if (!Array.isArray(streak.marks)) streak.marks = [];
   if (!Number.isInteger(streak.freezes)) streak.freezes = 0;
   const saveStreak = () => { try { localStorage.setItem('ge_streak', JSON.stringify(streak)); } catch (e) {} };
-  let quests = { date: null, ids: [], prog: {}, done: [], all: false };
-  try { const q = JSON.parse(localStorage.getItem('ge_quests') || 'null'); if (q && Array.isArray(q.ids)) quests = { ...quests, ...q }; } catch (e) {}
-  const saveQuests = () => { try { localStorage.setItem('ge_quests', JSON.stringify(quests)); } catch (e) {} };
-  let lad = { week: null, pts: 0, ms: [], last: null };
-  try { const l = JSON.parse(localStorage.getItem('ge_ladder') || 'null'); if (l && typeof l.pts === 'number') lad = { ...lad, ...l }; } catch (e) {}
-  const saveLadder = () => { try { localStorage.setItem('ge_ladder', JSON.stringify(lad)); } catch (e) {} };
-  const dayStr = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-  const dayGap = (a, b) => Math.round((new Date(b + 'T12:00') - new Date(a + 'T12:00')) / 864e5); // noon-anchored: DST-safe
-  // deterministic roll: FNV-1a of the local date seeds a tiny PRNG — every player, same three
-  const seedOf = s => { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
-  const prng = seed => () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-  function rollQuests(date) {
-    const r = prng(seedOf('ge-quests-' + date)), pool = Object.keys(QUEST_TEMPLATES), ids = [];
-    while (ids.length < 3) { const id = pool[Math.floor(r() * pool.length)]; if (!ids.includes(id)) ids.push(id); }
-    return ids;
-  }
-  function questsToday() {
-    const today = dayStr(GE.now());
-    if (quests.date !== today) { quests = { date: today, ids: rollQuests(today), prog: {}, done: [], all: false }; saveQuests(); }
-    return quests;
-  }
-  function onWinQuests(d) {
-    const q = questsToday(), justDone = [];
-    for (const id of q.ids) {
-      if (q.done.includes(id)) continue;
-      const t = QUEST_TEMPLATES[id];
-      if (!t) continue;
-      q.prog[id] = Math.min(t.target, (q.prog[id] || 0) + t.gain(d));
-      if (q.prog[id] >= t.target) { q.done.push(id); justDone.push(id); track('quest_done', { id }); }
+
+  const blankSurvey = (week, keep) => ({ week, offered: rollContracts(week), chosen: [], prog: {}, filed: [],
+    days: [], delays: [], pts: 0, ms: [], seal: false, frags: (keep && keep.frags) || 0, last: (keep && keep.last) || null });
+  let survey = blankSurvey(isoWeek(GE.now()));
+  const saveSurvey = () => { try { localStorage.setItem('ge_survey', JSON.stringify(survey)); return true; } catch (e) { return false; } };
+  // one-shot migration off the v1 pair. ge_streak is NOT touched, so len / best / freezes / marks
+  // survive by construction. ge_quests is dropped: a single day's quests have no weekly meaning and
+  // the contracts are a different bargain. ge_ladder's points, marks and last-week line carry over,
+  // and the day spine is seeded from the streak's rolling week marks — the same fact, already
+  // recorded — so a player migrating mid-week does not see a week they played read as empty.
+  function migrateV1() {
+    const week = isoWeek(GE.now());
+    let old = null;
+    try { old = JSON.parse(localStorage.getItem('ge_ladder') || 'null'); } catch (e) {}
+    survey = blankSurvey(week);
+    if (old && typeof old.pts === 'number') {
+      if (old.week === week) { survey.pts = old.pts; survey.ms = Array.isArray(old.ms) ? old.ms.slice() : []; survey.last = old.last || null; }
+      else if (old.week) survey.last = { week: old.week, pts: old.pts, filed: 0, seal: false };
+      else survey.last = old.last || null;
     }
-    let allJustDone = false, freezeBanked = false;
-    if (!q.all && q.ids.length === 3 && q.done.length === 3) {
-      q.all = true; allJustDone = true;
-      track('quests_all_done', { date: q.date });
-      if (streak.freezes < FREEZE_MAX) { streak.freezes++; freezeBanked = true; saveStreak(); }
-    }
-    saveQuests();
-    return { justDone, allJustDone, freezeBanked };
+    const dates = weekDates(GE.now());
+    survey.days = streak.marks.filter(d => dates.includes(d));
+    if (!saveSurvey()) return false;
+    try { localStorage.removeItem('ge_ladder'); localStorage.removeItem('ge_quests'); } catch (e) {}
+    track('survey_migrated', { pts: survey.pts, marks: survey.ms.length, days: survey.days.length });
+    return true;
   }
-  // streak day-mark (unchanged: ≥1 clear marks the day) + the rolling last-7-days marks
+  {
+    let v = null;
+    try { v = JSON.parse(localStorage.getItem('ge_survey') || 'null'); } catch (e) {}
+    if (v && typeof v.week === 'string') {
+      survey = { ...survey, ...v };
+      for (const k of ['offered', 'chosen', 'filed', 'days', 'delays', 'ms']) if (!Array.isArray(survey[k])) survey[k] = [];
+      if (!survey.prog || typeof survey.prog !== 'object') survey.prog = {};
+      if (!survey.offered.length) survey.offered = rollContracts(survey.week);
+    } else migrateV1(); // guarded by the ABSENCE of ge_survey: it can only ever run once
+  }
+  // the week roll: everything on the sheet is this week's, and only last week's result line survives
+  function surveyWeek() {
+    const w = isoWeek(GE.now());
+    if (survey.week !== w) {
+      const last = survey.week ? { week: survey.week, pts: survey.pts, filed: survey.filed.length, seal: !!survey.seal } : survey.last;
+      survey = blankSurvey(w, { frags: survey.frags, last });
+      saveSurvey();
+    }
+    return survey;
+  }
+  // free to swap until a chosen contract has actually earned something; after that the week's pair
+  // is set (a filed contract counts as progress too)
+  const contractsLocked = () => surveyWeek().chosen.some(id => (survey.prog[id] || 0) > 0);
+  function chooseContract(id) {
+    const s = surveyWeek();
+    if (contractsLocked() || !s.offered.includes(id)) return false;
+    const i = s.chosen.indexOf(id);
+    if (i >= 0) s.chosen.splice(i, 1);
+    else if (s.chosen.length < PICKS) s.chosen.push(id);
+    else return false;
+    delete s.prog[id];
+    saveSurvey();
+    track('contract_select', { id, on: i < 0, chosen: s.chosen.length });
+    return true;
+  }
+  // streak day-mark (unchanged: >=1 clear marks the day) + the rolling last-7-days marks
   function onClear() {
     const today = dayStr(GE.now());
     if (!streak.marks.includes(today)) streak.marks.push(today);
@@ -386,74 +442,130 @@
     saveStreak();
     return { newBest };
   }
-  // weekly ladder (ISO week via GE.now); history keeps just last week's result line
-  function isoWeek(t) {
-    const d = new Date(t), th = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    th.setDate(th.getDate() + 3 - ((th.getDay() + 6) % 7)); // the week's Thursday decides the ISO year
-    const wk1 = new Date(th.getFullYear(), 0, 4);
-    const w = 1 + Math.round(((th - wk1) / 864e5 - 3 + ((wk1.getDay() + 6) % 7)) / 7);
-    return th.getFullYear() + '-W' + String(w).padStart(2, '0');
-  }
-  function ladderWeek() {
-    const w = isoWeek(GE.now());
-    if (lad.week !== w) { if (lad.week) lad.last = { week: lad.week, pts: lad.pts }; lad.week = w; lad.pts = 0; lad.ms = []; saveLadder(); }
-    return lad;
-  }
-  function onWinLadder(d) {
-    ladderWeek();
+  // one win, one pass over the sheet: stamp the day, take the points, advance both contracts
+  function onWinSurvey(d) {
+    const s = surveyWeek(), today = dayStr(GE.now());
+    if (!s.days.includes(today)) { s.days.push(today); track('survey_day', { days: s.days.length }); }
     const gain = 1 + (d.moves <= d.par ? 1 : 0);
-    lad.pts += gain;
-    track('ladder_point', { pts: lad.pts, gain });
-    const hit = MILESTONES.filter(n => lad.pts >= n && !lad.ms.includes(n));
-    for (const n of hit) { lad.ms.push(n); track('ladder_milestone', { n }); }
-    saveLadder();
-    return { gain, hit };
+    s.pts += gain;
+    track('survey_point', { pts: s.pts, gain });
+    const hit = MILESTONES.filter(n => s.pts >= n && !s.ms.includes(n));
+    for (const n of hit) { s.ms.push(n); track('survey_mark', { n }); }
+    const filedBefore = s.filed.length, justFiled = [];
+    for (const id of s.chosen) {
+      if (s.filed.includes(id)) continue;
+      const t = CONTRACTS[id];
+      if (!t) continue;
+      s.prog[id] = Math.min(t.target, (s.prog[id] || 0) + t.gain(d));
+      if (s.prog[id] >= t.target) { s.filed.push(id); justFiled.push(id); track('contract_filed', { id }); }
+    }
+    // the FIRST filing of the week banks one weather delay (honestly nothing when the bank is full)
+    let delayBanked = false, sealed = false;
+    if (justFiled.length && filedBefore === 0 && streak.freezes < DELAY_MAX) { streak.freezes++; delayBanked = true; saveStreak(); }
+    if (!s.seal && s.chosen.length === PICKS && s.filed.length === PICKS) {
+      s.seal = true; s.frags = (s.frags || 0) + 1; sealed = true;
+      track('survey_seal', { week: s.week, frags: s.frags });
+    }
+    saveSurvey();
+    return { justFiled, delayBanked, sealed, hit, gain };
   }
-  const surveyorMark = () => { ladderWeek(); return lad.ms.includes(20); }; // the 20-point mark, rest of the week
-  // title-block rendering: quest list, streak/lives row, survey row
-  function refreshDaily() {
-    const today = dayStr(GE.now());
-    const q = questsToday();
-    const rows = q.ids.map(id => {
-      const t = QUEST_TEMPLATES[id] || { label: id, target: 1 };
-      const p = Math.min(t.target, q.prog[id] || 0), done = q.done.includes(id);
-      return `<div class="q${done ? ' done' : ''}" data-quest="${id}"><span class="ql">${t.label}</span>`
-        + `<span class="qbar"><i style="width:${Math.round((p / t.target) * 100)}%"></i></span>`
-        + `<span class="qv">${p}/${t.target}</span>${done ? '<span class="qstamp">✓</span>' : ''}</div>`;
-    }).join('');
-    $('menuQuests').innerHTML = `<div class="qh"><span>Daily quests</span>${q.all ? '<b>ALL DONE</b>' : ''}</div>` + rows;
-    const live = streak.lastDate && streak.len > 0 && dayGap(streak.lastDate, today) <= 1 ? streak.len : 0;
-    const wk = streak.marks.filter(m => { const g = dayGap(m, today); return g >= 0 && g < 7; }).length;
-    $('fStreak').innerHTML = (live ? `${live} day${live === 1 ? '' : 's'}` : '—')
-      + (surveyorMark() ? '<span class="mark" title="Field Survey complete this week">⌖</span>' : '')
-      + `<small>${wk} of last 7 days${streak.freezes ? ` · ${streak.freezes} freeze${streak.freezes > 1 ? 's' : ''} held` : ''}</small>`;
-    $('fSurvey').textContent = `${lad.pts} pt${lad.pts === 1 ? '' : 's'}`;
+
+  // ---------- sheet-index row ----------
+  function refreshSurvey() {
+    const s = surveyWeek(), dates = weekDates(GE.now());
+    const stamped = dates.filter(d => s.days.includes(d)).length;
+    $('fSurvey').innerHTML = `${stamped}/7 · ${s.pts} pt${s.pts === 1 ? '' : 's'}`
+      + (s.ms.includes(20) ? '<span class="mark" title="20-point mark">⌖</span>' : '');
+    $('fSurveyBadge').hidden = s.chosen.length === PICKS;
     refreshLives();
     if (!screens.menu.hidden) refreshMenu(); // the landing stamp carries the same streak
   }
   function refreshLives() {
     const on = GE.livesEnabled;
-    $('menuLivesBox').hidden = !on;
+    $('menuLivesRow').hidden = $('menuLivesBox').hidden = !on;
     if (!on) return;
     const i = GE.livesInfo;
     $('fLives').innerHTML = `<span class="hearts">${'♥'.repeat(i.n)}<span class="off">${'♡'.repeat(i.max - i.n)}</span></span>`
       + (i.fullIn ? `<small>full in ${i.fullIn}</small>` : '');
   }
   window.addEventListener('ge:lives', () => { if (!screens.levels.hidden) refreshLives(); });
-  // win-card beat: ONE quiet stamped row after the stars — all-quests-done (banks the freeze)
-  // over a single quest, over a new best streak. A play beat, never a purchase event.
+
+  // ---------- the sheet ----------
+  // pending vs sealed differ by SHAPE (a dashed ring with a blank rule vs a solid ring with the
+  // surveyor's mark struck through it), not by ink alone
+  const SEAL_SVG = on => `<svg class="seal-ico${on ? ' on' : ''}" viewBox="0 0 32 32" aria-hidden="true">`
+    + `<circle class="ring" cx="16" cy="16" r="12.5"/><path class="rule" d="M10 16h12"/>`
+    + `<path class="mk" d="M10.5 16.4l3.6 3.8 7.4-8"/></svg>`;
+  function renderSurvey() {
+    const s = surveyWeek(), today = dayStr(GE.now()), dates = weekDates(GE.now());
+    const stamped = dates.filter(d => s.days.includes(d)).length;
+    $('surveyNo').textContent = 'WEEK ' + s.week.split('-W')[1];
+    const live = streak.lastDate && streak.len > 0 && dayGap(streak.lastDate, today) <= 1 ? streak.len : 0;
+    // the streak fact lives here now: one header line, stated plainly, nothing sold against it
+    $('surveySub').innerHTML = (live ? `<b>${live}-day streak</b>` : 'No streak running')
+      + ` · ${stamped} of 7 days · ${s.pts} point${s.pts === 1 ? '' : 's'}`
+      + (streak.freezes ? `<small>${streak.freezes} weather delay${streak.freezes > 1 ? 's' : ''} held</small>` : '');
+    $('surveySpine').innerHTML = dates.map((d, i) => {
+      // today is not a missed day until it is over, so it reads "to come" until it is stamped
+      const on = s.days.includes(d), delay = !on && s.delays.includes(d), ahead = d >= today;
+      const mark = on ? '✓' : delay ? '~' : ahead ? '·' : '○';
+      const what = on ? 'stamped' : delay ? 'weather delay' : ahead ? 'to come' : 'no clear';
+      return `<div class="d${on ? ' on' : delay ? ' delay' : ''}${d === today ? ' today' : ''}" data-day="${d}" title="${d} — ${what}">`
+        + `<span class="dn">${DAY_INITIALS[i]}</span><span class="dm">${mark}</span></div>`;
+    }).join('');
+    const locked = contractsLocked();
+    const rows = s.offered.filter(id => !locked || s.chosen.includes(id)).map(id => {
+      const t = CONTRACTS[id], on = s.chosen.includes(id), filed = s.filed.includes(id);
+      const p = Math.min(t.target, s.prog[id] || 0);
+      const chip = filed ? '<span class="qstamp">FILED</span>'
+        : locked ? ''
+        : on ? '<span class="qpick">DROP</span>'
+        : s.chosen.length < PICKS ? '<span class="qpick">TAKE</span>'
+        : '<span class="qpick off">—</span>';
+      // a taken contract shows its bar and count; an offered one shows only its label — the label
+      // already names the number, so repeating it was noise on the row you have not taken yet
+      const body = on ? `<span class="qbar"><i style="width:${Math.round((p / t.target) * 100)}%"></i></span><span class="qv">${p}/${t.target}</span>` : '';
+      return `<button class="q${on ? ' on' : ' alt'}${filed ? ' done' : ''}" data-contract="${id}"${locked ? ' disabled' : ''}`
+        + ` aria-label="${t.label}${on ? ', chosen' : ''}${filed ? ', filed' : ''}"><span class="ql">${t.label}</span>${body}${chip}</button>`;
+    }).join('');
+    const head = locked ? 'SET FOR THE WEEK' : s.chosen.length < PICKS ? `CHOOSE ${PICKS - s.chosen.length}` : 'SWAP FREE';
+    $('surveyContracts').innerHTML = `<div class="qh"><span>Contracts</span><b>${head}</b></div>` + rows;
+    $('surveyTrack').innerHTML = MILESTONES.map(n => {
+      const got = s.ms.includes(n);
+      return `<div class="ms${got ? ' got' : ''}" data-ms="${n}">${n === 20 ? '<span class="mark">⌖</span>' : ''}<b>${n}</b><span>${got ? 'marked' : 'points'}</span></div>`;
+    }).join('');
+    $('surveySeal').className = 'sealrow' + (s.seal ? ' got' : '');
+    $('surveySeal').innerHTML = SEAL_SVG(s.seal)
+      + `<div><span class="k">Weekly seal</span><span class="v">`
+      + (s.seal ? `Sealed · ${s.frags} fragment${s.frags === 1 ? '' : 's'} held`
+        : `File both contracts to seal the week · ${s.filed.length}/${PICKS}`)
+      + '</span></div>';
+    $('surveyLast').textContent = s.last
+      ? `Last week: ${s.last.pts} point${s.last.pts === 1 ? '' : 's'} · ${s.last.filed || 0}/${PICKS} filed${s.last.seal ? ' · sealed' : ''}`
+      : 'A fresh survey sheet opens every Monday.';
+  }
+  // one delegated handler: the rows are rebuilt on every render, the binding is not
+  $('surveyContracts').addEventListener('click', e => {
+    const b = e.target.closest('button.q');
+    if (!b || b.disabled) return;
+    if (chooseContract(b.dataset.contract)) { renderSurvey(); refreshSurvey(); GE.sound('gate'); }
+  });
+  $('btnSurvey').onclick = () => { renderSurvey(); $('surveyModal').hidden = false; };
+  $('btnSurveyClose').onclick = () => { $('surveyModal').hidden = true; };
+
+  // win-card beat: ONE quiet stamped row after the stars — the week's seal over a filed contract
+  // over a new best streak. A play beat, never a purchase event.
   let dailyTimer = 0;
   const winDaily = $('winDaily');
   window.addEventListener('ge:win', e => {
-    const d = e.detail, lvl = d.lvl;
-    const info = { stars: d.stars, moves: d.moves, par: d.par != null ? d.par : LEVELS[lvl].par, undos: d.undos || 0, hints: d.hints || 0, blocks: LEVELS[lvl].blocks.length };
+    const d = e.detail, lvl = d.lvl, L = LEVELS[lvl] || { par: d.par, blocks: [] };
+    const info = { stars: d.stars, moves: d.moves, par: d.par != null ? d.par : L.par, undos: d.undos || 0, hints: d.hints || 0, blocks: (d.blocks != null ? d.blocks : L.blocks.length) };
     const sr = onClear();
-    const qr = onWinQuests(info);
-    onWinLadder(info);
+    const rs = onWinSurvey(info);
     clearTimeout(dailyTimer); winDaily.hidden = true;
     let row = null;
-    if (qr.allJustDone) row = { stamp: 'DONE', k: 'All quests complete', v: qr.freezeBanked ? `Streak freeze banked · ${streak.freezes} held` : 'All 3 daily quests done' };
-    else if (qr.justDone.length) row = { stamp: 'QUEST', k: 'Quest complete', v: QUEST_TEMPLATES[qr.justDone[0]].label };
+    if (rs.sealed) row = { stamp: 'SEAL', k: 'Survey sealed', v: `Both contracts filed · fragment ${survey.frags}` };
+    else if (rs.justFiled.length) row = { stamp: 'FILED', k: 'Contract filed', v: rs.delayBanked ? `Weather delay banked · ${streak.freezes} held` : CONTRACTS[rs.justFiled[0]].label };
     else if (sr.newBest) row = { stamp: 'BEST', k: 'New best streak', v: `${streak.len} days in a row` };
     if (!row) return;
     dailyTimer = setTimeout(() => {
@@ -462,10 +574,11 @@
       GE.sound('gate');
     }, GE.reduced ? 0 : 1150);
   });
-  // launch check: banked freezes cover the missed day(s) automatically (calm notice, nothing to
-  // buy). Otherwise the streak lapses SILENTLY — the counter is cleared here so the field log
-  // tells the truth on the next frame, and the player is shown nothing at all. No card, no offer,
-  // no "you lost it" beat: the next clear starts a new streak at 1 exactly as day one did.
+  // launch check: banked weather delays cover the missed day(s) automatically and each covered day
+  // is stamped WEATHER DELAY on the survey spine (calm notice, nothing to buy). Otherwise the
+  // streak lapses SILENTLY — the counter is cleared here so the field log tells the truth on the
+  // next frame, and the player is shown nothing at all. No card, no offer, no "you lost it" beat:
+  // the next clear starts a new streak at 1 exactly as day one did.
   function checkStreak() {
     const today = dayStr(GE.now());
     if (!streak.lastDate || streak.len < 1) return false;
@@ -476,39 +589,36 @@
       streak.freezes -= missed;
       streak.lastDate = dayStr(GE.now() - 864e5); // yesterday: today's first clear extends the streak
       saveStreak();
-      track('streak_freeze_used', { missed, left: streak.freezes });
-      $('freezeSub').textContent = `Freeze used — streak safe · ${streak.freezes} left`;
+      const s = surveyWeek();
+      for (let i = missed; i >= 1; i--) { const d = dayStr(GE.now() - i * 864e5); if (!s.delays.includes(d)) s.delays.push(d); }
+      saveSurvey();
+      track('weather_delay_used', { missed, left: streak.freezes });
+      $('freezeSub').textContent = `Weather delay used — survey day covered · ${streak.freezes} left`;
       $('freezeModal').hidden = false;
-      refreshDaily();
+      refreshSurvey();
       return 'freeze';
     }
-    streak.len = 0; streak.lastDate = null; // lapsed: cleared quietly, best/marks/freezes untouched
+    streak.len = 0; streak.lastDate = null; // lapsed: cleared quietly, best/marks/delays untouched
     saveStreak();
-    refreshDaily();
+    refreshSurvey();
     return false;
   }
   $('btnFreezeOk').onclick = () => { $('freezeModal').hidden = true; };
-  // Field Survey card (weekly log): milestone stamps, points line, last week's result
-  function renderSurvey() {
-    ladderWeek();
-    $('surveySub').textContent = `${lad.pts} point${lad.pts === 1 ? '' : 's'} this week · 1 per clear · +1 at par`;
-    $('surveyTrack').innerHTML = MILESTONES.map(n => {
-      const got = lad.ms.includes(n);
-      return `<div class="ms${got ? ' got' : ''}" data-ms="${n}">${n === 20 ? '<span class="mark">⌖</span>' : ''}<b>${n}</b><span>${got ? 'stamped' : 'points'}</span></div>`;
-    }).join('');
-    $('surveyLast').textContent = lad.last ? `Last week: ${lad.last.pts} point${lad.last.pts === 1 ? '' : 's'}` : 'A fresh survey starts each week.';
-  }
-  $('btnSurvey').onclick = () => { renderSurvey(); $('surveyModal').hidden = false; };
-  $('btnSurveyClose').onclick = () => { $('surveyModal').hidden = true; };
 
   // ---------- engine events ----------
   window.addEventListener('ge:load', () => { show(null); pauseModal.hidden = true; GE.paused = false; levelsFrom = 'menu'; clearTimeout(certTimer); winCert.hidden = true; clearTimeout(dailyTimer); winDaily.hidden = true; });
   window.addEventListener('ge:win', e => {
-    const { lvl, stars, last } = e.detail;
+    const { lvl, stars, last, daily } = e.detail;
+    clearTimeout(certTimer); winCert.hidden = true;
+    // The Daily Draft rides on a VIRTUAL level index one past LEVELS. It is play — so it stamps
+    // the survey day spine and counts toward contracts and points, exactly like any other clear —
+    // but it is NOT campaign progress: no star on a sheet, no unlock, no certification, and the
+    // win card's campaign meta (star total / next level) has nothing true to say about it.
+    $('winMeta').hidden = !!daily;
+    if (daily) { $('winNo').textContent = 'DAILY DRAFT'; return; }
     const before = starsTotal(), sheet = Math.floor(lvl / PER), sheetBefore = sheetStars(sheet);
     prog.s[lvl] = Math.max(prog.s[lvl] || 0, stars);
     prog.u = Math.max(prog.u, Math.min(lvl + 1, N - 1));
-    clearTimeout(certTimer); winCert.hidden = true;
     if (sheetBefore < CERT_STARS && sheetStars(sheet) >= CERT_STARS && CERT_SKINS[sheet]) {
       const id = CERT_SKINS[sheet];
       if (!unlocked(id)) prog.skins = [...skins(), id];
@@ -664,14 +774,15 @@
 
 
   show('menu');
-  checkStreak(); // freeze notice / silent lapse, resolved once on launch (and only then)
+  checkStreak(); // weather-delay notice / silent lapse, resolved once on launch (and only then)
   window.GE_MENU = { show, get prog() { return prog; }, setSkin, CERT_STARS, CERT_SKINS,
     // the landing's whole interactive surface: Play + two quiet entries, nothing else
     landing: () => [...screens.menu.querySelectorAll('button, a, input, select, textarea, [role="button"], [tabindex]')]
       .filter(b => !b.hidden && b.getClientRects().length > 0).map(b => b.id || b.className),
-    get streak() { return streak; }, checkStreak, refreshDaily,
-    get quests() { return questsToday(); }, get ladder() { ladderWeek(); return lad; },
-    questInfo: () => questsToday().ids.map(id => ({ id, label: QUEST_TEMPLATES[id].label, target: QUEST_TEMPLATES[id].target,
-      prog: Math.min(QUEST_TEMPLATES[id].target, quests.prog[id] || 0), done: quests.done.includes(id) })),
-    QUEST_TEMPLATES, MILESTONES };
+    get streak() { return streak; }, checkStreak, refreshSurvey, renderSurvey,
+    get survey() { return surveyWeek(); }, weekDates: () => weekDates(GE.now()), isoWeek: () => isoWeek(GE.now()),
+    contractsLocked, chooseContract,
+    contractInfo: () => { const s = surveyWeek(); return s.offered.map(id => ({ id, label: CONTRACTS[id].label, target: CONTRACTS[id].target,
+      prog: Math.min(CONTRACTS[id].target, s.prog[id] || 0), chosen: s.chosen.includes(id), filed: s.filed.includes(id) })); },
+    CONTRACTS, MILESTONES, DELAY_MAX, PICKS };
 })();

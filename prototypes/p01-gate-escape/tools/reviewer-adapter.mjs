@@ -23,7 +23,7 @@ the gate) is a single move. Par and the move limit are computed on that rule, so
 routes rather than single steps. Clear all blocks within the move limit. Losing shows a rescue offer (+3 moves, once per attempt — a Restart is a fresh attempt).
 Both the rescue and the HUD hint are rewarded-ad slots: tapping one shows a ~1.2 s placeholder "ad" card first, then the grant lands (free in the prototype).
 The game opens on a calm landing (the drawing's title block): the title treatment, one static stamp line (level / stars / streak) and exactly three
-taps — the primary CTA (Play / Continue - Level N / Resume level N), Levels and How to play. Everything else (stars, daily quests, streak, Field survey,
+taps — the primary CTA (Play / Continue - Level N / Resume level N), Levels and How to play. Everything else (stars, the Field survey,
 Paper picker, Sound) lives on the Levels screen, the sheet index; in-game the HUD has hint (?, ghosts the next reference move — an exit route,
 or a dashed outline where a block should park; one per board position), undo (↶, one step, refunds the move), restart (↻) and pause (☰), shows the stars the
 current pace would earn, and an objective row of blocks left per color.
@@ -32,16 +32,21 @@ Stars have a cosmetic sink: each sheet of ten levels on the level select is CERT
 gate or HUD state colours — and nothing is gated on certification. The sheet header carries a stamp glyph: a dashed pending frame with "N to certify",
 or a solid stamped frame naming the paper once earned. The "Paper" picker on the sheet index and the pause card lists the skins; a locked swatch shows
 the pending stamp of the sheet it comes from. The win that crosses 24 adds a "Sheet certified — <paper>" row with a "Try it" button to the win card.
-Daily quests + streak (sheet index): THREE quests roll each local day, deterministically from the date (all players share the day's set), from safe
-telemetry templates (clear N levels / earn N stars / clear N at par / clear without undo / without hints / clear N blocks — never ad views or spending).
-Each shows a progress bar and a ✓ stamp on the sheet index; a quest completion adds a quiet stamped row to the win card. Completing ALL 3 banks one
-STREAK FREEZE (max 2 held, shown on the streak row). The streak is consecutive calendar days with ≥1 clear; the row also shows "N of last 7 days".
-A missed day consumes a banked freeze automatically (calm "Freeze used — streak safe" notice at next launch). With no freeze banked the streak simply
-LAPSES SILENTLY — there is no repair surface at all: no card, no ad, no offer at the moment of loss; the counter clears and the next clear starts a new
-streak at 1. Nothing is gated on any of it. (Worth a reviewer's attention: does the silent reset read as calm, or as something going missing?)
-Field Survey (weekly ladder, "Field survey" row on the sheet index opens the log card): 1 point per level clear, +1 bonus at par; milestone stamps at
-3/7/12/20 points; the 20-point stamp is a surveyor's mark (⌖) shown next to the streak row for the rest of that week. Resets each ISO week; no
-leaderboard, only last week's result is kept. Dates all come from GE.now (overridable for testing).
+FIELD SURVEY — the only meta system (2026-09-02: the daily quests, the streak card and the weekly ladder were merged into it). The "Field survey"
+row on the sheet index reads "n/7 · N pts" (plus a SELECT 2 badge until the contracts are chosen) and opens the week's sheet, which holds:
+ * a 7-DAY SPINE, Mon–Sun: any level clear stamps today (✓ stamped, ~ weather delay, ○ no clear, · still to come — four glyphs, not four colours);
+ * two CONTRACTS chosen from the FOUR the week offers, rolled deterministically from the ISO week so everyone sees the same four. They come from safe
+   telemetry templates (clear N levels / earn N stars / clear N at par / without undo / without hints / clear N blocks — never ad views or spending),
+   retargeted to a week. Swapping is FREE until a chosen contract earns its first progress; after that the pair is set for the week (the header reads
+   SET FOR THE WEEK and the two unchosen ones come off the sheet);
+ * point MARKS at 3/7/12/20 — 1 point per clear, +1 at par; the 20-point mark is a surveyor's mark (⌖) on the sheet-index row for the rest of the week;
+ * the WEEKLY SEAL: filing ONE contract banks a WEATHER DELAY (max 2 held); filing BOTH seals the week and yields a fragment (a keepsake tally —
+   nothing is gated on it, or on any of this).
+The streak is unchanged: consecutive calendar days with ≥1 clear, stated in the survey sheet's header. A missed day consumes a banked weather delay
+automatically (calm "Weather delay used — survey day covered" notice at next launch) and that day is stamped ~ on the spine. With nothing banked the
+streak simply LAPSES SILENTLY — there is no repair surface at all: no card, no ad, no offer at the moment of loss; the counter clears and the next
+clear starts a new streak at 1. (Worth a reviewer's attention: does the silent reset read as calm, or as something going missing? And is "choose 2 of 4,
+set once you start" a real decision or a trap?) Only last week's result line is kept. Dates all come from GE.now (overridable for testing).
 Lives (DEFAULT OFF — flag-gated via ?lives=1 / ge_flags / GE.livesEnabled): the shipped game has NO energy gate; there are no hearts anywhere and a
 failed level can be retried forever. Everything in this paragraph therefore describes what ?lives=1 turns on, and is not what a normal session shows:
 five hearts, HUD top-left and sheet index. Levels 1–5 NEVER cost a life.
@@ -52,7 +57,7 @@ Motion toggle (pause card): forces the reduced-motion path (no shake, half parti
 Coordinates: (x,y) cells, x to the right, y downward, origin top-left. A block's position is its
 top-left origin; its cells are listed absolute.`,
   buttons: {
-    btnPlay: 'landing: the primary CTA — "Play" on a fresh install, "Continue — Level N", or "Resume level N" when a paused attempt is on the board', btnLevels: 'landing: Levels (the sheet index, which also carries the field log: stars, quests, streak, survey, paper, sound)', btnLegend: 'landing: How to play',
+    btnPlay: 'landing: the primary CTA — "Play" on a fresh install, "Continue — Level N", or "Resume level N" when a paused attempt is on the board', btnLevels: 'landing: Levels (the sheet index, which also carries the field log: stars, the field survey, paper, sound)', btnLegend: 'landing: How to play',
     btnSound: 'sheet index: toggle sound', btnLevelsBack: 'levels: Back (returns to the pause card if opened from pause)', btnReset: 'levels: Reset progress (two-tap arm: first tap arms, second erases)', btnLegendBack: 'how-to-play: Back',
     btnHint: 'HUD: hint — show the next reference move (rewarded-ad placeholder, ~1.2 s, then a ghost route appears)',
     btnUndo: 'HUD: undo last move (one step)', btnRestart: 'HUD: restart level', btnMenu: 'HUD: pause / unpause',
@@ -64,9 +69,9 @@ top-left origin; its cells are listed absolute.`,
     btnPausePaperCyan: 'pause: Paper → Cyanotype', btnPausePaperSepia: 'pause: Paper → Sepia draft', btnPausePaperNight: 'pause: Paper → Night vellum', btnPausePaperWhite: 'pause: Paper → Whiteprint',
     btnHaptics: 'sheet index: toggle haptics (native app only — hidden in a browser)', btnPauseHaptics: 'pause: toggle haptics (native app only)',
     btnPauseMotion: 'pause: toggle Motion on/off — off forces the reduced-motion rendering path (persisted)',
-    btnFreezeOk: 'freeze-notice card: Continue — dismiss the "Freeze used — streak safe" notice',
-    btnSurvey: 'sheet index: Field survey row — open the weekly log card (points + milestone stamps)',
-    btnSurveyClose: 'survey card: Close',
+    btnFreezeOk: 'weather-delay notice: Continue — dismiss the "Weather delay used — survey day covered" notice',
+    btnSurvey: "sheet index: Field survey row — open this week's sheet (day spine, contracts, marks, seal)",
+    btnSurveyClose: 'survey sheet: Close',
     btnLifeRefill: 'out-of-lives card: +1 life (rewarded-ad placeholder; offered once per appearance of the card, never past 5)',
     btnLivesHome: 'out-of-lives card: Back to menu (Escape does the same; browsing is never blocked)',
   },
@@ -104,14 +109,13 @@ top-left origin; its cells are listed absolute.`,
       return {
         level: GE.level, L: GE.L, pos: GE.pos, moves: GE.moves, movesLeft: GE.movesLeft,
         over: GE.over, paused: GE.paused, metrics: GE.metrics, rect: { left: r.left, top: r.top },
-        screens: { menu: vis('menu'), levels: vis('levels'), legend: vis('legend'), pause: vis('pauseModal'), win: vis('winModal'), fail: vis('failModal'), ad: vis('adModal'), freeze: vis('freezeModal'), lives: vis('livesModal'), survey: vis('surveyModal') },
+        screens: { menu: vis('menu'), levels: vis('levels'), legend: vis('legend'), pause: vis('pauseModal'), win: vis('winModal'), fail: vis('failModal'), ad: vis('adModal'), delayNotice: vis('freezeModal'), lives: vis('livesModal'), survey: vis('surveyModal') },
         streak: (window.GE_MENU && window.GE_MENU.streak) || null,
-        quests: window.GE_MENU ? window.GE_MENU.questInfo() : null,
-        ladder: window.GE_MENU ? { ...window.GE_MENU.ladder } : null,
+        survey: window.GE_MENU ? { ...window.GE_MENU.survey, contracts: window.GE_MENU.contractInfo(), locked: window.GE_MENU.contractsLocked() } : null,
         lives: { enabled: GE.livesEnabled, ...GE.livesInfo },
         winDaily: vis('winDaily') ? document.getElementById('winDaily').innerText.replace(/\s+/g, ' ').trim() : null,
-        menuDaily: vis('levels') ? (document.getElementById('fStreak').innerText + ' · survey ' + document.getElementById('fSurvey').textContent).replace(/\s+/g, ' ').trim() : null,
-        menuQuests: vis('levels') ? [...document.querySelectorAll('#menuQuests .q')].map(r => r.innerText.replace(/\s+/g, ' ').trim()) : null,
+        menuSurvey: vis('levels') ? ('survey ' + document.getElementById('fSurvey').innerText + (document.getElementById('fSurveyBadge').hidden ? '' : ' [SELECT 2]')).replace(/\s+/g, ' ').trim() : null,
+        surveySheet: vis('surveyModal') ? document.querySelector('#surveyModal .card').innerText.replace(/\s+/g, ' ').trim() : null,
         hint: GE.hint ? { block: GE.hint.bi, path: GE.hint.path, exit: GE.hint.side || null } : null,
         paper: GE.theme, skins: (window.GE_MENU && window.GE_MENU.prog.skins) || [],
         certRow: vis('winCert') ? document.querySelector('#winCert').innerText.replace(/\s+/g, ' ').trim() : null,
@@ -136,9 +140,12 @@ top-left origin; its cells are listed absolute.`,
       gates: L.gates.map(g => ({ color: COLOR[g.color], side: g.side, lanes: `${g.start}..${g.start + g.len - 1}` })),
       winCard: raw.winText, failCard: raw.failText, rescueAvailable: raw.screens.fail && !raw.rescueHidden, hintShown: raw.hint,
       paper: raw.paper, skinsUnlocked: raw.skins, sheetCertified: raw.certRow,
-      daily: raw.streak ? { streakDays: raw.streak.len, bestStreak: raw.streak.best, weekMarks: (raw.streak.marks || []).length, freezes: raw.streak.freezes || 0 } : null,
-      quests: raw.quests, ladder: raw.ladder, lives: raw.lives,
-      winBeat: raw.winDaily, menuDailyRow: raw.menuDaily, menuQuests: raw.menuQuests,
+      streak: raw.streak ? { days: raw.streak.len, best: raw.streak.best, weekMarks: (raw.streak.marks || []).length, weatherDelays: raw.streak.freezes || 0 } : null,
+      survey: raw.survey ? { week: raw.survey.week, daysStamped: (raw.survey.days || []).length, weatherDelayDays: (raw.survey.delays || []).length,
+        points: raw.survey.pts, marks: raw.survey.ms, contracts: raw.survey.contracts, chosen: raw.survey.chosen,
+        contractsLocked: raw.survey.locked, filed: raw.survey.filed, sealed: !!raw.survey.seal, fragments: raw.survey.frags || 0, lastWeek: raw.survey.last } : null,
+      lives: raw.lives,
+      winBeat: raw.winDaily, menuSurveyRow: raw.menuSurvey, surveySheet: raw.surveySheet,
       hud: raw.hud, jsErrors: raw.errors.length, recentErrors: raw.errors.slice(-5),
     };
   },

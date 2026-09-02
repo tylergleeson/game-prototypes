@@ -10,7 +10,7 @@ const out = root + 'dist/itch/';
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });
 
-const FILES = ['index.html', 'game.js', 'levels.js', 'menu.js', 'beacon.js'];
+const FILES = ['index.html', 'game.js', 'levels.js', 'dailies.js', 'menu.js', 'beacon.js'];
 for (const f of FILES) fs.copyFileSync(root + f, out + f);
 execSync(`zip -X -q gate-escape-itch.zip ${FILES.join(' ')}`, { cwd: out });
 

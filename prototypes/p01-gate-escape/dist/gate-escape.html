@@ -232,15 +232,14 @@
   .papers .cap.lock { color:var(--dim); font-weight:600; }
   .card .papers { margin:8px 0 0; padding:8px 10px; }
   .card .papers .cap { font-size:12px; }
-  /* daily goal + streak: a second drafting-log row on the title block. Decoupled by design:
-     the goal is DAILY_GOAL clears today (replays count), the streak is calendar days with ≥1
-     clear. Nothing is gated on either; menu.js owns the state (ge_streak). */
+  /* the lives row on the sheet index (the economy is off by default, so it is normally hidden).
+     The streak fact moved into the survey sheet's header at the Field Survey merge. */
   .fields.daily { margin-top:8px; }
   .fields.daily .v { font-size:14px; }
   .fields.daily .v .boxes { font-family:var(--mono); font-weight:600; letter-spacing:2px; color:var(--amber-ink); margin-right:5px; }
   .fields.daily .v .boxes .off { color:var(--star-off); }
-  /* win-card beat rows (daily goal met / new best streak): a stamped drafting annotation —
-     these celebrate progress, never a purchase */
+  /* win-card beat rows (contract filed / week sealed / new best streak): a stamped drafting
+     annotation — these celebrate progress, never a purchase */
   .card .daily-row { position:relative; display:flex; align-items:center; gap:12px; text-align:left; border:1px solid var(--line2); padding:8px 10px; margin:0 0 6px; animation:pop .45s cubic-bezier(.34,1.56,.64,1) both; }
   .card .daily-row .stamp { flex:none; font:800 11px/1 var(--mono); letter-spacing:.14em; color:var(--green-ink); border:2px solid var(--green-ink); border-radius:3px; padding:5px 6px; transform:rotate(-7deg); animation:stamppop .5s cubic-bezier(.34,1.56,.64,1) both; }
   @keyframes stamppop { from { transform:rotate(-7deg) scale(2.1); opacity:0; } 60% { transform:rotate(-7deg) scale(.92); opacity:1; } to { transform:rotate(-7deg) scale(1); opacity:1; } }
@@ -344,7 +343,8 @@
   #livesModal { z-index:25; }
   #livesModal .hearts { display:block; font-size:26px; letter-spacing:7px; margin-bottom:8px; }
   #freezeModal { z-index:25; }
-  /* daily quests: a drafting-log list on the title block — label, progress bar, count, ✓ stamp */
+  /* contract list on the survey sheet — label, progress bar, count, FILED stamp. (This markup
+     used to be the three daily quests; the merge kept the row shape and moved it into the sheet.) */
   .quests { border:1px solid var(--line2); margin-top:8px; text-align:left; }
   .quests .qh { display:flex; justify-content:space-between; padding:6px 10px 4px; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); text-transform:uppercase; }
   .quests .qh b { color:var(--green-ink); letter-spacing:.06em; }
@@ -356,25 +356,68 @@
   .quests .q .qstamp { flex:none; font:800 10px/1 var(--mono); color:var(--green-ink); border:1.5px solid var(--green-ink); border-radius:3px; padding:2px 3px; transform:rotate(-7deg); }
   .quests .q.done .ql { color:var(--dim); }
   .quests .q.done .qbar i { background:var(--green-ink); }
-  /* streak / lives row under the quests; small sub-lines for "n of last 7" and the refill label */
+  /* a contract row is tappable while the choice is still open, so it is a real button */
+  .quests button.q { width:100%; background:none; color:var(--ink); font-family:inherit; text-align:left; border-left:0; border-right:0; border-bottom:0; cursor:pointer; }
+  .quests button.q[disabled] { cursor:default; }
+  .quests button.q:not([disabled]):active { transform:translateY(1px); }
+  /* chosen vs merely offered differ by SHAPE (a solid left rule + a filled chip vs a dashed
+     chip on an unruled row), not by ink alone */
+  .quests .q.on { border-left:3px solid var(--amber-ink); padding-left:7px; }
+  .quests .q.alt .ql { color:var(--dim); font-weight:600; }
+  .quests .q .qpick { flex:none; font:800 9px/1 var(--mono); letter-spacing:.1em; color:var(--dim); border:1.5px dashed var(--line2); border-radius:3px; padding:3px 4px; }
+  .quests .q.on .qpick { color:var(--amber-ink); border-color:var(--amber-ink); border-style:solid; }
+  .quests .q .qpick.off { opacity:.45; }
+  /* lives row (hidden with the economy off); small sub-lines for the refill label */
+  .fields.daily { grid-template-columns:1fr; }
   .fields.daily .v small { display:block; font:600 10px/1.3 var(--mono); letter-spacing:.04em; color:var(--dim); margin-top:3px; }
-  .fields.daily:has(#menuLivesBox[hidden]) { grid-template-columns:1fr; }
   .fields.daily .v .mark { color:var(--amber-ink); font-weight:800; margin-left:4px; }
-  /* Field Survey: the weekly log row (opens the survey card) + its milestone stamps */
+  /* Field Survey: the sheet-index row (opens the week's sheet) + the sheet itself */
   .surveyrow { display:flex; align-items:center; gap:8px; width:100%; border:1px solid var(--line2); margin-top:8px; padding:8px 10px; background:none; color:var(--ink); cursor:pointer; font-family:inherit; }
   .surveyrow .k { font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); text-transform:uppercase; }
   .surveyrow .v { flex:1; text-align:right; font-weight:800; font-size:14px; font-variant-numeric:tabular-nums; }
+  .surveyrow .v .mark { color:var(--amber-ink); margin-left:4px; }
+  .surveyrow .badge { flex:none; font:800 9px/1 var(--mono); letter-spacing:.1em; color:var(--amber-ink); border:1.5px solid var(--amber-ink); border-radius:3px; padding:3px 4px; }
   .surveyrow .chev { color:var(--dim); font-size:16px; line-height:1; }
   .surveyrow:active { transform:translateY(2px); }
-  .mstones { display:flex; justify-content:center; gap:9px; margin:4px 0 12px; }
+  /* the week's sheet is taller than a result card: give it room and let it scroll on short phones */
+  .card.survey { width:min(92vw,362px); max-height:88vh; overflow-y:auto; overscroll-behavior:contain; padding:22px 18px 18px; }
+  .card.survey h2 { font-size:23px; }
+  .card.survey p { font-size:13px; margin-bottom:10px; }
+  .card.survey p small { display:block; font:600 10px/1.3 var(--mono); letter-spacing:.04em; color:var(--dim); margin-top:3px; }
+  .card.survey .qh { padding-top:7px; }
+  /* the day spine: one cell per day, Mon–Sun. Stamped / weather-delayed / missed / still to come
+     read apart by GLYPH first (✓ ~ ○ ·) and by the cell's rule second (solid, dashed, plain). */
+  .spine { display:flex; gap:4px; margin:0 0 12px; }
+  .spine .d { flex:1; border:1px solid var(--line2); padding:5px 0 4px; text-align:center; }
+  .spine .d .dn { display:block; font:600 9px/1 var(--mono); letter-spacing:.04em; color:var(--dim); }
+  .spine .d .dm { display:block; font:800 14px/1.1 var(--mono); color:var(--star-off); margin-top:3px; }
+  .spine .d.on { border-color:var(--green-ink); }
+  .spine .d.on .dm { color:var(--green-ink); }
+  .spine .d.delay { border-style:dashed; border-color:var(--amber-ink); }
+  .spine .d.delay .dm { color:var(--amber-ink); }
+  .spine .d.today { outline:1.5px solid var(--amber-ink); outline-offset:1px; }
+  .mstones { display:flex; justify-content:center; gap:9px; margin:8px 0 12px; }
   .mstones .ms { width:58px; border:1px solid var(--line2); padding:8px 4px 7px; text-align:center; }
   .mstones .ms b { display:block; font:800 17px var(--mono); color:var(--dim); }
   .mstones .ms span { font:600 8.5px/1 var(--mono); letter-spacing:.1em; color:var(--dim); text-transform:uppercase; }
   .mstones .ms.got { border-color:var(--green-ink); }
   .mstones .ms.got b { color:var(--green-ink); }
   .mstones .ms .mark { display:block; font-size:15px; line-height:1; color:var(--amber-ink); margin-bottom:1px; }
+  /* the week's seal: pending is a dashed ring with a blank rule, sealed is a solid ring with the
+     surveyor's mark struck through it — the same shape-cue contract the certification stamp uses */
+  .sealrow { display:flex; align-items:center; gap:10px; text-align:left; border:1px solid var(--line2); padding:8px 10px; margin:0 0 10px; }
+  .sealrow .k { display:block; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); margin-bottom:4px; }
+  .sealrow .v { font-weight:800; font-size:12.5px; }
+  .sealrow.got { border-color:var(--green-ink); }
+  .seal-ico { flex:none; width:32px; height:32px; }
+  .seal-ico .ring { fill:none; stroke:var(--star-off); stroke-width:1.8; stroke-dasharray:3 3; }
+  .seal-ico .rule { stroke:var(--star-off); stroke-width:1.8; stroke-linecap:round; }
+  .seal-ico .mk { display:none; }
+  .seal-ico.on .ring { stroke:var(--green-ink); stroke-dasharray:none; stroke-width:2.2; }
+  .seal-ico.on .rule { display:none; }
+  .seal-ico.on .mk { display:block; fill:none; stroke:var(--green-ink); stroke-width:2.2; stroke-linecap:round; }
   #surveyLast { font:600 11px var(--mono); color:var(--dim); margin-bottom:12px; }
-  #surveyModal { z-index:25; } /* the survey card opens over the title block (screens are z-20) */
+  #surveyModal { z-index:25; } /* the survey sheet opens over the title block (screens are z-20) */
   @media (prefers-reduced-motion: reduce) { .gatebtn, .gatebtn .blk, .tblock, .card, .card .stars span, #toast, #btnHint.nudge, .cert-ico, .card .cert-row, .card .daily-row, .card .daily-row .stamp, .landing .sub, .landing .stamp, .landing .row, .landing .gatebtn, .landing .title::after { animation:none; } }
   /* the Motion toggle (pause card) forces the same reduced path via body.reduce-motion */
   body.reduce-motion .gatebtn, body.reduce-motion .gatebtn .blk, body.reduce-motion .tblock, body.reduce-motion .card, body.reduce-motion .card .stars span, body.reduce-motion #toast, body.reduce-motion #btnHint.nudge, body.reduce-motion .cert-ico, body.reduce-motion .card .cert-row, body.reduce-motion .card .daily-row, body.reduce-motion .card .daily-row .stamp, body.reduce-motion .landing .sub, body.reduce-motion .landing .stamp, body.reduce-motion .landing .row, body.reduce-motion .landing .gatebtn, body.reduce-motion .landing .title::after { animation:none; }
@@ -474,12 +517,14 @@
     </div>
   </div>
 
-  <!-- streak freeze notice: an earned freeze (all 3 daily quests) was consumed automatically for a
-       missed day. Informational only — one calm line, one button, nothing to buy. -->
+  <!-- weather-delay notice: a banked delay (earned by filing a survey contract) was consumed
+       automatically for a missed day, and that day is stamped WEATHER DELAY on the survey sheet.
+       Informational only — one calm line, one button, nothing to buy. (The element ids keep the
+       original "freeze" spelling on purpose: ge_streak.freezes is the same field it always was.) -->
   <div class="modal" id="freezeModal" hidden>
     <div class="card">
       <span class="no">FIELD LOG</span>
-      <h2>Streak safe</h2>
+      <h2>Weather delay</h2>
       <p id="freezeSub"></p>
       <button class="primary" id="btnFreezeOk">Continue</button>
     </div>
@@ -498,14 +543,19 @@
     </div>
   </div>
 
-  <!-- Field Survey: the weekly personal ladder. 1 point per clear, +1 at par; milestone stamps at
-       3 / 7 / 12 / 20. No leaderboard, no comparison — every participant can finish. -->
+  <!-- Field Survey: ONE weekly sheet — the day spine (a stamp for every day with a clear), two
+       contracts chosen from four the week offers, the point marks at 3/7/12/20, and the week's
+       seal. It replaces the three daily quests, the streak card and the weekly ladder: one sheet,
+       one week, one place to look. No leaderboard, no comparison — every surveyor can finish. -->
   <div class="modal" id="surveyModal" hidden>
-    <div class="card">
-      <span class="no">FIELD SURVEY</span>
-      <h2>Weekly log</h2>
+    <div class="card survey">
+      <span class="no" id="surveyNo">WEEK</span>
+      <h2>Field survey</h2>
       <p id="surveySub"></p>
+      <div class="spine" id="surveySpine" aria-label="Survey days this week"></div>
+      <div class="quests" id="surveyContracts" aria-label="Survey contracts"></div>
       <div class="mstones" id="surveyTrack"></div>
+      <div class="sealrow" id="surveySeal"></div>
       <p id="surveyLast"></p>
       <button class="ghost" id="btnSurveyClose">Close</button>
     </div>
@@ -513,7 +563,7 @@
 
   <!-- title block: the cold-open landing. A drawing's cover sheet — the title treatment, one
        primary CTA and two quiet entries, and nothing else to read. The stamp line is static text
-       (level, stars, streak); the whole field log — quests, streak, survey, paper, sound — lives
+       (level, stars, streak); the whole field log — the field survey, paper, sound — lives
        one tap deeper on the sheet index, and the legend one tap deeper behind How to play. -->
   <div class="screen" id="menu" hidden>
     <div class="tblock landing">
@@ -533,7 +583,7 @@
     </div>
   </div>
 
-  <!-- sheet index: level select + the field log (progress, daily quests, streak, survey, paper,
+  <!-- sheet index: level select + the field log (progress, the week's field survey, paper,
        sound) — everything the landing deliberately does not say on a cold open -->
   <div class="screen" id="levels" hidden>
     <div class="tblock">
@@ -543,14 +593,12 @@
         <div><span class="k">Stars</span><span class="v" id="fStars">0 / 90</span></div>
       </div>
       <div id="menuDaily">
-        <div class="quests" id="menuQuests" aria-label="Daily quests"></div>
-        <div class="fields daily">
-          <div><span class="k">Streak</span><span class="v" id="fStreak">—</span></div>
+        <button class="surveyrow" id="btnSurvey" aria-label="Field survey — open this week's sheet">
+          <span class="k">Field survey</span><span class="v" id="fSurvey">0/7 · 0 pts</span><span class="badge" id="fSurveyBadge" hidden>SELECT 2</span><span class="chev">›</span>
+        </button>
+        <div class="fields daily" id="menuLivesRow" hidden>
           <div id="menuLivesBox" hidden><span class="k">Lives</span><span class="v" id="fLives"></span></div>
         </div>
-        <button class="surveyrow" id="btnSurvey" aria-label="Field Survey — open the weekly log">
-          <span class="k">Field survey</span><span class="v" id="fSurvey">0 pts</span><span class="chev">›</span>
-        </button>
       </div>
       <div class="div">SHEET INDEX</div>
       <div class="grid" id="levelGrid"></div>
@@ -575,9 +623,9 @@
         <div class="li"><canvas id="symMoves" width="128" height="88"></canvas><div><b>Moves</b><span>One drag = one move. ★★★ at par, ★★ within two over. Undo (↶) gives a move back; ? shows the next move.</span></div></div>
         <div class="div">AROUND THE GAME</div>
         <div class="mi" id="legendLives"><span class="g">♥ Lives</span><span>Retrying a failed level costs one (from level 6). They refill over time; a rescue saves the attempt instead.</span></div>
-        <div class="mi"><span class="g">Quests</span><span>Three each day, shared by everyone. Finish all three to bank a streak freeze (hold up to 2).</span></div>
-        <div class="mi"><span class="g">Streak</span><span>One clear a day keeps it going. A banked freeze covers a missed day; otherwise it simply starts again.</span></div>
-        <div class="mi"><span class="g">Survey</span><span>Weekly points — 1 per clear, +1 at par — with stamps at 3, 7, 12 and 20.</span></div>
+        <div class="mi"><span class="g">Field survey</span><span>One sheet a week: a stamp for every day you clear a level, two contracts you pick from the four the week offers, and point marks at 3, 7, 12 and 20 (1 point per clear, +1 at par).</span></div>
+        <div class="mi"><span class="g">Contracts</span><span>Swap freely until one of them earns a mark, then the pair is set for the week. File one and you bank a weather delay (hold up to 2); file both and the sheet gets its seal.</span></div>
+        <div class="mi"><span class="g">Streak</span><span>One clear a day keeps it going. A banked weather delay covers a missed day; otherwise it simply starts again.</span></div>
         <div class="mi"><span class="g">Certification</span><span>24 ★ on a sheet certifies it: a new paper for the drawing.</span></div>
       </div>
     </div>
@@ -586,6 +634,114 @@
   <script>
 window.BEACON_URL = window.BEACON_URL || ''; // '' = beacon disabled (zero network) — artifact builds stay offline
 const LEVELS = [{"w":4,"h":5,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":1,"y":2}],"gates":[{"color":0,"side":"right","start":2,"len":3}],"par":1,"moves":5},{"w":4,"h":5,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[1,0]],"x":2,"y":3},{"color":1,"cells":[[0,0]],"x":2,"y":1}],"gates":[{"color":0,"side":"right","start":1,"len":3},{"color":1,"side":"top","start":2,"len":2}],"par":2,"moves":6},{"w":5,"h":6,"stones":[],"blocks":[{"color":0,"cells":[[0,0]],"x":4,"y":0},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":1},{"color":0,"cells":[[0,0],[0,1]],"x":4,"y":2}],"gates":[{"color":0,"side":"bottom","start":0,"len":3}],"par":3,"moves":7},{"w":5,"h":7,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[1,0]],"x":1,"y":2},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":3},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":4},{"color":0,"cells":[[0,0]],"x":3,"y":0}],"gates":[{"color":0,"side":"left","start":2,"len":4},{"color":1,"side":"bottom","start":0,"len":4}],"par":4,"moves":8},{"w":5,"h":7,"stones":[[4,3]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":1,"y":1},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":6},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":0,"y":0},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":1}],"gates":[{"color":0,"side":"left","start":3,"len":3},{"color":1,"side":"bottom","start":1,"len":4}],"par":4,"moves":7},{"w":6,"h":8,"stones":[[5,4]],"blocks":[{"color":0,"cells":[[0,0],[1,0]],"x":3,"y":1},{"color":1,"cells":[[0,0],[0,1]],"x":0,"y":0},{"color":1,"cells":[[0,0],[0,1]],"x":0,"y":5},{"color":1,"cells":[[0,0],[0,1]],"x":5,"y":2},{"color":1,"cells":[[0,0]],"x":1,"y":3}],"gates":[{"color":0,"side":"top","start":0,"len":2},{"color":1,"side":"top","start":3,"len":2}],"par":6,"moves":9},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0]],"x":0,"y":1},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":2},{"color":0,"cells":[[0,0]],"x":4,"y":3},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":5},{"color":1,"cells":[[0,0]],"x":5,"y":4}],"gates":[{"color":0,"side":"right","start":0,"len":4},{"color":1,"side":"bottom","start":1,"len":4}],"par":5,"moves":8},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":5,"y":4},{"color":2,"cells":[[0,0],[1,0]],"x":2,"y":1},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":1,"y":4},{"color":1,"cells":[[0,0],[0,1]],"x":1,"y":2},{"color":1,"cells":[[0,0],[1,0]],"x":2,"y":6}],"gates":[{"color":0,"side":"right","start":2,"len":4},{"color":1,"side":"bottom","start":2,"len":4},{"color":2,"side":"top","start":3,"len":3}],"par":6,"moves":9},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":2},{"color":1,"cells":[[0,0],[0,1]],"x":2,"y":6},{"color":2,"cells":[[0,0],[0,1]],"x":0,"y":6},{"color":2,"cells":[[0,0],[0,1]],"x":1,"y":1},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":5},{"color":2,"cells":[[0,0],[0,1]],"x":1,"y":3}],"gates":[{"color":0,"side":"left","start":3,"len":4},{"color":1,"side":"left","start":0,"len":3},{"color":2,"side":"right","start":0,"len":4}],"par":6,"moves":9},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":3},{"color":2,"cells":[[0,0],[0,1]],"x":2,"y":3},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":7},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":5,"y":1},{"color":1,"cells":[[0,0],[1,0]],"x":1,"y":7}],"gates":[{"color":0,"side":"right","start":2,"len":4},{"color":1,"side":"bottom","start":2,"len":4},{"color":2,"side":"left","start":2,"len":2}],"par":7,"moves":10},{"w":6,"h":8,"stones":[[0,7],[4,6]],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":2,"y":3},{"color":1,"cells":[[0,0],[1,0]],"x":1,"y":5},{"color":2,"cells":[[0,0]],"x":1,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":3,"y":0},{"color":1,"cells":[[0,0]],"x":3,"y":4},{"color":0,"cells":[[0,0],[0,1]],"x":4,"y":2}],"gates":[{"color":0,"side":"top","start":2,"len":3},{"color":1,"side":"right","start":2,"len":3},{"color":2,"side":"left","start":3,"len":2}],"par":6,"moves":9},{"w":6,"h":8,"stones":[[2,6],[0,7]],"blocks":[{"color":0,"cells":[[0,0]],"x":5,"y":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":3,"y":4},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":3},{"color":0,"cells":[[0,0],[0,1]],"x":3,"y":6},{"color":2,"cells":[[0,0],[1,0]],"x":1,"y":2}],"gates":[{"color":0,"side":"top","start":2,"len":3},{"color":1,"side":"left","start":3,"len":3},{"color":2,"side":"right","start":2,"len":2}],"par":7,"moves":10},{"w":6,"h":8,"stones":[[0,5],[1,6]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":0,"y":2},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":3},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":4},{"color":1,"cells":[[0,0],[1,0]],"x":4,"y":6},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":3,"y":6}],"gates":[{"color":0,"side":"left","start":1,"len":3},{"color":1,"side":"top","start":3,"len":3},{"color":2,"side":"bottom","start":1,"len":4}],"par":7,"moves":10},{"w":6,"h":8,"stones":[[5,7]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[1,1]],"x":4,"y":2},{"color":1,"cells":[[0,0],[0,1]],"x":0,"y":3},{"color":2,"cells":[[0,0],[0,1]],"x":2,"y":5},{"color":1,"cells":[[0,0],[0,1]],"x":4,"y":6},{"color":1,"cells":[[0,0],[0,1]],"x":3,"y":6}],"gates":[{"color":0,"side":"top","start":2,"len":3},{"color":1,"side":"bottom","start":0,"len":3},{"color":2,"side":"right","start":0,"len":3}],"par":5,"moves":8},{"w":6,"h":8,"stones":[[4,0]],"blocks":[{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":4},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":2,"y":6},{"color":2,"cells":[[0,0],[1,0]],"x":3,"y":3},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":4},{"color":1,"cells":[[0,0],[1,0]],"x":0,"y":2},{"color":2,"cells":[[0,0],[0,1]],"x":5,"y":1}],"gates":[{"color":0,"side":"left","start":0,"len":3},{"color":1,"side":"left","start":5,"len":3},{"color":2,"side":"bottom","start":3,"len":2}],"par":7,"moves":10},{"w":6,"h":8,"stones":[[1,2]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":0},{"color":1,"cells":[[0,0],[0,1]],"x":5,"y":4},{"color":2,"cells":[[0,0]],"x":2,"y":7},{"color":2,"cells":[[0,0],[1,0]],"x":2,"y":3},{"color":2,"cells":[[0,0],[0,1]],"x":5,"y":2},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":0}],"gates":[{"color":0,"side":"right","start":0,"len":4},{"color":1,"side":"left","start":5,"len":2},{"color":2,"side":"left","start":1,"len":2}],"par":7,"moves":10},{"w":7,"h":9,"stones":[[5,6],[0,8]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":5},{"color":1,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":2},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":4,"y":2},{"color":3,"cells":[[0,0],[0,1]],"x":3,"y":6},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":0},{"color":3,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":4},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":4,"y":5}],"gates":[{"color":0,"side":"right","start":2,"len":3},{"color":1,"side":"top","start":0,"len":3},{"color":2,"side":"bottom","start":1,"len":3},{"color":3,"side":"left","start":1,"len":4}],"par":8,"moves":11},{"w":7,"h":9,"stones":[[2,8],[2,4]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":3,"y":0},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":0},{"color":2,"cells":[[0,0],[1,0]],"x":0,"y":5},{"color":3,"cells":[[0,0],[0,1],[0,2]],"x":5,"y":5},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":1,"y":0},{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":5,"y":3},{"color":1,"cells":[[0,0],[0,1]],"x":4,"y":6}],"gates":[{"color":0,"side":"bottom","start":2,"len":3},{"color":1,"side":"right","start":3,"len":4},{"color":2,"side":"left","start":3,"len":4},{"color":3,"side":"top","start":1,"len":4}],"par":8,"moves":11},{"w":7,"h":9,"stones":[[5,1],[4,0]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":5,"y":2},{"color":1,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":5},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":0,"y":2},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":1,"y":0},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":6},{"color":3,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":1},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":3}],"gates":[{"color":0,"side":"left","start":5,"len":3},{"color":1,"side":"left","start":1,"len":3},{"color":2,"side":"bottom","start":3,"len":3},{"color":3,"side":"right","start":1,"len":4}],"par":8,"moves":11},{"w":6,"h":8,"stones":[[4,0],[3,3]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":2},{"color":1,"cells":[[0,0],[1,0],[0,1]],"x":0,"y":0},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":4,"y":3},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":5},{"color":0,"cells":[[0,0],[1,0],[0,1]],"x":1,"y":6},{"color":2,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":3},{"color":1,"cells":[[0,0],[0,1]],"x":2,"y":2}],"gates":[{"color":0,"side":"top","start":1,"len":3},{"color":1,"side":"left","start":0,"len":2},{"color":2,"side":"bottom","start":3,"len":2},{"color":3,"side":"right","start":1,"len":2}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[2,4],[4,7]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":6},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":5},{"color":2,"cells":[[0,0],[1,0]],"x":0,"y":3},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":3,"y":0},{"color":0,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":4},{"color":1,"cells":[[0,0],[1,0],[0,1]],"x":3,"y":4},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":4,"y":2}],"gates":[{"color":0,"side":"left","start":2,"len":2},{"color":1,"side":"bottom","start":0,"len":3},{"color":2,"side":"top","start":3,"len":2},{"color":3,"side":"left","start":4,"len":2}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[5,6],[0,5]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":1},{"color":1,"cells":[[0,0],[0,1]],"x":1,"y":6},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":3,"y":4},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":3,"y":0},{"color":3,"cells":[[0,0],[1,0],[1,1]],"x":3,"y":6},{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":1,"y":2},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":1,"y":0}],"gates":[{"color":0,"side":"top","start":4,"len":2},{"color":1,"side":"right","start":0,"len":2},{"color":2,"side":"bottom","start":0,"len":2},{"color":3,"side":"top","start":0,"len":2}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[5,5],[0,1]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":5},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":1},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":3,"y":0},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":0,"y":2},{"color":3,"cells":[[0,0],[0,1]],"x":5,"y":1},{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":2,"y":6},{"color":2,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":4}],"gates":[{"color":0,"side":"top","start":4,"len":2},{"color":1,"side":"left","start":3,"len":4},{"color":2,"side":"bottom","start":1,"len":2},{"color":3,"side":"right","start":5,"len":3}],"par":9,"moves":11},{"w":6,"h":8,"stones":[[4,4],[1,2]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":0},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":4},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":2},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":4},{"color":3,"cells":[[0,0],[0,1]],"x":4,"y":6},{"color":0,"cells":[[0,0],[1,0]],"x":2,"y":5},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":0}],"gates":[{"color":0,"side":"right","start":4,"len":3},{"color":1,"side":"bottom","start":0,"len":2},{"color":2,"side":"top","start":1,"len":2},{"color":3,"side":"bottom","start":3,"len":2}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[1,2],[1,0]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":3},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":1,"y":6},{"color":3,"cells":[[0,0],[1,0]],"x":4,"y":6},{"color":3,"cells":[[0,0],[1,0],[0,1]],"x":0,"y":5},{"color":3,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":6},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":3}],"gates":[{"color":0,"side":"bottom","start":0,"len":2},{"color":1,"side":"left","start":2,"len":3},{"color":2,"side":"top","start":1,"len":3},{"color":3,"side":"right","start":4,"len":2}],"par":8,"moves":10},{"w":7,"h":9,"stones":[[4,0],[2,4]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":4},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":5,"y":7},{"color":2,"cells":[[0,0],[0,1]],"x":4,"y":1},{"color":3,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":1},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":2},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":4},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":3}],"gates":[{"color":0,"side":"top","start":1,"len":2},{"color":1,"side":"right","start":4,"len":4},{"color":2,"side":"left","start":3,"len":3},{"color":3,"side":"right","start":0,"len":2}],"par":8,"moves":11},{"w":7,"h":9,"stones":[[0,4],[3,3]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":6,"y":0},{"color":1,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":7},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":2},{"color":3,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":5},{"color":2,"cells":[[0,0],[1,0]],"x":4,"y":3},{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":0},{"color":0,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":4}],"gates":[{"color":0,"side":"top","start":1,"len":3},{"color":1,"side":"left","start":1,"len":2},{"color":2,"side":"bottom","start":1,"len":4},{"color":3,"side":"left","start":6,"len":3}],"par":8,"moves":11},{"w":7,"h":9,"stones":[[5,2],[0,8]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":3,"y":0},{"color":1,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":2},{"color":2,"cells":[[0,0],[0,1]],"x":3,"y":2},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":8},{"color":2,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":0},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":4,"y":3},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":5,"y":6}],"gates":[{"color":0,"side":"right","start":3,"len":2},{"color":1,"side":"bottom","start":5,"len":2},{"color":2,"side":"top","start":3,"len":3},{"color":3,"side":"top","start":0,"len":3}],"par":9,"moves":12},{"w":7,"h":9,"stones":[[3,8],[6,1]],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":5,"y":5},{"color":1,"cells":[[0,0],[1,0]],"x":2,"y":2},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":5},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":0},{"color":2,"cells":[[0,0],[1,0],[1,1]],"x":1,"y":7},{"color":0,"cells":[[0,0],[1,0]],"x":0,"y":4},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":1}],"gates":[{"color":0,"side":"bottom","start":1,"len":2},{"color":1,"side":"right","start":1,"len":3},{"color":2,"side":"right","start":5,"len":2},{"color":3,"side":"left","start":5,"len":3}],"par":8,"moves":11},{"w":7,"h":9,"stones":[[5,4],[6,7]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":6},{"color":1,"cells":[[0,0],[1,0]],"x":1,"y":7},{"color":2,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":3},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":6},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":1},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":2},{"color":2,"cells":[[0,0],[1,0]],"x":5,"y":0}],"gates":[{"color":0,"side":"right","start":1,"len":3},{"color":1,"side":"bottom","start":0,"len":3},{"color":2,"side":"left","start":6,"len":3},{"color":3,"side":"top","start":5,"len":2}],"par":8,"moves":11}];
+
+'use strict';
+/* Gate Escape — Daily Draft table.
+   GENERATED by tools/generate-dailies.mjs — do not edit by hand.
+
+   One solver-verified board per calendar day, seeded by the date itself, so the
+   draft is identical for every player and its par is the truth the same A* that
+   graded the 30 shipped levels proved. Rows are APPEND-ONLY: tools/dailies.lock
+   pins a SHA-256 over every row up to and including today, and the generator
+   refuses to run if regeneration would move any of them.
+
+   Row encoding: 'WHPM-<shape color x y>*-<color side start len>*-<x y>*',
+   every field one base36 digit. Difficulty follows the weekday
+   (Mon/Tue easy, Wed/Sun mid, Thu/Fri hard, Sat the peak); the move limit is
+   always par + 3. */
+
+const DAILIES = {
+  v: 1,
+  start: '2026-09-01',
+  rows: [
+  '6847-4025414020452122-00041224-', '6869-60246136025712331203-024210322123-02', '687a-701551015220404360362155-033311222042-3417', '687a-201221524255701550007031-013313532303-2104', '798b-1012812072306303331640338351-0034113222523213-5864', '6858-70147130721640203033-023313222132-00',
+  '6847-1037312531011030-02131104-', '6847-1045411031331120-01221223-', '6858-20206131721200167046-010312132253-00', '687a-302161163202013451467104-025312122003-3342', '687a-100451464241225431166034-013212342023-0533', '798b-1014210642368346301563305010-0113104222343332-1745',
+  '6858-70242112423060416004-023310032323-00', '6847-2010311711450143-01231353-', '6847-2013313330070116-03241234-', '6858-20567113621522112021-014210222332-06', '687a-303701110222302451160213-001312422131-5141', '687a-702141454255501522350121-012313032233-4142',
+  '798b-7056514472522350111853236137-0002113222233322-0558', '6858-40354115224140221103-012312432352-25', '6847-0025112101230013-02321333-', '6847-4050110601562145-02331112-', '6858-60441133123711050012-034210032122-20', '687a-100001077220611432261244-003213522204-3520',
+  '687a-501141231200415521315134-000311232232-4006', '798b-8002311842527326910413075040-0102120320033372-1325', '6858-70104125424040056235-002413242233-24', '6847-2051311511303023-03041114-', '6847-2023313740022145-03231004-', '6858-10204141225472112106-013310042352-50',
+  '687a-704511067240402352334200-024313022353-1140', '687a-504431060232623060136235-010311332223-0115', '799c-9034511052466305522230187342-0003113220423102-3136', '6858-00416131021331140210-034112332321-33', '6847-4003414110231112-00141113-', '6847-3011415201134043-02141334-',
+  '6858-00446124421321466032-001311032244-02', '687a-405001052201412451101036-000312042033-3241', '687a-001321356222214221543127-000212042132-0001', '798b-4045115462519301413341303204-0203103421433372-6661', '6858-30037140023242524014-012312532353-35', '6847-3006313701052130-01141244-',
+  '6847-3023111610404151-03241253-', '6858-00262132622460061112-024313432023-53', '687a-501271141210724342045031-001211232244-1707', '687a-302541021216704502373034-001311232253-3252', '798b-8041314532159353201042063003-0333124320043222-3261', '6858-70163100423030042234-000313042133-25',
+  '6847-0012211540402002-02341353-', '6847-0033413031254150-02421033-', '6858-70424105022662206236-003311132243-34', '687a-303171336245122040252204-012313032253-2336', '687a-301161333212212631200215-003311232303-5500', '798b-8045312082519357322750023138-0372112423133032-2805',
+  '6858-60054142321360352003-012210042214-25', '6847-0003310231102013-02131253-', '6847-0036411011420120-02021024-', '6858-30221145025641141147-011312132012-13', '687a-003141127235523200223005-034413042242-5334', '687a-502571304253221100010250-000311032303-3303',
+  '798b-5006714462407352833282377317-0012133320423132-0231', '6858-10161132120701133236-033211422104-00', '6847-2000210331102132-01231234-', '6847-4053210620423117-00041303-', '6858-70057103721601033201-022310032314-41', '687a-300651130236415330157246-013313032032-4401',
+  '687a-001241305210321412405241-031212232023-3707', '798b-2014712232417354701090471130-0013133322433312-4456', '6858-00200115424420424104-000212532103-47', '6847-3013415431263005-03131114-', '6847-4030210641401016-01141314-', '6858-60420120622270206104-003311332233-06',
+  '687a-001401164243103742203103-000313342203-4612', '687a-500511364222022602106043-012212522344-0330', '798b-5042812222406326231190448200-0012114223423102-6733', '6858-70430115724622050055-030310122342-31', '6847-4013312221451041-01331303-', '6847-0053411200201140-03421214-',
+  '6858-10377113623422301016-024210332112-10', '687a-702471003220610620020204-024210132104-3147', '687a-503051146245120310472101-034213032033-2027', '798b-9021510482163348923442627336-0272102222433114-2461', '6869-10262152424470460211-032213622233-22', '6847-0031311641132055-01131024-',
+  '6847-2053413121160045-03431214-', '6858-30210107020362154042-001413622102-32', '687a-504521510242403372132102-000313022142-2132', '687a-602161412200624360263104-002311142262-4553', '799c-3035412062503336821691534105-0363103421023003-4330', '6858-00357141224400503202-001212132123-15',
+  '6847-4025012211334110-03241114-', '6847-1046110241433101-02321314-', '6869-20211123321431001007-001212242124-30', '687a-201321056240002071112015-025310332222-2557', '687a-703501016211014410415242-010213222122-2300', '798b-9007314762506352203542429310-0052123321343372-6223',
+  '6858-40243112120002140106-002413042243-02', '6847-3026014411413022-03041103-', '6847-3034113631331021-03441224-', '6869-00067101322002522213-026210322233-42', '687a-101051417212100202254043-030313422033-1417', '687a-104471236246001260266141-001311232352-4014',
+  '798b-4052412652341306111030232124-0003124423723043-5615', '6858-30221117723302217105-010410322312-33', '6847-0016213611211145-02321142-', '6847-4003215501064050-02041113-', '6858-00463112422460343111-021310332313-01', '687a-003721255211700371347046-003211122233-3454',
+  '687a-503141357246021502106112-024313242013-5243', '798b-5006815362401337930321237317-0232101223523262-0143', '6858-20562114623220123007-010413522233-22', '6847-2000311241550043-01031003-', '6847-1027111641121136-03521224-', '6858-20467105425310227132-023311332004-17',
+  '687a-101011311246502452066003-013212422003-3051', '687a-005231110200303310054240-022411232013-1223', '798b-5047311562524344700120606007-0312136320123333-3204', '6858-30337113620140152046-033312332013-40', '6847-4003113720554133-02531313-', '6847-4012215521223011-02341023-',
+  '6858-30343116222441316211-002313042353-06', '687a-600311263223411530021120-024310242213-3556', '688b-704131200202722671214223-003311032313-4354', '799c-4015512082279352533253443047-0343112223223372-2346', '6858-30112145420020344013-002312422313-12', '6847-3037215400441113-02441003-',
+  '6847-3036310101004113-02041253-', '6858-00344102322241242115-012110032223-10', '687a-001641311204022412456025-034311232202-1150', '687a-102651223234005070203227-013213132213-2506', '798b-8043815762146320200771122101-0113101221523232-4024', '6858-20136120724062013132-023213232023-40',
+  '6847-0035211600074043-01241032-', '6847-4053113640304114-02231104-', '6858-00401103724531170032-000210242362-14', '687a-001771010210603030226036-021410022351-2104', '687a-500531206211323712130224-004212532124-0036', '798b-3004711782317350110131337054-0104133422123372-5403',
+  '6858-40253130021622100200-001413232123-37', '6847-2030311201520114-02531033-', '6847-2040012120024034-01141242-', '6858-10337134425012316012-036211322013-03', '687a-602521567236313462403101-032311042232-0515', '687a-500241047231214531232254-025313432132-2051',
+  '798b-5050713692522331833360532055-0142135220123323-1203', '6858-70350147225300374102-025312142103-51', '6847-0020412530300047-00041124-', '6847-4011312030051004-02341334-', '6858-00004144421062267022-034210142304-36', '687a-502621337220415561404202-020210242133-2250',
+  '687a-102321045236310032210015-000313132343-2556', '798b-8051214392158313603693566307-0362111322323052-2758', '6858-70231120624111132100-030311422023-26', '6847-2003010701210054-02531371-', '6847-2001015700443127-03031233-', '6858-40231127121171334212-024312032004-17',
+  '687a-104211117225120030275243-034310232122-2407', '687a-404471100207302250307224-022411322012-1506', '798b-4050611282543333414063352224-0113100322023303-3160', '6858-20323137321110260234-000312242333-05', '6847-4020113320521102-00241302-', '6847-0023411020154133-00421004-',
+  '6858-60033131422302370032-011211332244-22', '687a-100731123214120370415126-001311032333-4047', '687a-201541226246301011445203-011410132352-3134', '798b-4046510242417310232281173225-0243135320333112-1634', '6858-40133135420132377242-010310032214-06', '6847-3031215210304033-02031243-',
+  '6847-2043213600564102-02531324-', '6858-30103105223401476040-001413032212-13', '687a-602651417214601142302102-011212022023-3443', '687a-301401161200510231153223-010410332234-0437', '798b-4010915692316304822013553133-0043101322523132-0744', '6858-40343112425042402005-020311242244-27',
+  '6847-2056211530032150-00131212-', '6847-2035213030040044-00241323-', '6858-20507122225221551047-030211232102-11', '688b-300111343230714440023017-033311222243-1643', '687a-302151060251714612006243-010310322133-5002', '798b-8056613172148311623572433317-0272113222323203-6223',
+  '6869-70034141023031353026-031312332211-31', '6847-4005011221200024-01041142-', '6847-3002015210163107-01041004-', '6858-40457104024060423107-021411032252-35', '687a-100441013215415470167232-000312142353-4013', '687a-303771146232023021024210-002413532124-2634',
+  '798b-6044610582235330215312576036-0222134221423113-6318', '6858-60261130025101060132-032212232262-03', '6847-1022114111401035-01021253-', '6847-1007410411111024-02331324-', '6858-20050150724130170245-002412422002-23', '687a-603571232230500350106144-000310322142-1215',
+  '687a-301301506224710131316215-010412032302-5247', '798b-9023514182025320220053061247-0272122223723022-4815', '6869-30370115722531201207-031310132133-00', '6847-3012413531303103-02441014-', '6847-3017410241130023-00041124-', '6858-00426120320601046132-010113532313-12',
+  '687a-401251266220224322415200-011410332012-4505', '688b-205571435214225160027222-033310422203-2031', '798b-9020615092279301400513248046-0353120220523253-2868', '6858-60167131421042351224-020211132323-05', '6847-0016412110404154-03521204-', '6847-0053310331342004-03221124-',
+  '6869-00452123620240141220-023311422112-11', '687a-700231075242500442335030-023211242014-5732', '688b-502461164244703062362205-014213122004-2230', '798b-8036416682557307920593103230-0203112423543002-2264', '6858-30167102123101151004-020313332032-33', '6847-2031012601251144-00031342-',
+  '6847-2026210111473030-02431112-', '6858-30076145124761324221-020313132114-03', '687a-400071465231311530036006-000413332142-2245', '687a-003501022213224430307123-022311232302-5422', '798b-6006715052127315323063008043-0222110223233362-3804', '6858-20134144024172412202-000312032303-54',
+  '6847-2010313141123006-00241123-', '6847-1042011500322024-03431032-', '6858-20467113124402170037-032312432042-07', '687a-100171137221102672467132-001210332242-5550', '688b-603041342222300021063005-024312032023-4403', '798b-4010612752405303704721537136-0123100221023262-0267',
+  '6858-70032141421531353110-033310142214-00', '6847-1046012421411106-01121353-', '6847-1041015000212113-00321253-', '6858-20160124220512460245-010313122203-32', '687a-400021507202714561422133-022313032202-3757', '687a-402151166245425171331230-030410322124-3254',
+  '798b-4010711532088314814462313040-0123103323043232-5701', '6858-40201114423020542101-000311122214-47', '6847-3013015320264035-02341102-', '6847-3032112731152006-01131014-', '6858-40501131323472004114-000412142334-42', '687a-602171441242301471003037-030311222033-1226',
+  '687a-301171047216414022446202-011412042332-1612', '798b-3035914642627330320882133217-0113121220433302-0467', '6858-30076133021602204000-013310332371-23', '6847-2022013230374025-03441032-', '6847-3017110040500115-01241333-', '6858-10423105322622446000-035311242234-17',
+  '687a-101621453203513140524100-000313242233-5547', '687a-003231317244113651136000-023312032342-0547', '798b-3002713312287345621332057126-0004104221033272-2347', '6858-70313134221531176110-011213142212-36', '6847-0033114031064042-03031013-', '6847-3010014210254152-00241333-',
+  '6858-40047113220071320150-030413532022-37', '687a-603431051213312241503020-035312132032-2107', '687a-404021536214310060021112-022311042042-1116', '798b-6050914692263302533473535242-0322103222033123-0315', '6858-20142106020460244110-001311332251-43', '6847-3036414110074113-01331004-',
+  '6847-3006215640012051-00041223-', '6869-30132134622601074244-013310232203-55', '687a-603071357212620502173214-013310122033-5525', '687a-703521315211312720547042-002311032312-3402', '798b-8007711422463330102263568053-0362113220023333-2721', '6858-00103103423102021126-002213442124-05',
+  '6847-4042215030142035-02331352-', '6847-0002013630321044-02441012-', '6869-10061110421341403212-012210132303-56', '687a-100171211223303430260037-020412622042-1341', '687a-302611010225623132237204-000412222124-1741', '798b-5014912712444362703031477306-0272113323023353-0551',
+  '6858-00307135322171331204-010110022344-37', '6847-1003311400324154-02621024-', '6847-0045311401011116-03521124-', '6858-70331145021740404104-033311242262-36', '687a-702211020235321040242043-000412622114-0734', '688b-005051411244423240225003-030310122343-4631',
+  '798b-7041511752536311733041558237-0152100421123362-4832', '6869-30303102120001531023-003312442313-43', '6847-2054312630034131-00031314-', '6847-2006010110302143-03031362-', '6858-40227125724622126040-022310132353-54', '687a-703611044201700640112256-022313122033-5331',
+  '687a-401431026223710010170107-001311042232-2131', '798b-5003312332374310801761056025-0302112323233013-0244', '6858-00132110420140410133-024311032304-45', '6847-4044213521011030-00041233-', '6847-0054310300001022-02031133-', '6858-40454121323271162056-022313332024-20',
+  '687a-601371254255003362306116-001311222344-2312', '687a-405301142230023721416123-024310222042-1146', '798b-7035912142003314115492307357-0042122223533003-6244', '6858-40200105124372013214-013312022343-01', '6847-0004013140101023-00041261-', '6847-0006011120234033-02441102-',
+  '6858-60337113225372353010-032312522213-26', '687a-601071410207311570306046-010210232261-5432', '687a-503161064223603622433120-030211232214-4556', '798b-4032615522279352804311156300-0043122222523142-3141', '6858-30034130222421357111-021410242133-20', '6847-3001312331242051-02431014-',
+  '6847-2042010121111016-02531113-', '6858-10357136022320040215-013210232232-51', '687a-000401342256720100242236-037110422102-2631', '687a-602671022255110672421241-010313122212-0033', '798b-8046515312282344735081305100-0042115220223272-2536', '6858-40050144323011003122-010313242033-12',
+  '6847-0012012631313020-03531224-', '6847-0017112630033121-03341103-', '6858-60362156220132233114-021311242334-06', '687a-602451163220310231132010-003311132353-1501', '688b-303711465223210271005244-001413122123-4015', '798b-8056711672376341436253343201-0202127223043363-4625',
+  '6858-00003130020760051045-010312242002-12', '6847-4054310111251133-02431014-', '6847-3007211430101106-03041033-', '6858-40213135720172410225-000411132353-34', '687a-402311353232213370035201-001313322244-4331', '687a-400151402223323702077204-025311332023-3321',
+  '798b-2031410652107357800312509023-0102113322133013-1600', '6858-40307103020230161234-013312322022-00', '6847-3016111430201123-02441303-', '6847-4003013441200143-01141304-', '6858-20517104223501567221-013210322002-13', '688b-603651211224500440516045-000313522132-1216',
+  '687a-303151063201020540021126-010412322303-3735', '79ad-8014815452419302433550103123-0042101321123143-6246', '6858-70204110225312224204-013212342324-26', '6847-1010111141354100-01131314-', '6847-0023214011111102-02521042-', '6858-70113107424101022123-023313432114-53',
+  '687a-703561224215714252100050-033312422023-0137', '687a-103071226234320072060253-036211332303-5556', '798b-3013715012547342320791264246-0344111220233002-6708', '6858-20062143225602200215-030313532142-53', '6847-2054414310244121-01331004-', '6847-2045313110053133-03431253-',
+  '6858-40222113721622060104-010412032243-57', '687a-703121141244020072010207-000212222332-3150', '687a-205151003230213310327146-036210322103-5544', '799c-8000511522045330635293171145-0312112220023212-4635', '6858-00220147724322240233-035112512203-36', '6847-3032212111353023-03241223-',
+  '6847-3002310100471000-02241104-', '6869-60157142224072034045-022311232333-00', '687a-503571005213514371203132-014211132002-2241', '687a-003141100201623472316105-022113342113-4625', '798b-9030912112377305623382074266-0142120220233243-6162', '6869-70166140624460352042-035211232213-23',
+  '6847-1020313600253133-00031133-', '6847-0046410401254055-03141014-', '6858-30106142122622552215-010412432352-12', '687a-300311202246420400263133-000312432313-3531', '687a-504151252244312300201027-013313432102-0256', '798b-9046210572326313430122153144-0123121421523353-5025',
+  '6858-00333105121360100244-003313432223-14', '6847-4001313740054043-02041124-', '6847-4052313141340157-02241344-', '6858-40143100322170263034-001411332303-45', '687a-301251046235415272463223-024310232333-2750', '687a-100001566235420331242013-025213342003-2540',
+  '799c-6022910282414334735472143037-0233102221523263-4621', '6858-40313100323622154102-024310232303-27', '6847-3030312111330023-02031324-', '6847-4051312000554103-00141104-', '6858-60032152322241343001-024310332103-50', '688b-702301077200312711067025-011210232343-1303',
+  '687a-703401542242110022211002-020211132312-5616', '799c-3035515042158356600383428026-0303122221133152-5431', '6858-70111114624211470206-020213622022-03', '6847-0024410101160145-00311344-', '6847-0002413411063101-02021104-',
+  ],
+};
+
+// ---------- decoder (the only daily code that ships) ----------
+DAILIES.S = {"s1":[[0,0]],"h2":[[0,0],[1,0]],"v2":[[0,0],[0,1]],"h3":[[0,0],[1,0],[2,0]],"v3":[[0,0],[0,1],[0,2]],"sq":[[0,0],[1,0],[0,1],[1,1]],"l1":[[0,0],[0,1],[1,1]],"l2":[[1,0],[1,1],[0,1]],"l3":[[0,0],[1,0],[0,1]],"l4":[[0,0],[1,0],[1,1]]};
+DAILIES.O = ["s1","h2","v2","h3","v3","sq","l1","l2","l3","l4"];
+DAILIES.D = ["top","bottom","left","right"];
+// a calendar date is a date, not a moment: all index maths is UTC
+DAILIES.parse = function (d) { var p = d.split('-'); return Date.UTC(+p[0], +p[1] - 1, +p[2]); };
+DAILIES.index = function (d) { return Math.round((DAILIES.parse(d) - DAILIES.parse(DAILIES.start)) / 864e5); };
+DAILIES.dateAt = function (i) { return new Date(DAILIES.parse(DAILIES.start) + i * 864e5).toISOString().slice(0, 10); };
+// past the end of the table (or before its start) the date wraps onto a row that
+// WAS generated and solver-verified — never an unverified or improvised board
+DAILIES.rowFor = function (d) {
+  var n = DAILIES.rows.length, i = DAILIES.index(d), wrapped = i < 0 || i >= n;
+  if (wrapped) i = ((i % n) + n) % n;
+  return { i: i, wrapped: wrapped, row: DAILIES.rows[i] };
+};
+DAILIES.decode = function (row) {
+  var n = function (c) { return parseInt(c, 36); }, p = row.split('-'), i;
+  var L = { w: n(p[0][0]), h: n(p[0][1]), par: n(p[0][2]), moves: n(p[0][3]), stones: [], blocks: [], gates: [] };
+  for (i = 0; i < p[1].length; i += 4) L.blocks.push({ color: n(p[1][i + 1]), cells: DAILIES.S[DAILIES.O[n(p[1][i])]].map(function (c) { return c.slice(); }), x: n(p[1][i + 2]), y: n(p[1][i + 3]) });
+  for (i = 0; i < p[2].length; i += 4) L.gates.push({ color: n(p[2][i]), side: DAILIES.D[n(p[2][i + 1])], start: n(p[2][i + 2]), len: n(p[2][i + 3]) });
+  for (i = 0; i < p[3].length; i += 2) L.stones.push([n(p[3][i]), n(p[3][i + 1])]);
+  return L;
+};
+DAILIES.levelFor = function (d) { var r = DAILIES.rowFor(d); return { i: r.i, wrapped: r.wrapped, level: DAILIES.decode(r.row) }; };
 
 'use strict';
 /* Gate Escape — drag colored blocks out through matching gates. */
@@ -970,10 +1126,169 @@ const FIRST_STONE = LEVELS.findIndex(l => l.stones.length > 0);
 let best = {};
 try { best = JSON.parse(localStorage.getItem('ge_best') || '{}') || {}; } catch (e) {}
 
+// ---------- Daily Draft ----------
+// One board a day, the same board for every player, decoded from the
+// precomputed solver-verified table in `dailies.js`. Nothing about it is
+// generated in the page: a generator here would mean a solver here, and par has
+// to be a fact the player cannot dial.
+//
+// It rides on a VIRTUAL level index — `DAILY_INDEX === LEVELS.length`, one past
+// the last real sheet — so `LEVELS` itself never changes shape. Everything that
+// keys off a level index therefore has exactly one question to ask (`isDaily()`)
+// and the answer is always the same: the draft is OUTSIDE the campaign. It never
+// moves the resume pointer, never writes a personal best, never spends or gates
+// on a life, never certifies a sheet.
+const DAILY_INDEX = LEVELS.length;
+const DAILY_KEY = 'ge_daily';
+const DAILY_HIST = 30;
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+let dailyLevel = null;     // decoded board for dailyDate (null = no draft armed yet)
+let dailyDate = null;      // 'YYYY-MM-DD' of the armed draft
+let dailyRow = -1, dailyWrapped = false; // which table row, and whether the date wrapped onto it
+let dailyPractice = false; // this play is after the day's record closed — it counts for nothing
+let dailyPending = null;   // a fail waiting on the rescue decision (see closePendingDaily)
+let resumeLevel = li;      // the last REAL level loaded: the daily must not disturb it
+
+const isDaily = () => li === DAILY_INDEX;
+const dailyReady = () => typeof DAILIES !== 'undefined' && !!(DAILIES && DAILIES.levelFor);
+const levelAt = i => (i === DAILY_INDEX ? dailyLevel : LEVELS[i]);
+// the same day boundary the streak logic uses: local midnight, read through the
+// overridable clock so a bot can walk days without touching the system clock
+const dayStr = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const todayStr = () => dayStr(GE.now());
+const dayLabel = d => { const p = d.split('-'); return +p[2] + ' ' + MON[+p[1] - 1]; };
+
+// ---------- the day's record ----------
+// `cur` is the ONE recorded attempt for today. It opens when the draft is first
+// loaded and CLOSES on the first resolution — a clear, or a loss the player
+// resolved by retrying or leaving instead of taking the rescue. Once closed it is
+// never rewritten: every later play is practice, and practice never touches it.
+// A rescue is allowed and recorded as a fact on the row, not hidden.
+function dailyRec() {
+  let r = null;
+  try { r = JSON.parse(localStorage.getItem(DAILY_KEY) || 'null'); } catch (e) {}
+  if (!r || r.v !== 1) r = { v: 1, cur: null, practice: null, hist: [] };
+  if (!Array.isArray(r.hist)) r.hist = [];
+  return r;
+}
+function saveDailyRec(r) { try { localStorage.setItem(DAILY_KEY, JSON.stringify(r)); } catch (e) {} }
+
+// Recompute "is this play recorded?" from storage. EVERY entry into the draft
+// runs through here (first load, Retry, Replay, a reload on the win card), so the
+// HUD label and the stored record can never disagree.
+function syncDailyMode() {
+  const today = todayStr();
+  const r = dailyRec();
+  if (r.cur && r.cur.date !== today) {           // day rolled over
+    if (r.cur.state) r.hist = [r.cur, ...r.hist].slice(0, DAILY_HIST);
+    r.cur = null;                                 // an attempt that never resolved was never a result
+  }
+  if (r.practice && r.practice.date !== today) r.practice = null;
+  if (dailyDate === today && !r.cur) r.cur = { date: today, state: null };
+  dailyPractice = dailyDate !== today || !!(r.cur && r.cur.state);
+  if (dailyPractice && dailyDate === today) {
+    r.practice = { date: today, plays: (r.practice ? r.practice.plays : 0) + 1 };
+  }
+  saveDailyRec(r);
+}
+
+function closeDaily(state, extra) {
+  dailyPending = null;
+  if (dailyPractice || !dailyDate || dailyDate !== todayStr()) return false;
+  const r = dailyRec();
+  if (!r.cur || r.cur.date !== dailyDate || r.cur.state) return false; // already closed: never rewritten
+  r.cur = Object.assign({ date: dailyDate, state }, extra);
+  saveDailyRec(r);
+  dailyPractice = true; // from here on this board is practice
+  track('daily_' + state, dailyDate);
+  window.dispatchEvent(new CustomEvent('ge:daily', { detail: dailyInfo() }));
+  return true;
+}
+
+// A fail on the draft does NOT close the record on its own: the rescue is still
+// on the table and taking it keeps the same attempt alive. The result is decided
+// the moment the player declines — by retrying, by leaving the board, or by
+// closing the page. Then, and only then, the loss is written down.
+function closePendingDaily() {
+  if (!dailyPending) return;
+  const d = dailyPending;
+  closeDaily('lost', d);
+}
+
+function loadDaily(dateStr) {
+  if (!dailyReady()) return false;
+  const d = dateStr || todayStr();
+  const f = DAILIES.levelFor(d);
+  if (!f || !f.level) return false;
+  closePendingDaily();
+  dailyDate = d; dailyRow = f.i; dailyWrapped = f.wrapped; dailyLevel = f.level;
+  loadLevel(DAILY_INDEX);
+  return true;
+}
+
+function dailyInfo() {
+  const r = dailyRec();
+  const today = todayStr();
+  return {
+    today,
+    date: dailyDate,                 // the armed draft's date (null before the first load)
+    index: dailyRow,                 // its row in the table
+    wrapped: dailyWrapped,           // true = the date ran past the table and wrapped onto a verified row
+    active: isDaily(),               // the draft is the board on screen right now
+    practice: dailyPractice,         // ...and this play is NOT being recorded
+    par: dailyLevel ? dailyLevel.par : 0,
+    limit: dailyLevel ? dailyLevel.moves : 0,
+    done: !!(r.cur && r.cur.date === today && r.cur.state), // today's record has closed
+    cur: r.cur && r.cur.state ? r.cur : null,               // ...and this is it
+    plays: r.practice && r.practice.date === today ? r.practice.plays : 0,
+    hist: r.hist,
+  };
+}
+
+// ---------- FIELD REPORT ----------
+// The share text, and only the share text: five short lines that say how the day
+// went and nothing whatever about HOW. A per-move grid is the obvious thing to
+// build and the one thing that cannot ship — every player is on the SAME board,
+// so a picture of the route is a walkthrough. So the report carries the shape of
+// the attempt (a bar of par-filled and over-par cells), the stars, the moves
+// against par, route efficiency, and what help was used. Two different boards
+// with the same numbers produce the same text; that is the proof it leaks nothing.
+// Codepoints are pinned to ASCII plus the five marks in ALLOWED.
+// the five non-ASCII marks the report is allowed to use: ★ ☆ ■ □ · (playtest pins this)
+const REPORT_BAR_MAX = 20;
+function parBar(mv, par) {
+  const n = Math.min(mv, REPORT_BAR_MAX);
+  const filled = Math.max(0, Math.min(par, n));
+  return '■'.repeat(filled) + '□'.repeat(Math.max(0, n - filled))
+    + (mv > REPORT_BAR_MAX ? ' +' + (mv - REPORT_BAR_MAX) : '');
+}
+function dailyShareText(dateStr) {
+  const r = dailyRec();
+  const want = dateStr || (r.cur && r.cur.date) || dailyDate;
+  let row = null;
+  if (r.cur && r.cur.state && r.cur.date === want) row = r.cur;
+  else row = r.hist.find(h => h && h.date === want && h.state) || null;
+  if (!row) return null;
+  const p = row.date.split('-');
+  const stars = '★'.repeat(row.stars || 0) + '☆'.repeat(3 - (row.stars || 0));
+  const won = row.state === 'won';
+  const head = 'GATE ESCAPE · FIELD REPORT\n'
+    + (+p[2]) + ' ' + MON[+p[1] - 1] + ' ' + p[0] + ' · ' + (won ? 'CLEARED' : 'NOT CLEARED') + '\n'
+    + parBar(row.moves, row.par) + '\n';
+  const line = won
+    ? stars + ' · ' + row.moves + '/' + row.par + ' moves · route ' + Math.round(row.par / Math.max(1, row.moves) * 100) + '%'
+    : stars + ' · ' + row.cleared + ' of ' + row.blocks + ' out · ' + row.moves + '/' + row.par + ' moves';
+  return head + line + '\nundo ' + (row.undos || 0) + ' · hint ' + (row.hints || 0) + (row.rescued ? ' · rescued' : '');
+}
+
 function loadLevel(i) {
-  li = Math.max(0, Math.min(i, LEVELS.length - 1));
-  try { localStorage.setItem('ge_level', String(li)); } catch (e) {}
-  L = JSON.parse(JSON.stringify(LEVELS[li]));
+  // leaving a decided draft board IS the answer to the rescue offer
+  if (dailyPending && i !== DAILY_INDEX) closePendingDaily();
+  // the daily is the one index that escapes the clamp, and only while a board is armed
+  li = i === DAILY_INDEX && dailyLevel ? DAILY_INDEX : Math.max(0, Math.min(i, LEVELS.length - 1));
+  if (isDaily()) syncDailyMode();
+  else { resumeLevel = li; try { localStorage.setItem('ge_level', String(li)); } catch (e) {} }
+  L = JSON.parse(JSON.stringify(levelAt(li)));
   pos = L.blocks.map(b => [b.x, b.y]);
   disp = L.blocks.map(b => [b.x, b.y]);
   visQ = L.blocks.map(() => []);
@@ -989,7 +1304,10 @@ function loadLevel(i) {
   for (const t of winTimers) clearTimeout(t);
   winTimers = [];
   adClose();
-  hudLevel.textContent = 'Level ' + (li + 1);
+  hudLevel.textContent = isDaily()
+    ? (dailyPractice ? 'PRACTICE \u00b7 NOT RECORDED' : 'DAILY DRAFT \u00b7 ' + dayLabel(dailyDate))
+    : 'Level ' + (li + 1);
+  hudLevel.classList.toggle('daily', isDaily());
   hudPar.textContent = 'par ' + L.par;
   winModal.hidden = true; failModal.hidden = true;
   document.body.classList.remove('fail-up'); cv.style.transform = '';
@@ -998,9 +1316,12 @@ function loadLevel(i) {
   buildGoal();
   updateHud();
   layout();
-  track('level_start', li + 1);
-  window.dispatchEvent(new CustomEvent('ge:load', { detail: { lvl: li } }));
-  // one-time tips, shown in the HUD strip (never information the board itself lacks)
+  if (isDaily()) track(dailyPractice ? 'daily_practice' : 'daily_started', dailyDate);
+  else track('level_start', li + 1);
+  window.dispatchEvent(new CustomEvent('ge:load', { detail: { lvl: li, daily: isDaily(), date: isDaily() ? dailyDate : null } }));
+  // one-time tips, shown in the HUD strip (never information the board itself lacks).
+  // The draft is not a teaching surface: it teaches nothing and interrupts nothing.
+  if (isDaily()) return;
   if (li === 2) tip('corner', 'One drag can turn corners. The whole route is one move.');
   if (li === FIRST_STONE) tip('stone', 'Stones never move. Route around them.');
   if (li === FIRST_TWICE) tip('twice', 'Everything is corked. Sometimes a block has to move twice.');
@@ -1392,6 +1713,11 @@ function maybeFail() {
   if (movesLeft <= 0 && pos.some(p => p)) {
     over = true;
     hint = null;
+    // the draft's result is not written yet — the rescue is still on offer
+    if (isDaily() && !dailyPractice) {
+      dailyPending = { moves, par: L.par, stars: 0, undos: attemptUndos, hints: attemptHints,
+        rescued, cleared: pos.filter(p => !p).length, blocks: pos.length };
+    }
     updateHud();
     setTimeout(() => {
       const out = pos.filter(p => !p).length, left = pos.length - out;
@@ -1417,6 +1743,7 @@ function maybeFail() {
 // win-card titles rotate so the reward line never reads as a receipt; milestones get their own
 const WIN_TITLES = ['Level clear!', 'Sheet approved!', 'Cleared to par!', 'Drawing done!', 'Board cleared!'];
 function winTitleFor(stars) {
+  if (isDaily()) return dailyPractice ? 'Practice run cleared' : 'Daily draft filed!';
   const n = li + 1;
   if (n === LEVELS.length) return 'Every level clear!';
   if (n === 10 || n === 20) return `${n} levels drafted!`;
@@ -1445,16 +1772,25 @@ function win() {
   hint = null;
   updateHud();
   const stars = starsFor(moves);
-  const last = li === LEVELS.length - 1;
+  const daily = isDaily();
+  // the draft has nothing after it: its "next" is the way out, never LEVELS[31]
+  const last = daily || li === LEVELS.length - 1;
   const winUndos = attemptUndos, winHints = attemptHints;
   document.getElementById('winTitle').textContent = winTitleFor(stars);
   btnNext.textContent = last ? 'Back to menu' : 'Next level';
   // par is the target, never "best"; the player's own best is a separate fact once one exists
-  const prev = best[li];
+  // the draft keeps no personal best: one board, one recorded attempt, no ladder to climb
+  const prev = daily ? 0 : best[li];
   winSub.textContent = `Solved in ${moves} move${moves === 1 ? '' : 's'}`
     + (stars === 3 ? ' — perfect!' : ` · par ${L.par}`)
     + (prev && prev < moves ? ` · your best ${prev}` : '');
-  if (!prev || moves < prev) { best[li] = moves; try { localStorage.setItem('ge_best', JSON.stringify(best)); } catch (e) {} }
+  if (!daily && (!prev || moves < prev)) { best[li] = moves; try { localStorage.setItem('ge_best', JSON.stringify(best)); } catch (e) {} }
+  // the day's record closes here, before the event goes out, so every listener
+  // (and GE.dailyShareText) sees the resolved row rather than an open one
+  if (daily) {
+    closeDaily('won', { moves, par: L.par, stars, undos: winUndos, hints: winHints,
+      rescued, cleared: pos.length, blocks: pos.length });
+  }
   // the resume pointer advances on the win itself, not on the Next tap: a reload or app kill
   // on this card must not send the player back into a level they just cleared
   if (!last) { try { localStorage.setItem('ge_level', String(li + 1)); } catch (e) {} }
@@ -1475,10 +1811,10 @@ function win() {
   btnNext.disabled = btnReplay.disabled = !reduced;
   winTimers.push(setTimeout(() => { btnNext.disabled = btnReplay.disabled = false; }, delays[2] + 400 + 400));
   winModal.hidden = false;
-  window.dispatchEvent(new CustomEvent('ge:win', { detail: { lvl: li, stars, moves, last, par: L.par, undos: winUndos, hints: winHints } }));
+  window.dispatchEvent(new CustomEvent('ge:win', { detail: { lvl: li, stars, moves, last, par: L.par, blocks: pos.length, undos: winUndos, hints: winHints, daily, date: daily ? dailyDate : null } }));
   sound('win');
   haptic('win');
-  track('win', { lvl: li + 1, moves, stars });
+  track('win', daily ? { daily: dailyDate, moves, stars } : { lvl: li + 1, moves, stars });
 }
 
 // DOM spark burst from an element's centre (win card, third star)
@@ -1660,6 +1996,17 @@ btnAdSkip.onclick = adClose;
 btnRestart.onclick = () => { if (over || paused) return; track('restart', li + 1); loadLevel(li); };
 btnUndo.onclick = () => { audioInit(); undo(); };
 btnNext.onclick = () => {
+  if (isDaily()) {
+    // Hand control back to the menu on the shared event, then put the resume
+    // pointer back: the campaign's own finish handler sends the player to level 1,
+    // which is right after the 30th sheet and wrong after a draft — the draft is
+    // not part of the campaign and must not move where "Play" resumes.
+    const back = resumeLevel;
+    window.dispatchEvent(new CustomEvent('ge:finished', { detail: { daily: true, date: dailyDate } }));
+    li = resumeLevel = back;
+    try { localStorage.setItem('ge_level', String(back)); } catch (e) {}
+    return;
+  }
   if (li === LEVELS.length - 1) { window.dispatchEvent(new CustomEvent('ge:finished')); return; }
   if (!livesGate(li + 1)) return;
   loadLevel(li + 1);
@@ -1669,6 +2016,10 @@ btnReplay.onclick = () => { if (!livesGate(li)) return; track('replay', li + 1);
 // attempt instead (no life), Restart mid-level is free, winning is free. At zero lives the
 // calm empty-state card takes over (timer + one rewarded refill + back to menu).
 document.getElementById('btnRetry').onclick = () => {
+  // the draft never costs a life and is never gated by one: it is one board a day,
+  // outside the economy entirely. Retrying it is also the moment the player
+  // declines the rescue, so the day's result is written down here.
+  if (isDaily()) { closePendingDaily(); track('retry', 'daily'); loadLevel(DAILY_INDEX); return; }
   if (livesOn && li >= LIVES_FREE_LEVELS) {
     if (livesNow() < 1) { showLivesCard(); return; }
     spendLife();
@@ -1676,7 +2027,9 @@ document.getElementById('btnRetry').onclick = () => {
   track('retry', li + 1); loadLevel(li);
 };
 function grantRescue() {
-  rescued = true; over = false; movesLeft += 3; failModal.hidden = true; failRoute = null;
+  rescued = true; over = false; movesLeft += 3;
+  failModal.hidden = true; failRoute = null;
+  dailyPending = null; // the attempt continues, so the day is still undecided
   document.body.classList.remove('fail-up'); cv.style.transform = '';
   // the losing move stays undoable; undo must hand back the move without taking the rescue away
   if (undoSnap) undoSnap.movesLeft += 3;
@@ -2279,6 +2632,13 @@ window.GE = {
   // drawing helpers shared with menu.js (legend); ctx is swapped for the call
   draw(c, fn) { const o = ctx; ctx = c; try { fn({ rr, drawGlyph, drawBlockShape, COLORS }); } finally { ctx = o; } },
   load: loadLevel,
+  // ---- Daily Draft (the menu/index UI wires onto these; the engine owns the rules) ----
+  loadDaily,                                  // (dateStr?) -> bool; defaults to today
+  get isDaily() { return isDaily(); },        // the draft is the board on screen
+  get dailyDate() { return dailyDate; },      // 'YYYY-MM-DD' of the armed draft
+  get dailyInfo() { return dailyInfo(); },    // cur/practice/history state + today's row
+  get dailyIndex() { return DAILY_INDEX; },   // the virtual level index it lives at
+  dailyShareText,                             // (dateStr?) -> the FIELD REPORT string, or null
   undo,
   route: findRoute,
   solve: solveFrom,   // reference next move from any position (bots / reviewer console)
@@ -2312,6 +2672,10 @@ window.GE = {
     return true;
   },
 };
+
+// the page going away with the draft's fail sheet still up is the same decision
+// as walking away from it: the loss is a fact, and it is written down.
+window.addEventListener('pagehide', closePendingDaily);
 
 // ---------- go ----------
 updateLivesUI();
@@ -2476,15 +2840,15 @@ requestAnimationFrame(frame);
       : `Level <b>${GE.level + 1}</b> / ${N} · ★ <b>${starsTotal()}</b>`
         + (live ? ` · <i>${live}-day streak</i>` : '');
   }
-  // the sheet index's field log: progress, the day's quests, streak/lives, the survey row, the
-  // paper picker and the sound/haptics toggles
+  // the sheet index's field log: progress, the field-survey row (the week's sheet is one tap
+  // deeper), the lives row when the economy is on, the paper picker and the sound/haptics toggles
   function refreshLog() {
     $('fLevel').textContent = (GE.level + 1) + ' / ' + N;
     $('fStars').textContent = starsTotal() + ' / ' + (N * 3);
     refreshSound();
     refreshHaptics();
     refreshPapers();
-    refreshDaily();
+    refreshSurvey();
   }
   function buildGrid() {
     const g = $('levelGrid');
@@ -2623,73 +2987,129 @@ requestAnimationFrame(frame);
   }
   btnTry.onclick = () => { if (certSkin && setSkin(certSkin, 'win')) { btnTry.disabled = true; btnTry.textContent = 'On'; } };
 
-  // ---------- daily quests + streak (freezes, week marks) + weekly ladder ----------
-  // Three quests roll each local day, deterministically from the date (every player shares the
-  // day's set); the templates are safe telemetry facts — never ad views, boosters or spending,
-  // and nothing a content change could make impossible. Completing all three banks ONE streak
-  // freeze (max 2 held). The streak day-mark stays "≥1 level cleared"; a missed day consumes a
-  // banked freeze automatically (calm notice at next launch). With no freeze banked the streak
-  // simply starts again — there is NO repair surface: nothing to watch, nothing to buy, no card
-  // at the moment of loss (2026-09-02: the streak-repair ad was deleted, not disabled). The Field Survey is a weekly
-  // personal ladder: 1 point per clear, +1 at par, stamps at 3/7/12/20 — no leaderboard, no
-  // comparison, everyone can finish. All dates flow through GE.now() so bots simulate days;
-  // state lives in separate keys: ge_streak / ge_quests / ge_ladder.
-  const QUEST_TEMPLATES = {
-    clear3:   { label: 'Clear 3 levels',               target: 3,  gain: d => 1 },
-    clear5:   { label: 'Clear 5 levels',               target: 5,  gain: d => 1 },
-    stars6:   { label: 'Earn 6 stars',                 target: 6,  gain: d => d.stars },
-    stars9:   { label: 'Earn 9 stars',                 target: 9,  gain: d => d.stars },
-    par2:     { label: 'Clear 2 levels at par',        target: 2,  gain: d => (d.moves <= d.par ? 1 : 0) },
-    noundo1:  { label: 'Clear a level without undo',   target: 1,  gain: d => (d.undos === 0 ? 1 : 0) },
-    nohint2:  { label: 'Clear 2 levels without hints', target: 2,  gain: d => (d.hints === 0 ? 1 : 0) },
-    blocks12: { label: 'Clear 12 blocks',              target: 12, gain: d => d.blocks },
+  // ---------- Field Survey: ONE weekly sheet (day spine + contracts + marks + seal) ----------
+  // The 2026-09-02 research round merged three overlapping meta systems — daily quests, the
+  // streak card and the weekly ladder — into a single sheet the surveyor fills in over a week:
+  //   * a 7-day spine, Mon–Sun: any level clear stamps today (a Daily Draft clear counts too —
+  //     this listens to ge:win and asks no questions about which board it was);
+  //   * two CONTRACTS chosen from the four the week offers (rolled deterministically from the ISO
+  //     week, so everyone sees the same four). Swapping is free until a chosen contract earns its
+  //     first progress; after that the pair is set for the week — a choice you can undo forever is
+  //     not a choice, and one you can never revisit punishes a blind first tap;
+  //   * point MARKS at 3/7/12/20 on the same sheet, on the ladder's own rule (1 per clear, +1 at par);
+  //   * filing ONE contract banks a WEATHER DELAY (max 2 — the same ge_streak.freezes field, same
+  //     shape, renamed only in the language); filing BOTH seals the week and yields a fragment.
+  // The streak itself is unchanged and its state key is byte-identical (zero-risk preservation of
+  // real streaks): consecutive calendar days with >=1 clear, best kept, rolling 7-day marks. A
+  // missed day covered by a banked delay is stamped WEATHER DELAY on the spine; with nothing
+  // banked the streak simply starts again — there is NO repair surface, nothing to watch, nothing
+  // to buy, no card at the moment of loss. All dates flow through GE.now() so bots simulate days.
+  // State: ge_streak (unchanged) + ge_survey (new). ge_quests / ge_ladder are migrated once, then
+  // removed. Nothing here is ever gated on — the funnel test needs every level reachable.
+  const CONTRACTS = {
+    clear12:  { label: 'Clear 12 levels',             target: 12, gain: d => 1 },
+    clear20:  { label: 'Clear 20 levels',             target: 20, gain: d => 1 },
+    stars30:  { label: 'Earn 30 stars',               target: 30, gain: d => d.stars },
+    stars45:  { label: 'Earn 45 stars',               target: 45, gain: d => d.stars },
+    par8:     { label: 'Clear 8 levels at par',       target: 8,  gain: d => (d.moves <= d.par ? 1 : 0) },
+    noundo5:  { label: 'Clear 5 levels without undo', target: 5,  gain: d => (d.undos === 0 ? 1 : 0) },
+    nohint8:  { label: 'Clear 8 levels without hints',target: 8,  gain: d => (d.hints === 0 ? 1 : 0) },
+    blocks60: { label: 'Clear 60 blocks',             target: 60, gain: d => d.blocks },
   };
-  const FREEZE_MAX = 2, MILESTONES = [3, 7, 12, 20];
+  const OFFERED = 4, PICKS = 2, DELAY_MAX = 2, MILESTONES = [3, 7, 12, 20];
+  const DAY_INITIALS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  const dayStr = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const dayGap = (a, b) => Math.round((new Date(b + 'T12:00') - new Date(a + 'T12:00')) / 864e5); // noon-anchored: DST-safe
+  // deterministic roll: FNV-1a of the ISO week seeds a tiny PRNG — every player, same four contracts
+  const seedOf = s => { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+  const prng = seed => () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  function isoWeek(t) {
+    const d = new Date(t), th = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    th.setDate(th.getDate() + 3 - ((th.getDay() + 6) % 7)); // the week's Thursday decides the ISO year
+    const wk1 = new Date(th.getFullYear(), 0, 4);
+    const w = 1 + Math.round(((th - wk1) / 864e5 - 3 + ((wk1.getDay() + 6) % 7)) / 7);
+    return th.getFullYear() + '-W' + String(w).padStart(2, '0');
+  }
+  // the seven local dates of t's ISO week, Monday first (built from Y/M/D, so DST never shifts one)
+  function weekDates(t) {
+    const d = new Date(t), mon = new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 6) % 7));
+    return Array.from({ length: 7 }, (_, i) => dayStr(new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + i).getTime()));
+  }
+  function rollContracts(week) {
+    const r = prng(seedOf('ge-survey-' + week)), pool = Object.keys(CONTRACTS), ids = [];
+    while (ids.length < OFFERED) { const id = pool[Math.floor(r() * pool.length)]; if (!ids.includes(id)) ids.push(id); }
+    return ids;
+  }
+
+  // ---------- state ----------
   let streak = { len: 0, best: 0, lastDate: null, freezes: 0, marks: [] };
   try { const s = JSON.parse(localStorage.getItem('ge_streak') || 'null'); if (s && typeof s.len === 'number') streak = { ...streak, ...s }; } catch (e) {}
   if (!Array.isArray(streak.marks)) streak.marks = [];
   if (!Number.isInteger(streak.freezes)) streak.freezes = 0;
   const saveStreak = () => { try { localStorage.setItem('ge_streak', JSON.stringify(streak)); } catch (e) {} };
-  let quests = { date: null, ids: [], prog: {}, done: [], all: false };
-  try { const q = JSON.parse(localStorage.getItem('ge_quests') || 'null'); if (q && Array.isArray(q.ids)) quests = { ...quests, ...q }; } catch (e) {}
-  const saveQuests = () => { try { localStorage.setItem('ge_quests', JSON.stringify(quests)); } catch (e) {} };
-  let lad = { week: null, pts: 0, ms: [], last: null };
-  try { const l = JSON.parse(localStorage.getItem('ge_ladder') || 'null'); if (l && typeof l.pts === 'number') lad = { ...lad, ...l }; } catch (e) {}
-  const saveLadder = () => { try { localStorage.setItem('ge_ladder', JSON.stringify(lad)); } catch (e) {} };
-  const dayStr = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-  const dayGap = (a, b) => Math.round((new Date(b + 'T12:00') - new Date(a + 'T12:00')) / 864e5); // noon-anchored: DST-safe
-  // deterministic roll: FNV-1a of the local date seeds a tiny PRNG — every player, same three
-  const seedOf = s => { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
-  const prng = seed => () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-  function rollQuests(date) {
-    const r = prng(seedOf('ge-quests-' + date)), pool = Object.keys(QUEST_TEMPLATES), ids = [];
-    while (ids.length < 3) { const id = pool[Math.floor(r() * pool.length)]; if (!ids.includes(id)) ids.push(id); }
-    return ids;
-  }
-  function questsToday() {
-    const today = dayStr(GE.now());
-    if (quests.date !== today) { quests = { date: today, ids: rollQuests(today), prog: {}, done: [], all: false }; saveQuests(); }
-    return quests;
-  }
-  function onWinQuests(d) {
-    const q = questsToday(), justDone = [];
-    for (const id of q.ids) {
-      if (q.done.includes(id)) continue;
-      const t = QUEST_TEMPLATES[id];
-      if (!t) continue;
-      q.prog[id] = Math.min(t.target, (q.prog[id] || 0) + t.gain(d));
-      if (q.prog[id] >= t.target) { q.done.push(id); justDone.push(id); track('quest_done', { id }); }
+
+  const blankSurvey = (week, keep) => ({ week, offered: rollContracts(week), chosen: [], prog: {}, filed: [],
+    days: [], delays: [], pts: 0, ms: [], seal: false, frags: (keep && keep.frags) || 0, last: (keep && keep.last) || null });
+  let survey = blankSurvey(isoWeek(GE.now()));
+  const saveSurvey = () => { try { localStorage.setItem('ge_survey', JSON.stringify(survey)); return true; } catch (e) { return false; } };
+  // one-shot migration off the v1 pair. ge_streak is NOT touched, so len / best / freezes / marks
+  // survive by construction. ge_quests is dropped: a single day's quests have no weekly meaning and
+  // the contracts are a different bargain. ge_ladder's points, marks and last-week line carry over,
+  // and the day spine is seeded from the streak's rolling week marks — the same fact, already
+  // recorded — so a player migrating mid-week does not see a week they played read as empty.
+  function migrateV1() {
+    const week = isoWeek(GE.now());
+    let old = null;
+    try { old = JSON.parse(localStorage.getItem('ge_ladder') || 'null'); } catch (e) {}
+    survey = blankSurvey(week);
+    if (old && typeof old.pts === 'number') {
+      if (old.week === week) { survey.pts = old.pts; survey.ms = Array.isArray(old.ms) ? old.ms.slice() : []; survey.last = old.last || null; }
+      else if (old.week) survey.last = { week: old.week, pts: old.pts, filed: 0, seal: false };
+      else survey.last = old.last || null;
     }
-    let allJustDone = false, freezeBanked = false;
-    if (!q.all && q.ids.length === 3 && q.done.length === 3) {
-      q.all = true; allJustDone = true;
-      track('quests_all_done', { date: q.date });
-      if (streak.freezes < FREEZE_MAX) { streak.freezes++; freezeBanked = true; saveStreak(); }
-    }
-    saveQuests();
-    return { justDone, allJustDone, freezeBanked };
+    const dates = weekDates(GE.now());
+    survey.days = streak.marks.filter(d => dates.includes(d));
+    if (!saveSurvey()) return false;
+    try { localStorage.removeItem('ge_ladder'); localStorage.removeItem('ge_quests'); } catch (e) {}
+    track('survey_migrated', { pts: survey.pts, marks: survey.ms.length, days: survey.days.length });
+    return true;
   }
-  // streak day-mark (unchanged: ≥1 clear marks the day) + the rolling last-7-days marks
+  {
+    let v = null;
+    try { v = JSON.parse(localStorage.getItem('ge_survey') || 'null'); } catch (e) {}
+    if (v && typeof v.week === 'string') {
+      survey = { ...survey, ...v };
+      for (const k of ['offered', 'chosen', 'filed', 'days', 'delays', 'ms']) if (!Array.isArray(survey[k])) survey[k] = [];
+      if (!survey.prog || typeof survey.prog !== 'object') survey.prog = {};
+      if (!survey.offered.length) survey.offered = rollContracts(survey.week);
+    } else migrateV1(); // guarded by the ABSENCE of ge_survey: it can only ever run once
+  }
+  // the week roll: everything on the sheet is this week's, and only last week's result line survives
+  function surveyWeek() {
+    const w = isoWeek(GE.now());
+    if (survey.week !== w) {
+      const last = survey.week ? { week: survey.week, pts: survey.pts, filed: survey.filed.length, seal: !!survey.seal } : survey.last;
+      survey = blankSurvey(w, { frags: survey.frags, last });
+      saveSurvey();
+    }
+    return survey;
+  }
+  // free to swap until a chosen contract has actually earned something; after that the week's pair
+  // is set (a filed contract counts as progress too)
+  const contractsLocked = () => surveyWeek().chosen.some(id => (survey.prog[id] || 0) > 0);
+  function chooseContract(id) {
+    const s = surveyWeek();
+    if (contractsLocked() || !s.offered.includes(id)) return false;
+    const i = s.chosen.indexOf(id);
+    if (i >= 0) s.chosen.splice(i, 1);
+    else if (s.chosen.length < PICKS) s.chosen.push(id);
+    else return false;
+    delete s.prog[id];
+    saveSurvey();
+    track('contract_select', { id, on: i < 0, chosen: s.chosen.length });
+    return true;
+  }
+  // streak day-mark (unchanged: >=1 clear marks the day) + the rolling last-7-days marks
   function onClear() {
     const today = dayStr(GE.now());
     if (!streak.marks.includes(today)) streak.marks.push(today);
@@ -2706,74 +3126,130 @@ requestAnimationFrame(frame);
     saveStreak();
     return { newBest };
   }
-  // weekly ladder (ISO week via GE.now); history keeps just last week's result line
-  function isoWeek(t) {
-    const d = new Date(t), th = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    th.setDate(th.getDate() + 3 - ((th.getDay() + 6) % 7)); // the week's Thursday decides the ISO year
-    const wk1 = new Date(th.getFullYear(), 0, 4);
-    const w = 1 + Math.round(((th - wk1) / 864e5 - 3 + ((wk1.getDay() + 6) % 7)) / 7);
-    return th.getFullYear() + '-W' + String(w).padStart(2, '0');
-  }
-  function ladderWeek() {
-    const w = isoWeek(GE.now());
-    if (lad.week !== w) { if (lad.week) lad.last = { week: lad.week, pts: lad.pts }; lad.week = w; lad.pts = 0; lad.ms = []; saveLadder(); }
-    return lad;
-  }
-  function onWinLadder(d) {
-    ladderWeek();
+  // one win, one pass over the sheet: stamp the day, take the points, advance both contracts
+  function onWinSurvey(d) {
+    const s = surveyWeek(), today = dayStr(GE.now());
+    if (!s.days.includes(today)) { s.days.push(today); track('survey_day', { days: s.days.length }); }
     const gain = 1 + (d.moves <= d.par ? 1 : 0);
-    lad.pts += gain;
-    track('ladder_point', { pts: lad.pts, gain });
-    const hit = MILESTONES.filter(n => lad.pts >= n && !lad.ms.includes(n));
-    for (const n of hit) { lad.ms.push(n); track('ladder_milestone', { n }); }
-    saveLadder();
-    return { gain, hit };
+    s.pts += gain;
+    track('survey_point', { pts: s.pts, gain });
+    const hit = MILESTONES.filter(n => s.pts >= n && !s.ms.includes(n));
+    for (const n of hit) { s.ms.push(n); track('survey_mark', { n }); }
+    const filedBefore = s.filed.length, justFiled = [];
+    for (const id of s.chosen) {
+      if (s.filed.includes(id)) continue;
+      const t = CONTRACTS[id];
+      if (!t) continue;
+      s.prog[id] = Math.min(t.target, (s.prog[id] || 0) + t.gain(d));
+      if (s.prog[id] >= t.target) { s.filed.push(id); justFiled.push(id); track('contract_filed', { id }); }
+    }
+    // the FIRST filing of the week banks one weather delay (honestly nothing when the bank is full)
+    let delayBanked = false, sealed = false;
+    if (justFiled.length && filedBefore === 0 && streak.freezes < DELAY_MAX) { streak.freezes++; delayBanked = true; saveStreak(); }
+    if (!s.seal && s.chosen.length === PICKS && s.filed.length === PICKS) {
+      s.seal = true; s.frags = (s.frags || 0) + 1; sealed = true;
+      track('survey_seal', { week: s.week, frags: s.frags });
+    }
+    saveSurvey();
+    return { justFiled, delayBanked, sealed, hit, gain };
   }
-  const surveyorMark = () => { ladderWeek(); return lad.ms.includes(20); }; // the 20-point mark, rest of the week
-  // title-block rendering: quest list, streak/lives row, survey row
-  function refreshDaily() {
-    const today = dayStr(GE.now());
-    const q = questsToday();
-    const rows = q.ids.map(id => {
-      const t = QUEST_TEMPLATES[id] || { label: id, target: 1 };
-      const p = Math.min(t.target, q.prog[id] || 0), done = q.done.includes(id);
-      return `<div class="q${done ? ' done' : ''}" data-quest="${id}"><span class="ql">${t.label}</span>`
-        + `<span class="qbar"><i style="width:${Math.round((p / t.target) * 100)}%"></i></span>`
-        + `<span class="qv">${p}/${t.target}</span>${done ? '<span class="qstamp">✓</span>' : ''}</div>`;
-    }).join('');
-    $('menuQuests').innerHTML = `<div class="qh"><span>Daily quests</span>${q.all ? '<b>ALL DONE</b>' : ''}</div>` + rows;
-    const live = streak.lastDate && streak.len > 0 && dayGap(streak.lastDate, today) <= 1 ? streak.len : 0;
-    const wk = streak.marks.filter(m => { const g = dayGap(m, today); return g >= 0 && g < 7; }).length;
-    $('fStreak').innerHTML = (live ? `${live} day${live === 1 ? '' : 's'}` : '—')
-      + (surveyorMark() ? '<span class="mark" title="Field Survey complete this week">⌖</span>' : '')
-      + `<small>${wk} of last 7 days${streak.freezes ? ` · ${streak.freezes} freeze${streak.freezes > 1 ? 's' : ''} held` : ''}</small>`;
-    $('fSurvey').textContent = `${lad.pts} pt${lad.pts === 1 ? '' : 's'}`;
+
+  // ---------- sheet-index row ----------
+  function refreshSurvey() {
+    const s = surveyWeek(), dates = weekDates(GE.now());
+    const stamped = dates.filter(d => s.days.includes(d)).length;
+    $('fSurvey').innerHTML = `${stamped}/7 · ${s.pts} pt${s.pts === 1 ? '' : 's'}`
+      + (s.ms.includes(20) ? '<span class="mark" title="20-point mark">⌖</span>' : '');
+    $('fSurveyBadge').hidden = s.chosen.length === PICKS;
     refreshLives();
     if (!screens.menu.hidden) refreshMenu(); // the landing stamp carries the same streak
   }
   function refreshLives() {
     const on = GE.livesEnabled;
-    $('menuLivesBox').hidden = !on;
+    $('menuLivesRow').hidden = $('menuLivesBox').hidden = !on;
     if (!on) return;
     const i = GE.livesInfo;
     $('fLives').innerHTML = `<span class="hearts">${'♥'.repeat(i.n)}<span class="off">${'♡'.repeat(i.max - i.n)}</span></span>`
       + (i.fullIn ? `<small>full in ${i.fullIn}</small>` : '');
   }
   window.addEventListener('ge:lives', () => { if (!screens.levels.hidden) refreshLives(); });
-  // win-card beat: ONE quiet stamped row after the stars — all-quests-done (banks the freeze)
-  // over a single quest, over a new best streak. A play beat, never a purchase event.
+
+  // ---------- the sheet ----------
+  // pending vs sealed differ by SHAPE (a dashed ring with a blank rule vs a solid ring with the
+  // surveyor's mark struck through it), not by ink alone
+  const SEAL_SVG = on => `<svg class="seal-ico${on ? ' on' : ''}" viewBox="0 0 32 32" aria-hidden="true">`
+    + `<circle class="ring" cx="16" cy="16" r="12.5"/><path class="rule" d="M10 16h12"/>`
+    + `<path class="mk" d="M10.5 16.4l3.6 3.8 7.4-8"/></svg>`;
+  function renderSurvey() {
+    const s = surveyWeek(), today = dayStr(GE.now()), dates = weekDates(GE.now());
+    const stamped = dates.filter(d => s.days.includes(d)).length;
+    $('surveyNo').textContent = 'WEEK ' + s.week.split('-W')[1];
+    const live = streak.lastDate && streak.len > 0 && dayGap(streak.lastDate, today) <= 1 ? streak.len : 0;
+    // the streak fact lives here now: one header line, stated plainly, nothing sold against it
+    $('surveySub').innerHTML = (live ? `<b>${live}-day streak</b>` : 'No streak running')
+      + ` · ${stamped} of 7 days · ${s.pts} point${s.pts === 1 ? '' : 's'}`
+      + (streak.freezes ? `<small>${streak.freezes} weather delay${streak.freezes > 1 ? 's' : ''} held</small>` : '');
+    $('surveySpine').innerHTML = dates.map((d, i) => {
+      // today is not a missed day until it is over, so it reads "to come" until it is stamped
+      const on = s.days.includes(d), delay = !on && s.delays.includes(d), ahead = d >= today;
+      const mark = on ? '✓' : delay ? '~' : ahead ? '·' : '○';
+      const what = on ? 'stamped' : delay ? 'weather delay' : ahead ? 'to come' : 'no clear';
+      return `<div class="d${on ? ' on' : delay ? ' delay' : ''}${d === today ? ' today' : ''}" data-day="${d}" title="${d} — ${what}">`
+        + `<span class="dn">${DAY_INITIALS[i]}</span><span class="dm">${mark}</span></div>`;
+    }).join('');
+    const locked = contractsLocked();
+    const rows = s.offered.filter(id => !locked || s.chosen.includes(id)).map(id => {
+      const t = CONTRACTS[id], on = s.chosen.includes(id), filed = s.filed.includes(id);
+      const p = Math.min(t.target, s.prog[id] || 0);
+      const chip = filed ? '<span class="qstamp">FILED</span>'
+        : locked ? ''
+        : on ? '<span class="qpick">DROP</span>'
+        : s.chosen.length < PICKS ? '<span class="qpick">TAKE</span>'
+        : '<span class="qpick off">—</span>';
+      // a taken contract shows its bar and count; an offered one shows only its label — the label
+      // already names the number, so repeating it was noise on the row you have not taken yet
+      const body = on ? `<span class="qbar"><i style="width:${Math.round((p / t.target) * 100)}%"></i></span><span class="qv">${p}/${t.target}</span>` : '';
+      return `<button class="q${on ? ' on' : ' alt'}${filed ? ' done' : ''}" data-contract="${id}"${locked ? ' disabled' : ''}`
+        + ` aria-label="${t.label}${on ? ', chosen' : ''}${filed ? ', filed' : ''}"><span class="ql">${t.label}</span>${body}${chip}</button>`;
+    }).join('');
+    const head = locked ? 'SET FOR THE WEEK' : s.chosen.length < PICKS ? `CHOOSE ${PICKS - s.chosen.length}` : 'SWAP FREE';
+    $('surveyContracts').innerHTML = `<div class="qh"><span>Contracts</span><b>${head}</b></div>` + rows;
+    $('surveyTrack').innerHTML = MILESTONES.map(n => {
+      const got = s.ms.includes(n);
+      return `<div class="ms${got ? ' got' : ''}" data-ms="${n}">${n === 20 ? '<span class="mark">⌖</span>' : ''}<b>${n}</b><span>${got ? 'marked' : 'points'}</span></div>`;
+    }).join('');
+    $('surveySeal').className = 'sealrow' + (s.seal ? ' got' : '');
+    $('surveySeal').innerHTML = SEAL_SVG(s.seal)
+      + `<div><span class="k">Weekly seal</span><span class="v">`
+      + (s.seal ? `Sealed · ${s.frags} fragment${s.frags === 1 ? '' : 's'} held`
+        : `File both contracts to seal the week · ${s.filed.length}/${PICKS}`)
+      + '</span></div>';
+    $('surveyLast').textContent = s.last
+      ? `Last week: ${s.last.pts} point${s.last.pts === 1 ? '' : 's'} · ${s.last.filed || 0}/${PICKS} filed${s.last.seal ? ' · sealed' : ''}`
+      : 'A fresh survey sheet opens every Monday.';
+  }
+  // one delegated handler: the rows are rebuilt on every render, the binding is not
+  $('surveyContracts').addEventListener('click', e => {
+    const b = e.target.closest('button.q');
+    if (!b || b.disabled) return;
+    if (chooseContract(b.dataset.contract)) { renderSurvey(); refreshSurvey(); GE.sound('gate'); }
+  });
+  $('btnSurvey').onclick = () => { renderSurvey(); $('surveyModal').hidden = false; };
+  $('btnSurveyClose').onclick = () => { $('surveyModal').hidden = true; };
+
+  // win-card beat: ONE quiet stamped row after the stars — the week's seal over a filed contract
+  // over a new best streak. A play beat, never a purchase event.
   let dailyTimer = 0;
   const winDaily = $('winDaily');
   window.addEventListener('ge:win', e => {
-    const d = e.detail, lvl = d.lvl;
-    const info = { stars: d.stars, moves: d.moves, par: d.par != null ? d.par : LEVELS[lvl].par, undos: d.undos || 0, hints: d.hints || 0, blocks: LEVELS[lvl].blocks.length };
+    const d = e.detail, lvl = d.lvl, L = LEVELS[lvl] || { par: d.par, blocks: [] };
+    const info = { stars: d.stars, moves: d.moves, par: d.par != null ? d.par : L.par, undos: d.undos || 0, hints: d.hints || 0, blocks: (d.blocks != null ? d.blocks : L.blocks.length) };
     const sr = onClear();
-    const qr = onWinQuests(info);
-    onWinLadder(info);
+    const rs = onWinSurvey(info);
     clearTimeout(dailyTimer); winDaily.hidden = true;
     let row = null;
-    if (qr.allJustDone) row = { stamp: 'DONE', k: 'All quests complete', v: qr.freezeBanked ? `Streak freeze banked · ${streak.freezes} held` : 'All 3 daily quests done' };
-    else if (qr.justDone.length) row = { stamp: 'QUEST', k: 'Quest complete', v: QUEST_TEMPLATES[qr.justDone[0]].label };
+    if (rs.sealed) row = { stamp: 'SEAL', k: 'Survey sealed', v: `Both contracts filed · fragment ${survey.frags}` };
+    else if (rs.justFiled.length) row = { stamp: 'FILED', k: 'Contract filed', v: rs.delayBanked ? `Weather delay banked · ${streak.freezes} held` : CONTRACTS[rs.justFiled[0]].label };
     else if (sr.newBest) row = { stamp: 'BEST', k: 'New best streak', v: `${streak.len} days in a row` };
     if (!row) return;
     dailyTimer = setTimeout(() => {
@@ -2782,10 +3258,11 @@ requestAnimationFrame(frame);
       GE.sound('gate');
     }, GE.reduced ? 0 : 1150);
   });
-  // launch check: banked freezes cover the missed day(s) automatically (calm notice, nothing to
-  // buy). Otherwise the streak lapses SILENTLY — the counter is cleared here so the field log
-  // tells the truth on the next frame, and the player is shown nothing at all. No card, no offer,
-  // no "you lost it" beat: the next clear starts a new streak at 1 exactly as day one did.
+  // launch check: banked weather delays cover the missed day(s) automatically and each covered day
+  // is stamped WEATHER DELAY on the survey spine (calm notice, nothing to buy). Otherwise the
+  // streak lapses SILENTLY — the counter is cleared here so the field log tells the truth on the
+  // next frame, and the player is shown nothing at all. No card, no offer, no "you lost it" beat:
+  // the next clear starts a new streak at 1 exactly as day one did.
   function checkStreak() {
     const today = dayStr(GE.now());
     if (!streak.lastDate || streak.len < 1) return false;
@@ -2796,39 +3273,36 @@ requestAnimationFrame(frame);
       streak.freezes -= missed;
       streak.lastDate = dayStr(GE.now() - 864e5); // yesterday: today's first clear extends the streak
       saveStreak();
-      track('streak_freeze_used', { missed, left: streak.freezes });
-      $('freezeSub').textContent = `Freeze used — streak safe · ${streak.freezes} left`;
+      const s = surveyWeek();
+      for (let i = missed; i >= 1; i--) { const d = dayStr(GE.now() - i * 864e5); if (!s.delays.includes(d)) s.delays.push(d); }
+      saveSurvey();
+      track('weather_delay_used', { missed, left: streak.freezes });
+      $('freezeSub').textContent = `Weather delay used — survey day covered · ${streak.freezes} left`;
       $('freezeModal').hidden = false;
-      refreshDaily();
+      refreshSurvey();
       return 'freeze';
     }
-    streak.len = 0; streak.lastDate = null; // lapsed: cleared quietly, best/marks/freezes untouched
+    streak.len = 0; streak.lastDate = null; // lapsed: cleared quietly, best/marks/delays untouched
     saveStreak();
-    refreshDaily();
+    refreshSurvey();
     return false;
   }
   $('btnFreezeOk').onclick = () => { $('freezeModal').hidden = true; };
-  // Field Survey card (weekly log): milestone stamps, points line, last week's result
-  function renderSurvey() {
-    ladderWeek();
-    $('surveySub').textContent = `${lad.pts} point${lad.pts === 1 ? '' : 's'} this week · 1 per clear · +1 at par`;
-    $('surveyTrack').innerHTML = MILESTONES.map(n => {
-      const got = lad.ms.includes(n);
-      return `<div class="ms${got ? ' got' : ''}" data-ms="${n}">${n === 20 ? '<span class="mark">⌖</span>' : ''}<b>${n}</b><span>${got ? 'stamped' : 'points'}</span></div>`;
-    }).join('');
-    $('surveyLast').textContent = lad.last ? `Last week: ${lad.last.pts} point${lad.last.pts === 1 ? '' : 's'}` : 'A fresh survey starts each week.';
-  }
-  $('btnSurvey').onclick = () => { renderSurvey(); $('surveyModal').hidden = false; };
-  $('btnSurveyClose').onclick = () => { $('surveyModal').hidden = true; };
 
   // ---------- engine events ----------
   window.addEventListener('ge:load', () => { show(null); pauseModal.hidden = true; GE.paused = false; levelsFrom = 'menu'; clearTimeout(certTimer); winCert.hidden = true; clearTimeout(dailyTimer); winDaily.hidden = true; });
   window.addEventListener('ge:win', e => {
-    const { lvl, stars, last } = e.detail;
+    const { lvl, stars, last, daily } = e.detail;
+    clearTimeout(certTimer); winCert.hidden = true;
+    // The Daily Draft rides on a VIRTUAL level index one past LEVELS. It is play — so it stamps
+    // the survey day spine and counts toward contracts and points, exactly like any other clear —
+    // but it is NOT campaign progress: no star on a sheet, no unlock, no certification, and the
+    // win card's campaign meta (star total / next level) has nothing true to say about it.
+    $('winMeta').hidden = !!daily;
+    if (daily) { $('winNo').textContent = 'DAILY DRAFT'; return; }
     const before = starsTotal(), sheet = Math.floor(lvl / PER), sheetBefore = sheetStars(sheet);
     prog.s[lvl] = Math.max(prog.s[lvl] || 0, stars);
     prog.u = Math.max(prog.u, Math.min(lvl + 1, N - 1));
-    clearTimeout(certTimer); winCert.hidden = true;
     if (sheetBefore < CERT_STARS && sheetStars(sheet) >= CERT_STARS && CERT_SKINS[sheet]) {
       const id = CERT_SKINS[sheet];
       if (!unlocked(id)) prog.skins = [...skins(), id];
@@ -2984,16 +3458,17 @@ requestAnimationFrame(frame);
 
 
   show('menu');
-  checkStreak(); // freeze notice / silent lapse, resolved once on launch (and only then)
+  checkStreak(); // weather-delay notice / silent lapse, resolved once on launch (and only then)
   window.GE_MENU = { show, get prog() { return prog; }, setSkin, CERT_STARS, CERT_SKINS,
     // the landing's whole interactive surface: Play + two quiet entries, nothing else
     landing: () => [...screens.menu.querySelectorAll('button, a, input, select, textarea, [role="button"], [tabindex]')]
       .filter(b => !b.hidden && b.getClientRects().length > 0).map(b => b.id || b.className),
-    get streak() { return streak; }, checkStreak, refreshDaily,
-    get quests() { return questsToday(); }, get ladder() { ladderWeek(); return lad; },
-    questInfo: () => questsToday().ids.map(id => ({ id, label: QUEST_TEMPLATES[id].label, target: QUEST_TEMPLATES[id].target,
-      prog: Math.min(QUEST_TEMPLATES[id].target, quests.prog[id] || 0), done: quests.done.includes(id) })),
-    QUEST_TEMPLATES, MILESTONES };
+    get streak() { return streak; }, checkStreak, refreshSurvey, renderSurvey,
+    get survey() { return surveyWeek(); }, weekDates: () => weekDates(GE.now()), isoWeek: () => isoWeek(GE.now()),
+    contractsLocked, chooseContract,
+    contractInfo: () => { const s = surveyWeek(); return s.offered.map(id => ({ id, label: CONTRACTS[id].label, target: CONTRACTS[id].target,
+      prog: Math.min(CONTRACTS[id].target, s.prog[id] || 0), chosen: s.chosen.includes(id), filed: s.filed.includes(id) })); },
+    CONTRACTS, MILESTONES, DELAY_MAX, PICKS };
 })();
 
 'use strict';

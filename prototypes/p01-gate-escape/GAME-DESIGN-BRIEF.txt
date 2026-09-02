@@ -134,7 +134,8 @@ verb before the first tap). All meta surfaces sit one tap deeper.
 ---------------
 Cold open -> cover sheet -> Continue (one tap) -> play.
 A level takes 20-90 seconds. Win card: stars with a burst, move count vs
-par, quest/streak stamp when relevant, Next / Replay-for-3-stars. Fail
+par, a survey stamp when one lands (contract filed / week sealed / new
+best streak), Next / Replay-for-3-stars. Fail
 sheet: rescue offer at the moment of loss. Pause: resume/restart/exit plus
 sound, haptics, and motion toggles. The legend (how-to-play) includes an
 "around the game" section documenting the meta systems, and animated
@@ -156,22 +157,45 @@ a solid stamped frame with a star once earned, so the state reads by shape
 and not by colour alone. (This mechanic shipped as a treasure "chest"; only
 the language and the glyph changed on 2026-09-02, never the 24-star rule.)
 
-Daily quests: three per day, deterministically seeded from the date (e.g.
-"clear 3 levels," "win at par," "use zero undos"). Completing all three
-banks a streak freeze.
+Field Survey: ONE weekly sheet, and the only meta system besides
+certification. As of 2026-09-02 the three daily quests, the streak card and
+the weekly ladder were MERGED into it — the research round's verdict was that
+three overlapping systems asked the player to track three clocks for one
+behaviour. The sheet index now carries a single row (FIELD SURVEY - n/7 -
+N pts, with a SELECT 2 badge while the week's contracts are unchosen) that
+opens the week's sheet. On it:
 
-Streak: consecutive-day play streak shown as "N of last 7 days" marks.
-Missing a day consumes a banked freeze (max 2) before breaking. With no
-freeze banked the streak LAPSES SILENTLY — as of 2026-09-02 there is no
-repair surface of any kind: no card, no ad, no offer at the moment of loss.
-The counter simply clears and the next clear starts a new streak at 1. The
-open question is no longer whether to sell the repair but whether the silent
-reset READS as calm rather than as something quietly going missing; the next
-critic session is scoped to answer that.
+  * A seven-day spine, Monday to Sunday. Any level clear stamps today, once.
+    The four states read apart by glyph, never by colour: a check for a
+    stamped day, a tilde for a weather delay, an open circle for a day that
+    went by, a dot for a day still to come.
+  * Two CONTRACTS, chosen from the four the week offers. The four are seeded
+    deterministically from the ISO week, so every player is offered the same
+    four; they come from the same safe telemetry templates the daily quests
+    used (clear N levels, earn N stars, N at par, no undos, no hints, N
+    blocks), retargeted to a week. Swapping is free until a chosen contract
+    earns its first progress; after that the pair is set for the week. That
+    is the deliberate design bet of the merge: a choice you can undo forever
+    is not a choice, and one you can never revisit punishes a blind first tap.
+  * The point marks at 3 / 7 / 12 / 20 — the old ladder's rule, unchanged:
+    1 point per clear, +1 at par. No leaderboard, no social comparison; it is
+    self-competition only, and everyone can finish.
+  * The weekly seal. Filing one contract banks a WEATHER DELAY (max 2 held —
+    the old streak freeze, renamed); filing both seals the week and yields a
+    fragment, a keepsake tally with nothing gated on it.
 
-Weekly ladder ("Field Survey"): a personal points ladder — 1 point per
-clear, +1 at par — with stamps at 3 / 7 / 12 / 20 points per week. There
-is no leaderboard and no social comparison; it is self-competition only.
+Streak: unchanged, and deliberately so — the merge kept its saved state
+byte-identical so no real streak was lost. Consecutive calendar days with at
+least one clear; its fact now sits in the survey sheet's header rather than
+on a row of its own. Missing a day consumes a banked weather delay before
+breaking, and that day is stamped on the spine as a delay. With nothing
+banked the streak LAPSES SILENTLY — as of 2026-09-02 there is no repair
+surface of any kind: no card, no ad, no offer at the moment of loss. The
+counter simply clears and the next clear starts a new streak at 1. The open
+question is no longer whether to sell the repair but whether the silent reset
+READS as calm rather than as something quietly going missing; the next critic
+session is scoped to answer that, and to say whether "choose 2 of 4, set once
+you start" reads as a real decision or as a trap.
 
 Lives: OFF BY DEFAULT as of 2026-09-02 (the research round's answer to Q6).
 The shipped game has no energy gate at all — no hearts anywhere, and a
@@ -231,7 +255,7 @@ Hard rules already encoded for whenever money ships:
    sheet numbers, approval seals, red-line markup...).
 
 Everything else — including whether lives ever come back, the certification
-economy, the ladder shape, session pacing — is open to challenge.
+economy, the survey's shape, session pacing — is open to challenge.
 
 
 11. LINEAGE & SELF-ASSESSED POSITIONING (FOR THE RESEARCHER TO CORRECT)
@@ -266,9 +290,14 @@ stamped sequence (an "approval chain").
 - The silent streak lapse is untested on real players: with the repair card
   gone, nobody has watched a player notice their streak is missing. This is
   the single riskiest copy decision of the simplify pass.
-- The recent menu simplification moved quests/streak/ladder one tap deeper;
-  we accepted a possible engagement cost for a calmer first impression and
-  want a second opinion (Q7).
+- The recent menu simplification moved the meta one tap deeper, and the
+  2026-09-02 merge collapsed quests + streak + ladder into a single weekly
+  Field Survey sheet; we accepted a possible engagement cost for a calmer
+  first impression and a legible surface, and want a second opinion (Q7).
+- The contract lock ("choose 2 of 4, set for the week once one earns
+  progress") is untested. It could read as ownership of a real weekly plan,
+  or as a trap sprung by a tap the player made before understanding it. It is
+  the riskiest new rule of the merge and the next critic session covers it.
 
 
 13. QUESTIONS FOR THE RESEARCHER

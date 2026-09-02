@@ -693,7 +693,14 @@ const burnLevel = () => page.evaluate(() => {
   else { failures++; console.error('haptics FAIL:', JSON.stringify(h)); }
 }
 
-// ---------- design pass 2026-08-31: quests, streak freezes, ladder, motion, lives ----------
+// ---- pass 2: field survey ----
+// The 2026-09-02 research round merged three overlapping meta systems — the three daily quests,
+// the streak card and the weekly ladder — into ONE weekly sheet (ge_survey): a 7-day spine, two
+// contracts chosen from four, the point marks at 3/7/12/20, and the week's seal. ge_streak keeps
+// its EXACT shape, so a real streak survives the merge untouched; the migration check below proves
+// that on a seeded v1 save rather than on an empty one. These blocks replace the old
+// quests / streak-freeze / freeze-cap / menu-rows / ladder blocks wholesale.
+//
 // Shared helpers: an overridable clock (GE.now) and a fast L1 win. Motion goes off through the
 // same GE hook the pause card uses, which (a) exercises the reduced path everywhere and
 // (b) lands the win-card quiet rows at 0 ms so day simulation stays fast.
@@ -713,100 +720,336 @@ const winL1 = async (waste = 0) => {
   await page.waitForTimeout(80); // reduced motion: the quiet row lands immediately
 };
 const S = () => page.evaluate(() => ({ ...window.GE_MENU.streak, stats: JSON.parse(localStorage.getItem('ge_stats') || '{}') }));
-const Q = () => page.evaluate(() => ({ info: window.GE_MENU.questInfo(), all: window.GE_MENU.quests.all }));
+const V = () => page.evaluate(() => ({ ...window.GE_MENU.survey, contracts: window.GE_MENU.contractInfo(), locked: window.GE_MENU.contractsLocked(),
+  stats: JSON.parse(localStorage.getItem('ge_stats') || '{}') }));
 const beatRow = () => page.evaluate(() => (document.getElementById('winDaily').hidden ? null
   : { stamp: document.getElementById('winDailyStamp').textContent, k: document.getElementById('winDailyK').textContent, v: document.getElementById('winDailyV').textContent }));
+const wipeMeta = () => page.evaluate(() => { for (const k of ['ge_streak', 'ge_survey', 'ge_quests', 'ge_ladder']) localStorage.removeItem(k); localStorage.setItem('ge_stats', '{}'); });
+// a day offset that still leaves `need` further days inside the SAME ISO week, so a multi-day walk
+// never falls off the end of the sheet it is testing (the suite runs on whatever weekday it runs on)
+const weekBase = need => page.evaluate(n => { const dow = (new Date(window.GE.now()).getDay() + 6) % 7; return 6 - dow >= n ? 0 : 7 - dow; }, need);
+// open the sheet index, open the week's sheet, read everything off it in one round trip
+const sheet = () => page.evaluate(() => {
+  window.GE_MENU.show('levels');
+  document.getElementById('btnSurvey').click();
+  const q = s => [...document.querySelectorAll(s)];
+  const seal = document.getElementById('surveySeal');
+  return {
+    row: document.getElementById('fSurvey').innerText.replace(/\s+/g, ' ').trim(),
+    badge: !document.getElementById('fSurveyBadge').hidden,
+    mark20: !!document.querySelector('#fSurvey .mark'),
+    no: document.getElementById('surveyNo').textContent,
+    sub: document.getElementById('surveySub').innerText.replace(/\s+/g, ' ').trim(),
+    spine: q('#surveySpine .d').map(d => ({ day: d.dataset.day, m: d.querySelector('.dm').textContent,
+      on: d.classList.contains('on'), delay: d.classList.contains('delay'), today: d.classList.contains('today') })),
+    head: (document.querySelector('#surveyContracts .qh b') || {}).textContent || null,
+    rows: q('#surveyContracts button.q').map(b => ({ id: b.dataset.contract, on: b.classList.contains('on'),
+      filed: b.classList.contains('done'), disabled: b.disabled,
+      chip: (b.querySelector('.qpick, .qstamp') || {}).textContent || null,
+      bar: ((b.querySelector('.qbar i') || {}).style || {}).width || null })),
+    marks: q('#surveyTrack .ms.got').map(m => m.dataset.ms),
+    seal: { got: seal.classList.contains('got'), stamped: !!seal.querySelector('.seal-ico.on'), text: seal.innerText.replace(/\s+/g, ' ').trim() },
+    last: document.getElementById('surveyLast').textContent,
+  };
+});
+const closeSheet = () => page.click('#btnSurveyClose');
+const dayOf = off => page.evaluate(o => { const d = new Date(window.GE.now() + o * 864e5); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }, off);
+const cell = (s, day) => s.spine.find(d => d.day === day) || {};
+// put a chosen contract one clear short of filing (any L1 par win advances every template by >=1),
+// so the FILING itself still runs through the real win path rather than being written into the save
+const nearFiling = i => page.evaluate(i => {
+  const v = JSON.parse(localStorage.getItem('ge_survey')), id = v.chosen[i];
+  v.prog[id] = window.GE_MENU.CONTRACTS[id].target - 1;
+  localStorage.setItem('ge_survey', JSON.stringify(v));
+  return id;
+}, i);
+const pickTwo = () => page.evaluate(() => {
+  const o = window.GE_MENU.survey.offered;
+  window.GE_MENU.chooseContract(o[0]); window.GE_MENU.chooseContract(o[1]);
+  window.GE_MENU.refreshSurvey();
+  return [...window.GE_MENU.survey.chosen];
+});
 
-// quests: three roll deterministically from the local date; progress follows the win facts;
-// all three done banks a streak freeze (the win-card rows are quiet play beats)
+// the week's four contracts roll deterministically from the ISO week: same week → same four in
+// two separate page contexts, and the week is genuinely part of the seed (not a constant list)
 {
-  await page.evaluate(() => { for (const k of ['ge_streak', 'ge_quests', 'ge_ladder']) localStorage.removeItem(k); localStorage.setItem('ge_stats', '{}'); });
+  await wipeMeta(); await readyAgain();
+  const a = await V();
   await readyAgain();
-  const ids0 = (await Q()).info.map(q => q.id);
-  await readyAgain();
-  const ids1 = (await Q()).info.map(q => q.id);
-  if (ids0.length === 3 && new Set(ids0).size === 3 && JSON.stringify(ids0) === JSON.stringify(ids1))
-    console.log(`quests ok: 3 distinct quests roll deterministically from the date (${ids0.join(', ')})`);
-  else { failures++; console.error('quests roll FAIL:', JSON.stringify({ ids0, ids1 })); }
-  // an L1 par win advances every template by a known amount — drive to all-done against the model
-  const GAIN = { clear3: 1, clear5: 1, stars6: 3, stars9: 3, par2: 1, noundo1: 1, nohint2: 1, blocks12: 1 };
-  const target = Object.fromEntries((await Q()).info.map(q => [q.id, q.target]));
-  const model = Object.fromEntries(ids0.map(id => [id, 0]));
-  let wins = 0, modelOk = true, rowsOk = true, allDoneRow = null, sawQuestRow = false;
-  for (let i = 0; i < 30; i++) {
-    const doneBefore = ids0.filter(id => model[id] >= target[id]);
-    await winL1(); wins++;
-    for (const id of ids0) model[id] = Math.min(target[id], model[id] + GAIN[id]);
-    const justDone = ids0.filter(id => model[id] >= target[id] && !doneBefore.includes(id));
-    const allNow = ids0.every(id => model[id] >= target[id]);
-    const expectStamp = allNow && justDone.length ? 'DONE' : justDone.length ? 'QUEST' : null;
-    const q = await Q();
-    for (const { id, prog, done } of q.info) if (prog !== model[id] || done !== (model[id] >= target[id])) modelOk = false;
-    const row = await beatRow();
-    if ((row ? row.stamp : null) !== expectStamp) rowsOk = false;
-    if (row && row.stamp === 'QUEST') sawQuestRow = true;
-    if (row && row.stamp === 'DONE') allDoneRow = row;
-    if (q.all) break;
-  }
-  const st1 = await S();
-  const menuQ = await page.evaluate(() => {
-    window.GE_MENU.show('levels');
-    return { rows: [...document.querySelectorAll('#menuQuests .q')].map(r => ({ done: r.classList.contains('done'), stamp: !!r.querySelector('.qstamp') })),
-      all: (document.querySelector('#menuQuests .qh b') || {}).textContent || null,
-      streakCell: document.getElementById('fStreak').innerText.replace(/\s+/g, ' ').trim() };
+  const b = await V();
+  const wk = await page.evaluate(() => window.GE_MENU.isoWeek());
+  const sets = [];
+  for (let w = 1; w <= 6; w++) { await setDay(w * 7); sets.push((await V()).offered.join(',')); }
+  await setDay(0); await readyAgain();
+  const back = await V();
+  const ok = a.offered.length === 4 && new Set(a.offered).size === 4 && a.week === wk && a.chosen.length === 0
+    && JSON.stringify(a.offered) === JSON.stringify(b.offered)
+    && JSON.stringify(back.offered) === JSON.stringify(a.offered)
+    && sets.every(s => s.split(',').length === 4 && new Set(s.split(',')).size === 4)
+    && new Set(sets).size >= 2;
+  if (ok) console.log(`survey roll ok: ${wk} offers 4 distinct contracts (${a.offered.join(', ')}), identical across page contexts; ${new Set(sets).size} distinct sets over the next 6 weeks`);
+  else { failures++; console.error('survey roll FAIL:', JSON.stringify({ a: a.offered, b: b.offered, wk, week: a.week, sets, back: back.offered })); }
+}
+
+// choose 2 of the 4: swapping is FREE until a chosen contract earns its first progress, and the
+// pair is set for the week after that — the two that were not taken come off the sheet entirely
+{
+  await wipeMeta(); await readyAgain();
+  const base = await weekBase(1); await setDay(base);
+  const fresh = await sheet();
+  const chosen = await page.evaluate(() => {
+    const ids = window.GE_MENU.survey.offered;
+    document.querySelector(`#surveyContracts button.q[data-contract="${ids[0]}"]`).click();
+    document.querySelector(`#surveyContracts button.q[data-contract="${ids[1]}"]`).click();
+    return [...window.GE_MENU.survey.chosen];
   });
-  await page.waitForTimeout(300);
-  await page.screenshot({ path: `${shotDir}/menu-quests-alldone.png` });
-  const ok = modelOk && rowsOk && allDoneRow && /Streak freeze banked · 1 held/.test(allDoneRow.v)
-    && st1.freezes === 1 && st1.stats.quest_done === 3 && st1.stats.quests_all_done === 1
-    && menuQ.rows.length === 3 && menuQ.rows.every(r => r.done && r.stamp) && menuQ.all === 'ALL DONE' && /1 freeze held/.test(menuQ.streakCell);
-  if (ok) console.log(`quests ok: progress matches the model across ${wins} par wins${sawQuestRow ? ' (QUEST row on completions)' : ''}; DONE row banks freeze #1; quest_done ×3, quests_all_done ×1; menu stamps + ALL DONE + freeze shown on the streak row`);
-  else { failures++; console.error('quests progress FAIL:', JSON.stringify({ modelOk, rowsOk, wins, allDoneRow, freezes: st1.freezes, qd: st1.stats.quest_done, qad: st1.stats.quests_all_done, menuQ })); }
+  const two = await sheet();
+  // a free swap: drop the first, take the third
+  const swapped = await page.evaluate(() => {
+    const ids = window.GE_MENU.survey.offered;
+    document.querySelector(`#surveyContracts button.q[data-contract="${ids[0]}"]`).click();
+    document.querySelector(`#surveyContracts button.q[data-contract="${ids[2]}"]`).click();
+    return { chosen: [...window.GE_MENU.survey.chosen], locked: window.GE_MENU.contractsLocked() };
+  });
+  const afterSwap = await sheet();
+  await page.waitForTimeout(250);
+  await page.screenshot({ path: `${shotDir}/survey-choose-two.png` });
+  await closeSheet();
+  await winL1();                       // the first progress on a chosen contract sets the pair
+  const locked = await sheet();
+  const refused = await page.evaluate(() => {
+    const o = window.GE_MENU.survey.offered.find(id => !window.GE_MENU.survey.chosen.includes(id));
+    const r = window.GE_MENU.chooseContract(o);
+    const drop = window.GE_MENU.chooseContract(window.GE_MENU.survey.chosen[0]);
+    return { r, drop, chosen: [...window.GE_MENU.survey.chosen] };
+  });
+  await page.waitForTimeout(250);
+  await page.screenshot({ path: `${shotDir}/survey-contracts-set.png` });
+  await closeSheet();
+  const ok = fresh.badge && fresh.rows.length === 4 && fresh.rows.every(r => !r.on && r.chip === 'TAKE') && fresh.head === 'CHOOSE 2'
+    && chosen.length === 2 && !two.badge && two.head === 'SWAP FREE'
+    && two.rows.filter(r => r.on).length === 2 && two.rows.filter(r => r.on).every(r => r.chip === 'DROP')
+    && two.rows.filter(r => !r.on).every(r => r.chip === '—')
+    && !swapped.locked && JSON.stringify(swapped.chosen) === JSON.stringify([chosen[1], afterSwap.rows[2].id])
+    && afterSwap.rows.length === 4 && afterSwap.head === 'SWAP FREE'
+    && locked.head === 'SET FOR THE WEEK' && locked.rows.length === 2 && locked.rows.every(r => r.on && r.disabled && r.chip === null)
+    && locked.rows.every(r => r.bar && r.bar !== '0%')
+    && refused.r === false && refused.drop === false && JSON.stringify(refused.chosen) === JSON.stringify(swapped.chosen);
+  if (ok) console.log(`survey contracts ok: 4 offered → 2 taken (${chosen.join(', ')}), swapped freely while unstarted; the first clear sets the pair (${swapped.chosen.join(', ')}) — the sheet drops to 2 disabled rows and both take and drop are refused`);
+  else { failures++; console.error('survey contracts FAIL:', JSON.stringify({ fresh, chosen, two, swapped, afterSwap: afterSwap.rows, locked, refused })); }
 }
 
-// a missed day consumes a banked freeze automatically: calm notice at launch, streak intact
+// migration off the v1 pair, once and only once. A realistic save goes in — a live 4-day streak
+// with a banked freeze, a half-played day of quests, a mid-week ladder — and everything that had
+// real value has to still be visible afterwards. ge_streak is asserted BYTE-IDENTICAL.
 {
-  await page.evaluate(() => document.getElementById('btnNext').click());
-  await page.waitForTimeout(80);
-  await setDay(2); // day 1 had no clear
-  const fr = await page.evaluate(() => ({ r: window.GE_MENU.checkStreak(), up: !document.getElementById('freezeModal').hidden, sub: document.getElementById('freezeSub').textContent }));
-  await page.waitForTimeout(350);
-  await page.screenshot({ path: `${shotDir}/freeze-used-notice.png` });
-  await page.click('#btnFreezeOk');
-  const st2 = await S();
+  await page.evaluate(() => localStorage.clear());
+  await readyAgain();
+  const wk = await page.evaluate(() => window.GE_MENU.isoWeek());
+  const weekdays = await page.evaluate(() => window.GE_MENU.weekDates());
+  const seeded = await page.evaluate(wk => {
+    const ds = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+    const now = window.GE.now(), marks = [0, 1, 2, 3].map(i => ds(now - i * 864e5));
+    const streak = { len: 4, best: 6, lastDate: marks[0], freezes: 1, marks };
+    localStorage.setItem('ge_streak', JSON.stringify(streak));
+    localStorage.setItem('ge_quests', JSON.stringify({ date: marks[0], ids: ['clear3', 'stars6', 'par2'], prog: { clear3: 2, stars6: 4 }, done: [], all: false }));
+    localStorage.setItem('ge_ladder', JSON.stringify({ week: wk, pts: 9, ms: [3, 7], last: { week: '2026-W01', pts: 14 } }));
+    localStorage.removeItem('ge_survey'); // the ABSENCE of ge_survey is the migration's only trigger
+    return { streak: localStorage.getItem('ge_streak'), marks };
+  }, wk);
+  await readyAgain();
+  const expectDays = seeded.marks.filter(d => weekdays.includes(d)).sort();
+  const after = await page.evaluate(() => ({ survey: JSON.parse(localStorage.getItem('ge_survey')),
+    streak: localStorage.getItem('ge_streak'), quests: localStorage.getItem('ge_quests'), ladder: localStorage.getItem('ge_ladder'),
+    live: { ...window.GE_MENU.streak } }));
+  const mig = await sheet();
+  await page.waitForTimeout(250);
+  await page.screenshot({ path: `${shotDir}/survey-migrated.png` });
+  await closeSheet();
+  // and it can never run twice: put ge_ladder back and reload — nothing may touch it again
+  await page.evaluate(() => localStorage.setItem('ge_ladder', JSON.stringify({ week: 'x', pts: 999, ms: [], last: null })));
+  await readyAgain();
+  const twice = await page.evaluate(() => ({ ladder: localStorage.getItem('ge_ladder'), pts: window.GE_MENU.survey.pts, days: window.GE_MENU.survey.days.length }));
+  await page.evaluate(() => localStorage.removeItem('ge_ladder'));
+  const ok = after.streak === seeded.streak                                   // byte-identical
+    && after.live.len === 4 && after.live.best === 6 && after.live.freezes === 1 && after.live.marks.length === 4
+    && after.quests === null && after.ladder === null && after.survey && after.survey.week === wk
+    && after.survey.pts === 9 && JSON.stringify(after.survey.ms) === '[3,7]'
+    && after.survey.last && after.survey.last.pts === 14 && after.survey.last.week === '2026-W01'
+    && JSON.stringify(after.survey.days.slice().sort()) === JSON.stringify(expectDays)
+    && after.survey.chosen.length === 0 && after.survey.offered.length === 4
+    && mig.row === `${expectDays.length}/7 · 9 pts` && mig.badge
+    && /4-day streak/.test(mig.sub) && /1 weather delay held/.test(mig.sub)
+    && JSON.stringify(mig.marks) === '["3","7"]' && mig.spine.filter(d => d.on).length === expectDays.length
+    && /Last week: 14 points/.test(mig.last)
+    && twice.pts === 9 && twice.days === expectDays.length && JSON.parse(twice.ladder).pts === 999;
+  if (ok) console.log(`survey migration ok: v1 (4-day streak, best 6, 1 freeze, 4 marks + a ${wk} ladder on 9 pts with marks 3/7) → one sheet reading "${mig.row}", "${mig.sub}"; ge_streak byte-identical, ge_quests + ge_ladder removed, and a re-seeded ge_ladder is never touched again`);
+  else { failures++; console.error('survey migration FAIL:', JSON.stringify({ streakSame: after.streak === seeded.streak, after, expectDays, mig, twice })); }
+}
+
+// the day spine: any clear stamps TODAY, once. Days still to come read "·", a day that went by
+// without a clear reads "○" — four glyphs, so the spine is legible with no colour at all.
+{
+  await wipeMeta(); await readyAgain();
+  const base = await weekBase(2); await setDay(base);
+  const d0 = await dayOf(0), d1 = await dayOf(1), d2 = await dayOf(2);
+  const zero = await sheet(); await closeSheet();
   await winL1();
-  const st3 = await S();
-  if (fr.r === 'freeze' && fr.up && fr.sub === 'Freeze used — streak safe · 0 left' && st2.freezes === 0 && st2.stats.streak_freeze_used === 1 && st3.len === 2)
-    console.log(`streak freeze ok: a missed day auto-consumed the banked freeze ("${fr.sub}"); today's clear lands len 2`);
-  else { failures++; console.error('streak freeze FAIL:', JSON.stringify({ fr, f: st2.freezes, used: st2.stats.streak_freeze_used, len3: st3.len })); }
+  const one = await sheet(); await closeSheet();
+  await setDay(base + 2);                       // base + 1 goes by unplayed
+  await winL1();
+  const two = await sheet();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: `${shotDir}/survey-sheet.png` });
+  await closeSheet();
+  await winL1();                                // a second clear the same day adds nothing
+  const again = await sheet(); await closeSheet();
+  const wkNo = (await page.evaluate(() => window.GE_MENU.isoWeek())).split('-W')[1];
+  const ok = zero.spine.length === 7 && zero.spine.filter(d => d.on).length === 0
+    && zero.row.startsWith('0/7') && cell(zero, d0).m === '·' && cell(zero, d0).today && cell(zero, d2).m === '·'
+    && one.spine.filter(d => d.on).length === 1 && cell(one, d0).m === '✓' && cell(one, d0).on && one.row.startsWith('1/7')
+    && two.spine.filter(d => d.on).length === 2 && two.row.startsWith('2/7')
+    && cell(two, d0).m === '✓' && cell(two, d2).m === '✓' && cell(two, d1).m === '○' && !cell(two, d1).delay
+    && again.row.startsWith('2/7') && again.spine.filter(d => d.on).length === 2   // the day, not the points
+    && /2 of 7 days/.test(two.sub) && two.no === 'WEEK ' + wkNo;
+  if (ok) console.log(`survey spine ok: a clear stamps today (✓) and only once; the skipped day ${d1} reads ○, days still to come read ·; the sheet-index row tracks "${two.row}" and the header "${two.sub}"`);
+  else { failures++; console.error('survey spine FAIL:', JSON.stringify({ days: [d0, d1, d2], zero: zero.spine, one: one.spine, two: two.spine, rows: [zero.row, one.row, two.row, again.row], no: two.no, wkNo })); }
 }
 
-// the freeze bank caps at 2 held: all-done with a full bank banks nothing (and says so honestly)
+// filing ONE contract banks a weather delay; a missed day then spends it and is STAMPED on the
+// spine (the "freeze" is the same ge_streak.freezes field it always was — only the language moved)
 {
-  await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('ge_streak')); s.freezes = 2; localStorage.setItem('ge_streak', JSON.stringify(s)); });
-  await readyAgain(); await setDay(3);
-  let capRow = null;
-  for (let i = 0; i < 30; i++) {
-    await winL1();
-    const row = await beatRow();
-    if (row && row.stamp === 'DONE') capRow = row;
-    if ((await Q()).all) break;
-  }
-  const st4 = await S();
-  if (st4.freezes === 2 && capRow && /All 3 daily quests done/.test(capRow.v) && st4.stats.quests_all_done === 2)
-    console.log('freeze cap ok: with 2 freezes held, all-done banks nothing ("All 3 daily quests done")');
-  else { failures++; console.error('freeze cap FAIL:', JSON.stringify({ f: st4.freezes, capRow, qad: st4.stats.quests_all_done })); }
+  await wipeMeta(); await readyAgain();
+  const base = await weekBase(3); await setDay(base);
+  await pickTwo();
+  await nearFiling(0);
+  await readyAgain(); await setDay(base);
+  await winL1();
+  const filedRow = await beatRow();
+  const v1 = await V(), st1 = await S();
+  // a day goes by with nothing cleared: the banked delay covers it, calmly, with nothing to buy
+  await setDay(base + 2);
+  const fr = await page.evaluate(() => ({ r: window.GE_MENU.checkStreak(), up: !document.getElementById('freezeModal').hidden,
+    h2: document.querySelector('#freezeModal h2').textContent, sub: document.getElementById('freezeSub').textContent }));
+  await page.waitForTimeout(350);
+  await page.screenshot({ path: `${shotDir}/survey-weather-delay-notice.png` });
+  await page.click('#btnFreezeOk');
+  const v2 = await V(), st2 = await S();
+  const covered = await sheet();
+  await page.waitForTimeout(250);
+  await page.screenshot({ path: `${shotDir}/survey-weather-delay.png` });
+  await closeSheet();
+  await winL1(); const st3 = await S();
+  const missedDay = await page.evaluate(() => { const d = new Date(window.GE.now() - 864e5); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); });
+  const ok = filedRow && filedRow.stamp === 'FILED' && filedRow.k === 'Contract filed' && /Weather delay banked · 1 held/.test(filedRow.v)
+    && v1.filed.length === 1 && v1.seal === false && st1.freezes === 1 && st1.stats.contract_filed === 1
+    && fr.r === 'freeze' && fr.up && fr.h2 === 'Weather delay' && fr.sub === 'Weather delay used — survey day covered · 0 left'
+    && st2.freezes === 0 && st2.stats.weather_delay_used === 1
+    && JSON.stringify(v2.delays) === JSON.stringify([missedDay])
+    && covered.spine.filter(d => d.delay).length === 1 && covered.spine.find(d => d.delay).m === '~'
+    && covered.spine.find(d => d.delay).day === missedDay
+    && /1 of 7 days/.test(covered.sub) && st3.len === 2;             // the streak survived the gap
+  if (ok) console.log(`survey delay ok: filing the first contract banked a weather delay; a missed day spent it ("${fr.sub}") and is stamped ~ on ${missedDay}; the streak lands at 2, nothing was offered for sale`);
+  else { failures++; console.error('survey delay FAIL:', JSON.stringify({ filedRow, filed: v1.filed, f1: st1.freezes, fr, f2: st2.freezes, delays: v2.delays, missedDay, spine: covered.spine, len: st3.len, stats: st2.stats })); }
 }
 
-// THE REPAIR SURFACE IS GONE (2026-09-02 research round). A missed day with no banked freeze
-// lapses the streak SILENTLY: no card, no ad, no offer at the moment of loss, no guilt copy.
+// the bank caps at 2 held: a first filing with a full bank banks nothing, and says so honestly
+{
+  await wipeMeta(); await readyAgain();
+  const base = await weekBase(1); await setDay(base);
+  await pickTwo();
+  const id = await nearFiling(0);
+  await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('ge_streak') || '{}'); s.len = s.len || 0; s.freezes = 2; localStorage.setItem('ge_streak', JSON.stringify(s)); });
+  await readyAgain(); await setDay(base);
+  await winL1();
+  const row = await beatRow(); const st = await S(); const v = await V();
+  const label = await page.evaluate(id => window.GE_MENU.CONTRACTS[id].label, id);
+  const ok = st.freezes === 2 && v.filed.length === 1 && row && row.stamp === 'FILED' && row.v === label;
+  if (ok) console.log(`survey delay cap ok: with 2 weather delays held, filing banks nothing — the row names the contract instead ("${label}")`);
+  else { failures++; console.error('survey delay cap FAIL:', JSON.stringify({ freezes: st.freezes, filed: v.filed, row, label })); }
+}
+
+// filing BOTH seals the week (one fragment) — and the delay is banked once, on the first filing only
+{
+  await wipeMeta(); await readyAgain();
+  const base = await weekBase(1); await setDay(base);
+  await pickTwo();
+  await nearFiling(0);
+  await readyAgain(); await setDay(base);
+  await winL1();
+  const first = await beatRow(); const stA = await S();
+  await nearFiling(1);
+  await readyAgain(); await setDay(base);
+  await winL1();
+  const sealRow = await beatRow(); const stB = await S(); const v = await V();
+  const sealed = await sheet();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: `${shotDir}/survey-sealed.png` });
+  await closeSheet();
+  const ok = first && first.stamp === 'FILED' && stA.freezes === 1
+    && sealRow && sealRow.stamp === 'SEAL' && sealRow.k === 'Survey sealed' && sealRow.v === 'Both contracts filed · fragment 1'
+    && v.seal === true && v.frags === 1 && v.filed.length === 2 && stB.freezes === 1   // no second delay
+    && v.stats.survey_seal === 1 && v.stats.contract_filed === 2
+    && sealed.seal.got && sealed.seal.stamped && /Sealed · 1 fragment held/.test(sealed.seal.text)
+    && sealed.rows.every(r => r.filed && r.chip === 'FILED');
+  if (ok) console.log('survey seal ok: both contracts filed → the week is sealed with 1 fragment; the delay was banked once (on the first filing), and the seal stamp is a shape change, not just ink');
+  else { failures++; console.error('survey seal FAIL:', JSON.stringify({ first, sealRow, seal: v.seal, frags: v.frags, filed: v.filed, freezes: stB.freezes, stats: v.stats, sealed: sealed.seal, rows: sealed.rows })); }
+  // the week rolls: everything on the sheet is this week's, and ONLY last week's result line survives
+  const before = { week: v.week, pts: v.pts, frags: v.frags };
+  await setDay(base + 7);
+  const nw = await V();
+  const rolled = await sheet();
+  await page.waitForTimeout(250);
+  await page.screenshot({ path: `${shotDir}/survey-new-week.png` });
+  await closeSheet();
+  const rollOk = nw.week !== before.week && nw.pts === 0 && nw.ms.length === 0 && nw.days.length === 0 && nw.delays.length === 0
+    && nw.chosen.length === 0 && nw.filed.length === 0 && nw.seal === false && nw.offered.length === 4
+    && nw.frags === before.frags                                     // the fragment tally is a lifetime count
+    && nw.last && nw.last.week === before.week && nw.last.pts === before.pts && nw.last.filed === 2 && nw.last.seal === true
+    && rolled.badge && rolled.head === 'CHOOSE 2' && !rolled.mark20 && rolled.row === '0/7 · 0 pts'
+    && rolled.last === `Last week: ${before.pts} points · 2/2 filed · sealed` && !rolled.seal.got;
+  if (rollOk) console.log(`survey week ok: a new week resets the whole sheet and keeps only "${rolled.last}"; the fragment tally (${nw.frags}) carries`);
+  else { failures++; console.error('survey week FAIL:', JSON.stringify({ before, nw, rolled })); }
+}
+
+// the point marks at 3/7/12/20 (the ladder's own rule, on the same sheet): 1 per clear, +1 at par
+{
+  await wipeMeta(); await readyAgain();
+  const base = await weekBase(1); await setDay(base);
+  await winL1();       // par: 1 + 1
+  const p1 = await V();
+  await winL1(2);      // 3 moves: sub-par, +1 → 3 → the first mark
+  const p2 = await V();
+  const mid = await sheet(); await closeSheet();
+  for (let i = 0; i < 14; i++) { if ((await page.evaluate(() => window.GE_MENU.survey.pts)) >= 20) break; await winL1(); }
+  const p3 = await V();
+  const top = await sheet();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: `${shotDir}/survey-marks-20.png` });
+  await closeSheet();
+  const ok = p1.pts === 2 && p1.ms.length === 0 && p2.pts === 3 && JSON.stringify(p2.ms) === '[3]'
+    && p2.stats.survey_point === 2 && p2.stats.survey_mark === 1
+    && JSON.stringify(mid.marks) === '["3"]' && /3 points/.test(mid.sub) && !mid.mark20
+    && p3.pts >= 20 && JSON.stringify(p3.ms) === '[3,7,12,20]' && p3.stats.survey_mark === 4
+    && top.marks.length === 4 && top.mark20 && /⌖/.test(top.row);
+  if (ok) console.log(`survey marks ok: par win +2, sub-par +1; ${p3.pts} points stamps all four marks and the 20-point surveyor's mark (⌖) rides on the sheet-index row`);
+  else { failures++; console.error('survey marks FAIL:', JSON.stringify({ p1: p1.pts, p2: p2.pts, ms2: p2.ms, mid, p3: p3.pts, ms3: p3.ms, top })); }
+}
+
+// THE REPAIR SURFACE IS GONE (2026-09-02 research round). A missed day with NO banked weather
+// delay lapses the streak SILENTLY: no card, no ad, no offer at the moment of loss, no guilt copy.
 // This check asserts the ABSENCE of the surface — the ids are not in the DOM at all and the word
 // cannot be found in the markup — plus the honest consequences: nothing pops on launch, the
-// counter is cleared truthfully, no streak_repair_* event can ever be recorded again, and the
-// next clear starts a fresh streak at 1 exactly as day one did.
+// counter is cleared truthfully, no streak_repair_* event can ever be recorded again, the survey
+// spine shows the missed day as a plain ○ (never a delay it did not have), and the next clear
+// starts a fresh streak at 1 exactly as day one did.
 {
+  await wipeMeta(); await readyAgain();
+  const base = await weekBase(4); await setDay(base);
+  const w0 = await dayOf(0), w1 = await dayOf(1), w2 = await dayOf(2), miss = await dayOf(3);
+  await winL1(); await setDay(base + 1); await winL1(); await setDay(base + 2); await winL1();
   await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('ge_streak')); s.freezes = 0; localStorage.setItem('ge_streak', JSON.stringify(s)); });
-  await readyAgain(); await setDay(5); // a 2-day gap on a 3-day streak: the case that used to be sold
+  await readyAgain(); await setDay(base + 4); // a 2-day gap on a 3-day streak: the case that used to be sold
   const before = await S();
   const gone = await page.evaluate(() => ({
     ids: ['streakModal', 'btnStreakRepair', 'btnStreakDecline'].filter(id => document.getElementById(id)),
@@ -816,88 +1059,73 @@ const beatRow = () => page.evaluate(() => (document.getElementById('winDaily').h
   const after = await page.evaluate(() => ({
     modals: [...document.querySelectorAll('.modal')].filter(m => !m.hidden).map(m => m.id),
     ...window.GE_MENU.streak, stats: JSON.parse(localStorage.getItem('ge_stats') || '{}'),
-    row: (window.GE_MENU.show('levels'), document.getElementById('fStreak').innerText.replace(/\s+/g, ' ').trim()),
   }));
+  const lapsed = await sheet();
   await page.waitForTimeout(250);
   await page.screenshot({ path: `${shotDir}/streak-lapsed-silently.png` });
+  await closeSheet();
   await winL1(); const next = await S();
   const noRepair = gone.ids.length === 0 && !gone.word && before.len === 3 && r === false
     && after.modals.length === 0 && after.len === 0 && after.lastDate === null && after.best === 3
     && !('streak_repair_offered' in after.stats) && !('streak_repair_taken' in after.stats) && !('streak_repair_declined' in after.stats)
-    && /^—/.test(after.row) && next.len === 1;
-  if (noRepair) console.log(`no repair surface ok: a 2-day gap with 0 freezes lapses a 3-day streak silently — zero modals up, field log reads "${after.row}", best kept at 3, next clear starts at 1; #streakModal / #btnStreakRepair / #btnStreakDecline absent from the DOM and no streak_repair_* event exists`);
-  else { failures++; console.error('repair-surface FAIL:', JSON.stringify({ gone, beforeLen: before.len, r, after, nextLen: next.len })); }
-}
-// menu rows: quests fresh, streak "n of last 7 days" + freezes held, persisted across a real reload
-{
-  await page.evaluate(() => { for (const k of ['ge_streak', 'ge_quests']) localStorage.removeItem(k); });
-  await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L);
-  await page.waitForTimeout(400);
-  const rowFresh = await page.evaluate(() => ({ streak: (window.GE_MENU.show('levels'), document.getElementById('fStreak').innerText).replace(/\s+/g, ' ').trim(), rows: document.querySelectorAll('#menuQuests .q').length, done: document.querySelectorAll('#menuQuests .q.done').length, bars: [...document.querySelectorAll('#menuQuests .qbar i')].map(b => b.style.width) }));
-  await page.screenshot({ path: `${shotDir}/menu-quests-fresh.png` });
-  await page.evaluate(() => {
-    const day = o => { const x = new Date(Date.now() - o * 864e5); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
-    localStorage.setItem('ge_streak', JSON.stringify({ len: 4, best: 4, lastDate: day(0), freezes: 1, marks: [day(0), day(1), day(2), day(4)] }));
-  });
-  await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L);
-  await page.waitForTimeout(400);
-  const row4 = await page.evaluate(() => { window.GE_MENU.show('levels'); return document.getElementById('fStreak').innerText.replace(/\s+/g, ' ').trim(); });
-  await page.screenshot({ path: `${shotDir}/menu-quests-live.png` });
-  if (rowFresh.rows === 3 && rowFresh.done === 0 && /^—/.test(rowFresh.streak) && /0 of last 7 days/.test(rowFresh.streak) && rowFresh.bars.every(w => w === '0%')
-    && /^4 days/.test(row4) && /4 of last 7 days/.test(row4) && /1 freeze held/.test(row4))
-    console.log(`menu rows ok: fresh "${rowFresh.streak}" with 3 empty quests; live "${row4}" (persisted across reload)`);
-  else { failures++; console.error('menu rows FAIL:', JSON.stringify({ rowFresh, row4 })); }
+    && !('weather_delay_used' in after.stats)                                   // nothing was spent
+    && lapsed.spine.filter(d => d.delay).length === 0 && cell(lapsed, miss).m === '○'
+    && [w0, w1, w2].every(d => cell(lapsed, d).m === '✓') && lapsed.spine.filter(d => d.on).length === 3
+    && /No streak running/.test(lapsed.sub)
+    && next.len === 1;
+  if (noRepair) console.log(`no repair surface ok: a 2-day gap with 0 weather delays lapses a 3-day streak silently — zero modals up, the sheet header reads "${lapsed.sub}", the two missed days read ○ (never a delay), best kept at 3, next clear starts at 1; #streakModal / #btnStreakRepair / #btnStreakDecline absent from the DOM and no streak_repair_* event exists`);
+  else { failures++; console.error('repair-surface FAIL:', JSON.stringify({ gone, beforeLen: before.len, r, after, days: [w0, w1, w2, miss], spine: lapsed.spine, sub: lapsed.sub, nextLen: next.len })); }
 }
 
-// ---------- Field Survey (weekly personal ladder) ----------
-// 1 point per clear, +1 at par; stamps at 3/7/12/20; the 20-pointer is a surveyor's mark on the
-// streak row for the rest of the week; a new ISO week resets and keeps last week's line only
+// the sheet-index row is the whole meta surface on that screen: one row, the week's state on it,
+// and a SELECT 2 badge for exactly as long as the contracts are unchosen
 {
-  await page.evaluate(() => { localStorage.removeItem('ge_ladder'); localStorage.setItem('ge_stats', '{}'); });
-  await readyAgain();
-  await winL1();  // par: 1 + 1 bonus
-  const l1 = await page.evaluate(() => ({ ...window.GE_MENU.ladder }));
-  await winL1(2); // 3 moves: sub-par, +1 → 3 → first milestone
-  const l2 = await page.evaluate(() => ({ ...window.GE_MENU.ladder, stats: JSON.parse(localStorage.getItem('ge_stats')) }));
-  await page.evaluate(() => window.GE_MENU.show('levels'));
-  await page.waitForTimeout(300);
-  const mid = await page.evaluate(() => {
-    document.getElementById('btnSurvey').click();
-    return { pts: document.getElementById('fSurvey').textContent, sub: document.getElementById('surveySub').textContent,
-      got: [...document.querySelectorAll('#surveyTrack .ms.got')].map(m => m.dataset.ms), last: document.getElementById('surveyLast').textContent };
-  });
-  await page.waitForTimeout(300);
-  await page.screenshot({ path: `${shotDir}/survey-card-midweek.png` });
-  await page.click('#btnSurveyClose');
-  const midOk = l1.pts === 2 && l1.ms.length === 0 && l2.pts === 3 && JSON.stringify(l2.ms) === '[3]' && l2.stats.ladder_point === 2 && l2.stats.ladder_milestone === 1
-    && mid.pts === '3 pts' && /^3 points this week/.test(mid.sub) && JSON.stringify(mid.got) === '["3"]' && /A fresh survey/.test(mid.last);
-  if (midOk) console.log('ladder ok: par win +2, sub-par +1; milestone 3 stamped; the survey card renders points + stamps');
-  else { failures++; console.error('ladder mid FAIL:', JSON.stringify({ l1, l2pts: l2.pts, l2ms: l2.ms, lp: l2.stats.ladder_point, lm: l2.stats.ladder_milestone, mid })); }
-  for (let i = 0; i < 12; i++) { const pts = await page.evaluate(() => window.GE_MENU.ladder.pts); if (pts >= 20) break; await winL1(); }
-  const l3 = await page.evaluate(() => ({ ...window.GE_MENU.ladder, stats: JSON.parse(localStorage.getItem('ge_stats')) }));
-  const top = await page.evaluate(() => {
+  await wipeMeta(); await readyAgain();
+  const base = await weekBase(1); await setDay(base);
+  const unchosen = await sheet();
+  await closeSheet();
+  await page.waitForTimeout(250);
+  await page.screenshot({ path: `${shotDir}/survey-row-select2.png` }); // the row, badge up, sheet down
+  await pickTwo();
+  const chosen = await sheet(); await closeSheet();
+  const row = await page.evaluate(() => {
     window.GE_MENU.show('levels');
-    document.getElementById('btnSurvey').click();
-    return { mark: !!document.querySelector('#fStreak .mark'), got: [...document.querySelectorAll('#surveyTrack .ms.got')].map(m => m.dataset.ms),
-      m20: !!document.querySelector('#surveyTrack .ms.got[data-ms="20"] .mark') };
+    return { gone: ['menuQuests', 'fStreak'].filter(id => document.getElementById(id)),
+      surveyRows: document.querySelectorAll('#menuDaily .surveyrow').length,
+      livesRow: !document.getElementById('menuLivesRow').hidden,
+      text: document.getElementById('menuDaily').innerText.replace(/\s+/g, ' ').trim() };
   });
   await page.waitForTimeout(300);
-  await page.screenshot({ path: `${shotDir}/survey-card-20.png` });
-  await page.click('#btnSurveyClose');
-  const topOk = l3.pts >= 20 && JSON.stringify(l3.ms) === '[3,7,12,20]' && l3.stats.ladder_milestone === 4 && top.mark && top.got.length === 4 && top.m20;
-  if (topOk) console.log(`ladder ok: ${l3.pts} points → all four milestones stamped; the 20-point surveyor's mark (⌖) sits on the streak row`);
-  else { failures++; console.error('ladder top FAIL:', JSON.stringify({ pts: l3.pts, ms: l3.ms, lm: l3.stats.ladder_milestone, top })); }
-  await setDay(7);
-  const wk = await page.evaluate(() => {
-    const l = { ...window.GE_MENU.ladder }; // the getter rolls the week
-    window.GE_MENU.refreshDaily();
-    document.getElementById('btnSurvey').click();
-    return { pts: l.pts, ms: l.ms, last: l.last, line: document.getElementById('surveyLast').textContent, mark: !!document.querySelector('#fStreak .mark') };
-  });
-  await page.click('#btnSurveyClose');
-  if (wk.pts === 0 && wk.ms.length === 0 && wk.last && wk.last.pts === l3.pts && wk.line === `Last week: ${l3.pts} points` && !wk.mark)
-    console.log(`ladder ok: week rollover resets to 0 and keeps "Last week: ${l3.pts} points"; the mark comes off the streak row`);
-  else { failures++; console.error('ladder week FAIL:', JSON.stringify(wk)); }
+  await page.screenshot({ path: `${shotDir}/survey-row.png` });
+  const ok = unchosen.badge && unchosen.row === '0/7 · 0 pts' && !chosen.badge
+    && row.gone.length === 0 && row.surveyRows === 1 && !row.livesRow && row.text === 'FIELD SURVEY 0/7 · 0 pts ›';
+  if (ok) console.log(`survey row ok: the sheet index carries ONE meta row — "${row.text}" — with the SELECT 2 badge up only while the contracts are unchosen; #menuQuests and the streak field are gone from the DOM`);
+  else { failures++; console.error('survey row FAIL:', JSON.stringify({ unchosen: { badge: unchosen.badge, row: unchosen.row }, chosenBadge: chosen.badge, row })); }
+}
+
+// menu.js surfaces that index off the level number must never speak the Daily Draft's virtual
+// index out loud. The pause card is the one that did: mid-draft it read "Level 31".
+{
+  await page.evaluate(() => { for (const k of ['ge_daily', 'ge_survey', 'ge_streak']) localStorage.removeItem(k); });
+  await readyAgain();
+  const lvl = await page.evaluate(() => { window.GE.load(7); return window.GE.level; });
+  await page.waitForTimeout(120);
+  await page.evaluate(() => document.getElementById('btnMenu').click());
+  const campaign = await page.evaluate(() => document.getElementById('pauseSub').textContent);
+  await page.evaluate(() => document.getElementById('btnResume').click());
+  const opened = await page.evaluate(() => window.GE.loadDaily());
+  await page.waitForTimeout(140);
+  await page.evaluate(() => document.getElementById('btnMenu').click());
+  const draft = await page.evaluate(() => ({ sub: document.getElementById('pauseSub').textContent, date: window.GE.dailyDate, isDaily: window.GE.isDaily }));
+  await page.evaluate(() => document.getElementById('btnResume').click());
+  await page.evaluate(() => { window.GE.load(0); localStorage.removeItem('ge_daily'); }); // leave the day's attempt unspent
+  await readyAgain();
+  const ok = lvl === 7 && /^Level 8 · \d+ moves left$/.test(campaign)
+    && opened && draft.isDaily && !/Level \d+/.test(draft.sub)
+    && /^Daily draft · \d{4}-\d{2}-\d{2} · \d+ moves left$/.test(draft.sub)
+    && draft.sub.startsWith(`Daily draft · ${draft.date} · `);
+  if (ok) console.log(`pause copy ok: "${campaign}" on a campaign level, "${draft.sub}" mid-draft — the virtual index never reaches the player as "Level 31"`);
+  else { failures++; console.error('pause copy FAIL:', JSON.stringify({ lvl, campaign, opened, draft })); }
 }
 
 // ---------- Motion toggle (pause card) ----------
@@ -1159,7 +1387,7 @@ const trailOf = t => {
 // ---------- the landing (2026-09-02) ----------
 // User report: "the main menu when you open the app is too overwhelming". The cold open is now a
 // calm landing — the title treatment, ONE primary CTA and two quiet entries, and nothing else to
-// read; the field log (stars, quests, streak, survey, paper, sound) moved to the sheet index and
+// read; the field log (stars, the field survey, paper, sound) moved to the sheet index and
 // the legend stays behind How to play. A returning player still reaches play in one tap.
 {
   await page.evaluate(() => localStorage.clear());
@@ -1170,7 +1398,7 @@ const trailOf = t => {
     landing: window.GE_MENU.landing(),
     cta: document.getElementById('playLabel').textContent,
     stamp: document.getElementById('menuStamp').textContent.replace(/\s+/g, ' ').trim(),
-    quiet: ['menuQuests', 'menuPapers', 'fStars', 'levelGrid', 'btnSurvey', 'btnSound'].every(id => !document.getElementById('menu').contains(document.getElementById(id))),
+    quiet: ['menuDaily', 'menuPapers', 'fStars', 'levelGrid', 'btnSurvey', 'btnSound'].every(id => !document.getElementById('menu').contains(document.getElementById(id))),
     // the entrance animation must not have eaten the CTA's beckon pulse (.landing .gatebtn outranks .gatebtn)
     ctaAnim: getComputedStyle(document.getElementById('btnPlay')).animationName,
     levels: document.getElementById('levels').hidden, legend: document.getElementById('legend').hidden,
@@ -1193,7 +1421,7 @@ const trailOf = t => {
   await page.evaluate(() => window.GE_MENU.show('menu')); await page.waitForTimeout(120);
   await page.click('#btnLevels'); await page.waitForTimeout(200);
   const idx = await page.evaluate(() => ({ levels: !document.getElementById('levels').hidden, tiles: document.querySelectorAll('#levelGrid .tile').length,
-    log: ['fStars', 'menuQuests', 'fStreak', 'btnSurvey', 'menuPapers', 'btnSound'].every(id => document.getElementById('levels').contains(document.getElementById(id))) }));
+    log: ['fStars', 'btnSurvey', 'fSurvey', 'menuPapers', 'btnSound'].every(id => document.getElementById('levels').contains(document.getElementById(id))) }));
   await page.screenshot({ path: shotDir + '/levels-fieldlog.png' });
   await page.click('#btnLevelsBack'); await page.waitForTimeout(120);
   await page.click('#btnLegend'); await page.waitForTimeout(200);
@@ -1280,7 +1508,11 @@ const pixelOf = async (sel, fx, fy) => {
     });
     seen[t] = { ...cpx, ...dom };
     // 3. contrast floors on the real rendered sheet and card
-    const sheetPx = await pixelOf('#levels .tblock', 0.5, 0.985);
+    // sample the sheet's own LEFT PADDING COLUMN, not a fraction down the middle: the sheet
+    // scrolls (max-height 100%), so "98.5% down the visible box" lands on whatever row happens to
+    // sit there and silently measured a paper swatch once the field log got shorter. 2% in from
+    // the left edge is inside the 20px padding on every viewport — background by construction.
+    const sheetPx = await pixelOf('#levels .tblock', 0.02, 0.5);
     const cs = await page.evaluate(() => ({
       ink: getComputedStyle(document.querySelector('#levels .shead h2')).color,
       dim: getComputedStyle(document.querySelector('#levels .foot')).color,
@@ -1483,7 +1715,7 @@ const pixelOf = async (sel, fx, fy) => {
   await tapScrim('#winModal');
   const winStays = await page.evaluate(() => !document.getElementById('winModal').hidden);
   await page.click('#btnNext'); await page.waitForTimeout(160);
-  // the survey card is safe to put down
+  // the survey sheet is safe to put down
   await page.evaluate(() => window.GE_MENU.show('levels')); await page.waitForTimeout(200);
   await page.click('#btnSurvey'); await page.waitForTimeout(200);
   await tapScrim('#surveyModal');
@@ -1494,7 +1726,7 @@ const pixelOf = async (sel, fx, fy) => {
     && !backToPause.levels && backToPause.pause && backToPause.paused
     && !legendBack.legend && legendBack.pause
     && failStays.up && failStays.over && winStays && surveyGone;
-  if (ok) console.log('scrim dismiss ok: a tap outside the pause card resumes (a tap on the card does not); levels/legend over pause go back one layer; the survey card closes — the fail sheet and the win card stay explicit');
+  if (ok) console.log('scrim dismiss ok: a tap outside the pause card resumes (a tap on the card does not); levels/legend over pause go back one layer; the survey sheet closes — the fail sheet and the win card stay explicit');
   else { failures++; console.error('scrim dismiss FAIL:', JSON.stringify({ pauseUp, onCard, onScrim, backToPause, legendBack, failStays, winStays, surveyGone })); }
 }
 
@@ -1559,6 +1791,320 @@ const pixelOf = async (sel, fx, fy) => {
   const r2 = await page.evaluate(() => ({ prog: JSON.stringify(window.GE_MENU.prog), label: document.getElementById('btnReset').textContent, theme: window.GE.theme, certified: document.querySelectorAll('#levelGrid .chap .cert.on').length }));
   if (r1.prog === p0 && /again/i.test(r1.label) && r2.prog === '{"u":0,"s":[]}' && !/again/i.test(r2.label) && r2.theme === 'cyan' && r2.certified === 0) console.log('reset ok: first tap arms, second erases (certifications lapse, paper back to cyanotype)');
   else { failures++; console.error('reset FAIL:', JSON.stringify({ p0, r1, r2 })); }
+}
+
+// ---- pass 3: daily draft (engine) ----
+// The Daily Draft is ONE solver-verified board a day, the same board for every
+// player, living at a virtual level index one past the last sheet. Three claims
+// make that a product rather than a feature, and each is checked below: the board
+// is identical everywhere, the day's result is written down exactly once, and the
+// FIELD REPORT says how the day went without saying how it was done.
+{
+  const crypto = await import('crypto');
+  const DT = new Function(fs.readFileSync(root + 'dailies.js', 'utf8') + '\nreturn DAILIES;')();
+  const dsol = JSON.parse(fs.readFileSync(root + 'tools/daily-solutions.json', 'utf8'));
+  const lock = JSON.parse(fs.readFileSync(root + 'tools/dailies.lock', 'utf8'));
+
+  // a fresh page with a fixed "today" — the engine reads every date through
+  // GE.now(), so a bot can stand on any calendar day without touching the clock
+  const openDaily = async (today) => {
+    const ctx = await browser.newContext({ viewport: { width: 420, height: 780 } });
+    const pg = await ctx.newPage();
+    const errs = [];
+    pg.on('pageerror', e => errs.push(e.message));
+    await pg.goto('file://' + root + 'index.html');
+    await pg.waitForFunction(() => window.GE && window.GE.L);
+    if (today) await setToday(pg, today);
+    return { ctx, pg, errs };
+  };
+  const setToday = (pg, d) => pg.evaluate(day => { const t = new Date(day + 'T10:00:00').getTime(); window.GE.now = () => t; }, d);
+  // burn the move budget WITHOUT clearing the board: shuffle one block between two
+  // in-board cells (an in-board target can never trigger an exit), so the attempt
+  // reaches 0 moves with blocks still on the sheet
+  const burnFn = (() => {
+    const GE = window.GE;
+    let bi = -1, home = null, away = null;
+    for (let i = 0; i < GE.pos.length && bi < 0; i++) {
+      if (!GE.pos[i]) continue;
+      const [x, y] = GE.pos[i];
+      for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+        const tx = x + dx, ty = y + dy;
+        if (tx < 0 || ty < 0 || tx >= GE.L.w || ty >= GE.L.h) continue;
+        const before = GE.moves;
+        GE.drag(i, tx, ty);
+        if (GE.moves > before) { bi = i; home = [x, y]; away = GE.pos[i].slice(); break; }
+      }
+    }
+    if (bi < 0) return { err: 'no legal shuffle found' };
+    for (let t = 0; !GE.over && GE.movesLeft > 0 && t < 60; t++) {
+      const to = t % 2 ? home : away;
+      GE.drag(bi, to[0], to[1]);
+    }
+    return { over: GE.over, movesLeft: GE.movesLeft, left: GE.pos.filter(p => p).length };
+  }).toString();
+
+  // load the draft for `date` and replay its recorded optimal line through the real
+  // engine — same drag physics, same rule, as any level in the run above
+  const replayDaily = async (pg, date) => {
+    const idx = DT.rowFor(date).i;
+    const res = await pg.evaluate(({ date, sol }) => {
+      if (!window.GE.loadDaily(date)) return { loaded: false };
+      for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side);
+      return { loaded: true, cleared: window.GE.pos.every(p => !p), moves: window.GE.moves,
+        movesLeft: window.GE.movesLeft, par: window.GE.L.par, limit: window.GE.L.moves,
+        label: document.getElementById('hudLevel').textContent };
+    }, { date, sol: dsol[idx] });
+    if (res.loaded && res.cleared) await pg.waitForSelector('#winModal:not([hidden])', { timeout: 3000 });
+    return res;
+  };
+
+  // 1. the table itself: append-only lock, and every row decodes to a legal board
+  {
+    const prefix = DT.rows.slice(0, lock.frozen).join('\n');
+    const hash = crypto.createHash('sha256').update(prefix).digest('hex');
+    let bad = null;
+    for (let i = 0; i < DT.rows.length && !bad; i++) {
+      const lv = DT.decode(DT.rows[i]);
+      const cells = lv.blocks.reduce((n, b) => n + b.cells.length, 0);
+      if (lv.moves !== lv.par + 3) bad = `row ${i}: limit ${lv.moves} is not par+3`;
+      else if (lv.par < lv.blocks.length) bad = `row ${i}: par ${lv.par} below block count`;
+      else if (!lv.blocks.every(b => b.cells.every(([cx, cy]) => b.x + cx < lv.w && b.y + cy < lv.h)))
+        bad = `row ${i}: a block hangs off the board`;
+      else if (!lv.gates.every(g => g.start + g.len <= (g.side === 'top' || g.side === 'bottom' ? lv.w : lv.h)))
+        bad = `row ${i}: a gate hangs off its edge`;
+      else if (!lv.blocks.every(b => lv.gates.some(g => g.color === b.color))) bad = `row ${i}: a block has no gate`;
+      else if (cells < 1) bad = `row ${i}: empty board`;
+    }
+    const lockOk = hash === lock.sha256 && lock.start === DT.start && lock.frozen >= 1;
+    if (lockOk && !bad && DT.rows.length === 365 && dsol.length === DT.rows.length)
+      console.log(`dailies table ok: ${DT.rows.length} rows from ${DT.start}, every row a legal board at par+3, ${lock.frozen} frozen rows match tools/dailies.lock`);
+    else { failures++; console.error('dailies table FAIL:', JSON.stringify({ lockOk, bad, rows: DT.rows.length, sols: dsol.length, lockFrozen: lock.frozen })); }
+  }
+
+  // 2. the weekday rhythm is real, not decorative: Saturday's boards are genuinely
+  //    harder than Monday's (excess = the repositioning drags par forces)
+  {
+    const byDay = [0, 1, 2, 3, 4, 5, 6].map(() => []);
+    for (let i = 0; i < DT.rows.length; i++) {
+      const lv = DT.decode(DT.rows[i]);
+      byDay[new Date(DT.parse(DT.dateAt(i))).getUTCDay()].push(lv.par - lv.blocks.length);
+    }
+    const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
+    const m = byDay.map(mean);
+    const rising = m[1] <= m[0] && m[2] <= m[0] && m[0] <= m[4] && m[4] <= m[6] && m[6] > m[1];
+    if (rising && byDay.every(a => a.length >= 52))
+      console.log(`daily curve ok: mean excess Mon ${m[1].toFixed(2)} · Tue ${m[2].toFixed(2)} · Wed ${m[3].toFixed(2)} · Thu ${m[4].toFixed(2)} · Fri ${m[5].toFixed(2)} · Sat ${m[6].toFixed(2)} · Sun ${m[0].toFixed(2)} — the week rises to Saturday`);
+    else { failures++; console.error('daily curve FAIL:', JSON.stringify(m.map(x => +x.toFixed(2)))); }
+  }
+
+  // 3. two independent contexts, one fixed date → byte-identical board. This is the
+  //    whole promise of a daily: nothing about the board can come from the device.
+  {
+    const DATE = '2026-11-14'; // a Saturday: the hardest archetype
+    const a = await openDaily(DATE), b = await openDaily(DATE);
+    const grab = pg => pg.evaluate(() => {
+      window.GE.loadDaily();
+      const i = window.GE.dailyInfo;
+      return { L: JSON.stringify(window.GE.L), date: window.GE.dailyDate, isDaily: window.GE.isDaily,
+        index: i.index, wrapped: i.wrapped, practice: i.practice, label: document.getElementById('hudLevel').textContent };
+    });
+    const ra = await grab(a.pg), rb = await grab(b.pg);
+    const fromTable = JSON.stringify(Object.assign(DT.decode(DT.rowFor(DATE).row), {}));
+    const sameAsTable = JSON.parse(ra.L).par === JSON.parse(fromTable).par
+      && JSON.stringify(JSON.parse(ra.L).blocks) === JSON.stringify(JSON.parse(fromTable).blocks)
+      && JSON.stringify(JSON.parse(ra.L).gates) === JSON.stringify(JSON.parse(fromTable).gates)
+      && JSON.stringify(JSON.parse(ra.L).stones) === JSON.stringify(JSON.parse(fromTable).stones);
+    const ok = ra.L === rb.L && sameAsTable && ra.index === rb.index && ra.index === DT.rowFor(DATE).i
+      && ra.isDaily && !ra.wrapped && !ra.practice && ra.label === 'DAILY DRAFT · 14 Nov'
+      && !a.errs.length && !b.errs.length;
+    await a.ctx.close(); await b.ctx.close();
+    if (ok) console.log(`daily determinism ok: two contexts on ${DATE} decode the identical board (row ${ra.index}) straight from the table, HUD reads "${ra.label}"`);
+    else { failures++; console.error('daily determinism FAIL:', JSON.stringify({ same: ra.L === rb.L, sameAsTable, ra: { index: ra.index, label: ra.label, isDaily: ra.isDaily, wrapped: ra.wrapped, practice: ra.practice }, errsA: a.errs, errsB: b.errs })); }
+  }
+
+  // 4. par replay: sampled dates across the year, every weekday (so all four
+  //    archetypes) covered, each beaten at par through the shipped engine
+  {
+    const IDX = [0, 1, 2, 3, 4, 5, 6, 20, 45, 76, 120, 187, 244, 300, 364];
+    const { ctx, pg, errs } = await openDaily(DT.dateAt(0));
+    const bad = [];
+    const days = new Set();
+    for (const i of IDX) {
+      const date = DT.dateAt(i);
+      await setToday(pg, date);
+      const r = await replayDaily(pg, date);
+      days.add(new Date(DT.parse(date)).getUTCDay());
+      if (!r.loaded || !r.cleared || r.moves !== r.par || r.limit !== r.par + 3 || r.movesLeft !== 3) bad.push({ date, r });
+    }
+    const ledger = await pg.evaluate(() => ({ level: localStorage.getItem('ge_level'), best: localStorage.getItem('ge_best'), daily: JSON.parse(localStorage.getItem('ge_daily') || 'null') }));
+    await ctx.close();
+    const histOk = ledger.daily && ledger.daily.hist.length === IDX.length - 1 && ledger.daily.hist.every(h => h.state === 'won');
+    if (!bad.length && days.size === 7 && !errs.length && ledger.level === '0' && !ledger.best && histOk)
+      console.log(`daily par replay ok: ${IDX.length} sampled dates across the year (all 7 weekdays / 4 archetypes) each cleared AT PAR with 3 spare; ${ledger.daily.hist.length} closed days archived, ge_level/ge_best untouched`);
+    else { failures++; console.error('daily par replay FAIL:', JSON.stringify({ bad: bad.slice(0, 3), weekdays: days.size, errs, ledger: { level: ledger.level, best: ledger.best, hist: ledger.daily && ledger.daily.hist.length } })); }
+  }
+
+  // 5. one recorded attempt a day. The first resolution closes the record; every
+  //    later play is practice and CANNOT rewrite it. The recorded run here is
+  //    deliberately marked (one undo) so a practice run's clean numbers would show.
+  {
+    const DATE = DT.dateAt(30);
+    const idx = DT.rowFor(DATE).i;
+    const { ctx, pg, errs } = await openDaily(DATE);
+    // recorded attempt: play one move, take it back, then the full line
+    const armed = await pg.evaluate(({ sol }) => {
+      window.GE.loadDaily();
+      const opening = { practice: window.GE.dailyInfo.practice, done: window.GE.dailyInfo.done, label: document.getElementById('hudLevel').textContent };
+      const m0 = sol[0];
+      window.GE.dragVia(m0.bi, m0.path, null);
+      window.GE.undo();
+      for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side);
+      return opening;
+    }, { sol: dsol[idx] });
+    await pg.waitForSelector('#winModal:not([hidden])', { timeout: 3000 });
+    const rec = await pg.evaluate(() => window.GE.dailyInfo);
+    // practice: the same board again, clean this time
+    const prac = await pg.evaluate(({ sol }) => {
+      window.GE.loadDaily();
+      const label = document.getElementById('hudLevel').textContent;
+      for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side);
+      return { label };
+    }, { sol: dsol[idx] });
+    await pg.waitForSelector('#winModal:not([hidden])', { timeout: 3000 });
+    const after = await pg.evaluate(() => window.GE.dailyInfo);
+    await ctx.close();
+    const ok = rec.cur && rec.cur.state === 'won' && rec.cur.undos === 1 && rec.done
+      && !armed.practice && !armed.done && armed.label === 'DAILY DRAFT · ' + (+DATE.split('-')[2]) + ' Oct'
+      && prac.label === 'PRACTICE · NOT RECORDED'
+      && after.cur && after.cur.undos === 1 && after.cur.moves === rec.cur.moves && after.cur.stars === rec.cur.stars
+      && after.practice === true && after.plays === 1 && !errs.length;
+    if (ok) console.log(`daily record-once ok: the day opens as "${armed.label}" and the first clear closes it (${rec.cur.moves} moves, ${rec.cur.stars}★, 1 undo); the replay runs as "PRACTICE · NOT RECORDED" and leaves the record exactly as it was`);
+    else { failures++; console.error('daily record-once FAIL:', JSON.stringify({ armed, rec: { cur: rec.cur, done: rec.done }, prac, after: { cur: after.cur, practice: after.practice, plays: after.plays }, errs })); }
+  }
+
+  // 6. a loss is a result too — but only once the rescue has actually been declined.
+  //    The fail sheet alone decides nothing; retrying is what writes the loss down.
+  //    And the draft never touches lives, even with the economy switched back on.
+  {
+    const DATE = DT.dateAt(76);
+    const { ctx, pg, errs } = await openDaily(DATE);
+    const lost = await pg.evaluate(fn => { window.GE.livesEnabled = true; window.GE.loadDaily(); return { lives: window.GE.lives, burn: eval('(' + fn + ')')() }; }, burnFn);
+    await pg.waitForSelector('#failModal:not([hidden])', { timeout: 3000 });
+    const stillOpen = await pg.evaluate(() => window.GE.dailyInfo.done); // the sheet decides nothing
+    await pg.click('#btnRetry');
+    await pg.waitForTimeout(120);
+    const closed = await pg.evaluate(() => ({ info: window.GE.dailyInfo, lives: window.GE.lives, livesCard: !document.getElementById('livesModal').hidden, label: document.getElementById('hudLevel').textContent }));
+    await ctx.close();
+    const c = closed.info.cur;
+    const ok = lost.burn.over && lost.burn.movesLeft === 0 && !stillOpen
+      && c && c.state === 'lost' && c.stars === 0 && c.cleared < c.blocks && c.cleared === c.blocks - lost.burn.left
+      && closed.info.practice === true && closed.label === 'PRACTICE · NOT RECORDED'
+      && closed.lives === lost.lives && !closed.livesCard && !errs.length;
+    if (ok) console.log(`daily loss ok: the fail sheet leaves the day undecided (the rescue is still on offer); Retry declines it and writes the loss (${c.cleared} of ${c.blocks} out), and lives are untouched with the economy on (${closed.lives}/${lost.lives})`);
+    else { failures++; console.error('daily loss FAIL:', JSON.stringify({ burn: lost.burn, stillOpen, cur: c, lives: [lost.lives, closed.lives], livesCard: closed.livesCard, label: closed.label, errs })); }
+  }
+
+  // 7. the rescue keeps the attempt alive rather than ending the day, and lands on
+  //    the record as a fact — never hidden, never dressed up as a clean clear
+  {
+    const DATE = DT.dateAt(120);
+    const { ctx, pg, errs } = await openDaily(DATE);
+    await pg.evaluate(fn => { window.GE.loadDaily(); return eval('(' + fn + ')')(); }, burnFn);
+    await pg.waitForSelector('#failModal:not([hidden])', { timeout: 3000 });
+    await pg.click('#btnRescue');
+    await pg.waitForTimeout(3600); // the placeholder ad runs its full countdown before it grants
+    const saved = await pg.evaluate(() => ({ over: window.GE.over, left: window.GE.movesLeft, done: window.GE.dailyInfo.done }));
+    await ctx.close();
+    const ok = saved.left === 3 && !saved.over && !saved.done && !errs.length;
+    if (ok) console.log('daily rescue ok: taking the rescue keeps the day open (+3 moves, record still unwritten) — the result is decided by how the attempt actually ends');
+    else { failures++; console.error('daily rescue FAIL:', JSON.stringify({ saved, errs })); }
+  }
+
+  // 8. past the end of the table the date wraps onto a row that WAS generated and
+  //    solver-verified. A player on day 400 gets a proven board, never an improvised one.
+  {
+    const beyond = DT.dateAt(DT.rows.length + 35);
+    const wrapIdx = 35;
+    const { ctx, pg, errs } = await openDaily(beyond);
+    const r = await pg.evaluate(() => { window.GE.loadDaily(); const i = window.GE.dailyInfo; return { index: i.index, wrapped: i.wrapped, L: JSON.stringify(window.GE.L) }; });
+    // and it is beatable at par by the line recorded for the row it wrapped onto
+    const played = await pg.evaluate(({ sol }) => {
+      for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side);
+      return { cleared: window.GE.pos.every(p => !p), moves: window.GE.moves, par: window.GE.L.par };
+    }, { sol: dsol[wrapIdx] });
+    await ctx.close();
+    const ok = r.wrapped && r.index === wrapIdx && played.cleared && played.moves === played.par && !errs.length;
+    if (ok) console.log(`daily fallback ok: ${beyond} is past the table, wraps onto verified row ${wrapIdx} and is cleared at par (${played.moves})`);
+    else { failures++; console.error('daily fallback FAIL:', JSON.stringify({ r: { index: r.index, wrapped: r.wrapped }, played, errs })); }
+  }
+
+  // 9. the FIELD REPORT: pinned format, a hard codepoint allowlist, and the spoiler
+  //    assertion — two DIFFERENT boards played to the same numbers must produce the
+  //    same report but for the date. If any board detail leaked in, they would differ.
+  {
+    const ALLOWED = /^[\x20-\x7e\n★☆■□·]*$/;
+    const PINNED = /^GATE ESCAPE · FIELD REPORT\n\d{1,2} [A-Z][a-z]{2} \d{4} · (CLEARED|NOT CLEARED)\n[■]{0,20}[□]{0,20}(?: \+\d+)?\n[★☆]{3} · (?:\d+\/\d+ moves · route \d{1,3}%|\d+ of \d+ out · \d+\/\d+ moves)\nundo \d+ · hint \d+(?: · rescued)?$/;
+    const { ctx, pg, errs } = await openDaily(DT.dateAt(200));
+    const texts = await pg.evaluate(() => {
+      const mk = (date, over) => Object.assign({ date, state: 'won', moves: 8, par: 6, stars: 2, undos: 1, hints: 0, rescued: false, cleared: 6, blocks: 6 }, over);
+      localStorage.setItem('ge_daily', JSON.stringify({ v: 1, cur: null, practice: null, hist: [
+        mk('2026-09-05'),                                                     // a Saturday board
+        mk('2027-04-17'),                                                     // a different Saturday, a year later
+        mk('2026-10-06', { state: 'lost', stars: 0, moves: 9, cleared: 4, hints: 1, undos: 0 }),
+        mk('2026-10-07', { rescued: true, moves: 30, stars: 1 }),             // over the 20-cell bar cap
+      ] }));
+      const t = d => window.GE.dailyShareText(d);
+      return { a: t('2026-09-05'), b: t('2027-04-17'), lost: t('2026-10-06'), long: t('2026-10-07'), none: t('2026-01-01') };
+    });
+    await ctx.close();
+    const all = [texts.a, texts.b, texts.lost, texts.long];
+    const pinned = all.every(t => PINNED.test(t));
+    const allowed = all.every(t => ALLOWED.test(t));
+    // spoiler assertion: identical numbers on two different boards → identical report
+    const stripDate = t => t.split('\n').filter((_, i) => i !== 1).join('\n');
+    const spoilerFree = stripDate(texts.a) === stripDate(texts.b)
+      && all.every(t => t.split('\n').length === 5 && t.length <= 160 && !/[,()\[\]{}]/.test(t) && !/\d+\s*[,.]\s*\d+/.test(t));
+    const capOk = /\n■{6}□{14} \+10\n/.test(texts.long) && / · rescued$/.test(texts.long);
+    const lostOk = /NOT CLEARED/.test(texts.lost) && /☆☆☆ · 4 of 6 out · 9\/6 moves/.test(texts.lost) && !/route/.test(texts.lost);
+    const winOk = /★★☆ · 8\/6 moves · route 75%/.test(texts.a) && /^■{6}□{2}$/m.test(texts.a);
+    if (pinned && allowed && spoilerFree && capOk && lostOk && winOk && texts.none === null && !errs.length)
+      console.log('field report ok: format pinned, codepoints limited to ASCII + ★☆■□·, bar capped at 20 with +n, a loss reads as a loss — and two different boards played to the same numbers produce the same report, so nothing about the board leaks');
+    else { failures++; console.error('field report FAIL:', JSON.stringify({ pinned, allowed, spoilerFree, capOk, lostOk, winOk, none: texts.none, errs, sample: texts.a })); }
+  }
+
+  // 10. the draft is OUTSIDE the campaign. It is a virtual level index, so every
+  //     consumer that keys off a level index has to be told — a daily clear must not
+  //     star a level, must not move the unlock pointer, must not certify a sheet,
+  //     must not touch the resume pointer or a personal best.
+  {
+    const { ctx, pg, errs } = await openDaily(DT.dateAt(244));
+    // stand the player somewhere real first, so "the resume pointer is untouched" means something
+    await pg.evaluate(() => window.GE.load(12));
+    await pg.waitForTimeout(60);
+    const before = await pg.evaluate(() => ({ prog: JSON.stringify(window.GE_MENU.prog), level: localStorage.getItem('ge_level'), best: localStorage.getItem('ge_best'), theme: window.GE.theme }));
+    await replayDaily(pg, DT.dateAt(244));
+    // ...and leaving the draft puts the player back where they were, not at level 1
+    await pg.waitForSelector('#btnNext:not([disabled])', { timeout: 4000 });
+    await pg.click('#btnNext');
+    await pg.waitForTimeout(160);
+    const after = await pg.evaluate(() => ({ prog: JSON.stringify(window.GE_MENU.prog), level: localStorage.getItem('ge_level'), best: localStorage.getItem('ge_best'), theme: window.GE.theme, lvl: window.GE.level, daily: window.GE.isDaily, menu: !document.getElementById('menu').hidden }));
+    await ctx.close();
+    const ok = after.prog === before.prog && before.level === '12' && after.level === '12' && after.best === before.best
+      && after.theme === before.theme && !after.daily && after.lvl === 12 && after.menu && !errs.length;
+    if (ok) console.log('daily isolation ok: a cleared draft leaves level stars, the unlock pointer, certification and the paper untouched, and "Back to menu" returns the player to level 13 — not to level 1');
+    else { failures++; console.error('daily isolation FAIL:', JSON.stringify({ before, after, errs })); }
+  }
+
+  // 10. bundle cost: the whole year of boards is data, and it has to stay small
+  {
+    const tableBytes = fs.statSync(root + 'dailies.js').size;
+    const distPath = root + 'dist/gate-escape.html';
+    const dist = fs.existsSync(distPath) ? fs.statSync(distPath).size : 0;
+    const shipped = !fs.existsSync(root + 'app/www/daily-solutions.json') && !fs.readFileSync(root + 'tools/build-single.mjs', 'utf8').includes('daily-solutions');
+    if (tableBytes <= 40960 && shipped)
+      console.log(`daily size ok: dailies.js is ${(tableBytes / 1024).toFixed(1)} KB for ${DT.rows.length} boards (${(tableBytes / DT.rows.length).toFixed(0)} B/day)${dist ? `, dist/gate-escape.html ${(dist / 1024).toFixed(1)} KB` : ''}; the solutions file stays tool-side`);
+    else { failures++; console.error('daily size FAIL:', JSON.stringify({ tableBytes, dist, solutionsKeptOutOfBundle: shipped })); }
+  }
 }
 
 // with BEACON_URL empty (the shipped index.html) the whole run must have been network-silent

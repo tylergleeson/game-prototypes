@@ -84,28 +84,41 @@ Built to the hybrid-casual grammar:
   amber/red/green *text* inks darken on the two light papers so they still clear
   4.5:1. Persisted in `ge_prog` (`skin`, `skins`, `seen`); `cert_earned` /
   `skin_select` tracked.
-- **Daily quests + streak with freezes** (the retention pair, upgraded to the playbook):
-  the title block carries a drafting-log **quest list** — three quests roll each local day,
-  deterministically from the date (every player shares the set), from safe telemetry
-  templates (clear N / earn N stars / N at par / no-undo / no-hint / N blocks — never ad
-  views, boosters or spending; `QUEST_TEMPLATES` in `menu.js`). Each has a progress bar and
-  a ✓ stamp; a completion adds a quiet stamped `QUEST` row to the win card, and all three
-  bank ONE **streak freeze** (max 2 held, `DONE` row). The streak day-mark stays "≥1 clear";
-  the row shows `4 days · 3 of last 7 days · 1 freeze held`. A missed day consumes a banked
-  freeze automatically with a calm `Freeze used — streak safe` notice at next launch. With
-  **no freeze banked the streak simply lapses in silence** — there is no repair surface at
-  all: no card, no ad, no offer at the moment of loss (the once-per-streak repair ad was
-  DELETED, not disabled, on 2026-09-02). The counter clears at launch and the next clear
-  starts a new streak at 1, exactly as day one did; the bot asserts the absence of
-  `#streakModal` / `#btnStreakRepair` / `#btnStreakDecline`. State in `ge_streak` /
-  `ge_quests`; every date flows through the overridable `GE.now`. Tracked: `quest_done`,
-  `quests_all_done`, `streak_day`, `streak_freeze_used`.
-- **Field Survey** (weekly personal ladder, `ge_ladder`): 1 point per clear, +1 bonus at
-  par; milestone stamps at 3/7/12/20 on a weekly log card (the `FIELD SURVEY` row on the
-  title block opens it); the 20-point stamp is a surveyor's mark (⌖) shown beside the
-  streak row for the rest of that week. Resets each ISO week; only last week's result line
-  is kept. No leaderboard, no comparison — every participant can finish. Tracked:
-  `ladder_point`, `ladder_milestone`.
+- **Field Survey** (the one meta system, `ge_survey` — the 2026-09-02 research round merged
+  the three daily quests, the streak card and the weekly ladder into it): the sheet index
+  carries ONE row, `FIELD SURVEY · n/7 · N pts`, with a `SELECT 2` badge while the week's
+  contracts are unchosen. It opens the week's sheet, which holds four things:
+  - a **7-day spine**, Mon–Sun. Any level clear stamps today, once — a Daily Draft clear
+    counts too (the listener takes any `ge:win`). The four states read apart by glyph, not
+    by colour: `✓` stamped, `~` weather delay, `○` a day that went by, `·` still to come.
+  - two **contracts** chosen from the FOUR the week offers, rolled deterministically from
+    the ISO week (`prng(seedOf('ge-survey-' + week))`), so everyone sees the same four.
+    Same safe telemetry templates as the old quests (clear N / earn N stars / N at par /
+    no-undo / no-hint / N blocks — never ad views, boosters or spending; `CONTRACTS` in
+    `menu.js`), retargeted to a week. **Swapping is free until a chosen contract earns its
+    first progress**; after that the pair is set for the week and the two you did not take
+    come off the sheet — a choice you can undo forever is not a choice, and one you can
+    never revisit punishes a blind first tap.
+  - the **point marks** at 3/7/12/20, on the old ladder's own rule (1 per clear, +1 at par).
+    The 20-point mark is a surveyor's mark (⌖) on the sheet-index row for the rest of the week.
+  - the **weekly seal**. Filing ONE contract banks a **weather delay** (max 2 held — the same
+    `ge_streak.freezes` field it always was, renamed only in the language); filing BOTH seals
+    the week and yields a fragment (a keepsake tally; nothing is gated on it, or on any of this).
+  The **streak is unchanged and its state key is byte-identical** — consecutive calendar days
+  with ≥1 clear, best kept, rolling 7-day marks — so a real streak survived the merge untouched;
+  its fact moved into the sheet's header (`4-day streak · 3 of 7 days · 12 points`). A missed day
+  consumes a banked weather delay automatically (calm `Weather delay used — survey day covered`
+  notice at next launch) and that day is stamped `~` on the spine. With **nothing banked the
+  streak simply lapses in silence** — there is no repair surface at all: no card, no ad, no offer
+  at the moment of loss (the once-per-streak repair ad was DELETED, not disabled, on 2026-09-02).
+  The counter clears at launch and the next clear starts a new streak at 1, exactly as day one
+  did; the bot asserts the absence of `#streakModal` / `#btnStreakRepair` / `#btnStreakDecline`.
+  A **one-shot migration** (guarded by the absence of `ge_survey`) carries the old ladder's
+  points, marks and last-week line across, seeds the day spine from the streak's own week marks,
+  then removes `ge_quests` and `ge_ladder`; `ge_streak` is never written. Every date flows
+  through the overridable `GE.now`. Tracked: `survey_day`, `survey_point`, `survey_mark`,
+  `contract_select`, `contract_filed`, `survey_seal`, `survey_migrated`, `streak_day`,
+  `weather_delay_used`.
 - **Lives** (flag-gated, **default OFF** since 2026-09-02 — `LIVES_ENABLED` in `game.js`,
   overridable via `ge_flags {"lives":1}`, `?lives=1`, or `GE.livesEnabled`): the shipped
   game has **no energy gate at all** — no hearts in the HUD, no field-log row, no legend
@@ -173,7 +186,8 @@ Built to the hybrid-casual grammar:
 - [x] Ad-moment capture (`tools/showcase.json` + `tools/capture.mjs` at the repo root): four real-gameplay moments filmed at iPhone size into `marketing/` (stills + webm), plus the itch cover
 - [x] itch.io bundle (`tools/build-itch.mjs` → `dist/itch/gate-escape-itch.zip`, index.html at the zip root) and page copy in `marketing/itch-page.md`; embed verified at 412×732 and 960×720
 - [x] Native pass (`reviews/p01-par-20260831-0056-s1/native-report.md`): haptics via a native UIKit-generator driver (prepared/reused; selection ticks on pickup + rate-limited cell steps, light impact on settle, medium on gate exit with one Core Haptics signature whoosh, success/warning/error on win/low/fail; independent persisted Haptics toggle, native-only, web build byte-identical in behavior) + StatusBar tint and runtime `theme-color` meta following the paper skins (bot-asserted); blueprint launch screen (`tools/make-splash.mjs`); `PrivacyInfo.xcprivacy` in the app target; App Store metadata + 6.9" iPhone and 13" iPad store-size screenshots in `marketing/appstore/`
-- [x] Design-playbook pass (`reviews/p01-par-20260831-0056-s1/design-report.md`): feel beats (press dip / settle overshoot / unified button depth / audio pitch drift + 3 exit variants), canvas `prefers-reduced-motion` + pause-card Motion toggle, three deterministic daily quests replacing the single daily goal, streak freezes (banked by all-quests-done, auto-consumed with a calm notice) + "N of last 7 days" marks, Field Survey weekly ladder (3/7/12/20 stamps, surveyor's mark), lives system (default ON, flag-gated: L1–5 free, Retry-after-fail costs one from L6, rescue preserves, 25-min anchor refill, calm empty-state card), colorblind/grayscale verification stills (`tools/capture-accessibility.mjs`)
+- [x] Design-playbook pass (`reviews/p01-par-20260831-0056-s1/design-report.md`): feel beats (press dip / settle overshoot / unified button depth / audio pitch drift + 3 exit variants), canvas `prefers-reduced-motion` + pause-card Motion toggle, three deterministic daily quests replacing the single daily goal, streak freezes (banked by all-quests-done, auto-consumed with a calm notice) + "N of last 7 days" marks, Field Survey weekly ladder (3/7/12/20 stamps, surveyor's mark) — all three of those were merged into ONE weekly Field Survey sheet on 2026-09-02, see below — lives system (default ON, flag-gated: L1–5 free, Retry-after-fail costs one from L6, rescue preserves, 25-min anchor refill, calm empty-state card), colorblind/grayscale verification stills (`tools/capture-accessibility.mjs`)
+- [x] Field Survey merge (2026-09-02 research round, `reviews/p01-research-round/r2-report.md`): the three daily quests, the streak card and the weekly ladder became ONE weekly sheet (`ge_survey`) — a 7-day spine, two contracts chosen from four the ISO week offers (free to swap until one earns progress), the 3/7/12/20 marks and the week's seal; streak freezes renamed weather delays and stamped on the spine; `ge_streak` byte-identical, `ge_quests` / `ge_ladder` migrated once and removed
 - [ ] Web-portal upload (itch.io first — zip + copy ready, needs the account)
 - [ ] Beacon deployment (Cloudflare account; commands in `tools/beacon/README.md`), then paste the worker URL into `index.html`
 - [ ] Publisher packet (gameplay capture + KPI sheet)

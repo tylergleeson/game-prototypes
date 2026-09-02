@@ -381,10 +381,169 @@ const FIRST_STONE = LEVELS.findIndex(l => l.stones.length > 0);
 let best = {};
 try { best = JSON.parse(localStorage.getItem('ge_best') || '{}') || {}; } catch (e) {}
 
+// ---------- Daily Draft ----------
+// One board a day, the same board for every player, decoded from the
+// precomputed solver-verified table in `dailies.js`. Nothing about it is
+// generated in the page: a generator here would mean a solver here, and par has
+// to be a fact the player cannot dial.
+//
+// It rides on a VIRTUAL level index — `DAILY_INDEX === LEVELS.length`, one past
+// the last real sheet — so `LEVELS` itself never changes shape. Everything that
+// keys off a level index therefore has exactly one question to ask (`isDaily()`)
+// and the answer is always the same: the draft is OUTSIDE the campaign. It never
+// moves the resume pointer, never writes a personal best, never spends or gates
+// on a life, never certifies a sheet.
+const DAILY_INDEX = LEVELS.length;
+const DAILY_KEY = 'ge_daily';
+const DAILY_HIST = 30;
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+let dailyLevel = null;     // decoded board for dailyDate (null = no draft armed yet)
+let dailyDate = null;      // 'YYYY-MM-DD' of the armed draft
+let dailyRow = -1, dailyWrapped = false; // which table row, and whether the date wrapped onto it
+let dailyPractice = false; // this play is after the day's record closed — it counts for nothing
+let dailyPending = null;   // a fail waiting on the rescue decision (see closePendingDaily)
+let resumeLevel = li;      // the last REAL level loaded: the daily must not disturb it
+
+const isDaily = () => li === DAILY_INDEX;
+const dailyReady = () => typeof DAILIES !== 'undefined' && !!(DAILIES && DAILIES.levelFor);
+const levelAt = i => (i === DAILY_INDEX ? dailyLevel : LEVELS[i]);
+// the same day boundary the streak logic uses: local midnight, read through the
+// overridable clock so a bot can walk days without touching the system clock
+const dayStr = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const todayStr = () => dayStr(GE.now());
+const dayLabel = d => { const p = d.split('-'); return +p[2] + ' ' + MON[+p[1] - 1]; };
+
+// ---------- the day's record ----------
+// `cur` is the ONE recorded attempt for today. It opens when the draft is first
+// loaded and CLOSES on the first resolution — a clear, or a loss the player
+// resolved by retrying or leaving instead of taking the rescue. Once closed it is
+// never rewritten: every later play is practice, and practice never touches it.
+// A rescue is allowed and recorded as a fact on the row, not hidden.
+function dailyRec() {
+  let r = null;
+  try { r = JSON.parse(localStorage.getItem(DAILY_KEY) || 'null'); } catch (e) {}
+  if (!r || r.v !== 1) r = { v: 1, cur: null, practice: null, hist: [] };
+  if (!Array.isArray(r.hist)) r.hist = [];
+  return r;
+}
+function saveDailyRec(r) { try { localStorage.setItem(DAILY_KEY, JSON.stringify(r)); } catch (e) {} }
+
+// Recompute "is this play recorded?" from storage. EVERY entry into the draft
+// runs through here (first load, Retry, Replay, a reload on the win card), so the
+// HUD label and the stored record can never disagree.
+function syncDailyMode() {
+  const today = todayStr();
+  const r = dailyRec();
+  if (r.cur && r.cur.date !== today) {           // day rolled over
+    if (r.cur.state) r.hist = [r.cur, ...r.hist].slice(0, DAILY_HIST);
+    r.cur = null;                                 // an attempt that never resolved was never a result
+  }
+  if (r.practice && r.practice.date !== today) r.practice = null;
+  if (dailyDate === today && !r.cur) r.cur = { date: today, state: null };
+  dailyPractice = dailyDate !== today || !!(r.cur && r.cur.state);
+  if (dailyPractice && dailyDate === today) {
+    r.practice = { date: today, plays: (r.practice ? r.practice.plays : 0) + 1 };
+  }
+  saveDailyRec(r);
+}
+
+function closeDaily(state, extra) {
+  dailyPending = null;
+  if (dailyPractice || !dailyDate || dailyDate !== todayStr()) return false;
+  const r = dailyRec();
+  if (!r.cur || r.cur.date !== dailyDate || r.cur.state) return false; // already closed: never rewritten
+  r.cur = Object.assign({ date: dailyDate, state }, extra);
+  saveDailyRec(r);
+  dailyPractice = true; // from here on this board is practice
+  track('daily_' + state, dailyDate);
+  window.dispatchEvent(new CustomEvent('ge:daily', { detail: dailyInfo() }));
+  return true;
+}
+
+// A fail on the draft does NOT close the record on its own: the rescue is still
+// on the table and taking it keeps the same attempt alive. The result is decided
+// the moment the player declines — by retrying, by leaving the board, or by
+// closing the page. Then, and only then, the loss is written down.
+function closePendingDaily() {
+  if (!dailyPending) return;
+  const d = dailyPending;
+  closeDaily('lost', d);
+}
+
+function loadDaily(dateStr) {
+  if (!dailyReady()) return false;
+  const d = dateStr || todayStr();
+  const f = DAILIES.levelFor(d);
+  if (!f || !f.level) return false;
+  closePendingDaily();
+  dailyDate = d; dailyRow = f.i; dailyWrapped = f.wrapped; dailyLevel = f.level;
+  loadLevel(DAILY_INDEX);
+  return true;
+}
+
+function dailyInfo() {
+  const r = dailyRec();
+  const today = todayStr();
+  return {
+    today,
+    date: dailyDate,                 // the armed draft's date (null before the first load)
+    index: dailyRow,                 // its row in the table
+    wrapped: dailyWrapped,           // true = the date ran past the table and wrapped onto a verified row
+    active: isDaily(),               // the draft is the board on screen right now
+    practice: dailyPractice,         // ...and this play is NOT being recorded
+    par: dailyLevel ? dailyLevel.par : 0,
+    limit: dailyLevel ? dailyLevel.moves : 0,
+    done: !!(r.cur && r.cur.date === today && r.cur.state), // today's record has closed
+    cur: r.cur && r.cur.state ? r.cur : null,               // ...and this is it
+    plays: r.practice && r.practice.date === today ? r.practice.plays : 0,
+    hist: r.hist,
+  };
+}
+
+// ---------- FIELD REPORT ----------
+// The share text, and only the share text: five short lines that say how the day
+// went and nothing whatever about HOW. A per-move grid is the obvious thing to
+// build and the one thing that cannot ship — every player is on the SAME board,
+// so a picture of the route is a walkthrough. So the report carries the shape of
+// the attempt (a bar of par-filled and over-par cells), the stars, the moves
+// against par, route efficiency, and what help was used. Two different boards
+// with the same numbers produce the same text; that is the proof it leaks nothing.
+// Codepoints are pinned to ASCII plus the five marks in ALLOWED.
+// the five non-ASCII marks the report is allowed to use: ★ ☆ ■ □ · (playtest pins this)
+const REPORT_BAR_MAX = 20;
+function parBar(mv, par) {
+  const n = Math.min(mv, REPORT_BAR_MAX);
+  const filled = Math.max(0, Math.min(par, n));
+  return '■'.repeat(filled) + '□'.repeat(Math.max(0, n - filled))
+    + (mv > REPORT_BAR_MAX ? ' +' + (mv - REPORT_BAR_MAX) : '');
+}
+function dailyShareText(dateStr) {
+  const r = dailyRec();
+  const want = dateStr || (r.cur && r.cur.date) || dailyDate;
+  let row = null;
+  if (r.cur && r.cur.state && r.cur.date === want) row = r.cur;
+  else row = r.hist.find(h => h && h.date === want && h.state) || null;
+  if (!row) return null;
+  const p = row.date.split('-');
+  const stars = '★'.repeat(row.stars || 0) + '☆'.repeat(3 - (row.stars || 0));
+  const won = row.state === 'won';
+  const head = 'GATE ESCAPE · FIELD REPORT\n'
+    + (+p[2]) + ' ' + MON[+p[1] - 1] + ' ' + p[0] + ' · ' + (won ? 'CLEARED' : 'NOT CLEARED') + '\n'
+    + parBar(row.moves, row.par) + '\n';
+  const line = won
+    ? stars + ' · ' + row.moves + '/' + row.par + ' moves · route ' + Math.round(row.par / Math.max(1, row.moves) * 100) + '%'
+    : stars + ' · ' + row.cleared + ' of ' + row.blocks + ' out · ' + row.moves + '/' + row.par + ' moves';
+  return head + line + '\nundo ' + (row.undos || 0) + ' · hint ' + (row.hints || 0) + (row.rescued ? ' · rescued' : '');
+}
+
 function loadLevel(i) {
-  li = Math.max(0, Math.min(i, LEVELS.length - 1));
-  try { localStorage.setItem('ge_level', String(li)); } catch (e) {}
-  L = JSON.parse(JSON.stringify(LEVELS[li]));
+  // leaving a decided draft board IS the answer to the rescue offer
+  if (dailyPending && i !== DAILY_INDEX) closePendingDaily();
+  // the daily is the one index that escapes the clamp, and only while a board is armed
+  li = i === DAILY_INDEX && dailyLevel ? DAILY_INDEX : Math.max(0, Math.min(i, LEVELS.length - 1));
+  if (isDaily()) syncDailyMode();
+  else { resumeLevel = li; try { localStorage.setItem('ge_level', String(li)); } catch (e) {} }
+  L = JSON.parse(JSON.stringify(levelAt(li)));
   pos = L.blocks.map(b => [b.x, b.y]);
   disp = L.blocks.map(b => [b.x, b.y]);
   visQ = L.blocks.map(() => []);
@@ -400,7 +559,10 @@ function loadLevel(i) {
   for (const t of winTimers) clearTimeout(t);
   winTimers = [];
   adClose();
-  hudLevel.textContent = 'Level ' + (li + 1);
+  hudLevel.textContent = isDaily()
+    ? (dailyPractice ? 'PRACTICE \u00b7 NOT RECORDED' : 'DAILY DRAFT \u00b7 ' + dayLabel(dailyDate))
+    : 'Level ' + (li + 1);
+  hudLevel.classList.toggle('daily', isDaily());
   hudPar.textContent = 'par ' + L.par;
   winModal.hidden = true; failModal.hidden = true;
   document.body.classList.remove('fail-up'); cv.style.transform = '';
@@ -409,9 +571,12 @@ function loadLevel(i) {
   buildGoal();
   updateHud();
   layout();
-  track('level_start', li + 1);
-  window.dispatchEvent(new CustomEvent('ge:load', { detail: { lvl: li } }));
-  // one-time tips, shown in the HUD strip (never information the board itself lacks)
+  if (isDaily()) track(dailyPractice ? 'daily_practice' : 'daily_started', dailyDate);
+  else track('level_start', li + 1);
+  window.dispatchEvent(new CustomEvent('ge:load', { detail: { lvl: li, daily: isDaily(), date: isDaily() ? dailyDate : null } }));
+  // one-time tips, shown in the HUD strip (never information the board itself lacks).
+  // The draft is not a teaching surface: it teaches nothing and interrupts nothing.
+  if (isDaily()) return;
   if (li === 2) tip('corner', 'One drag can turn corners. The whole route is one move.');
   if (li === FIRST_STONE) tip('stone', 'Stones never move. Route around them.');
   if (li === FIRST_TWICE) tip('twice', 'Everything is corked. Sometimes a block has to move twice.');
@@ -803,6 +968,11 @@ function maybeFail() {
   if (movesLeft <= 0 && pos.some(p => p)) {
     over = true;
     hint = null;
+    // the draft's result is not written yet — the rescue is still on offer
+    if (isDaily() && !dailyPractice) {
+      dailyPending = { moves, par: L.par, stars: 0, undos: attemptUndos, hints: attemptHints,
+        rescued, cleared: pos.filter(p => !p).length, blocks: pos.length };
+    }
     updateHud();
     setTimeout(() => {
       const out = pos.filter(p => !p).length, left = pos.length - out;
@@ -828,6 +998,7 @@ function maybeFail() {
 // win-card titles rotate so the reward line never reads as a receipt; milestones get their own
 const WIN_TITLES = ['Level clear!', 'Sheet approved!', 'Cleared to par!', 'Drawing done!', 'Board cleared!'];
 function winTitleFor(stars) {
+  if (isDaily()) return dailyPractice ? 'Practice run cleared' : 'Daily draft filed!';
   const n = li + 1;
   if (n === LEVELS.length) return 'Every level clear!';
   if (n === 10 || n === 20) return `${n} levels drafted!`;
@@ -856,16 +1027,25 @@ function win() {
   hint = null;
   updateHud();
   const stars = starsFor(moves);
-  const last = li === LEVELS.length - 1;
+  const daily = isDaily();
+  // the draft has nothing after it: its "next" is the way out, never LEVELS[31]
+  const last = daily || li === LEVELS.length - 1;
   const winUndos = attemptUndos, winHints = attemptHints;
   document.getElementById('winTitle').textContent = winTitleFor(stars);
   btnNext.textContent = last ? 'Back to menu' : 'Next level';
   // par is the target, never "best"; the player's own best is a separate fact once one exists
-  const prev = best[li];
+  // the draft keeps no personal best: one board, one recorded attempt, no ladder to climb
+  const prev = daily ? 0 : best[li];
   winSub.textContent = `Solved in ${moves} move${moves === 1 ? '' : 's'}`
     + (stars === 3 ? ' — perfect!' : ` · par ${L.par}`)
     + (prev && prev < moves ? ` · your best ${prev}` : '');
-  if (!prev || moves < prev) { best[li] = moves; try { localStorage.setItem('ge_best', JSON.stringify(best)); } catch (e) {} }
+  if (!daily && (!prev || moves < prev)) { best[li] = moves; try { localStorage.setItem('ge_best', JSON.stringify(best)); } catch (e) {} }
+  // the day's record closes here, before the event goes out, so every listener
+  // (and GE.dailyShareText) sees the resolved row rather than an open one
+  if (daily) {
+    closeDaily('won', { moves, par: L.par, stars, undos: winUndos, hints: winHints,
+      rescued, cleared: pos.length, blocks: pos.length });
+  }
   // the resume pointer advances on the win itself, not on the Next tap: a reload or app kill
   // on this card must not send the player back into a level they just cleared
   if (!last) { try { localStorage.setItem('ge_level', String(li + 1)); } catch (e) {} }
@@ -886,10 +1066,10 @@ function win() {
   btnNext.disabled = btnReplay.disabled = !reduced;
   winTimers.push(setTimeout(() => { btnNext.disabled = btnReplay.disabled = false; }, delays[2] + 400 + 400));
   winModal.hidden = false;
-  window.dispatchEvent(new CustomEvent('ge:win', { detail: { lvl: li, stars, moves, last, par: L.par, undos: winUndos, hints: winHints } }));
+  window.dispatchEvent(new CustomEvent('ge:win', { detail: { lvl: li, stars, moves, last, par: L.par, blocks: pos.length, undos: winUndos, hints: winHints, daily, date: daily ? dailyDate : null } }));
   sound('win');
   haptic('win');
-  track('win', { lvl: li + 1, moves, stars });
+  track('win', daily ? { daily: dailyDate, moves, stars } : { lvl: li + 1, moves, stars });
 }
 
 // DOM spark burst from an element's centre (win card, third star)
@@ -1071,6 +1251,17 @@ btnAdSkip.onclick = adClose;
 btnRestart.onclick = () => { if (over || paused) return; track('restart', li + 1); loadLevel(li); };
 btnUndo.onclick = () => { audioInit(); undo(); };
 btnNext.onclick = () => {
+  if (isDaily()) {
+    // Hand control back to the menu on the shared event, then put the resume
+    // pointer back: the campaign's own finish handler sends the player to level 1,
+    // which is right after the 30th sheet and wrong after a draft — the draft is
+    // not part of the campaign and must not move where "Play" resumes.
+    const back = resumeLevel;
+    window.dispatchEvent(new CustomEvent('ge:finished', { detail: { daily: true, date: dailyDate } }));
+    li = resumeLevel = back;
+    try { localStorage.setItem('ge_level', String(back)); } catch (e) {}
+    return;
+  }
   if (li === LEVELS.length - 1) { window.dispatchEvent(new CustomEvent('ge:finished')); return; }
   if (!livesGate(li + 1)) return;
   loadLevel(li + 1);
@@ -1080,6 +1271,10 @@ btnReplay.onclick = () => { if (!livesGate(li)) return; track('replay', li + 1);
 // attempt instead (no life), Restart mid-level is free, winning is free. At zero lives the
 // calm empty-state card takes over (timer + one rewarded refill + back to menu).
 document.getElementById('btnRetry').onclick = () => {
+  // the draft never costs a life and is never gated by one: it is one board a day,
+  // outside the economy entirely. Retrying it is also the moment the player
+  // declines the rescue, so the day's result is written down here.
+  if (isDaily()) { closePendingDaily(); track('retry', 'daily'); loadLevel(DAILY_INDEX); return; }
   if (livesOn && li >= LIVES_FREE_LEVELS) {
     if (livesNow() < 1) { showLivesCard(); return; }
     spendLife();
@@ -1087,7 +1282,9 @@ document.getElementById('btnRetry').onclick = () => {
   track('retry', li + 1); loadLevel(li);
 };
 function grantRescue() {
-  rescued = true; over = false; movesLeft += 3; failModal.hidden = true; failRoute = null;
+  rescued = true; over = false; movesLeft += 3;
+  failModal.hidden = true; failRoute = null;
+  dailyPending = null; // the attempt continues, so the day is still undecided
   document.body.classList.remove('fail-up'); cv.style.transform = '';
   // the losing move stays undoable; undo must hand back the move without taking the rescue away
   if (undoSnap) undoSnap.movesLeft += 3;
@@ -1690,6 +1887,13 @@ window.GE = {
   // drawing helpers shared with menu.js (legend); ctx is swapped for the call
   draw(c, fn) { const o = ctx; ctx = c; try { fn({ rr, drawGlyph, drawBlockShape, COLORS }); } finally { ctx = o; } },
   load: loadLevel,
+  // ---- Daily Draft (the menu/index UI wires onto these; the engine owns the rules) ----
+  loadDaily,                                  // (dateStr?) -> bool; defaults to today
+  get isDaily() { return isDaily(); },        // the draft is the board on screen
+  get dailyDate() { return dailyDate; },      // 'YYYY-MM-DD' of the armed draft
+  get dailyInfo() { return dailyInfo(); },    // cur/practice/history state + today's row
+  get dailyIndex() { return DAILY_INDEX; },   // the virtual level index it lives at
+  dailyShareText,                             // (dateStr?) -> the FIELD REPORT string, or null
   undo,
   route: findRoute,
   solve: solveFrom,   // reference next move from any position (bots / reviewer console)
@@ -1723,6 +1927,10 @@ window.GE = {
     return true;
   },
 };
+
+// the page going away with the draft's fail sheet still up is the same decision
+// as walking away from it: the loss is a fact, and it is written down.
+window.addEventListener('pagehide', closePendingDaily);
 
 // ---------- go ----------
 updateLivesUI();
