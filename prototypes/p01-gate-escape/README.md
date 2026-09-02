@@ -35,14 +35,27 @@ Built to the hybrid-casual grammar:
   deadlock; in the teens ordering and deadlock boards alternate (11 ordering,
   12–13 deadlocks), then new shapes one at a time — L14 a single L-tromino
   on a sparse board, L15 two Ls, L16 the 2×2 square alone — the 4th color at
-  L17; spike at L20–25. The generator enforces the lesson shapes (`straight`
-  / `turns` / `blocked` / `sharedSide` opening constraints, `fixed` shapes,
+  L17. The generator enforces the lesson shapes (`straight` / `turns` /
+  `blocked` / `sharedSide` opening constraints, `fixed` shapes,
   `minExcess`/`maxExcess` par-over-blocks) and seeds each level independently,
   so re-tuning one level never reshuffles the rest.
-- **Moves are the score**: limit = par+4 on L1–4, par+3 from L5, par+2 in the
-  L20–25 spike, par+3 again on L26–30 (relief after the spike, per the
-  template), par+2 across Sheet 4 (L31–40, the tightened Sheet-2+ rule). Stars: 3 at par, 2 within par+2, 1 beyond — on a par+2 level the
-  1-star tier is the rescued clear. The HUD shows the stars still reachable
+- **The sawtooth (L16–30)**: difficulty here is `par − blockCount`, the drags
+  the best line spends repositioning rather than clearing. It runs
+  `1 1 2 2 3 0 1 1 2 2 1 2 2 1 2` — **L20 is the exam**, the only board in the
+  game at three drags of excess and the only 6×7 board anywhere, with six of
+  its seven blocks corked at the opening and two colours queueing on one
+  edge; **L21–22 are relief and reinforcement** (L21 is the sheet's only
+  deadlock-free board, three colours, six blocks); a **second rise at 23–25**
+  crests below the exam on purpose; **26–30 recombine** the mastered ideas
+  without ever settling into one rhythm. The shape is legible before a drag —
+  relief beats are roomy 7×9s or short-handed boards, rises are tight 6×8s —
+  and the bot asserts the profile so it cannot drift back to flat.
+- **Moves are the score**: limit = par+4 on L1–4, par+3 on L5–10 (the rest of
+  Sheet 1 — the stone and the first deadlock debut there), par+2 from L11 to
+  L40 and never looser again. Relief after the spike is now carried by the
+  boards themselves rather than by handing back slack on boards that were
+  exactly as hard. Stars: 3 at par, 2 within par+1, 1 beyond — on a par+2
+  level the 1-star tier is the rescued clear. The HUD shows the stars still reachable
   next to the counter, turns amber when 3 stars are gone and red (with a
   shake) at the point of no return. One-step undo (↶) refunds a mis-drag;
   used gates dim once their color is cleared. The win card says `par N`

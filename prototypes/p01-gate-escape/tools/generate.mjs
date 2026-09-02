@@ -49,12 +49,93 @@ CURVE.push({ w: 6, h: 8, colors: 3, shapes: ['h2', 'v2', 'h3', 'v3', 's1'], bloc
 CURVE.push({ w: 6, h: 8, colors: 3, shapes: ['h2', 'v2', 'h3', 's1'], fixed: ['L'], blockCount: 5, stoneCount: 1, gateSlack: 0.6, minExcess: 0, maxExcess: 0 });
 CURVE.push({ w: 6, h: 8, colors: 3, shapes: ['h2', 'v2', 'h3', 'v3', 's1'], fixed: ['L', 'L'], blockCount: 6, stoneCount: 1, gateSlack: 0.5, minExcess: 1, maxExcess: 1 });
 CURVE.push({ w: 6, h: 8, colors: 3, shapes: ['h2', 'v2', 'h3', 'v3', 's1'], fixed: ['sq'], blockCount: 6, stoneCount: 1, gateSlack: 0.5, minExcess: 1, maxExcess: 2 });
-// L17-19: four colors, denser.
-for (let i = 17; i <= 19; i++) CURVE.push({ w: 7, h: 9, colors: 4, shapes: ['h2', 'v2', 'h3', 'v3', 'l1', 'l2', 'sq'], blockCount: 7, stoneCount: 2, gateSlack: 0.4, minExcess: 1, maxExcess: 2 });
-// L20-25: THE SPIKE. dense boards, real puzzles, tight gates.
-for (let i = 20; i <= 25; i++) CURVE.push({ w: 6, h: 8, colors: 4, shapes: ['h2', 'v2', 'h3', 'v3', 'l1', 'l2', 'l3', 'l4', 'sq'], blockCount: 7, stoneCount: 2, gateSlack: 0.15, minExcess: 1, maxExcess: 3 });
-// L26-30: sustained challenge with variety.
-for (let i = 26; i <= 30; i++) CURVE.push({ w: 7, h: 9, colors: 4, shapes: ['h2', 'v2', 'h3', 'v3', 'l1', 'l2', 'l3', 'l4', 'sq'], blockCount: 7, stoneCount: 2, gateSlack: 0.25, minExcess: 1, maxExcess: 2 });
+// ---------- L17-30: THE SAWTOOTH (pass 7) ----------
+// This band used to be three `for` loops with wide excess windows, and the boards the
+// seeds happened to land on came out FLAT: par-over-blocks was 1 on thirteen of the
+// fifteen levels and 2 on the other two, so the "spike" at L20-25 was a spike in the
+// comment only — L20 played exactly like L19 and exactly like L26.
+//
+// The research round asked for a sawtooth instead: a memorable exam at L20, relief and
+// reinforcement immediately after it, a second rise at 23-25, and the mastered ideas
+// recombined through 26-30. So each level now PINS its difficulty
+// (`minExcess === maxExcess`) rather than accepting anything inside a window, and the
+// bot asserts the profile that comes out:
+//
+//   L    16 17 18 19 20 21 22 23 24 25 26 27 28 29 30
+//   exc   1  1  2  2  3  0  1  1  2  2  1  2  2  1  2
+//                     ^^ ^^^^^     ^^^^^        ^^^^^
+//                   exam relief   2nd rise    recombination
+//
+// The shape is also legible BEFORE a drag, which is the point of a sawtooth a player can
+// feel: the relief beats are roomy or short-handed boards (7x9, or three colours and six
+// blocks) and the rises are tight 6x8s, so the curve reads off the board and not only off
+// the move counter.
+//
+// The lesson constraints do the work that raw block count used to. `blocked: n` (n blocks
+// corked at the opening) and `sharedSide` (two gates splitting one edge) are the two that
+// dense boards can actually satisfy — `turns` is anti-correlated with density, because on
+// a crowded board most blocks cannot reach a gate at all, so it is spent on the roomy
+// levels where it means something.
+const MID = ['h2', 'v2', 'h3', 'v3', 'l1', 'l2', 'sq'];   // L17-19: the shapes taught so far
+const FULL = ['h2', 'v2', 'h3', 'v3', 'l1', 'l2', 'l3', 'l4', 'sq'];
+// The hint-latency ceiling, in solver states. Same number and same measurement r6 set for
+// Sheet 4 (`SEQ_HINT` below): a board whose optimum sits well above the trivial bound makes
+// the RUNTIME hint solver iterative-deepen through complete misses before it answers, and
+// the player feels that as a frozen tap. Pass 7 raised this band's excess, so the gate that
+// used to be a Sheet-4 concern applies here too. The worst board on the OLD Sheets 1-3 cost
+// ~980 states; every reshaped board below comes in under 1250.
+const HINT_CAP = 2500;
+
+// L17: the fourth colour arrives, and that is the only new thing — a roomy 7x9 at one drag
+// of excess, so the colour count is what the player notices, not the pressure.
+CURVE.push({ w: 7, h: 9, colors: 4, shapes: MID, blockCount: 7, stoneCount: 2, gateSlack: 0.45, minExcess: 1, maxExcess: 1, maxHintStates: HINT_CAP });
+// L18: the board tightens to 6x8 and the excess doubles — the first level where more than
+// one block has to park and come back.
+CURVE.push({ w: 6, h: 8, colors: 4, shapes: MID, blockCount: 7, stoneCount: 2, gateSlack: 0.35, minExcess: 2, maxExcess: 2, blocked: 2, maxHintStates: HINT_CAP });
+// L19: the exam's two ideas, separately and one drag cheaper — three blocks corked at the
+// opening AND two gates sharing an edge. Whatever L20 asks for is recognised here first.
+CURVE.push({ w: 6, h: 8, colors: 4, shapes: MID, blockCount: 7, stoneCount: 2, gateSlack: 0.3, minExcess: 2, maxExcess: 2, blocked: 3, sharedSide: true, maxHintStates: HINT_CAP });
+// L20: THE EXAM. The one 6x7 board in the game — a whole row shorter than everything
+// around it, so it is recognisable on the level grid and in a screenshot. Six of its seven
+// blocks are corked at the opening and two colours queue on the same edge with gates cut to
+// the block width, so the board cannot be read as "which block goes first" at all. The
+// insight it wants is a routing one: a block has to be parked somewhere it does not belong
+// to open the shared lane, and then collected afterwards. That is what the third drag of
+// excess buys — and it is bought with structure, not with an eighth block.
+CURVE.push({ w: 6, h: 7, colors: 4, shapes: FULL, blockCount: 7, stoneCount: 2, gateSlack: 0.1, minExcess: 3, maxExcess: 3, blocked: 3, sharedSide: true, maxHintStates: HINT_CAP });
+// L21: RELIEF, and it has to be unmistakable — straight off the hardest board in the game
+// into the only one on the sheet with no deadlock at all (excess 0: every block leaves in
+// one drag, in the right order). Three colours and six blocks, so it reads lighter before
+// a single drag. This is the "you have got it" beat; without it the exam is just attrition.
+CURVE.push({ w: 6, h: 8, colors: 3, shapes: FULL, blockCount: 6, stoneCount: 1, gateSlack: 0.6, minExcess: 0, maxExcess: 0, maxHintStates: HINT_CAP });
+// L22: REINFORCEMENT — the ordering lesson again, alone, at one drag of excess. Still three
+// colours; the player gets to be good at the thing L20 tested.
+CURVE.push({ w: 6, h: 8, colors: 3, shapes: FULL, blockCount: 6, stoneCount: 2, gateSlack: 0.5, minExcess: 1, maxExcess: 1, blocked: 2, maxHintStates: HINT_CAP });
+// L23: the second rise starts. The fourth colour and the seventh block come back, and the
+// shared edge with them, but the board is roomy again and the excess stays at 1.
+CURVE.push({ w: 7, h: 9, colors: 4, shapes: FULL, blockCount: 7, stoneCount: 2, gateSlack: 0.4, minExcess: 1, maxExcess: 1, sharedSide: true, maxHintStates: HINT_CAP });
+// L24: back to 6x8 and back to two drags of excess.
+CURVE.push({ w: 6, h: 8, colors: 4, shapes: FULL, blockCount: 7, stoneCount: 2, gateSlack: 0.3, minExcess: 2, maxExcess: 2, blocked: 2, maxHintStates: HINT_CAP });
+// L25: the crest of the second rise — the exam's exact pair of constraints (three corked,
+// a shared edge) on tighter gates, but one drag cheaper. L20 stays the hardest board on the
+// sheet on purpose: a second peak that matched it would make the first one forgettable.
+CURVE.push({ w: 6, h: 8, colors: 4, shapes: FULL, blockCount: 7, stoneCount: 2, gateSlack: 0.2, minExcess: 2, maxExcess: 2, blocked: 3, sharedSide: true, maxHintStates: HINT_CAP });
+// L26-30: RECOMBINATION. Every idea the game has taught, dealt out in a different pairing
+// each level, and the sawtooth keeps its teeth to the end of the sheet — 1, 2, 2, 1, 2 —
+// so the last five levels never settle into one rhythm the player can coast on.
+// L26: a dip, and the corner lesson gets its roomy board back (`turns` needs the space).
+CURVE.push({ w: 7, h: 9, colors: 4, shapes: FULL, blockCount: 7, stoneCount: 2, gateSlack: 0.45, minExcess: 1, maxExcess: 1, turns: 2, maxHintStates: HINT_CAP });
+// L27: rise — the lane rule on a tight board.
+CURVE.push({ w: 6, h: 8, colors: 4, shapes: FULL, blockCount: 7, stoneCount: 2, gateSlack: 0.3, minExcess: 2, maxExcess: 2, sharedSide: true, maxHintStates: HINT_CAP });
+// L28: rise held — corking, three deep, on tighter gates than L18 had.
+CURVE.push({ w: 6, h: 8, colors: 4, shapes: FULL, blockCount: 7, stoneCount: 2, gateSlack: 0.25, minExcess: 2, maxExcess: 2, blocked: 3, maxHintStates: HINT_CAP });
+// L29: the last dip, and the only board on the sheet with a third stone — roomy, but the
+// stones are where the space went.
+CURVE.push({ w: 7, h: 9, colors: 4, shapes: FULL, blockCount: 7, stoneCount: 3, gateSlack: 0.35, minExcess: 1, maxExcess: 1, sharedSide: true, maxHintStates: HINT_CAP });
+// L30: the sheet's finale — corking and the shared edge together on the tightest gates of
+// the band, one drag below the exam. The last thing Sheet 3 says is "you have seen all of
+// this", which is what makes the approval chain on L31 land as genuinely new.
+CURVE.push({ w: 6, h: 8, colors: 4, shapes: FULL, blockCount: 7, stoneCount: 2, gateSlack: 0.2, minExcess: 2, maxExcess: 2, blocked: 3, sharedSide: true, maxHintStates: HINT_CAP });
 
 // ---------- SHEET 4 (L31-40): the approval chain ----------
 // One new obstacle, introduced once and then deepened: `sequence: k` numbers k blocks
@@ -69,8 +150,7 @@ for (let i = 26; i <= 30; i++) CURVE.push({ w: 7, h: 9, colors: 4, shapes: ['h2'
 // quiet on a shipped level; the bot asserts a hint from every position of every board
 // on this sheet. `maxStates` is raised here and here only — chained boards are the
 // only specs that need the extra search.
-const FULL = ['h2', 'v2', 'h3', 'v3', 'l1', 'l2', 'l3', 'l4', 'sq'];
-const BARS = ['h2', 'v2', 'h3', 'v3', 's1'];
+const BARS = ['h2', 'v2', 'h3', 'v3', 's1'];   // (FULL is declared with the sawtooth above)
 const SEQ_STATES = 200000;
 // ...and the ceiling on what the HINT is allowed to cost on a shipped chained board,
 // in solver states (gen-core `hintCost`, which walks the runtime's own iterative
@@ -114,13 +194,24 @@ const LEVEL_SEEDS = [
   // a shipped board.
   824190001, 611307733, 1290544517, 402118909, 1733650271, 95884463, 1477392089, 268431197, 1904773051, 731260817,
 ];
-// Move limit = par + slack. Generous only while the verbs are being taught
-// (L1-4); from L5 the budget is tight enough that a sloppy route costs stars and
-// the fail/rescue surface can actually appear; tightest through the L20-25 spike.
-// (Sheet 4 opens under the tightened Sheet-2+ rule: par+2 throughout, including the
-// teaching level — two spare drags is exactly enough to push a numbered block out of
-// turn twice and still finish.)
-function slackFor(idx) { return idx <= 4 ? 4 : idx <= 19 ? 3 : idx <= 25 ? 2 : idx <= 30 ? 3 : 2; }
+// Move limit = par + slack. Two bands, and the boundary is a SHEET boundary
+// (user decision, 2026-09-02: "par+2 from Sheet 2 onward"):
+//
+//   L1-4   par+4  the verbs are still being taught and L1-2 cannot be failed at all
+//   L5-10  par+3  rest of Sheet 1 - the stone (L5) and the first deadlock (L6) debut
+//                 here, and a player meeting "a block must park and come back" for the
+//                 first time should not also be meeting the fail sheet. The plan pinned
+//                 L1-5; L6-10 keep par+3 with them so the rule lands on a sheet edge
+//                 rather than mid-sheet, which is also what the level grid shows.
+//   L11+   par+2  Sheet 2 onward, all the way through Sheet 4. From here a sloppy route
+//                 costs stars and the fail/rescue surface actually appears in normal play.
+//
+// This REPLACES the old schedule, which relaxed back to par+3 for L26-30 "as relief after
+// the spike". Pass 7 puts the relief in the BOARDS instead (the sawtooth: L21 and L26 and
+// L29 are genuinely easier puzzles), which is the honest version of the same idea - the
+// old one told the player the levels were easier by handing them slack on boards that were
+// exactly as hard.
+function slackFor(idx) { return idx <= 4 ? 4 : idx <= 10 ? 3 : 2; }
 
 const levels = [];
 for (let i = 0; i < CURVE.length; i++) {

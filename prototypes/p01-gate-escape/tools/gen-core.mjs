@@ -453,6 +453,14 @@ export function genLevel(spec, opts = {}) {
     const excess = res.par - level.blocks.length;
     if (excess < spec.minExcess || excess > spec.maxExcess) continue;
     if (!meetsShape(level, spec, opts)) continue;
+    // Hint latency, same gate the chained specs use (`fitChain` below): a board whose
+    // optimum sits several drags above the trivial bound makes the RUNTIME hint solver
+    // iterative-deepen through misses before it answers, and the player feels that as a
+    // frozen tap. Pass 7 raised the L16-30 band's excess to shape the sawtooth, so the
+    // gate is no longer a Sheet-4-only concern and it applies here too. Every spec that
+    // shipped before pass 7 leaves `maxHintStates` undefined, so this is a no-op for
+    // them and their boards stay byte-identical.
+    if (spec.maxHintStates && hintCost(level, { limit: spec.maxHintStates, opts }) > spec.maxHintStates) continue;
     level.par = res.par;
     return level;
   }

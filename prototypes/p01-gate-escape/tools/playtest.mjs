@@ -426,6 +426,25 @@ const hudBtns = () => page.evaluate(() => ({ undo: document.getElementById('btnU
 }
 
 // ---------- regressions from the parallel critic/breaker sessions (2026-08-31) ----------
+// Two of the checks below need "a block on THIS board that can be nudged one cell in a
+// given direction". They used to name a block index and a direction from a board the
+// author had looked at, which is a hidden dependency on a level's exact layout: pass 7
+// reshaped L16-30 and every such line became a silent liar. Ask the board instead.
+const shiftable = (dx, dy, skip = []) => page.evaluate(([dx, dy, skip]) => {
+  const { L, pos } = window.GE;
+  const occ = Array.from({ length: L.h }, () => Array(L.w).fill(-1));
+  for (const [sx, sy] of L.stones) occ[sy][sx] = -2;
+  pos.forEach((p, i) => { if (p) for (const [cx, cy] of L.blocks[i].cells) occ[p[1] + cy][p[0] + cx] = i; });
+  for (let bi = 0; bi < L.blocks.length; bi++) {
+    if (!pos[bi] || skip.includes(bi)) continue;
+    const [x, y] = pos[bi];
+    if (L.blocks[bi].cells.every(([cx, cy]) => {
+      const gx = x + dx + cx, gy = y + dy + cy;
+      return gx >= 0 && gy >= 0 && gx < L.w && gy < L.h && (occ[gy][gx] === -1 || occ[gy][gx] === bi);
+    })) return bi;
+  }
+  return -1;
+}, [dx, dy, skip]);
 const pev = (type, id, x, y) => page.evaluate(([type, id, x, y]) => {
   document.getElementById('cv').dispatchEvent(new PointerEvent(type, { bubbles: true, pointerId: id, pointerType: 'touch', isPrimary: id === 1, clientX: x, clientY: y }));
 }, [type, id, x, y]);
@@ -447,11 +466,14 @@ const burnLevel = () => page.evaluate(() => {
 // CRITICAL (breaker): a second pointer while a block is held must be ignored — one finger, one block,
 // one move; undo restores the whole board. Driven with two pointerIds on the canvas.
 {
-  await page.evaluate(() => window.GE.load(21)); // L22: #1 cyan at (1,6) can rise, #5 red at (1,2) can slide right
+  await page.evaluate(() => window.GE.load(21)); // L22 — the two blocks are picked off the board, not named
   await page.waitForTimeout(60);
   const g = await geom();
   const before = await page.evaluate(() => JSON.stringify(window.GE.pos));
-  const [p1, p5] = await page.evaluate(() => [window.GE.pos[1], window.GE.pos[5]]);
+  const bHeld = await shiftable(0, -1);            // one that can rise
+  const bOther = await shiftable(1, 0, [bHeld]);   // a DIFFERENT one that can slide right
+  if (bHeld < 0 || bOther < 0) { failures++; console.error('multitouch setup FAIL: no two nudgeable blocks on L22', JSON.stringify({ bHeld, bOther })); }
+  const [p1, p5] = await page.evaluate(([a, b]) => [window.GE.pos[a], window.GE.pos[b]], [bHeld, bOther]);
   let [x, y] = cellPx(g, p1[0] + 0.5, p1[1] + 0.5); await pev('pointerdown', 1, x, y);
   [x, y] = cellPx(g, p1[0] + 0.5, p1[1] - 0.5); await pev('pointermove', 1, x, y);
   const held = await page.evaluate(() => ({ pos: JSON.stringify(window.GE.pos), moves: window.GE.moves }));
@@ -459,12 +481,12 @@ const burnLevel = () => page.evaluate(() => {
   [x, y] = cellPx(g, p5[0] + 0.5, p5[1] + 0.5); await pev('pointerdown', 2, x, y);
   [x, y] = cellPx(g, p5[0] + 1.5, p5[1] + 0.5); await pev('pointermove', 2, x, y);
   await pev('pointerup', 2, x, y);
-  const second = await page.evaluate(() => ({ pos: JSON.stringify(window.GE.pos), moves: window.GE.moves, p5: JSON.stringify(window.GE.pos[5]) }));
+  const second = await page.evaluate(b => ({ pos: JSON.stringify(window.GE.pos), moves: window.GE.moves, p5: JSON.stringify(window.GE.pos[b]) }), bOther);
   // second finger moves over the board while the first is still down: still ignored
   [x, y] = cellPx(g, p5[0] + 0.5, p5[1] + 1.5); await pev('pointermove', 2, x, y);
   const stray = await page.evaluate(() => JSON.stringify(window.GE.pos));
   [x, y] = cellPx(g, p1[0] + 0.5, p1[1] - 0.5); await pev('pointerup', 1, x, y);
-  const released = await page.evaluate(() => ({ pos: JSON.stringify(window.GE.pos), moves: window.GE.moves, p1: JSON.stringify(window.GE.pos[1]) }));
+  const released = await page.evaluate(a => ({ pos: JSON.stringify(window.GE.pos), moves: window.GE.moves, p1: JSON.stringify(window.GE.pos[a]) }), bHeld);
   await page.evaluate(() => window.GE.undo());
   const undone = await page.evaluate(() => ({ pos: JSON.stringify(window.GE.pos), moves: window.GE.moves }));
   const onlyOneMoved = second.p5 === JSON.stringify(p5) && held.pos === second.pos && stray === second.pos;
@@ -540,7 +562,8 @@ const burnLevel = () => page.evaluate(() => {
 // pause → Levels → Back returns to the pause card with the attempt intact; pause → Main menu → Play resumes it
 {
   await page.evaluate(() => window.GE.load(27)); await page.waitForTimeout(60);
-  await page.evaluate(() => { const p = window.GE.pos[0]; window.GE.dragVia(0, [[p[0] + 1, p[1]]], null); });
+  const bPause = await shiftable(1, 0);   // L28 changed shape in pass 7 — ask the board which block can slide right
+  await page.evaluate(b => { const p = window.GE.pos[b]; window.GE.dragVia(b, [[p[0] + 1, p[1]]], null); }, bPause);
   const m0 = await page.evaluate(() => window.GE.moves);
   await page.click('#btnMenu'); await page.click('#btnPauseLevels');
   const onLevels = await page.evaluate(() => !document.getElementById('levels').hidden);
@@ -593,24 +616,35 @@ const burnLevel = () => page.evaluate(() => {
 // from its own seed, which is the mechanism; this is the GUARD. Two pinned hashes, so a pass that
 // means to reshape one band still cannot touch the other by accident, and any change at all has
 // to be a deliberate edit here with a reason attached.
-//   L1-15  — frozen since the round began; pass 7 (sawtooth) must not move these.
-//   L16-30 — pass 7 reshapes this band on purpose and will re-pin it.
+//   L1-15  — the BOARDS are frozen and must stay frozen. Pass 7 tightened their move
+//            limits (the user's "par+2 from Sheet 2 onward" decision reaches L11-15), so
+//            the hash is now taken over the level with `moves` STRIPPED, and the limits
+//            are pinned separately by value just below. That is deliberately not a
+//            loosening: a board change and a limit change are different mistakes with
+//            different blast radii, and pinning them apart says which one happened.
+//            `0a75e92b7acbc487` is the same fifteen boards that have shipped all round -
+//            it was computed from the pre-pass-7 levels.js and has not moved since.
+//   L16-30 — pass 7 reshaped this band into the sawtooth and re-pinned it here.
 // Sheet 4 (L31-40) is deliberately NOT pinned: it is the newest sheet and still being tuned.
 {
   const LVF = new Function(fs.readFileSync(root + 'levels.js', 'utf8') + '\nreturn LEVELS;')();
   const h = a => createHash('sha256').update(JSON.stringify(a)).digest('hex').slice(0, 16);
-  const got = { first15: h(LVF.slice(0, 15)), mid15: h(LVF.slice(15, 30)) };
-  const want = { first15: 'f5c3d9f2a53307a6', mid15: '1fc7d48e377630ad' };
-  if (got.first15 === want.first15 && got.mid15 === want.mid15 && LVF.length === solutions.length)
-    console.log(`frozen sheets ok: L1-15 (${got.first15}) and L16-30 (${got.mid15}) are byte-identical to the boards that shipped before Sheet 4; ${LVF.length} levels in all`);
-  else { failures++; console.error('frozen sheets FAIL: a shipped board changed. If that was intentional, re-pin the hash and say why in the pass report:', JSON.stringify({ got, want, n: LVF.length })); }
+  const boards = a => a.map(({ moves, ...rest }) => rest);
+  const got = { first15: h(boards(LVF.slice(0, 15))), mid15: h(LVF.slice(15, 30)) };
+  const want = { first15: '0a75e92b7acbc487', mid15: '895696a27912fbd4' };
+  const gotLimits = JSON.stringify(LVF.slice(0, 15).map(l => l.moves));
+  const wantLimits = JSON.stringify([5, 6, 7, 8, 7, 9, 8, 9, 9, 10, 8, 9, 9, 7, 9]);
+  if (got.first15 === want.first15 && got.mid15 === want.mid15 && gotLimits === wantLimits && LVF.length === solutions.length)
+    console.log(`frozen sheets ok: L1-15 boards (${got.first15}) unchanged and their limits exactly ${gotLimits}; L16-30 (${got.mid15}) is the pinned pass-7 sawtooth; ${LVF.length} levels in all`);
+  else { failures++; console.error('frozen sheets FAIL: a shipped board or a frozen limit changed. If that was intentional, re-pin here and say why in the pass report:', JSON.stringify({ got, want, gotLimits, wantLimits, n: LVF.length })); }
 }
 
-// curve: limits are derived from par by the schedule (par+4 L1–4, +3 L5–19, +2 L20–25, +3 L26–30,
-// +2 across Sheet 4 — the tightened Sheet-2+ rule); the first deadlock (par > blocks) is L6; new shapes
-// debut one at a time (L14 one L, L15 two, L16 the square); Sheet 4 and ONLY Sheet 4 carries chains.
+// curve: limits are derived from par by the schedule (par+4 L1–4, par+3 L5–10, par+2 from L11 to the
+// end — the user's "par+2 from Sheet 2 onward" decision, on a sheet boundary); the first deadlock
+// (par > blocks) is L6; new shapes debut one at a time (L14 one L, L15 two, L16 the square); Sheet 4
+// and ONLY Sheet 4 carries chains.
 {
-  const slack = i => (i <= 4 ? 4 : i <= 19 ? 3 : i <= 25 ? 2 : i <= 30 ? 3 : 2);
+  const slack = i => (i <= 4 ? 4 : i <= 10 ? 3 : 2);
   const r = await page.evaluate(() => LEVELS.map(l => ({
     par: l.par, limit: l.moves, n: l.blocks.length, stones: l.stones.length,
     L: l.blocks.filter(b => b.cells.length === 3 && !(b.cells.every(c => c[0] === 0) || b.cells.every(c => c[1] === 0))).length,
@@ -628,8 +662,39 @@ const burnLevel = () => page.evaluate(() => {
   const seqOk = chains.slice(0, 30).every(k => k === 0) && chains.slice(30).every(k => k >= 2 && k <= 4)
     && chains[30] === 2 && Math.max(...chains.slice(30)) === 4 && wellFormed;
   if (!badLimit.length && firstTwice === 6 && firstStone === 5 && shapesOk && deadlocks.includes(12) && deadlocks.includes(15) && deadlocks.includes(16) && seqOk)
-    console.log(`curve ok: limits follow the schedule on ${r.length}/${r.length} (Sheet 4 on par+2); first stone L5, first deadlock L6; deadlocks at L${deadlocks.join(',')}; L14 one L, L15 two Ls, L16 the square alone; chains on L31–40 only — ${chains.slice(30).join('')}, opening at 2, never past 4, every one a clean 1..k`);
+    console.log(`curve ok: limits follow the schedule on ${r.length}/${r.length} (par+2 from L11 to L40); first stone L5, first deadlock L6; deadlocks at L${deadlocks.join(',')}; L14 one L, L15 two Ls, L16 the square alone; chains on L31–40 only — ${chains.slice(30).join('')}, opening at 2, never past 4, every one a clean 1..k`);
   else { failures++; console.error('curve FAIL:', JSON.stringify({ badLimit, firstTwice, firstStone, shapesOk, deadlocks, chains })); }
+
+  // LIMITS SCHEDULE (pass 7). `badLimit` above proves the shipped limits match the formula;
+  // this proves the FORMULA is the one that was decided, by pinning the three bands and the
+  // two boundaries by value. Without it, editing `slackFor` and this `slack` together would
+  // move every limit in the game and nothing would go red.
+  const sl = r.map(l => l.limit - l.par);
+  const band = (a, b) => sl.slice(a - 1, b).every(v => v === sl[a - 1]) ? sl[a - 1] : `mixed(${sl.slice(a - 1, b).join(',')})`;
+  const bands = { 'L1-4': band(1, 4), 'L5-10': band(5, 10), 'L11-40': band(11, 40) };
+  const scheduleOk = bands['L1-4'] === 4 && bands['L5-10'] === 3 && bands['L11-40'] === 2
+    && sl[4] === 3 && sl[10] === 2               // the two boundaries, named: L5 relaxes, L11 tightens
+    && sl.slice(10).every(v => v === 2);         // and nothing after Sheet 1 is ever looser again
+  if (scheduleOk) console.log(`limits schedule ok: par+4 on L1-4, par+3 on L5-10 (the rest of Sheet 1 - stone and first deadlock debut there), par+2 on L11-L40 with no relaxation anywhere after it`);
+  else { failures++; console.error('limits schedule FAIL:', JSON.stringify({ bands, sl })); }
+
+  // SAWTOOTH (pass 7). The difficulty of a board is par - blockCount: the number of drags the
+  // best line "wastes" on repositioning. Before pass 7 this band was FLAT (1 everywhere bar two
+  // 2s), so L20 played like L19 and like L26 and the spike existed only in a comment. The shape
+  // the research round asked for is pinned here, because a curve nobody asserts drifts back to
+  // flat the next time a spec is retuned.
+  const exc = r.map(l => l.par - l.n);
+  const band16 = exc.slice(15, 30);              // L16..L30
+  const at = i => exc[i - 1];
+  const peakL20 = at(20) > at(19) && at(20) > at(21) && band16.filter(v => v === at(20)).length === 1 && at(20) === Math.max(...band16);
+  const relief = at(21) < at(19) && at(22) < at(19);
+  const minima = [];
+  for (let L = 17; L <= 29; L++) if (at(L) < at(L - 1) && at(L) < at(L + 1)) minima.push(L);
+  const secondRise = at(25) > at(23) && at(25) < at(20);   // a real second crest, and lower than the exam
+  const notFlat = Math.max(...band16) - Math.min(...band16) >= 3;
+  if (peakL20 && relief && minima.length >= 2 && secondRise && notFlat)
+    console.log(`sawtooth ok: L16-30 excess ${band16.join('')} - L20 is the strict local max and the band's only ${at(20)} (its neighbours are ${at(19)} and ${at(21)}); L21/L22 (${at(21)}/${at(22)}) dip below L19 (${at(19)}); ${minima.length} local minima at L${minima.join(',L')}; second crest at L25 (${at(25)}) above L23 (${at(23)}) and still under the exam`);
+  else { failures++; console.error('sawtooth FAIL:', JSON.stringify({ band16, peakL20, relief, minima, secondRise, notFlat })); }
   // the one-time tips land on the levels that debut the mechanic
   await page.evaluate(() => { localStorage.removeItem('ge_tips'); window.GE.load(4); });
   const t5 = await page.evaluate(() => ({ hidden: document.getElementById('toast').hidden, text: document.getElementById('toast').textContent }));

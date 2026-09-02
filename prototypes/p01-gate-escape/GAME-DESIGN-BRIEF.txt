@@ -104,10 +104,23 @@ The curve follows the hybrid-casual "CrazyLabs" discipline:
 - One new element at a time: longer blocks and a second color by L4;
   stones (immovable obstacles) first appear at L5; a third color ~L8;
   L-shaped and 2x2 blocks mid-teens; a fourth color and 7x9 boards late.
-- Tension between par and limit narrows with progress (early levels allow
-  par+4; later levels par+2 to par+3).
-- A deliberate difficulty spike in the L20-25 band (the genre-standard
-  "commitment test"), then breathing room.
+- Tension between par and limit narrows with progress, on a sheet boundary:
+  par+4 on L1-4, par+3 for the rest of Sheet 1 (L5-10, where the stone and
+  the first deadlock debut), par+2 from L11 to the end of the game and never
+  looser again.
+- A SAWTOOTH through L16-30 rather than a plateau. Difficulty is measured as
+  par minus block count - the drags the best line spends repositioning rather
+  than clearing - and it runs 1 1 2 2 3 0 1 1 2 2 1 2 2 1 2. L20 is the exam:
+  the only board at three drags of excess, the only 6x7 board in the game,
+  six of its seven blocks corked at the opening and two colours queueing on
+  one edge, so it is a routing insight rather than an extra block. L21-22 are
+  relief and reinforcement (L21 is the only board on the sheet with no
+  deadlock at all). A second rise at 23-25 crests deliberately BELOW the exam,
+  and 26-30 recombine the taught ideas in a different pairing each level. The
+  shape is visible before a drag - relief beats are roomy 7x9 or short-handed
+  boards, rises are tight 6x8s - and the playtest bot asserts the profile
+  (strict local max at L20, the dip at 21-22, at least two local minima) so a
+  later retune cannot quietly flatten it back out.
 - Levels are grouped into "sheets" (chapters) of 10 in the level select:
   Foundations, Corked, The spike, and Sign-off.
 - SHEET 4 (L31-40) is the first mechanic extension: the APPROVAL CHAIN.
