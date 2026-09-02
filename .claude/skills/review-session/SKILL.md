@@ -24,7 +24,7 @@ Wait until its log prints "studio on http://127.0.0.1:7411", then `curl -s local
 Do NOT stream the commentary into the conversation (the studio panel and `<runDir>/live.md` already show it) unless the user passes `--stream`; keep the chat free while the reviewer works.
 ## 2. Spawn the reviewer subagent (general-purpose, name `reviewer` — or `breaker`, **model: opus**)
 
-Model defaults (set on the Agent call's `model`): personas run on **opus** (perception + one judgment per turn; Fable adds cost, not quality, here), the developer runs on **fable** (root-cause hunting, regression checks, long verified edits), mechanical helpers such as dry runs on **sonnet**. Use the prompt in `prompts/reviewer.md` (critic) or `prompts/breaker.md` (adversarial QA) in this directory, substituting `<runDir>`, `<port>` (7411 for a single session; 7410+slot in parallel) and the budget. It plays via curl (`/state` → Read the screenshot → `/say` → `/act`), stops when `budget.timeUp` is true, writes `review-draft.md`, and files it with `/end`.
+Model defaults (set on the Agent call's `model`): first-run personas on **opus** (repeat coverage on **sonnet**); the developer on **opus**, escalated to **fable** only for scoring/level-generation/validity work or after a failed opus pass; mechanical helpers such as dry runs on **sonnet**.
 
 ## 3. When the reviewer finishes, spawn the developer subagent (general-purpose, name `developer`, **model: fable**) — unless `--no-dev`
 

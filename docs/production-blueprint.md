@@ -39,8 +39,8 @@ commits, and republishes. Research documents are turned into **audits** and then
 | Role | What it is | Model | Inputs | Outputs |
 |---|---|---|---|---|
 | **Lead** | The main Claude Code session. Sequences work, spawns agents, verifies independently, commits, publishes, keeps memory | Fable 5 | user decisions, agent reports | commits, artifact, status to the user |
-| **Developer** | A subagent that changes game source under a written spec, verifies with both bots, writes a report | Fable 5 (root-cause hunting, regression checks) | spec + reports + notes.json | code, regression checks, `reviews/**/…-report.md` |
-| **Critic** ("Juno Adler") | Persona that plays a level range as a first-time player and reviews against the hybrid-casual bar | Opus 5 | studio console `/state` + screenshots | `live.md`, `notes.json`, `review.md` (score, ranked improvements) |
+| **Developer** | A subagent that changes game source under a written spec, verifies with both bots, writes a report | Opus 5 by default; **Fable 5 only for the escalation lane** (scoring/validity, security-critical code, oracle/band work, or a failed cheaper pass) | spec + reports + notes.json | code, regression checks, `reviews/**/…-report.md` |
+| **Critic** ("Juno Adler") | Persona that plays a level range as a first-time player and reviews against the hybrid-casual bar | Opus 5 first run; Sonnet 5 on repeat coverage | studio console `/state` + screenshots | `live.md`, `notes.json`, `review.md` (score, ranked improvements) |
 | **Breaker** ("Mara Voss") | Adversarial QA persona whose only goal is bugs — raw gestures, races, persistence, exploits | Opus 5 | same console + attack tools | bug report with REPRO/EXPECTED/ACTUAL/EVIDENCE, regression suggestions |
 | **Marketing workers** | Tour/promo/TikTok personas that script and render collateral from real gameplay | Fable 5 (scripts) / Opus 5 (creative) | footage recipes, hooks grid, research | `marketing/**`, batch videos, plans, a re-runnable skill |
 | **Bots** | Not agents: `tools/playtest.mjs` (Chromium) and `tools/playtest-ios.sh` (XCUITest) prove every level + every checked flow | — | solutions.json, engine hooks | green/red, screenshots |
@@ -49,6 +49,7 @@ Rules of engagement that turned out to matter:
 - **One writer per file set at a time.** Two developers editing `game.js` concurrently nearly collided; the lead holds one off (SendMessage) until the other's pass is committed, and the second builds *on top* of uncommitted work rather than reverting it.
 - **Subagents don't wake from background jobs reliably.** If an agent says "waiting on a background task", arm a Monitor on the process/file and nudge it with a message when the job ends.
 - **The lead verifies independently** — re-runs the bot, views screenshots, checks `git status` only shows expected paths — before every commit. Reports are trusted but checked.
+- **Model tiering:** verification is the quality floor, so spend models where verification cannot catch a subtle wrong answer. Fable = lead + escalation lane only; Opus = default developers/breaker/planning; Sonnet = exploration, doc passes, repeat critics, dry runs. Escalate on a failed pass, never loop the same tier.
 - **Commit discipline:** developers never commit; the lead commits per pass with a message that states what changed *and how it was verified*; push when the user asks (then keep pushing).
 
 ---
