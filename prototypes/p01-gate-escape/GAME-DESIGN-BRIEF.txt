@@ -90,7 +90,7 @@ manufacture "so close!" moments. Deterministic levels are the product.
 
 4. LEVEL DESIGN & DIFFICULTY CURVE
 ----------------------------------
-All 30 levels are produced by a generator + solver toolchain:
+All 40 levels are produced by a generator + solver toolchain:
 - The generator places blocks/stones/gates per a difficulty spec; the
   solver (breadth-first over full board states) proves solvability and
   computes par. Unsolvable or degenerate boards are discarded.
@@ -108,7 +108,18 @@ The curve follows the hybrid-casual "CrazyLabs" discipline:
   par+4; later levels par+2 to par+3).
 - A deliberate difficulty spike in the L20-25 band (the genre-standard
   "commitment test"), then breathing room.
-- Levels are grouped into "sheets" (chapters) of 10 in the level select.
+- Levels are grouped into "sheets" (chapters) of 10 in the level select:
+  Foundations, Corked, The spike, and Sign-off.
+- SHEET 4 (L31-40) is the first mechanic extension: the APPROVAL CHAIN.
+  Some blocks carry a revision-stamp number and must leave in that order (a
+  numbered block may exit only while its number is the lowest still on the
+  board); unchained blocks are never gated and movement is never gated at
+  all. The generator solves every chained board TWICE - bare and numbered -
+  and ships it only if the numbers are worth a stated minimum of extra
+  drags, so a chain is never decoration. L31 is the one exception: it costs
+  nothing and exists to teach the rule. Chains are capped at 4 because the
+  in-game hint solver has to keep answering, and the generator measures
+  exactly what the hint will cost before shipping a board.
 
 
 5. VISUAL IDENTITY
@@ -124,7 +135,7 @@ voids. Everything the player can act on has solid fill plus outline
 Night vellum, Whiteprint) without touching layout or legibility.
 
 Cold open (recently reworked): a calm cover sheet — title treatment, one
-status stamp line (LEVEL 12 / 30 · star count · streak), and exactly three
+status stamp line (LEVEL 12 / 40 · star count · streak), and exactly three
 actions: Play/Continue, Levels, How to play. Fresh installs see a small
 vignette of a red block gliding out through its gate (teaching the core
 verb before the first tap). All meta surfaces sit one tap deeper.
@@ -191,7 +202,7 @@ rises to a Saturday peak; the move limit is par+3 every day.
     by, not a debt: the row never counts down and never asks.
 
 Staged disclosure (the FTUE ladder, 2026-09-02): a new save opens BARE. The
-sheet index shows the level, the stars, the thirty tiles and Sound, and
+sheet index shows the level, the stars, the forty tiles and Sound, and
 nothing else — no certification stamps, no paper picker, no draft row, no
 survey row, and no status line on the landing. Each system arrives on the win
 that makes it mean something: certification (with the paper picker) after two
@@ -291,7 +302,7 @@ Hard rules already encoded for whenever money ships:
 - Determinism end-to-end: same level plays identically forever; there is
   no server, no remote config, no A/B machinery (yet).
 - Machine verification: every gameplay/rendering change re-runs a bot that
-  beats all 30 levels at par through the real engine plus ~70 regression
+  beats all 40 levels at par through the real engine plus ~80 regression
   checks; an iOS UI-test bot does the same on-device.
 - Analytics: an anonymous, batched beacon exists but ships disabled.
 
@@ -328,9 +339,9 @@ Nearest neighbors as we understand them:
 - Rush Hour (classic) — the sliding-blocks-in-a-crowded-grid ancestor,
   but Rush Hour slides on rails; Gate Escape routes freely around corners,
   which changes the entire solution texture (route-finding, not shunting).
-Planned "ownable twist" candidates not yet built: gates that change color
-after each use; gates that close after N exits; blocks that must exit in a
-stamped sequence (an "approval chain").
+The first "ownable twist" has SHIPPED: blocks that must exit in a stamped
+sequence (the approval chain, Sheet 4). Still unbuilt: gates that change
+color after each use; gates that close after N exits.
 
 
 12. WHAT WE KNOW WE DON'T KNOW

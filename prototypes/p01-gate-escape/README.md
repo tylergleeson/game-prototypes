@@ -41,7 +41,7 @@ Built to the hybrid-casual grammar:
   so re-tuning one level never reshuffles the rest.
 - **Moves are the score**: limit = par+4 on L1–4, par+3 from L5, par+2 in the
   L20–25 spike, par+3 again on L26–30 (relief after the spike, per the
-  template). Stars: 3 at par, 2 within par+2, 1 beyond — on a par+2 level the
+  template), par+2 across Sheet 4 (L31–40, the tightened Sheet-2+ rule). Stars: 3 at par, 2 within par+2, 1 beyond — on a par+2 level the
   1-star tier is the rescued clear. The HUD shows the stars still reachable
   next to the counter, turns amber when 3 stars are gone and red (with a
   shake) at the point of no return. One-step undo (↶) refunds a mis-drag;
@@ -66,11 +66,15 @@ Built to the hybrid-casual grammar:
   running star total (ticks up) and the next level's block count and par;
   titles rotate with milestone lines at L5/10/20; sub-3-star wins offer
   "Replay for ★★★". Cards share the title block's drafting-sheet styling.
-- **Sheet certification and paper skins** (the star sink): the level select groups levels
-  into three sheets of ten; each sheet is **certified at 24 of its 30 stars**
-  (`CERT_STARS` in `menu.js`) and rewards a cosmetic paper skin — Sepia draft,
-  Night vellum, Whiteprint (Cyanotype is the default). Nothing is gated on
-  certification. The chapter header carries a stamp glyph — a dashed pending frame with
+- **Sheet certification, paper skins and the approval stamp** (the star sink): the level
+  select groups levels into **four sheets of ten**; each sheet is **certified at 24 of its
+  30 stars** (`CERT_STARS` in `menu.js`). Sheets 1–3 reward a cosmetic paper skin — Sepia
+  draft, Night vellum, Whiteprint (Cyanotype is the default). **Sheet 4 rewards the
+  approval stamp**, not a fourth paper: a mark stamped in the corner of every win card
+  afterwards, drawn in the sheet's own ink so it inherits every paper rather than adding
+  one. It is previewable on the **Stamp** shelf beside the paper picker while pending —
+  the ring is drawn and the approval check is not, so the two states differ in SHAPE.
+  Nothing is gated on certification. The chapter header carries a stamp glyph — a dashed pending frame with
   `★ 18/30 · 6 to certify`, or a solid stamped frame naming the paper once earned (the
   star is drawn only once certified, so the two states differ in SHAPE, not just colour).
   The win that crosses the threshold adds a `Sheet certified — <paper>` row with **Try it**
@@ -112,7 +116,7 @@ Built to the hybrid-casual grammar:
     selectable textarea. Tracked: `daily_started` / `daily_practice` / `daily_won` / `daily_lost` /
     `daily_enter` / `daily_report` / `daily_share` / `daily_shared`.
 - **Staged disclosure** (the FTUE ladder, 2026-09-02): a new save opens **bare** — the sheet index
-  shows level, stars, the thirty tiles and Sound, and nothing else; no certification stamps, no
+  shows level, stars, the forty tiles and Sound, and nothing else; no certification stamps, no
   paper picker, no draft row, no survey row, no status line. Each system arrives on the win that
   earns it: **certification (and the paper picker) after 2 cleared, the Daily Draft after 3, the
   Field Survey after 5** — the last with the *easiest* of the week's four contracts already taken,
@@ -217,7 +221,7 @@ Built to the hybrid-casual grammar:
 
 ## Status
 
-- [x] Core loop, 30 levels, win/fail/rescue, local telemetry counters
+- [x] Core loop, 40 levels (four sheets), win/fail/rescue, local telemetry counters
 - [x] Main menu (blueprint title block), level select with stars, how-to-play legend, pause, sound toggle, completion card — all in `menu.js`, engine untouched
 - [x] Native iOS app (Capacitor, `app/ios`) + in-app autoplay bot verified by XCUITest on the simulator (`tools/playtest-ios.sh`)
 - [x] Reviewer session #1 actioned (`reviews/p01-run-20260830-1835/dev-report.md`): win/fail juice, undo, star meter, ghost routes, tighter budget, stones from L5

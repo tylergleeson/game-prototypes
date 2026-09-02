@@ -129,3 +129,5 @@ reset — critic session validates the copy; solver caps on chained boards.
   the no-fail tutorial rule holds); sawtooth as planned. Playtest fail/rescue checks
   gain a "limits schedule" assertion; expect the rescue surface to actually appear in
   normal play now.
+- [ ] Perf (game.js, later pass): solveFrom allocates an occupancy grid per block per node — r6 measured a several-fold constant win available; fold into the next game.js pass.
+- [ ] Critic question for the round-end session: L31 teaching level at par+2 allows only two out-of-turn pushes — harsh? (slackFor is the knob; r6-report).

@@ -254,3 +254,84 @@ run again before the commit.**
   `0 of 7 survey days` read as a state or as a nag on a Monday? And is a *preselected* contract
   a helpful demonstration or a decision quietly taken away from the player? Both are one
   constant away from being changed (`REVEALS`, `preselectContract`).
+
+
+---
+
+# Addendum — three follow-ups folded in after the first report
+
+Landed after pass 5 reported and while pass 6 was running, on the lead's and developer-r5's
+asks. `node tools/playtest.mjs` is **green twice consecutively on the settled tree**
+(`EXIT=0`, 132 `ok:` lines).
+
+## A1. The legend's star sentence, pinned to the engine
+
+Pass 5 tightened `starsFor` to 2★ = par+1. The legend was the one place that stated the old
+band in words; it now reads **`One drag = one move. ★★★ at par · ★★ one over.`** (developer-r5
+had already made the minimal `two`→`one` fix; this is the lead's wording).
+
+New check **`legend star copy`** pins that number in *three* places at once so they cannot
+drift again: the band parsed out of `starsFor` in `game.js`, the word in the legend sentence,
+and what the engine actually awards — L1 cleared at par, par+n and par+n+1 through the real
+engine, asserting 3 / 2 / 1 stars. Change the constant in `game.js` and the check fails until
+the sentence is changed with it (and vice versa). It is engine-driven, so if pass 7 moves the
+band again it needs no edit — just the copy.
+
+## A2. `#symSeq` — the approval chain's legend drawing
+
+Pass 5 added the canvas and the row; the legend's ink is `menu.js`, so `seqSym()` is mine. It
+follows `drawSeqStamp()`'s geometry from r5's second message (box `s`, tab `1.85s`, numeral
+`0.66s`, chevron arm `0.22s`, ring inset `+3.5`, dash `[6,4]`, ink 3.4 under white 1.7),
+**scaled up deliberately**: the legend canvas is drawn at 2× for a 64 px box, so the board's
+~13 px stamp would land at 6 px on screen and be unreadable as a legend. The three shape
+channels are intact and there is no colour dependence at all — see `shots/legend-seq-row.png`
+(and the 5× render I reviewed): a wide inked tab with a white numeral, a double chevron and a
+dashed on-deck ring, against a narrow paper label with a dark numeral and neither.
+
+`#liSeq` is gated in `refreshLegendRows()` on `LEVELS.some(l => l.blocks.some(b => b.seq))` —
+**derived from the shipped levels**, so pass 6's chained sheet turned it on with no second
+edit. It did exactly that mid-run: the check saw `gated: true` before pass 6's `levels.js`
+landed and `shown` after, which is why the assertion compares the gate against the shipped
+levels rather than a fixed value.
+
+New check **`legend approval chain`**: asserts the gate follows the data and re-derives on
+every open, then forces the row visible and samples the canvas — the tab is a ~41 px run of
+ink, the label a ~18 px run of paper (tonal inverses *and* different widths), the chevron is
+present in the tab's right half, and the dashed on-deck ring crosses the next-up block only.
+
+## A3. Test boards cannot reach the campaign
+
+r5's optional hardening, taken. `GE.loadTest` rides on a second virtual index (one past the
+draft) and its `ge:win` now returns early in **both** `menu.js` listeners: the survey listener
+stamps no day and takes no points, and the progress listener writes nothing and labels the
+card `TEST BOARD` rather than naming a sheet that does not exist. Their checks run in isolated
+contexts, so this removes a footgun rather than fixing a bug — but `prog.d0` *was* reachable
+from a test win before this, and now is not.
+
+Their adapter ask was **withdrawn** by them (the rules text never states a numeric star band,
+so the tightening leaves it correct as written) — no adapter edit was made for it.
+
+## A4. Notes on the shared checkout
+
+- The lead's second point: **r2's uncommitted draft-aware pause fix was already in `menu.js`
+  when I started** and I built on it — I extended the same line to the friendly date and the
+  practice case, and their `pause copy` check is still there (regex updated for the new copy).
+  Nothing of theirs was removed; it commits with this pass.
+- `menu.js` was **syntactically broken in the working tree** for a few minutes during pass 6:
+  their new certification `SEAL_SVG` collided with the Field Survey's existing `SEAL_SVG`
+  (`Identifier 'SEAL_SVG' has already been declared`), which took the whole page down. I
+  verified my own additions on a scratch copy with a local-only rename rather than editing
+  their in-flight work; they had renamed it themselves within a few minutes. Flagged here only
+  because it is the second name collision this round in a file four passes share.
+- Two checks in my region had constants that pass 6's fourth sheet invalidated
+  (`certChips === 3`). They now assert the *rule* — one certification chip per sheet header
+  once certification is disclosed, none before — against the sheet count read from the DOM, so
+  they survive a fifth sheet too.
+- **Bundles** were rebuilt and `bundles fresh ok` passes. Pass 6 is still writing `menu.js` and
+  `levels.js`; any further edit there needs the three build scripts run again before the commit.
+
+## A5. Shots added
+
+`legend-seq.png` (the how-to-play sheet with the Approval chain row, settled rather than
+mid-fade) and `legend-seq-row.png` (the row close up). Both reviewed, plus a 5× render of the
+canvas to check the stamp geometry.

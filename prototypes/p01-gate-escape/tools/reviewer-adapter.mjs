@@ -27,11 +27,20 @@ taps — the primary CTA (Play / Continue - Level N / Resume level N), Levels an
 Paper picker, Sound) lives on the Levels screen, the sheet index; in-game the HUD has hint (?, ghosts the next reference move — an exit route,
 or a dashed outline where a block should park; one per board position), undo (↶, one step, refunds the move), restart (↻) and pause (☰), shows the stars the
 current pace would earn, and an objective row of blocks left per color.
-Stars have a cosmetic sink: each sheet of ten levels on the level select is CERTIFIED at 24 of its 30 stars and rewards a paper skin
-(Sepia draft / Night vellum / Whiteprint; Cyanotype is the default). Skins change only the drafting sheet (page, ink, grid, cards) — never block,
+Stars have a cosmetic sink: each of the FOUR sheets of ten levels on the level select is CERTIFIED at 24 of its 30 stars. Sheets 1-3 reward a paper skin
+(Sepia draft / Night vellum / Whiteprint; Cyanotype is the default); SHEET 4 rewards the APPROVAL STAMP instead of a fourth paper — a mark stamped in the
+corner of every win card from then on, previewable on the "Stamp" shelf beside the paper picker while it is still pending (the ring is drawn, the approval
+check is not, so pending and earned differ in shape). Skins change only the drafting sheet (page, ink, grid, cards) — never block,
 gate or HUD state colours — and nothing is gated on certification. The sheet header carries a stamp glyph: a dashed pending frame with "N to certify",
-or a solid stamped frame naming the paper once earned. The "Paper" picker on the sheet index and the pause card lists the skins; a locked swatch shows
-the pending stamp of the sheet it comes from. The win that crosses 24 adds a "Sheet certified — <paper>" row with a "Try it" button to the win card.
+or a solid stamped frame naming the reward once earned. The "Paper" picker on the sheet index and the pause card lists the skins; a locked swatch shows
+the pending stamp of the sheet it comes from. The win that crosses 24 adds a "Sheet certified — <reward>" row to the win card, with a "Try it" button for
+a paper and no button at all for the stamp (there is nothing to apply).
+
+APPROVAL CHAIN (Sheet 4, L31-40): some blocks carry a revision-stamp NUMBER and must leave in that order — a numbered block may exit only while its number
+is the lowest still on the board. Unchained blocks are never gated, and MOVEMENT is never gated: an out-of-turn block still slides anywhere, it simply
+parks flush against its gate instead of leaving (which costs the drag). Three shape channels carry the order, no colour: the solid stamp with a chevron is
+next up, the dashed on-deck ring marks it on the board, the "NEXT" chip names it, and a 1-2-3 polyline plays once on load. Par, the hint and the fail
+card's rescue preview all obey the chain, so nothing the game proposes is ever an illegal exit.
 FIELD SURVEY — the only meta system (2026-09-02: the daily quests, the streak card and the weekly ladder were merged into it). The "Field survey"
 row on the sheet index reads "n/7 · N pts" (plus a SELECT 2 badge until the contracts are chosen) and opens the week's sheet, which holds:
  * a 7-DAY SPINE, Mon–Sun: any level clear stamps today (✓ stamped, ~ weather delay, ○ no clear, · still to come — four glyphs, not four colours);

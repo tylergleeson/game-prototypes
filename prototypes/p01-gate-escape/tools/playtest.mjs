@@ -6,6 +6,7 @@
 
 import fs from 'fs';
 import { createRequire } from 'module';
+import { createHash } from 'crypto';
 // playwright is a dev-only dep, resolved from wherever it's installed (cwd)
 const { chromium } = createRequire(process.cwd() + '/')('playwright');
 
@@ -101,7 +102,8 @@ for (let i = 0; i < solutions.length; i++) {
   else { failures++; console.error('lives default-off FAIL:', JSON.stringify(l)); }
 }
 
-// sheet certification + paper skins (2026-08-31): 90/90 stars certifies all three sheets and unlocks every skin;
+// sheet certification + paper skins (2026-08-31; four sheets since pass 6): 120/120 stars certifies
+// all FOUR sheets — three papers and, on Sheet 4, the approval stamp (no fourth paper by design);
 // picking a paper swaps the CSS tokens and the canvas paper instantly; the default paper is the
 // build-before-skins pixel (rgba(255,255,255,.045) over the page → [255,255,255,11])
 const paperPx = () => page.evaluate(() => {
@@ -114,10 +116,12 @@ const DEFAULT_PAPER = '[255,255,255,11]';
   const stats = await page.evaluate(() => JSON.parse(localStorage.getItem('ge_stats') || '{}'));
   await page.evaluate(() => window.GE_MENU.show('levels')); await page.waitForTimeout(80);
   const heads = await page.evaluate(() => [...document.querySelectorAll('#levelGrid .chap .cert')].map(c => ({ on: c.classList.contains('on'), text: c.textContent.replace(/\s+/g, ' ').trim() })));
-  const allOn = heads.length === 3 && heads.every(h => h.on) && /Sepia draft$/.test(heads[0].text) && /Night vellum$/.test(heads[1].text) && /Whiteprint$/.test(heads[2].text);
-  const skinsOk = ['sepia', 'night', 'white'].every(id => (prog.skins || []).includes(id));
-  if (allOn && skinsOk && stats.cert_earned === 3) console.log(`certification ok: 3/3 sheets certified after 90 stars (${heads.map(h => h.text).join(' | ')}); cert_earned tracked ×3`);
-  else { failures++; console.error('certification FAIL:', JSON.stringify({ heads, skins: prog.skins, cert_earned: stats.cert_earned })); }
+  const allOn = heads.length === 4 && heads.every(h => h.on) && /Sepia draft$/.test(heads[0].text) && /Night vellum$/.test(heads[1].text) && /Whiteprint$/.test(heads[2].text) && /Approval stamp$/.test(heads[3].text);
+  const skinsOk = ['sepia', 'night', 'white'].every(id => (prog.skins || []).includes(id)) && prog.appr === 1 && (prog.skins || []).length === 3;
+  const chapNames = await page.evaluate(() => [...document.querySelectorAll('#levelGrid .chap > span:first-child')].map(x => x.textContent.trim()));
+  if (allOn && skinsOk && stats.cert_earned === 4 && chapNames.length === 4 && /Sign-off$/.test(chapNames[3]))
+    console.log(`certification ok: 4/4 sheets certified after ${solutions.length * 3} stars (${heads.map(h => h.text).join(' | ')}); cert_earned tracked \u00d74; Sheet 4 "${chapNames[3]}" pays the approval stamp and NOT a fourth paper (still 3 skins)`);
+  else { failures++; console.error('certification FAIL:', JSON.stringify({ heads, chapNames, skins: prog.skins, appr: prog.appr, cert_earned: stats.cert_earned })); }
   await page.screenshot({ path: `${shotDir}/levels-certified.png` });
   // skin select from the title block: CSS variable, body colour, canvas paper pixel, persistence
   await page.evaluate(() => window.GE.load(11)); await page.waitForTimeout(80);
@@ -583,22 +587,49 @@ const burnLevel = () => page.evaluate(() => {
   await page.click('#btnRetry');
 }
 
-// curve: limits are derived from par by the schedule (par+4 L1–4, +3 L5–19, +2 L20–25, +3 L26–30);
-// the first deadlock (par > blocks) is L6; new shapes debut one at a time (L14 one L, L15 two, L16 the square)
+// FROZEN SHEETS. Regenerating levels.js re-runs the whole curve, so the one thing that can go
+// wrong silently is a shipped board quietly changing under a player's save — a level they have
+// three stars on becoming a different puzzle. The seed table is append-only and each level starts
+// from its own seed, which is the mechanism; this is the GUARD. Two pinned hashes, so a pass that
+// means to reshape one band still cannot touch the other by accident, and any change at all has
+// to be a deliberate edit here with a reason attached.
+//   L1-15  — frozen since the round began; pass 7 (sawtooth) must not move these.
+//   L16-30 — pass 7 reshapes this band on purpose and will re-pin it.
+// Sheet 4 (L31-40) is deliberately NOT pinned: it is the newest sheet and still being tuned.
 {
-  const slack = i => (i <= 4 ? 4 : i <= 19 ? 3 : i <= 25 ? 2 : 3);
+  const LVF = new Function(fs.readFileSync(root + 'levels.js', 'utf8') + '\nreturn LEVELS;')();
+  const h = a => createHash('sha256').update(JSON.stringify(a)).digest('hex').slice(0, 16);
+  const got = { first15: h(LVF.slice(0, 15)), mid15: h(LVF.slice(15, 30)) };
+  const want = { first15: 'f5c3d9f2a53307a6', mid15: '1fc7d48e377630ad' };
+  if (got.first15 === want.first15 && got.mid15 === want.mid15 && LVF.length === solutions.length)
+    console.log(`frozen sheets ok: L1-15 (${got.first15}) and L16-30 (${got.mid15}) are byte-identical to the boards that shipped before Sheet 4; ${LVF.length} levels in all`);
+  else { failures++; console.error('frozen sheets FAIL: a shipped board changed. If that was intentional, re-pin the hash and say why in the pass report:', JSON.stringify({ got, want, n: LVF.length })); }
+}
+
+// curve: limits are derived from par by the schedule (par+4 L1–4, +3 L5–19, +2 L20–25, +3 L26–30,
+// +2 across Sheet 4 — the tightened Sheet-2+ rule); the first deadlock (par > blocks) is L6; new shapes
+// debut one at a time (L14 one L, L15 two, L16 the square); Sheet 4 and ONLY Sheet 4 carries chains.
+{
+  const slack = i => (i <= 4 ? 4 : i <= 19 ? 3 : i <= 25 ? 2 : i <= 30 ? 3 : 2);
   const r = await page.evaluate(() => LEVELS.map(l => ({
     par: l.par, limit: l.moves, n: l.blocks.length, stones: l.stones.length,
     L: l.blocks.filter(b => b.cells.length === 3 && !(b.cells.every(c => c[0] === 0) || b.cells.every(c => c[1] === 0))).length,
     sq: l.blocks.filter(b => b.cells.length === 4).length,
+    seqs: l.blocks.map(b => b.seq || 0).filter(Boolean).sort((a, b) => a - b),
   })));
   const badLimit = r.map((l, i) => (l.limit - l.par !== slack(i + 1) ? i + 1 : 0)).filter(Boolean);
   const firstTwice = r.findIndex(l => l.par > l.n) + 1, firstStone = r.findIndex(l => l.stones > 0) + 1;
   const deadlocks = r.map((l, i) => (l.par > l.n ? i + 1 : 0)).filter(Boolean);
   const shapesOk = r[13].L === 1 && r[13].sq === 0 && r[14].L === 2 && r[14].sq === 0 && r[15].sq === 1 && r[15].L === 0 && r[12].L === 0 && r[12].sq === 0;
-  if (!badLimit.length && firstTwice === 6 && firstStone === 5 && shapesOk && deadlocks.includes(12) && deadlocks.includes(15) && deadlocks.includes(16))
-    console.log(`curve ok: limits follow the schedule on 30/30; first stone L5, first deadlock L6; deadlocks at L${deadlocks.join(',')}; L14 one L, L15 two Ls, L16 the square alone`);
-  else { failures++; console.error('curve FAIL:', JSON.stringify({ badLimit, firstTwice, firstStone, shapesOk, deadlocks })); }
+  // Sheet 4: every board chained, every chain a clean 1..k with k between 2 and 4 (the runtime hint
+  // solver's allowance is what caps k), it opens at 2, and no earlier sheet is touched
+  const chains = r.map(l => l.seqs.length);
+  const wellFormed = r.every(l => l.seqs.every((v, j) => v === j + 1));
+  const seqOk = chains.slice(0, 30).every(k => k === 0) && chains.slice(30).every(k => k >= 2 && k <= 4)
+    && chains[30] === 2 && Math.max(...chains.slice(30)) === 4 && wellFormed;
+  if (!badLimit.length && firstTwice === 6 && firstStone === 5 && shapesOk && deadlocks.includes(12) && deadlocks.includes(15) && deadlocks.includes(16) && seqOk)
+    console.log(`curve ok: limits follow the schedule on ${r.length}/${r.length} (Sheet 4 on par+2); first stone L5, first deadlock L6; deadlocks at L${deadlocks.join(',')}; L14 one L, L15 two Ls, L16 the square alone; chains on L31–40 only — ${chains.slice(30).join('')}, opening at 2, never past 4, every one a clean 1..k`);
+  else { failures++; console.error('curve FAIL:', JSON.stringify({ badLimit, firstTwice, firstStone, shapesOk, deadlocks, chains })); }
   // the one-time tips land on the levels that debut the mechanic
   await page.evaluate(() => { localStorage.removeItem('ge_tips'); window.GE.load(4); });
   const t5 = await page.evaluate(() => ({ hidden: document.getElementById('toast').hidden, text: document.getElementById('toast').textContent }));
@@ -1447,10 +1478,10 @@ const trailOf = t => {
     && /beckon/.test(fresh.ctaAnim) && /rise/.test(fresh.ctaAnim)
     && !played.menu && played.lvl === 0 && played.moves === 0 && !played.paused && played.route
     && fresh.status.hidden && back.status.tag === 'DIV' && back.landing.length === 3
-    && back.cta === 'Continue — Level 12' && /Level 12 \/ 30/i.test(back.stamp)
+    && back.cta === 'Continue — Level 12' && new RegExp('Level 12 / ' + solutions.length, 'i').test(back.stamp)
     && !backPlayed.menu && backPlayed.lvl === 11
-    && idx.levels && idx.tiles === 30 && idx.log && leg;
-  if (ok) console.log('landing ok: 3 interactive elements (Play + Levels + How to play), stamp "' + back.stamp + '", "' + back.cta + '" lands on L12 in one tap; the field log and the 30-tile index live on the sheet index — and the staged status line is absent on day one, a passive div when it arrives');
+    && idx.levels && idx.tiles === solutions.length && idx.log && leg;
+  if (ok) console.log('landing ok: 3 interactive elements (Play + Levels + How to play), stamp "' + back.stamp + '", "' + back.cta + '" lands on L12 in one tap; the field log and the ' + solutions.length + '-tile index live on the sheet index — and the staged status line is absent on day one, a passive div when it arrives');
   else { failures++; console.error('landing FAIL:', JSON.stringify({ fresh, played, back, backPlayed, idx, leg })); }
 }
 
@@ -1479,7 +1510,7 @@ const pixelOf = async (sel, fx, fy) => {
   }), ['data:image/png;base64,' + buf.toString('base64'), fx, fy]);
 };
 {
-  await page.evaluate(() => { localStorage.setItem('ge_prog', JSON.stringify({ u: 29, s: Array(30).fill(3), skins: ['sepia', 'night', 'white'] })); localStorage.removeItem('ge_motion'); });
+  await page.evaluate(n => { localStorage.setItem('ge_prog', JSON.stringify({ u: n - 1, s: Array(n).fill(3), skins: ['sepia', 'night', 'white'], appr: 1 })); localStorage.removeItem('ge_motion'); }, solutions.length);
   await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L);
   await page.waitForTimeout(400);
   const THEMES = ['cyan', 'sepia', 'night', 'white'];
@@ -2126,7 +2157,7 @@ const pixelOf = async (sel, fx, fy) => {
     // sheets already celebrated. Deliberately NOT the whole `prog` blob: a draft clear is
     // still a clear, so a field like `prog.d0` (has this player ever finished a board, and
     // on what day) legitimately moves. What must never move is anything that says the
-    // player got further through the 30 sheets.
+    // player got further through the campaign's sheets.
     const campaign = () => pg.evaluate(() => JSON.stringify({ s: window.GE_MENU.prog.s, u: window.GE_MENU.prog.u, skins: window.GE_MENU.prog.skins || [], seen: window.GE_MENU.prog.seen || [] }));
     const before = await pg.evaluate(() => ({ level: localStorage.getItem('ge_level'), best: localStorage.getItem('ge_best'), theme: window.GE.theme }));
     before.prog = await campaign();
@@ -2481,6 +2512,7 @@ const pixelOf = async (sel, fx, fy) => {
     window.GE_MENU.show('levels');
     const r = { d: window.GE_MENU.disclosure(), draft: window.GE_MENU.draftRow(), survey: hid('btnSurvey'),
       papers: hid('menuPapers'), certChips: document.querySelectorAll('#levelGrid .chap .cert').length,
+      chaps: document.querySelectorAll('#levelGrid .chap').length, // sheets grow (pass 6): the rule is one chip per sheet, or none at all
       chosen: [...window.GE_MENU.survey.chosen], offered: [...window.GE_MENU.survey.offered] };
     window.GE_MENU.show('legend');
     r.legend = { cert: hid('legendCert'), daily: hid('legendDaily'), survey: hid('legendSurvey'),
@@ -2531,7 +2563,7 @@ const pixelOf = async (sel, fx, fy) => {
     const ok = hiddenAll(fresh) && fresh.status.hidden && JSON.stringify(fresh.landing) === '["btnPlay","btnLevels","btnLegend"]'
       && hiddenAll(seen[0]) && !beats[0]                                            // L1 reveals nothing
       && beats[1] && beats[1].stamp === 'NEW' && beats[1].k === 'Sheet certification'
-      && !afterL2.papers && afterL2.certChips === 3 && !afterL2.legend.cert && afterL2.draft.hidden && afterL2.survey
+      && !afterL2.papers && afterL2.chaps >= 3 && afterL2.certChips === afterL2.chaps && !afterL2.legend.cert && afterL2.draft.hidden && afterL2.survey
       && beats[2] && beats[2].stamp === 'NEW' && beats[2].k === 'Daily draft'
       && !afterL3.draft.hidden && /^Daily draft · \d{1,2} Sep$/.test(afterL3.draft.k) && afterL3.draft.v === 'READY' && afterL3.survey
       && !beats[3] && afterL4.survey                                                // L4 reveals nothing
@@ -2559,7 +2591,7 @@ const pixelOf = async (sel, fx, fy) => {
     const stored = await pg.evaluate(() => JSON.parse(localStorage.getItem('ge_prog')));
     const beat = await winLevel4(pg, 0);
     await ctx.close();
-    const ok = !s.draft.hidden && !s.survey && !s.papers && s.certChips === 3 && !s.status.hidden
+    const ok = !s.draft.hidden && !s.survey && !s.papers && s.chaps >= 3 && s.certChips === s.chaps && !s.status.hidden
       && stored.d0 === 'pre' && JSON.stringify(stored.rv) === '["rescue","cert","daily","survey"]'
       && !beat && !errs.length;
     if (ok) console.log('ftue legacy ok: a save that already had progress opens fully disclosed and marked seen (d0 "pre", rv rescue+cert+daily+survey) — the next win announces nothing');
@@ -2763,13 +2795,15 @@ const pixelOf = async (sel, fx, fy) => {
     const { ctx, pg, errs } = await open4();
     const runs = [];
     for (const waste of [0, n, n + 1]) {
-      runs.push(await pg.evaluate(({ sol, waste }) => {
+      await pg.evaluate(({ sol, waste }) => {
         window.GE.load(0);
         // burn moves without clearing: shuffle the block between two in-board cells
         for (let i = 0; i < waste; i++) { const p = window.GE.pos[0]; window.GE.dragVia(0, [[p[0] === 1 ? 0 : 1, p[1]]], null); }
         for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side);
-        return { moves: window.GE.moves, par: window.GE.L.par, stars: document.querySelectorAll('#winStars span.on').length };
-      }, { sol: solutions[0], waste }));
+      }, { sol: solutions[0], waste });
+      await pg.waitForSelector('#winModal:not([hidden])', { timeout: 3000 }); // the exit flight lands first
+      runs.push(await pg.evaluate(() => ({ moves: window.GE.moves, par: window.GE.L.par,
+        stars: document.querySelectorAll('#winStars span.on').length })));
     }
     await ctx.close();
     const ok = n >= 1 && said === WORDS[n]
@@ -2784,15 +2818,19 @@ const pixelOf = async (sel, fx, fy) => {
   // 7. the approval chain's legend drawing (pass 5 added the canvas and the row; the legend's ink
   //    is menu.js). The two states must be told apart WITHOUT colour: a wide filled tab against a
   //    narrow paper label, a dashed on-deck ring on the next one only, and a chevron in the tab.
-  //    The row itself stays hidden until a chained sheet exists, so this forces it open to look.
+  //    The row is gated on a chained sheet EXISTING (derived from levels.js, so it turns itself on
+  //    when pass 6 ships one and needs no second edit) — this asserts the gate against the shipped
+  //    levels either way, then forces the row open to look at the drawing.
   {
+    const LV = new Function(fs.readFileSync(root + 'levels.js', 'utf8') + '\nreturn LEVELS;')();
+    const chained = LV.some(l => l.blocks.some(b => b.seq));
     const { ctx, pg, errs } = await open4();
     const px = await pg.evaluate(() => {
       window.GE_MENU.show('legend');
       const row = document.getElementById('liSeq');
-      const gated = row.hidden;                       // no chained level ships yet (pass 6)
-      row.hidden = false;
-      window.GE_MENU.refreshLegendRows();             // ...and the gate must not put it straight back
+      const gated = row.hidden;                       // hidden exactly while no chained level ships
+      row.hidden = !row.hidden;
+      window.GE_MENU.refreshLegendRows();             // the gate is derived: it re-decides every open
       const stillGated = row.hidden;
       row.hidden = false;
       const c = document.getElementById('symSeq').getContext('2d');
@@ -2806,20 +2844,228 @@ const pixelOf = async (sel, fx, fy) => {
         labelLight: runAt(24, 70, 116, v => v > 0.6),  // the WAITING label: paper, ~20 wide
         // the chevron lives in the right half of the tab, on the numeral's line
         chevron: runAt(32, 32, 50, v => v > 0.75),
-        // the dashed on-deck ring crosses the lower half of the NEXT block only
-        ringLeft: runAt(64, 16, 52, v => v > 0.75),
-        ringRight: runAt(64, 76, 112, v => v > 0.75),
+        // the dashed on-deck ring crosses the lower half of the NEXT block only (its white pass
+        // lands on y 62-64; the block's own hatch never reaches this luminance)
+        ringLeft: Math.max(...[62, 63, 64].map(y => runAt(y, 16, 52, v => v > 0.75))),
+        ringRight: Math.max(...[62, 63, 64].map(y => runAt(y, 76, 112, v => v > 0.75))),
       };
     });
+    await pg.waitForTimeout(450); // the legend sheet animates in; shoot it settled, not mid-fade
     await pg.screenshot({ path: `${shotDir}/legend-seq.png` });
+    await (await pg.$('#liSeq')).screenshot({ path: `${shotDir}/legend-seq-row.png` });
     await ctx.close();
-    const ok = px.gated && px.stillGated                       // hidden until a chained sheet ships
+    const ok = px.gated === !chained && px.stillGated === !chained  // gated on the shipped levels
       && px.tabDark >= 30 && px.labelLight >= 14 && px.labelLight <= 26
       && px.tabDark > px.labelLight * 1.4                      // channel: width
       && px.chevron > 0 && px.ringLeft > 0 && px.ringRight === 0 // channels: chevron, on-deck ring
       && !errs.length;
-    if (ok) console.log(`legend approval chain ok: the row is gated until a chained sheet exists; forced open, "next up" is a ${px.tabDark}px inked tab with a chevron and a dashed on-deck ring, "waiting" a ${px.labelLight}px paper label with neither — tonal inverses, different widths, three shape channels, zero colour dependence`);
-    else { failures++; console.error('legend approval chain FAIL:', JSON.stringify({ px, errs })); }
+    if (ok) console.log(`legend approval chain ok: the row is ${chained ? 'shown (a chained sheet ships)' : 'gated (no chained sheet ships yet)'} and the gate re-derives on every open; "next up" is a ${px.tabDark}px inked tab with a chevron and a dashed on-deck ring, "waiting" a ${px.labelLight}px paper label with neither — tonal inverses, different widths, three shape channels, zero colour dependence`);
+    else { failures++; console.error('legend approval chain FAIL:', JSON.stringify({ chained, px, errs })); }
+  }
+}
+
+// ---- pass 6: sheet 4 (the approval chain, shipped) ----
+// Pass 5 proved the RULE on synthetic boards. This proves the SHEET: ten generated levels whose
+// par is the chained par, whose chains are short enough that the hint button still answers, and
+// whose certification pays the approval stamp rather than a fourth paper.
+{
+  const gc6 = await import('file://' + root + 'tools/gen-core.mjs');
+  const LV6 = new Function(fs.readFileSync(root + 'levels.js', 'utf8') + '\nreturn LEVELS;')();
+  const SHEET4 = LV6.map((l, i) => i).filter(i => LV6[i].blocks.some(b => b.seq));
+  const open6 = async () => {
+    const ctx = await browser.newContext({ viewport: { width: 420, height: 780 } });
+    const pg = await ctx.newPage();
+    const errs = [];
+    pg.on('pageerror', e => errs.push(e.message));
+    await pg.goto('file://' + root + 'index.html');
+    await pg.waitForFunction(() => window.GE && window.GE.L);
+    return { ctx, pg, errs };
+  };
+
+  // 1. THE PASS-5 TRAP, closed. A chain deep enough to push the optimal line past the runtime hint
+  //    solver's allowance (`remaining + 6` drags / 80 000 states, game.js solveFrom) would make the
+  //    hint button go QUIET on a shipped level — the player taps, watches an ad, and gets nothing.
+  //    So: from EVERY position along every Sheet-4 board's optimal line, the hint must answer, and
+  //    answer fast enough to feel like a tap rather than a hang. Same walk also re-proves par
+  //    through the engine with the chain live, and that the exits fire strictly in order.
+  {
+    const { ctx, pg, errs } = await open6();
+    const rows = [];
+    for (const i of SHEET4) {
+      rows.push(await pg.evaluate(({ i, sol }) => {
+        window.GE.load(i);
+        const out = { lvl: i + 1, quiet: [], illegal: [], order: [], worst: 0 };
+        for (let k = 0; k <= sol.length; k++) {
+          const t0 = performance.now();
+          const mv = window.GE.solve(window.GE.pos);          // the hint's own reference move
+          out.worst = Math.max(out.worst, performance.now() - t0);
+          const info = window.GE.seqInfo();
+          if (k < sol.length) {
+            if (!mv) out.quiet.push(k);                        // the hint went quiet HERE
+            // an EXIT the hint proposes must be legal under the chain. Only a chained block can
+            // be out of turn — an unchained one has no number and is never gated, so `nextUp` is
+            // false for it and reading that as illegal would be reading the rule backwards.
+            const pb = mv ? window.GE.L.blocks[mv.bi] : null;
+            if (mv && mv.side && pb.seq && !info.blocks[mv.bi].nextUp) out.illegal.push(k);
+            const m = sol[k];
+            if (m.side) out.order.push(window.GE.L.blocks[m.bi].seq || 0);
+            if (window.GE.dragVia(m.bi, m.path, m.side) === false) out.illegal.push('drag' + k);
+          }
+        }
+        out.worst = Math.round(out.worst);
+        out.cleared = window.GE.pos.every(p => !p);
+        out.moves = window.GE.moves; out.par = window.GE.L.par; out.limit = window.GE.L.moves;
+        out.chain = window.GE.L.blocks.map(b => b.seq || 0).filter(Boolean).length;
+        return out;
+      }, { i, sol: solutions[i] }));
+    }
+    await ctx.close();
+    // the numbered exits, in the order they actually fired, must be 1,2,3... with the unchained
+    // blocks (0) interleaved anywhere — that is what "the chain was obeyed" means on a real board
+    const orderOk = r => { const seen = r.order.filter(Boolean); return seen.every((v, j) => v === j + 1) && seen.length === r.chain; };
+    const bad = rows.filter(r => r.quiet.length || r.illegal.length || !r.cleared || r.moves !== r.par || r.moves > r.limit || !orderOk(r));
+    const worst = rows.reduce((a, r) => (r.worst > a.worst ? r : a), rows[0]);
+    // tool side: the same measurement the generator gates on (gen-core hintCost walks the runtime's
+    // own iterative deepening), so a future curve edit that makes the hint expensive fails here too
+    const costs = SHEET4.map(i => ({ lvl: i + 1, states: gc6.hintCost(LV6[i]) }));
+    const overBudget = costs.filter(c => c.states > 2500);
+    const ok6 = rows.length === 10 && !bad.length && !overBudget.length && worst.worst <= 600 && !errs.length;
+    if (ok6) console.log(`sheet 4 hints ok: on all ${rows.length} chained boards the hint answers from EVERY position of the optimal line (never quiet, never out of turn), every board still clears at par inside its limit, and the numbered blocks leave strictly in order; slowest single hint ${worst.worst} ms (L${worst.lvl}), worst solver cost ${Math.max(...costs.map(c => c.states))} states vs the 2500 the generator gates on`);
+    else { failures++; console.error('sheet 4 hints FAIL:', JSON.stringify({ bad, overBudget, worst, errs })); }
+  }
+
+  // 2. the chain has to be WORTH something. Every Sheet-4 board is solved twice by gen-core — as
+  //    shipped, and with the numbers stripped off — and the difference is what the ordering rule
+  //    actually costs the player. L31 is the teaching level and is allowed to cost nothing (the
+  //    numbers name an order the board would have given anyway); every level after it must not be
+  //    decoration. This is the generator's accept condition, re-checked against what shipped.
+  {
+    const strip6 = lv => ({ ...lv, blocks: lv.blocks.map(({ seq, ...b }) => b) });
+    const worth = SHEET4.map(i => {
+      const lv = LV6[i];
+      const free = gc6.solve(strip6(JSON.parse(JSON.stringify(lv))), 6, 200000, {});
+      return { lvl: i + 1, par: lv.par, free: free.par, cost: lv.par - free.par, chain: lv.blocks.filter(b => b.seq).length };
+    });
+    const teach = worth[0];
+    const ok = worth.length === 10 && worth.every(w => w.cost >= 0) && teach.cost === 0
+      && worth.slice(1).every(w => w.cost >= 1) && Math.max(...worth.map(w => w.cost)) >= 3;
+    if (ok) console.log(`sheet 4 chains ok: the teaching board (L${teach.lvl}) costs 0 — the numbers name the order it would have given anyway — and every board after it costs real drags: ${worth.slice(1).map(w => `L${w.lvl} +${w.cost}`).join(' · ')}`);
+    else { failures++; console.error('sheet 4 chains FAIL:', JSON.stringify(worth)); }
+  }
+
+  // 3. out of turn, on a SHIPPED board (pass 5 proved this on a synthetic one). A numbered block
+  //    that is not next up has no legal exit from anywhere: pushed at its own gate it parks flush
+  //    against it and stays on the board, and the hint never offers it.
+  {
+    const { ctx, pg, errs } = await open6();
+    const r = await pg.evaluate(idxs => {
+      for (const i of idxs) {
+        window.GE.load(i);
+        const bi = window.GE.L.blocks.findIndex(b => b.seq === 2);
+        const geo = window.GE.route(bi, { ignoreSeq: true });   // the purely geometric question
+        if (!geo) continue;                                     // ② has no lane open yet here
+        const gated = window.GE.route(bi);                      // ...and the gated one
+        // the drag is a legal MOVE and is accepted as one — the chain gates the EXIT, not the
+        // slide, so the block travels the whole route and parks flush against its own gate
+        window.GE.dragVia(bi, geo.path, geo.side);
+        const end = window.GE.pos[bi], want = geo.path[geo.path.length - 1];
+        return { lvl: i + 1, bi, geo: !!geo, gated, still: !!end,
+          flush: !!end && end[0] === want[0] && end[1] === want[1],
+          next: window.GE.seqInfo().next, moves: window.GE.moves,
+          proposed: (window.GE.solve(window.GE.pos) || {}).bi };
+      }
+      return null;
+    }, SHEET4);
+    await pg.screenshot({ path: `${shotDir}/sheet4-refused.png` });
+    await ctx.close();
+    const ok = r && r.geo && r.gated === null && r.still && r.flush && r.moves === 1 && r.next === 1 && r.proposed !== r.bi && !errs.length;
+    if (ok) console.log(`sheet 4 out-of-turn ok: on L${r.lvl}, block \u2461 has an open lane to its own gate (route with {ignoreSeq:true} finds it, the gated route is null) and STILL cannot leave — it slides the whole way and parks flush against the gate for the one drag it cost, the chip names \u2460, and the reference solver proposes a different block`);
+    else { failures++; console.error('sheet 4 out-of-turn FAIL:', JSON.stringify({ r, errs })); }
+  }
+
+  // 4. THE APPROVAL STAMP — Sheet 4's certification reward. The lead's call was a stamp and not a
+  //    fourth paper, so what is checked is: it is previewable while pending (drawn on the shelf, in
+  //    SHAPE-distinct pending form), it lands on the win that crosses 24 ★, it carries no "Try it"
+  //    (there is nothing to apply), it is stamped on EVERY win card afterwards, and it never adds a
+  //    fourth skin. Sheet 4 is seeded to 21 ★ (L31–37 at three) and the crossing is a real par win.
+  {
+    const { ctx, pg, errs } = await open6();
+    const seed = { u: 39, s: [...Array(30).fill(3), 3, 3, 3, 3, 3, 3, 3], skins: ['sepia', 'night', 'white'], rv: ['rescue', 'cert', 'daily', 'survey'], d0: 'pre' };
+    await pg.evaluate(p => { localStorage.setItem('ge_prog', JSON.stringify(p)); localStorage.setItem('ge_stats', '{}'); }, seed);
+    await pg.reload(); await pg.waitForFunction(() => window.GE && window.GE.L);
+    await pg.evaluate(() => window.GE_MENU.show('levels')); await pg.waitForTimeout(120);
+    const pending = await pg.evaluate(() => {
+      const b = document.getElementById('btnAppr'), h = [...document.querySelectorAll('#levelGrid .chap .cert')];
+      return { shelf: !document.getElementById('menuAppr').hidden, on: b.classList.contains('on'),
+        // pending vs earned differ in SHAPE: the approval check and the milled inner ring are not drawn
+        tick: getComputedStyle(b.querySelector('.tick')).display, mill: getComputedStyle(b.querySelector('.mill')).display,
+        cap: document.querySelector('#menuAppr .cap').textContent,
+        head4: h[3].textContent.replace(/\s+/g, ' ').trim(), heads: h.length,
+        chap4: document.querySelectorAll('#levelGrid .chap > span:first-child')[3].textContent.trim(),
+        appr: window.GE_MENU.prog.appr, papers: document.querySelectorAll('#menuPapers .paper').length,
+        themes: Object.keys(window.GE.themes).length };
+    });
+    await pg.screenshot({ path: `${shotDir}/sheet4-stamp-pending.png` });
+    // a locked tap explains itself rather than doing nothing
+    await pg.click('#btnAppr'); await pg.waitForTimeout(60);
+    const lockTap = await pg.evaluate(() => document.querySelector('#menuAppr .cap').textContent);
+    // the crossing win: L38 at par takes Sheet 4 from 21 to 24
+    await pg.evaluate(() => window.GE.load(37)); await pg.waitForTimeout(80);
+    await pg.evaluate(sol => { for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side); }, solutions[37]);
+    await pg.waitForSelector('#winCert:not([hidden])', { timeout: 4000 });
+    await pg.waitForTimeout(750);
+    await pg.screenshot({ path: `${shotDir}/win-approval-stamp.png` });
+    const crossed = await pg.evaluate(() => {
+      const st = JSON.parse(localStorage.getItem('ge_stats') || '{}');
+      return { k: document.querySelector('#winCert .k').textContent, name: document.getElementById('winCertName').textContent,
+        tryHidden: document.getElementById('btnTrySkin').hidden,
+        stamp: !document.getElementById('winAppr').hidden,
+        stampOn: !!document.querySelector('#winAppr .appr-ico.on'),
+        tick: getComputedStyle(document.querySelector('#winAppr .tick')).display,
+        appr: window.GE_MENU.prog.appr, skins: (window.GE_MENU.prog.skins || []).length,
+        cert_earned: st.cert_earned, sheet4: window.GE_MENU.prog.s.slice(30).reduce((a, b) => a + (b || 0), 0) };
+    });
+    // ...and it is on the NEXT win card too — a cosmetic nobody sees again is not a reward
+    await pg.click('#btnNext'); await pg.waitForTimeout(80);
+    await pg.evaluate(sol => { for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side); }, solutions[38]);
+    await pg.waitForSelector('#winModal:not([hidden])', { timeout: 3000 }); await pg.waitForTimeout(1400);
+    const next = await pg.evaluate(() => ({ stamp: !document.getElementById('winAppr').hidden, cert: !document.getElementById('winCert').hidden,
+      cert_earned: JSON.parse(localStorage.getItem('ge_stats')).cert_earned }));
+    await pg.evaluate(() => { document.getElementById('winModal').hidden = true; window.GE_MENU.show('levels'); }); await pg.waitForTimeout(120);
+    const shelf = await pg.evaluate(() => ({ on: document.getElementById('btnAppr').classList.contains('on'),
+      tick: getComputedStyle(document.querySelector('#btnAppr .tick')).display,
+      cap: document.querySelector('#menuAppr .cap').textContent,
+      head4: [...document.querySelectorAll('#levelGrid .chap .cert')][3].textContent.replace(/\s+/g, ' ').trim() }));
+    await pg.screenshot({ path: `${shotDir}/levels-sheet4-stamp.png` });
+    await ctx.close();
+    const ok = pending.shelf && !pending.on && pending.tick === 'none' && pending.mill === 'none' && !pending.appr
+      // four swatches on the shelf is Cyanotype plus the three earned papers — Sheet 4 added none
+      && pending.heads === 4 && /Sign-off$/.test(pending.chap4) && pending.head4 === '★ 21/30 · 3 to certify' && pending.papers === 4
+      && lockTap === 'Sheet 4 · certified at 24 ★'
+      && crossed.k === 'Sheet certified' && crossed.name === 'Approval stamp' && crossed.tryHidden
+      && crossed.stamp && crossed.stampOn && crossed.tick !== 'none'
+      && crossed.appr === 1 && crossed.skins === 3 && crossed.cert_earned === 1 && crossed.sheet4 === 24 && pending.themes === 4
+      && next.stamp && !next.cert && next.cert_earned === 1
+      && shelf.on && shelf.tick !== 'none' && shelf.cap === 'Approval stamp' && shelf.head4 === '★ 27/30 · Approval stamp'
+      && !errs.length;
+    if (ok) console.log(`approval stamp ok: pending on the shelf as a drawn-but-unstruck ring ("${lockTap}" on a locked tap), then an L38 par win takes Sheet 4 to 24 ★ → "Sheet certified — Approval stamp" with NO Try it (nothing to apply), the stamp lands on the card, it is still there on the next win, the shelf reads "${shelf.cap}", the header reads "${shelf.head4}" — and the theme table is still the same four papers`);
+    else { failures++; console.error('approval stamp FAIL:', JSON.stringify({ pending, lockTap, crossed, next, shelf, errs })); }
+  }
+
+  // 5. the sheet, on screen: the teaching board with its chip and its numbered stamps, and a
+  //    partial chain deeper in where unchained blocks sit among numbered ones.
+  {
+    const { ctx, pg } = await open6();
+    const mixed = SHEET4.find(i => LV6[i].blocks.filter(b => b.seq).length === 4 && LV6[i].blocks.some(b => !b.seq));
+    for (const [i, name] of [[SHEET4[0], 'sheet4-intro'], [mixed, 'sheet4-mixed']]) {
+      await pg.evaluate(i => window.GE.load(i), i);
+      await pg.waitForTimeout(1600); // the one-shot 1→2→3 polyline plays on load
+      await pg.screenshot({ path: `${shotDir}/${name}.png` });
+    }
+    const chip = await pg.evaluate(() => ({ up: !document.getElementById('hudSeq').hidden, text: document.getElementById('hudSeq').textContent }));
+    await ctx.close();
+    if (chip.up && /①/.test(chip.text)) console.log(`sheet 4 shots ok: L${SHEET4[0] + 1} (the lesson) and L${mixed + 1} (a 4-long chain among unchained blocks) captured; the HUD chip reads "${chip.text.trim()}"`);
+    else { failures++; console.error('sheet 4 shots FAIL:', JSON.stringify(chip)); }
   }
 }
 

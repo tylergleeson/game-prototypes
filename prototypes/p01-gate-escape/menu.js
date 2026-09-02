@@ -10,13 +10,21 @@
   const pauseModal = $('pauseModal');
   let legendFrom = 'menu', levelsFrom = 'menu'; // Back returns to the screen a sheet was opened from
   let resetArmed = false, resetTimer = 0;
-  const CHAPTERS = ['Foundations', 'Corked', 'The spike'];
+  const CHAPTERS = ['Foundations', 'Corked', 'The spike', 'Sign-off'];
   const PER = Math.ceil(N / CHAPTERS.length); // levels per sheet
-  // sheet certification: one per sheet, awarded at CERT_STARS of the sheet's 30. The reward is a
-  // paper skin — cosmetic only; nothing is ever gated on it (the funnel test needs every level
-  // reachable). Same deterministic threshold it always was; only the language is the surveyor's.
+  // sheet certification: one per sheet, awarded at CERT_STARS of the sheet's 30. The reward is
+  // cosmetic only; nothing is ever gated on it (the funnel test needs every level reachable).
+  // Same deterministic threshold it always was; only the language is the surveyor's.
   const CERT_STARS = 24;
   const CERT_SKINS = ['sepia', 'night', 'white']; // sheet 1, 2, 3 → GE.themes ids
+  // Sheet 4 pays a STAMP rather than a fourth paper (a fourth paper would mean a fourth theme and
+  // a fourth contrast-check row for a reward the player already has three of). It is drawn in the
+  // sheet's own ink, so it inherits every paper instead of adding one.
+  // NOT called a "seal": the Field Survey already has a weekly seal, and one word for two
+  // different rewards is exactly how a meta surface stops being legible. Sheet 4 is the sign-off
+  // sheet, so its reward is the stamp that signs a drawing off.
+  const APPR_SHEET = 3;
+  const APPR_NAME = 'Approval stamp';
   const DEFAULT_SKIN = 'cyan';
 
   // ---------- progress: highest unlocked level + best stars per level (+ paper skin, unlocked skins) ----------
@@ -31,16 +39,25 @@
   const sheetMax = c => Math.min(PER, N - c * PER) * 3;
   const skins = () => prog.skins || [];
   const unlocked = id => id === DEFAULT_SKIN || skins().includes(id);
-  const certLabel = id => `Sheet ${CERT_SKINS.indexOf(id) + 1} · certified at ${CERT_STARS} ★`;
-  // a save that already clears a threshold (older build, seeded progress) owns that skin; the
+  const sheetLabel = c => `Sheet ${c + 1} · certified at ${CERT_STARS} ★`;
+  const certLabel = id => sheetLabel(CERT_SKINS.indexOf(id));
+  // what a sheet's certification pays: a paper for sheets 1-3, the seal for sheet 4
+  const rewardName = c => (c === APPR_SHEET ? APPR_NAME : (GE.themes[CERT_SKINS[c]] || {}).name || 'certified');
+  const apprOn = () => !!prog.appr;
+  // a save that already clears a threshold (older build, seeded progress) owns that reward; the
   // stamp beat then plays the first time its header is seen (prog.seen)
   for (let c = 0; c < CERT_SKINS.length; c++) if (sheetStars(c) >= CERT_STARS && !unlocked(CERT_SKINS[c])) prog.skins = [...skins(), CERT_SKINS[c]];
+  if (sheetStars(APPR_SHEET) >= CERT_STARS && !prog.appr) prog.appr = 1;
   GE.setTheme(unlocked(prog.skin) ? prog.skin : DEFAULT_SKIN);
 
   // ---------- paper skins ----------
   // the certification stamp: a dashed pending frame with a blank rule, or — once the sheet is
   // certified — a solid frame with the star stamped into it (shape cue, not colour alone)
   const CERT_SVG = certified => `<svg class="cert-ico${certified ? ' on' : ''}" viewBox="0 0 24 20" aria-hidden="true"><rect class="frame" x="2" y="2.5" width="20" height="15" rx="2.5"/><path class="rule" d="M7.5 10h9"/><path class="star" d="M12 5.6l1.55 3.28 3.45.52-2.5 2.53.6 3.62L12 13.83l-3.1 1.72.6-3.62-2.5-2.53 3.45-.52z"/></svg>`;
+  // the approval stamp itself: an empty dashed ring while it is pending, a milled double ring
+  // with the approval check struck across it once it is earned. SHAPE carries the state (the check
+  // and the inner ring are simply absent when pending) — the rule the certification stamp follows.
+  const APPR_SVG = earned => `<svg class="appr-ico${earned ? ' on' : ''}" viewBox="0 0 40 40" aria-hidden="true"><circle class="ring" cx="20" cy="20" r="17"/><circle class="mill" cx="20" cy="20" r="13.2"/><path class="tick" d="M12.9 20.6l4.7 4.7 9.5-10.4"/></svg>`;
   function setSkin(id, from) {
     if (!unlocked(id) || !GE.themes[id]) return false;
     GE.setTheme(id); // instant: the next frame draws on the new paper; ge:theme refreshes the pickers
@@ -56,7 +73,8 @@
     const cap = host.querySelector('.cap');
     cap.textContent = text; cap.classList.toggle('lock', !!lock);
     clearTimeout(capTimers.get(host));
-    if (lock) capTimers.set(host, setTimeout(() => caption(host, GE.themes[GE.theme].name), 2600));
+    // a locked tap says its piece and then the shelf goes back to naming what it holds
+    if (lock) capTimers.set(host, setTimeout(() => (host.id === 'menuAppr' ? refreshAppr() : caption(host, GE.themes[GE.theme].name)), 2600));
   }
   function buildPapers(host, prefix) {
     const sw = host.querySelector('.sw');
@@ -82,6 +100,32 @@
     $('menuPapers').hidden = $('pausePapers').hidden = !on;
     if (!on) return;
     buildPapers($('menuPapers'), 'btnPaper'); buildPapers($('pausePapers'), 'btnPausePaper');
+  }
+  // the stamp shelf: one mark, beside the papers, arriving with them. It is previewable while
+  // pending (the ring is drawn, the check is not) and — like a locked swatch — a tap explains it
+  // rather than doing nothing. There is nothing to SELECT: the stamp is on the card or it is not.
+  function refreshAppr() {
+    const host = $('menuAppr'), on = disclosure().cert;
+    host.hidden = !on;
+    if (!on) return;
+    const earned = apprOn(), sw = host.querySelector('.sw');
+    sw.innerHTML = '';
+    const b = document.createElement('button');
+    b.className = 'apprbtn' + (earned ? ' on' : '');
+    b.id = 'btnAppr';
+    b.innerHTML = APPR_SVG(earned);
+    b.setAttribute('aria-label', APPR_NAME + (earned ? ', stamped on every win card' : ', locked. ' + sheetLabel(APPR_SHEET)));
+    b.onclick = () => caption(host, earned ? APPR_NAME + ' · on every win card' : sheetLabel(APPR_SHEET), !earned);
+    sw.appendChild(b);
+    caption(host, earned ? APPR_NAME : `★ ${sheetStars(APPR_SHEET)}/${sheetMax(APPR_SHEET)} on Sheet ${APPR_SHEET + 1}`, !earned);
+  }
+  // the win card's stamp: drawn once it exists, on every win from then on (a cosmetic you never
+  // see is not a reward). `fresh` is the one-shot landing animation on the win that earned it.
+  function refreshWinAppr(fresh) {
+    const el = $('winAppr');
+    el.classList.toggle('fresh', !!fresh);
+    el.hidden = !apprOn();
+    if (!el.hidden && !el.firstChild) el.innerHTML = APPR_SVG(true);
   }
   window.addEventListener('ge:theme', () => { refreshPapers(); if (!screens.legend.hidden) drawSymbols(); });
 
@@ -187,6 +231,7 @@
     refreshSound();
     refreshHaptics();
     refreshPapers();
+    refreshAppr();
     refreshDraft();
     refreshSurvey();
   }
@@ -198,13 +243,13 @@
       if (i % per === 0) {
         // chapter rule: a header per sheet of ten with its star count and the sheet's certification —
         // progress toward the threshold, or the paper it earned (no gate: every level stays reachable)
-        const c = i / per, got = sheetStars(c), done = got >= CERT_STARS, skin = GE.themes[CERT_SKINS[c]];
+        const c = i / per, got = sheetStars(c), done = got >= CERT_STARS, reward = rewardName(c);
         const cert = disclosure().cert; // staged: the sheet is just a sheet until level 2 is cleared
         const fresh = cert && done && !(prog.seen || []).includes(c); // first sight of a certified sheet: stamp it here
         const h = document.createElement('div');
         h.className = 'chap';
         h.innerHTML = `<span>Sheet ${c + 1} · ${CHAPTERS[c] || ''}</span>`
-          + (cert ? `<span class="cert${done && !fresh ? ' on' : ''}" title="Certified at ${CERT_STARS} ★">${CERT_SVG(done && !fresh)} <b>★ ${got}/${sheetMax(c)}</b> · ${done ? (skin ? skin.name : 'certified') : `${CERT_STARS - got} to certify`}</span>` : '');
+          + (cert ? `<span class="cert${done && !fresh ? ' on' : ''}" title="Certified at ${CERT_STARS} ★">${CERT_SVG(done && !fresh)} <b>★ ${got}/${sheetMax(c)}</b> · ${done ? reward : `${CERT_STARS - got} to certify`}</span>` : '');
         g.appendChild(h);
         if (fresh) {
           prog.seen = [...(prog.seen || []), c]; save();
@@ -237,7 +282,7 @@
       return;
     }
     prog = { u: 0, s: [] }; save();
-    GE.setTheme(DEFAULT_SKIN); // certifications lapse with the stars; the sheet goes back to cyanotype
+    GE.setTheme(DEFAULT_SKIN); // certifications lapse with the stars: the paper goes back to cyanotype, the stamp is unstamped
     GE.load(0); show('levels');
   };
 
@@ -325,11 +370,16 @@
   // have landed, the stamp comes down with sparks and a chime, and Try it applies the paper
   let certTimer = 0, certSkin = null;
   const winCert = $('winCert'), btnTry = $('btnTrySkin');
-  function revealCert(id) {
-    certSkin = id;
+  // takes the SHEET, not a skin id: sheets 1-3 pay a paper (with Try it), sheet 4 pays the stamp,
+  // which has nothing to apply — so the button is removed rather than left as a dead control.
+  function revealCert(sheet) {
+    const id = CERT_SKINS[sheet];
+    certSkin = id || null;
     const ico = winCert.querySelector('.cert-ico');
-    $('winCertName').textContent = GE.themes[id].name;
-    btnTry.disabled = GE.theme === id; btnTry.textContent = btnTry.disabled ? 'On' : 'Try it';
+    $('winCertName').textContent = rewardName(sheet);
+    btnTry.hidden = !id;
+    if (id) { btnTry.disabled = GE.theme === id; btnTry.textContent = btnTry.disabled ? 'On' : 'Try it'; }
+    if (sheet === APPR_SHEET) refreshWinAppr(true); // the stamp lands on the card it was earned on
     winCert.hidden = false; // unhiding restarts the row's pop and the stamp's delayed landing
     certTimer = setTimeout(() => { if (ico.isConnected) { GE.burst(ico); GE.sound('cert'); } }, GE.reduced ? 0 : 450);
   }
@@ -836,6 +886,7 @@
   window.addEventListener('ge:win', e => {
     const { lvl, stars, last, daily, test } = e.detail;
     clearTimeout(certTimer); winCert.hidden = true;
+    refreshWinAppr(false); // the stamp, once earned, is on every win card — draft and test boards too
     // GE.loadTest boards ride on a second virtual index (one past the draft) so a rule can be
     // verified on a synthetic level. They are not the campaign and not a draft: nothing is
     // recorded, and the card says what the board was rather than naming a sheet that does not exist.
@@ -862,20 +913,21 @@
     const before = starsTotal(), sheet = Math.floor(lvl / PER), sheetBefore = sheetStars(sheet);
     prog.s[lvl] = Math.max(prog.s[lvl] || 0, stars);
     prog.u = Math.max(prog.u, Math.min(lvl + 1, N - 1));
-    if (sheetBefore < CERT_STARS && sheetStars(sheet) >= CERT_STARS && CERT_SKINS[sheet]) {
+    if (sheetBefore < CERT_STARS && sheetStars(sheet) >= CERT_STARS && sheet < CHAPTERS.length) {
       const id = CERT_SKINS[sheet];
-      if (!unlocked(id)) prog.skins = [...skins(), id];
+      if (id && !unlocked(id)) prog.skins = [...skins(), id];
+      if (sheet === APPR_SHEET) prog.appr = 1;
       prog.seen = [...(prog.seen || []), sheet]; // the beat plays here, not again on the sheet index
-      track('cert_earned', { sheet: sheet + 1, skin: id, lvl: lvl + 1 });
+      track('cert_earned', { sheet: sheet + 1, skin: id || null, stamp: sheet === APPR_SHEET, lvl: lvl + 1 });
       const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      certTimer = setTimeout(() => revealCert(id), reduced ? 0 : 1000);
+      certTimer = setTimeout(() => revealCert(sheet), reduced ? 0 : 1000);
     }
     save();
     // win-card meta: the star total ticks up once the stars have landed; the next sheet is named
     const after = starsTotal();
     $('winNo').textContent = 'SHEET ' + String(lvl + 1).padStart(2, '0');
     const nx = LEVELS[lvl + 1];
-    $('winNext').innerHTML = last ? 'All 30 clear' : `Level ${lvl + 2}<small>${nx.blocks.length} blocks · par ${nx.par}</small>`;
+    $('winNext').innerHTML = last ? `All ${N} clear` : `Level ${lvl + 2}<small>${nx.blocks.length} blocks · par ${nx.par}</small>`;
     const total = $('winTotal');
     const paint = n => { total.innerHTML = `<b>★</b> ${n} / ${N * 3}`; };
     paint(before);
@@ -1085,7 +1137,8 @@
   seedDisclosure(); // an existing save is a returning player, not a first-time one
   show('menu');
   checkStreak(); // weather-delay notice / silent lapse, resolved once on launch (and only then)
-  window.GE_MENU = { show, get prog() { return prog; }, setSkin, CERT_STARS, CERT_SKINS,
+  window.GE_MENU = { show, get prog() { return prog; }, setSkin, CERT_STARS, CERT_SKINS, CHAPTERS, PER,
+    APPR_SHEET, APPR_NAME, apprOn, refreshAppr, rewardName,
     // the landing's whole interactive surface: Play + two quiet entries, nothing else
     landing: () => [...screens.menu.querySelectorAll('button, a, input, select, textarea, [role="button"], [tabindex]')]
       .filter(b => !b.hidden && b.getClientRects().length > 0).map(b => b.id || b.className),
