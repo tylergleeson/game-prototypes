@@ -1,0 +1,288 @@
+GATE ESCAPE — COMPLETE DESIGN & PLAY BRIEF
+===========================================
+Prepared 2026-09-02 for external research review.
+Purpose: (1) position this game against currently trending mobile puzzle
+games — where it is derivative, where it differs, and whether the
+differences matter commercially; (2) identify additional gamification
+opportunities consistent with the constraints in section 10. Specific
+questions for the researcher are in section 13.
+
+Current state: fully playable; 30 machine-verified levels; native iOS build
+(not yet on the App Store); shareable web build; no monetization active.
+
+
+1. ONE-PARAGRAPH OVERVIEW
+-------------------------
+Gate Escape is a single-finger, grid-based "block escape" puzzle in the
+hybrid-casual family of Color Block Jam. The board is drawn as an
+architect's blueprint. Colored blocks of various shapes sit on a grid;
+each edge of the board carries colored "gates." The player drags blocks —
+one drag may travel any distance, including around corners — and a block
+leaves the board when it reaches a wall gate of its own color that spans
+every row/column the block occupies. Clear all blocks within a move limit
+to win. Every level is generated with a solver that proves solvability and
+computes optimal par; nothing is hand-tuned or adjusted at runtime.
+
+
+2. CORE RULES (EXACT)
+---------------------
+Board: rectangular grid, from 4x5 (level 1) up to 7x9 (late levels).
+Cells may contain: a block cell, a stone (immovable 1x1 obstacle), or
+nothing.
+
+Blocks: polyomino shapes — 1x1, 1x2, 1x3 (both orientations), 2x2 squares,
+and L-triominoes. Each block has one of up to 4 colors. Color is never the
+only signal: every color carries a distinct printed symbol (circle,
+triangle, diamond, dot) on the block AND on its gates (colorblind-safe by
+construction).
+
+Gates: colored openings along the outer walls, each spanning a contiguous
+run of 1-4 lanes on one side. A block may exit only through a gate of its
+own color, only when flush against that wall, and only when the gate
+covers EVERY lane (row or column) the block occupies. There is no partial
+or misaligned exit; the rule is checked cell-exactly.
+
+Movement: drag with one finger. A drag routes the block cell-by-cell
+through free space, corners allowed, following the finger — the block
+never passes through blocks, stones, or walls. ONE DRAG = ONE MOVE, no
+matter how far it travels or how many corners it turns. Releasing ends the
+move. Reaching a valid gate mid-drag exits the block (also one move).
+An undo button reverses the last move.
+
+Move economy: each level has "moves" (the limit) and "par" (solver-proven
+minimum drags). Limits run 5-12; par runs 1-9. Stars on completion:
+3 stars at or under par, 2 stars within par+2, 1 star otherwise. A live
+star meter shows the current attainable stars during play.
+
+Failure and rescue: running out of moves with blocks remaining raises a
+fail sheet at the moment of loss showing the board state and offering
+RESCUE: +3 moves, granted through a (currently free, simulated) rewarded-
+ad flow, once per level attempt. Declining offers retry. This fail/rescue
+moment is deliberately the future monetization surface.
+
+Hints: an in-engine A* solver can show a "designer's reference" ghost
+route for one block — the exact drag path drawn on the blueprint — also
+behind the simulated rewarded-ad flow.
+
+Near-miss integrity rule (hard constraint): near misses are STATE TRUTH
+only. The game never manipulates a board, deal, or outcome post-hoc to
+manufacture "so close!" moments. Deterministic levels are the product.
+
+
+3. CONTROLS & GAME FEEL
+-----------------------
+- Single verb: drag. No taps-to-select, no buttons during play.
+- Feel beats: a 70 ms press dip on pickup; per-cell haptic ticks as the
+  block walks under the finger (rate-limited); a damped snap on release.
+- Exit choreography (recently reworked for legibility): the rendered block
+  visibly walks the exact cell path the logic took (34 ms/cell, catch-up
+  bounded at 260 ms), the gate's lanes flash the instant the block aligns,
+  a 90 ms held beat, then the block flies out with a particle burst and a
+  rising pitch. Consecutive quick exits climb in pitch (resets after ~4 s)
+  — a combo feel without any score mechanic.
+- Sound is layered but optional; the game is fully legible with sound off
+  (a hard design rule: any screenshot must be readable in 3 seconds).
+- Reduced-motion accessibility: every animation shortens or halves
+  (particles, shake, glide) under the system setting or an in-game toggle.
+- Haptics: native driver on iOS (UIKit generators + one Core Haptics
+  "whoosh" signature), with an independent toggle.
+
+
+4. LEVEL DESIGN & DIFFICULTY CURVE
+----------------------------------
+All 30 levels are produced by a generator + solver toolchain:
+- The generator places blocks/stones/gates per a difficulty spec; the
+  solver (breadth-first over full board states) proves solvability and
+  computes par. Unsolvable or degenerate boards are discarded.
+- Per-level seeds: retuning one level leaves all others byte-identical.
+- A headless bot plays every level to par through the real engine before
+  any change ships (plus ~70 regression checks for UI flows).
+
+The curve follows the hybrid-casual "CrazyLabs" discipline:
+- L1-2: no-fail tutorials (one block, then two; generous limits; L1-3 show
+  a ghost-route tutorial hint automatically).
+- One new element at a time: longer blocks and a second color by L4;
+  stones (immovable obstacles) first appear at L5; a third color ~L8;
+  L-shaped and 2x2 blocks mid-teens; a fourth color and 7x9 boards late.
+- Tension between par and limit narrows with progress (early levels allow
+  par+4; later levels par+2 to par+3).
+- A deliberate difficulty spike in the L20-25 band (the genre-standard
+  "commitment test"), then breathing room.
+- Levels are grouped into "sheets" (chapters) of 10 in the level select.
+
+
+5. VISUAL IDENTITY
+------------------
+The entire game is an architect's blueprint: cyanotype-blue paper, white
+line work, a drafting title block as the menu, the how-to-play as the
+drawing's "legend," level select as a "sheet index" with per-sheet chests.
+Blocks are cross-hatched solids with corner registration marks; gates are
+tabs on the wall with matching hatch + symbol; stones are cross-hatched
+voids. Everything the player can act on has solid fill plus outline
+(a hard rule). Unlockable "paper" skins re-ink the whole drawing (Sepia,
+Night vellum, Whiteprint) without touching layout or legibility.
+
+Cold open (recently reworked): a calm cover sheet — title treatment, one
+status stamp line (LEVEL 12 / 30 · star count · streak), and exactly three
+actions: Play/Continue, Levels, How to play. Fresh installs see a small
+vignette of a red block gliding out through its gate (teaching the core
+verb before the first tap). All meta surfaces sit one tap deeper.
+
+
+6. SESSION FLOW
+---------------
+Cold open -> cover sheet -> Continue (one tap) -> play.
+A level takes 20-90 seconds. Win card: stars with a burst, move count vs
+par, quest/streak stamp when relevant, Next / Replay-for-3-stars. Fail
+sheet: rescue offer at the moment of loss. Pause: resume/restart/exit plus
+sound, haptics, and motion toggles. The legend (how-to-play) includes an
+"around the game" section documenting the meta systems, and animated
+demonstrations of the drag and exit rules including the one-drag-corners
+rule.
+
+
+7. META & RETENTION SYSTEMS (ALL SHIPPED)
+-----------------------------------------
+Stars & chests: stars accumulate per sheet of 10 levels; at 24 stars a
+sheet's chest opens and grants a cosmetic paper skin. Chests are purely
+cosmetic, fully deterministic (no randomness), and previewable.
+
+Daily quests: three per day, deterministically seeded from the date (e.g.
+"clear 3 levels," "win at par," "use zero undos"). Completing all three
+banks a streak freeze.
+
+Streak: consecutive-day play streak shown as "N of last 7 days" marks.
+Missing a day consumes a banked freeze (max 2) before breaking; a broken
+streak can be repaired once via the (free, simulated) rewarded-ad flow.
+
+Weekly ladder ("Field Survey"): a personal points ladder — 1 point per
+clear, +1 at par — with stamps at 3 / 7 / 12 / 20 points per week. There
+is no leaderboard and no social comparison; it is self-competition only.
+
+Lives: 5 lives; losing a level from L6 onward costs one (L1-5 are free;
+rescue preserves the life). Refill: one life per 25 minutes, or a full
+refill via the rewarded-ad flow. Lives ship ON but are flag-gated
+(`?lives=0` disables the system entirely) because the team is genuinely
+uncertain the friction earns its retention keep — researcher opinion
+welcome (Q6).
+
+Hints & undo: as above; undo is unlimited and free (the puzzle is the
+product; input error should never be punished).
+
+
+8. MONETIZATION STANCE (CURRENT: NONE ACTIVE)
+---------------------------------------------
+Nothing is for sale and no real ads run. The design reserves:
+- Rewarded-ad placements: rescue (+3 moves), hint, streak repair, life
+  refill. All currently simulated with a 1.2 s placeholder bar.
+- Future IAP candidates: cosmetic papers, a one-time "remove ads."
+Hard rules already encoded for whenever money ships:
+- NEVER celebratory feedback (confetti/chimes/flashes) on a purchase
+  event (the celebration-on-spend pattern is prohibited).
+- Every currency grant/spend gets an immutable ledger entry; any
+  transaction UI shows opening balance, cost, reward, closing balance.
+- No "loss disguised as win" — win language never decorates a net-negative
+  outcome.
+- Paid random rewards (loot boxes, paid gacha) are permanently off the
+  roadmap; fixed bundles only.
+
+
+9. TECHNICAL PROPERTIES THAT SHAPE DESIGN
+-----------------------------------------
+- Zero-dependency web engine (canvas) wrapped in a native iOS shell;
+  levels are static data shipped with the build.
+- Determinism end-to-end: same level plays identically forever; there is
+  no server, no remote config, no A/B machinery (yet).
+- Machine verification: every gameplay/rendering change re-runs a bot that
+  beats all 30 levels at par through the real engine plus ~70 regression
+  checks; an iOS UI-test bot does the same on-device.
+- Analytics: an anonymous, batched beacon exists but ships disabled.
+
+
+10. DESIGN CONSTRAINTS THE RESEARCHER SHOULD TREAT AS FIXED
+-----------------------------------------------------------
+1. 3-second sound-off legibility of any screen.
+2. One verb (drag); no mid-play UI chrome.
+3. Deterministic, solver-verified levels; no dynamic difficulty
+   adjustment, no post-hoc outcome manipulation, no fake near-misses.
+4. Shape cues wherever color carries meaning.
+5. No paid randomness; no purchase celebration; ledger transparency.
+6. The blueprint art direction is the identity — gamification proposals
+   should be expressible in drafting-sheet vernacular (stamps, revisions,
+   sheet numbers, approval seals, red-line markup...).
+
+Everything else — including whether lives survive, the chest economy, the
+ladder shape, session pacing — is open to challenge.
+
+
+11. LINEAGE & SELF-ASSESSED POSITIONING (FOR THE RESEARCHER TO CORRECT)
+-----------------------------------------------------------------------
+Nearest neighbors as we understand them:
+- Color Block Jam (Rollic) — closest mechanical relative: colored blocks
+  dragged out through colored gates. Key differences on our side: strict
+  one-drag-=-one-move economy with par/stars (CBJ is untimed-move-free with
+  a countdown timer), polyomino variety incl. L-shapes, no timer anywhere,
+  deterministic levels, and the blueprint identity vs. toy-plastic look.
+- Block Blast / Unpuzzle / "unpack the grid" family — shares the
+  clear-the-board satisfaction, differs in the gate/color routing logic.
+- Parking Jam / Screw Jam / unscrew-and-sort wave — shares the
+  "declutter a jammed space" fantasy and the rescue-at-fail monetization
+  surface.
+- Rush Hour (classic) — the sliding-blocks-in-a-crowded-grid ancestor,
+  but Rush Hour slides on rails; Gate Escape routes freely around corners,
+  which changes the entire solution texture (route-finding, not shunting).
+Planned "ownable twist" candidates not yet built: gates that change color
+after each use; gates that close after N exits; blocks that must exit in a
+stamped sequence (an "approval chain").
+
+
+12. WHAT WE KNOW WE DON'T KNOW
+------------------------------
+- No live retention or funnel data exists (analytics disabled, no store
+  release). All difficulty/retention tuning is from design convention and
+  bot-verified par, not player telemetry.
+- The lives system's net effect is unmeasured (see section 7).
+- The recent menu simplification moved quests/streak/ladder one tap deeper;
+  we accepted a possible engagement cost for a calmer first impression and
+  want a second opinion (Q7).
+
+
+13. QUESTIONS FOR THE RESEARCHER
+--------------------------------
+Q1. Positioning: against the current top-grossing/top-download block and
+    sorting puzzlers (Color Block Jam, Block Blast, Screw Jam wave,
+    Hexa Sort, etc.), which of our differences are commercially meaningful
+    and which are noise? Is "no timer + strict move-par economy" a
+    differentiator or a retention liability in this genre?
+Q2. Which trending mechanics from adjacent genres would hybridize cleanly
+    with the one-drag/gate-alignment core under our constraints (sec. 10)?
+    We are especially interested in mechanics that deepen routing (the
+    around-corners drag) rather than add layers of board furniture.
+Q3. Of our three ownable-twist candidates (color-cycling gates, closing
+    gates, sequenced exits), which best matches proven engagement patterns,
+    and what does the literature/market say about "rule that changes as
+    you use it" mechanics in casual play?
+Q4. Gamification audit: given sections 7-8, what proven systems are we
+    missing that do NOT violate section 10 (e.g., collections/albums,
+    seasonal sheets, mastery badges, spectate/share moments, daily puzzle
+    with a global identical board, "perfect sheet" meta-goals)? Rank by
+    expected retention impact for a solo-dev product.
+Q5. Which of our shipped systems is most likely over-engineered or
+    redundant for our stage (quests vs streak vs ladder vs chests), and
+    what would you cut or merge first?
+Q6. Lives: for a premium-feeling, no-timer puzzle with rescue ads at fail,
+    does a lives system add or destroy value? Evidence either way?
+Q7. First-session design: given the calm cover-sheet open (sec. 5), what
+    does current evidence say about meta-system discovery — should quests/
+    streak surface passively on the cover sheet (a status line), or is
+    tap-deep discovery fine at our stage?
+Q8. Difficulty: our spike is placed at L20-25 by genre convention. Any
+    evidence on optimal spike placement/steepness for D1/D7 in move-limited
+    (not timed) puzzlers?
+Q9. Any monetization surfaces we have not considered that respect the
+    hard rules in section 8 (no paid randomness, no purchase celebration,
+    full ledger transparency)?
+
+Contact: reply with markups directly on this document if convenient.
+The playable web build can be shared on request; the game is also
+installable via TestFlight shortly.
