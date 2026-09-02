@@ -150,7 +150,7 @@ async function solveOut(max = 8, pace = 260) {
   }
 }
 const winUp = () => page.waitForSelector('#winModal:not([hidden])', { timeout: 6000 });
-const adDone = () => page.waitForFunction(() => !window.GE.adUp, null, { timeout: 5000 });
+const adDone = () => page.waitForFunction(() => !window.GE.adUp, null, { timeout: 9000 });
 
 // ================================ the tour ================================
 t0 = Date.now();
@@ -275,7 +275,7 @@ await page.click('#btnPlay');
 await w(1000);
 for (const mv of solutions[5].slice(0, 5)) { await drag(mv.bi, mv.path, mv.side, 240); await w(280); } // 5 of par 6
 for (let i = 0; i < 4; i++) { await wasteMove(220); await w(380); } // burn the last 4 moves for real
-await page.waitForSelector('#failModal:not([hidden])', { timeout: 5000 });
+await page.waitForSelector('#failModal:not([hidden])', { timeout: 9000 });
 await w(1400); // the board rises above the sheet; the last block pulses with its route
 await still('05-fail-sheet');
 await page.click('#btnRescue');
@@ -301,7 +301,7 @@ await w(900);
 for (const mv of solutions[7]) { await drag(mv.bi, mv.path, mv.side, 240); await w(280); }
 await winUp();
 await w(1300); // stars land…
-await page.waitForSelector('#winChest:not([hidden])', { timeout: 5000 });
+await page.waitForSelector('#winChest:not([hidden])', { timeout: 9000 });
 await w(1400); // …the lid swings open with sparks
 await still('06-chest-open');
 await page.click('#btnTrySkin'); // Sepia draft applies instantly, mid-win-card

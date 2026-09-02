@@ -204,7 +204,7 @@ async function film(name, scenario) {
       if (mv) await S.drag(mv.bi, [mv.to], null, pace);
     },
     winUp: () => page.waitForSelector('#winModal:not([hidden])', { timeout: 6000 }),
-    adDone: () => page.waitForFunction(() => !window.GE.adUp, null, { timeout: 5000 }),
+    adDone: () => page.waitForFunction(() => !window.GE.adUp, null, { timeout: 9000 }),
   };
 
   await page.goto('file://' + p01 + 'index.html');
@@ -357,7 +357,7 @@ const D = await film('D-rescue', async S => {
   await S.w(900);
   for (const mv of solutions[5].slice(0, 5)) { await S.drag(mv.bi, mv.path, mv.side, 220); await S.w(240); }
   for (let i = 0; i < 4; i++) { await S.wasteMove(200); await S.w(300); }
-  await S.page.waitForSelector('#failModal:not([hidden])', { timeout: 5000 });
+  await S.page.waitForSelector('#failModal:not([hidden])', { timeout: 9000 });
   S.mark('fail'); // sheet up, board in view, last block pulsing its route
   await S.w(5400); // long hold — the sheet copy gets read
   await S.page.click('#btnRescue');
@@ -387,7 +387,7 @@ const E = await film('E-chest', async S => {
   await S.drag(mvs[mvs.length - 1].bi, mvs[mvs.length - 1].path, mvs[mvs.length - 1].side, 260);
   await S.winUp();
   S.mark('win'); // stars land on the card…
-  await S.page.waitForSelector('#winChest:not([hidden])', { timeout: 5000 });
+  await S.page.waitForSelector('#winChest:not([hidden])', { timeout: 9000 });
   S.mark('chest'); // …the lid swings open
   await S.w(5200); // long hold — "Chest opened · Sepia draft · Try it" gets read
   await S.page.click('#btnTrySkin');

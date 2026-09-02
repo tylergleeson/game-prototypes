@@ -233,6 +233,29 @@
   $('btnPauseLegend').onclick = () => { legendFrom = 'pause'; pauseModal.hidden = true; show('legend'); };
   $('btnPauseLevels').onclick = () => { levelsFrom = 'pause'; pauseModal.hidden = true; show('levels'); };
   $('btnPauseHome').onclick = () => { pauseModal.hidden = true; show('menu'); };
+  // ---------- tap outside to dismiss ----------
+  // A sheet is a sheet: tapping the paper around it puts it down, exactly as its own dismiss
+  // control does. Only where dismissal is SAFE — the fail sheet (a rescue decision), the win card
+  // (a choice), the rewarded-ad slot (leaving early forfeits the reward) and the streak-repair
+  // card (dismiss = start fresh, i.e. the streak is spent) all stay explicit.
+  // A press that starts on the sheet and drifts onto the scrim is a drag, not a dismiss, so the
+  // pointerdown AND the click both have to land on the scrim itself.
+  function dismissOnScrim(host, dismiss) {
+    let downOnScrim = false;
+    host.addEventListener('pointerdown', e => { downOnScrim = e.target === host; });
+    host.addEventListener('click', e => {
+      if (e.target !== host || !downOnScrim) return;
+      downOnScrim = false;
+      dismiss();
+    });
+  }
+  dismissOnScrim(pauseModal, () => { if (!pauseModal.hidden) resume(); });          // resume play
+  dismissOnScrim($('surveyModal'), () => $('btnSurveyClose').click());
+  dismissOnScrim($('freezeModal'), () => $('btnFreezeOk').click());
+  dismissOnScrim($('livesModal'), () => $('btnLivesHome').click());                 // browsing is never blocked
+  dismissOnScrim(screens.levels, () => $('btnLevelsBack').click());                 // back one layer
+  dismissOnScrim(screens.legend, () => $('btnLegendBack').click());                 // back one layer
+
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     if (!$('surveyModal').hidden) { $('btnSurveyClose').click(); return; }
@@ -550,7 +573,7 @@
     GE.draw(c, ({ drawGlyph }) => {
       c.save();
       c.globalAlpha = alpha;
-      c.shadowColor = 'rgba(4,14,34,.5)'; c.shadowBlur = 6; c.shadowOffsetY = 3;
+      c.shadowColor = T().shadow; c.shadowBlur = 6; c.shadowOffsetY = 3;
       c.fillStyle = col.dark; c.fillRect(x, y, w, h);
       c.shadowColor = 'transparent';
       c.save(); c.beginPath(); c.rect(x, y, w, h); c.clip();
@@ -559,7 +582,7 @@
       for (let d = -h; d < w + h; d += 7) { c.beginPath(); c.moveTo(x + d, y + h); c.lineTo(x + d + h, y); c.stroke(); }
       c.restore();
       // ink halo under the coloured outline, as on the board
-      c.strokeStyle = 'rgba(6,18,40,.85)'; c.lineWidth = 5.5; c.strokeRect(x, y, w, h);
+      c.strokeStyle = T().halo; c.lineWidth = 5.5; c.strokeRect(x, y, w, h); // same ink rim as the board
       c.strokeStyle = col.dark; c.lineWidth = 2.6; c.strokeRect(x, y, w, h);
       c.fillStyle = col.lite;
       for (const [px, py] of [[x, y], [x + w, y], [x, y + h], [x + w, y + h]]) { c.beginPath(); c.arc(px, py, 2.8, 0, Math.PI * 2); c.fill(); }
@@ -587,7 +610,7 @@
   }
   function stone(c, x, y, s) { // drawn exactly as on the board: a solid object, not a marking
     c.save();
-    c.shadowColor = 'rgba(4,14,34,.55)'; c.shadowBlur = 6; c.shadowOffsetY = 3;
+    c.shadowColor = T().shadow; c.shadowBlur = 6; c.shadowOffsetY = 3;
     c.fillStyle = T().stoneBody; c.fillRect(x + 4, y + 4, s - 8, s - 8);
     c.shadowColor = 'transparent';
     c.save();

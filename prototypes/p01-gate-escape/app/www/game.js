@@ -93,6 +93,10 @@ const THEMES = {
     border2: 'rgba(214,238,255,.28)', tick: 'rgba(214,238,255,.8)',
     stoneBody: 'rgba(8,22,48,.92)', stoneHatch: 'rgba(214,238,255,.55)', stoneEdge: 'rgba(224,242,255,.92)',
     route: '255,255,255', routeEdge: '20,40,80', spark: '#ffffff', gateHalo: null, arrow: 'rgba(255,255,255,.9)',
+    // flash: the "it lit up" ink (gate close, alignment beat, stranded edge) — must contrast with
+    // the PAPER, so it is white on dark papers and the paper's own ink on light ones.
+    // shadow/halo: the drop shadow and ink rim every block and stone carries (solid fill + outline).
+    flash: '255,255,255', flashWash: 0.55, shadow: 'rgba(4,14,34,.55)', halo: 'rgba(6,18,40,.85)',
     legendInk: 'rgba(214,238,255,.75)', legendGrid: 'rgba(190,225,255,.12)', legendText: '#eaf4ff', legendAmber: '#ffd04d',
     swatch: ['#1a4480', '#0e2c58', 'rgba(214,238,255,.7)'],
     barStyle: 'DARK', // dark paper → light status-bar text (Capacitor StatusBar style names)
@@ -102,11 +106,15 @@ const THEMES = {
     css: { bg1: '#dcc7a1', bg2: '#bfa478', ink: '#2a1a0a', dim: '#5e421f', line: 'rgba(58,36,12,.7)', line2: 'rgba(58,36,12,.3)',
       card: 'rgba(238,224,192,.97)', sheet: 'rgba(238,224,192,.96)', fill: 'rgba(58,36,12,.07)', fill2: 'rgba(58,36,12,.1)', fill3: 'rgba(58,36,12,.25)',
       'tile-line': 'rgba(58,36,12,.5)', 'lock-ink': 'rgba(58,36,12,.4)', 'lock-hatch': 'rgba(58,36,12,.12)', 'star-off': 'rgba(42,26,10,.3)', tag: 'rgba(42,26,10,.85)',
-      'amber-ink': '#6e4400', 'red-ink': '#a3101a', 'green-ink': '#17603a', done: '#7a4d1c', 'done-fill': 'rgba(122,77,28,.16)' },
+      'amber-ink': '#6e4400', 'red-ink': '#a3101a', 'green-ink': '#17603a', done: '#7a4d1c', 'done-fill': 'rgba(122,77,28,.16)',
+      scrim: 'rgba(58,36,12,.34)', 'scrim-soft': 'rgba(58,36,12,.16)', 'scrim-ad': 'rgba(46,28,10,.5)',
+      'screen-scrim': 'rgba(58,36,12,.28)', 'screen-scrim-soft': 'rgba(58,36,12,.12)',
+      'card-shadow': 'rgba(58,36,12,.38)', 'amber-line': 'rgba(110,68,0,.5)', 'amber-glow': 'rgba(110,68,0,.35)' },
     paper: 'rgba(58,36,12,.06)', grid: 'rgba(58,36,12,.13)', border: 'rgba(58,36,12,.7)',
     border2: 'rgba(58,36,12,.3)', tick: 'rgba(58,36,12,.85)',
     stoneBody: 'rgba(46,28,10,.94)', stoneHatch: 'rgba(230,205,160,.55)', stoneEdge: 'rgba(240,222,184,.92)',
     route: '42,26,10', routeEdge: '255,240,210', spark: '#3a2410', gateHalo: 'rgba(42,26,10,.55)', arrow: 'rgba(42,26,10,.9)',
+    flash: '42,26,10', flashWash: 0, shadow: 'rgba(58,36,12,.45)', halo: 'rgba(42,26,10,.85)',
     legendInk: 'rgba(58,36,12,.8)', legendGrid: 'rgba(58,36,12,.14)', legendText: '#2a1a0a', legendAmber: '#6e4400',
     swatch: ['#dcc7a1', '#bfa478', 'rgba(58,36,12,.7)'],
     barStyle: 'LIGHT', // light paper → dark status-bar text
@@ -116,11 +124,15 @@ const THEMES = {
     css: { bg1: '#2c2c31', bg2: '#141417', ink: '#efe9dc', dim: '#a9a394', line: 'rgba(239,233,220,.7)', line2: 'rgba(239,233,220,.28)',
       card: 'rgba(38,38,43,.97)', sheet: 'rgba(38,38,43,.96)', fill: 'rgba(255,255,255,.05)', fill2: 'rgba(255,255,255,.08)', fill3: 'rgba(255,255,255,.14)',
       'tile-line': 'rgba(239,233,220,.5)', 'lock-ink': 'rgba(239,233,220,.35)', 'lock-hatch': 'rgba(239,233,220,.11)', 'star-off': 'rgba(239,233,220,.35)', tag: 'rgba(255,255,255,.85)',
-      'amber-ink': '#ffd04d', 'red-ink': '#ff5a5f', 'green-ink': '#5fe89b', done: '#e0c98a', 'done-fill': 'rgba(224,201,138,.14)' },
+      'amber-ink': '#ffd04d', 'red-ink': '#ff5a5f', 'green-ink': '#5fe89b', done: '#e0c98a', 'done-fill': 'rgba(224,201,138,.14)',
+      scrim: 'rgba(0,0,0,.58)', 'scrim-soft': 'rgba(0,0,0,.28)', 'scrim-ad': 'rgba(0,0,0,.76)',
+      'screen-scrim': 'rgba(10,10,12,.55)', 'screen-scrim-soft': 'rgba(10,10,12,.2)',
+      'card-shadow': 'rgba(0,0,0,.62)', 'amber-line': 'rgba(255,208,77,.45)', 'amber-glow': 'rgba(255,208,77,.55)' },
     paper: 'rgba(255,255,255,.05)', grid: 'rgba(239,233,220,.10)', border: 'rgba(239,233,220,.65)',
     border2: 'rgba(239,233,220,.28)', tick: 'rgba(239,233,220,.8)',
     stoneBody: 'rgba(6,6,8,.94)', stoneHatch: 'rgba(239,233,220,.55)', stoneEdge: 'rgba(245,240,228,.92)',
     route: '255,255,255', routeEdge: '20,20,24', spark: '#ffffff', gateHalo: null, arrow: 'rgba(255,255,255,.9)',
+    flash: '255,255,255', flashWash: 0.55, shadow: 'rgba(0,0,0,.6)', halo: 'rgba(0,0,0,.85)',
     legendInk: 'rgba(239,233,220,.75)', legendGrid: 'rgba(239,233,220,.12)', legendText: '#efe9dc', legendAmber: '#ffd04d',
     swatch: ['#2c2c31', '#141417', 'rgba(239,233,220,.7)'],
     barStyle: 'DARK',
@@ -130,18 +142,25 @@ const THEMES = {
     css: { bg1: '#f6f3ea', bg2: '#e4dfd0', ink: '#163a6b', dim: '#41598a', line: 'rgba(22,58,107,.7)', line2: 'rgba(22,58,107,.3)',
       card: 'rgba(255,253,247,.97)', sheet: 'rgba(255,253,247,.96)', fill: 'rgba(22,58,107,.07)', fill2: 'rgba(22,58,107,.1)', fill3: 'rgba(22,58,107,.25)',
       'tile-line': 'rgba(22,58,107,.5)', 'lock-ink': 'rgba(22,58,107,.4)', 'lock-hatch': 'rgba(22,58,107,.12)', 'star-off': 'rgba(22,58,107,.3)', tag: 'rgba(22,58,107,.85)',
-      'amber-ink': '#8a5a00', 'red-ink': '#b3121a', 'green-ink': '#1b7a45', done: '#1f4e9c', 'done-fill': 'rgba(31,78,156,.14)' },
+      'amber-ink': '#8a5a00', 'red-ink': '#b3121a', 'green-ink': '#1b7a45', done: '#1f4e9c', 'done-fill': 'rgba(31,78,156,.14)',
+      scrim: 'rgba(22,58,107,.3)', 'scrim-soft': 'rgba(22,58,107,.14)', 'scrim-ad': 'rgba(12,32,62,.46)',
+      'screen-scrim': 'rgba(22,58,107,.24)', 'screen-scrim-soft': 'rgba(22,58,107,.1)',
+      'card-shadow': 'rgba(22,58,107,.3)', 'amber-line': 'rgba(138,90,0,.5)', 'amber-glow': 'rgba(138,90,0,.3)' },
     paper: 'rgba(22,58,107,.05)', grid: 'rgba(22,58,107,.13)', border: 'rgba(22,58,107,.7)',
     border2: 'rgba(22,58,107,.3)', tick: 'rgba(22,58,107,.85)',
     stoneBody: 'rgba(16,40,76,.94)', stoneHatch: 'rgba(230,238,250,.55)', stoneEdge: 'rgba(240,246,255,.92)',
     route: '22,58,107', routeEdge: '255,255,255', spark: '#163a6b', gateHalo: 'rgba(22,58,107,.55)', arrow: 'rgba(22,58,107,.9)',
+    flash: '22,58,107', flashWash: 0, shadow: 'rgba(22,58,107,.35)', halo: 'rgba(16,40,76,.85)',
     legendInk: 'rgba(22,58,107,.8)', legendGrid: 'rgba(22,58,107,.14)', legendText: '#163a6b', legendAmber: '#8a5a00',
     swatch: ['#f6f3ea', '#e4dfd0', 'rgba(22,58,107,.7)'],
     barStyle: 'LIGHT',
   },
 };
 const CSS_VARS = ['bg1', 'bg2', 'ink', 'dim', 'line', 'line2', 'card', 'sheet', 'fill', 'fill2', 'fill3', 'tile-line', 'lock-ink', 'lock-hatch', 'star-off', 'tag',
-  'amber-ink', 'red-ink', 'green-ink', 'done', 'done-fill'];
+  'amber-ink', 'red-ink', 'green-ink', 'done', 'done-fill',
+  // every wash that sits BETWEEN the page and a sheet: scrims were hardcoded cyanotype navy, so
+  // the sepia/whiteprint papers were read through a blue filter on every card and screen
+  'scrim', 'scrim-soft', 'scrim-ad', 'screen-scrim', 'screen-scrim-soft', 'card-shadow', 'amber-line', 'amber-glow'];
 let themeId = 'cyan', THEME = THEMES.cyan;
 function setTheme(id) {
   if (!THEMES[id]) id = 'cyan';
@@ -177,6 +196,13 @@ const btnMenu = document.getElementById('btnMenu');
 const hudGoal = document.getElementById('hudGoal');
 const adModal = document.getElementById('adModal');
 const adBar = document.getElementById('adBar');
+const adCount = document.getElementById('adCount');
+const adTick = document.getElementById('adTick');
+const adGrantRow = document.getElementById('adGrant');
+const btnAdSkip = document.getElementById('btnAdSkip');
+// `hidden` is an HTMLElement property: assigning it on an <svg> silently sets an expando and
+// leaves the attribute (and the UA's [hidden]{display:none}) in place. Toggle the attribute.
+const showEl = (el, on) => { if (on) el.removeAttribute('hidden'); else el.setAttribute('hidden', ''); };
 const btnNext = document.getElementById('btnNext');
 const btnReplay = document.getElementById('btnReplay');
 const winModal = document.getElementById('winModal');
@@ -341,7 +367,7 @@ let settleT = [];      // per-block seconds since a released drag settled (overs
 let attemptUndos = 0, attemptHints = 0; // per-attempt counters, ride on ge:win (daily quests)
 let winTimers = [];
 let toastTimer = 0;
-let adTimer = 0, adCb = null;
+let adTimer = 0, adTickTimer = 0, adTailTimer = 0, adCb = null;
 
 // the first level whose par exceeds its block count: "a block has to move twice"
 const FIRST_TWICE = LEVELS.findIndex(l => l.par > l.blocks.length);
@@ -968,18 +994,75 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) cance
 // Both paid surfaces (rescue, hint) run through here. In the prototype the "ad" is a
 // short placeholder card so the surrounding state machine exists (nothing is granted
 // until it completes; a level change cancels it); the real SDK slots in behind `rewarded`.
-const AD_MS = 1200;
+// A 1.2 s bar that vanished read as a glitch, not as an ad. The slot now runs a ~3 s countdown
+// ring that names what it pays, grants ONLY on completion, and shows a Close only once the
+// reward has landed — so there is never a way to leave early and still be paid. Cancelling
+// (a level change, Restart, adClose) grants nothing. GE.rewarded(kind, grant) is unchanged.
+const AD_MS = 3000;       // the countdown itself
+const AD_TAIL_MS = 1100;  // the beat that names the earned reward before the card closes itself
+const AD_RING = 326.7;    // 2πr for the r=52 ring in index.html
+const AD_KIND = {
+  rescue: { title: 'Rescue', reward: '+3 moves' },
+  hint:   { title: 'Hint', reward: 'the next move' },
+  streak: { title: 'Streak repair', reward: 'your streak back' },
+  life:   { title: '+1 life', reward: '+1 life' },
+};
 function rewarded(kind, grant) {
   adClose();
-  adModal.querySelector('h2').textContent = { hint: 'Hint', streak: 'Streak repair', life: '+1 life' }[kind] || 'Rescue';
-  adBar.style.transition = 'none'; adBar.style.width = '0%'; void adBar.offsetWidth;
-  adBar.style.transition = `width ${AD_MS}ms linear`; adBar.style.width = '100%';
+  const k = AD_KIND[kind] || AD_KIND.rescue;
+  document.getElementById('adTitle').textContent = k.title;
+  document.getElementById('adSub').innerHTML = 'Watch to earn <b></b>';
+  document.getElementById('adSub').querySelector('b').textContent = k.reward;
+  document.getElementById('adGrantV').textContent = k.reward;
+  adGrantRow.hidden = true; showEl(adTick, false); btnAdSkip.hidden = true;
+  adCount.hidden = false;
+  document.querySelector('.adring').classList.remove('done');
+  adCount.textContent = Math.ceil(AD_MS / 1000);
+  // the card has to be VISIBLE before the arc is primed: a display:none element has no computed
+  // start value, so the browser would jump straight to the end and the ring would never sweep
   adModal.hidden = false;
+  // the arc: a linear sweep, or one step per tick when motion is reduced (shortened, not skipped)
+  adBar.style.transition = 'none';
+  adBar.style.strokeDashoffset = AD_RING;
+  void adBar.getBoundingClientRect(); // flush the start value before the transition is armed
+  if (!reducedMotion()) {
+    adBar.style.transition = `stroke-dashoffset ${AD_MS}ms linear`;
+    adBar.style.strokeDashoffset = 0;
+  }
   track('ad_start', { kind, lvl: li + 1 });
   adCb = grant;
-  adTimer = setTimeout(() => { const g = adCb; adClose(); track('ad_done', { kind, lvl: li + 1 }); g(); }, AD_MS);
+  const t0 = performance.now();
+  adTickTimer = setInterval(() => {
+    const left = Math.max(0, AD_MS - (performance.now() - t0));
+    adCount.textContent = Math.ceil(left / 1000);
+    if (reducedMotion()) adBar.style.strokeDashoffset = AD_RING * (left / AD_MS);
+  }, reducedMotion() ? 200 : 250);
+  adTimer = setTimeout(() => adGrantNow(kind), AD_MS);
 }
-function adClose() { clearTimeout(adTimer); adTimer = 0; adCb = null; adModal.hidden = true; }
+// the reward lands here and ONLY here
+function adGrantNow(kind) {
+  if (!adCb) return;
+  const g = adCb; adCb = null;
+  clearInterval(adTickTimer); adTickTimer = 0;
+  clearTimeout(adTimer); adTimer = 0;
+  adBar.style.transition = 'none'; adBar.style.strokeDashoffset = 0;
+  adCount.hidden = true; showEl(adTick, true);
+  document.querySelector('.adring').classList.add('done'); // the arc turns green behind the tick
+  adGrantRow.hidden = false;
+  btnAdSkip.hidden = false; // the way out appears only now — after the grant, never before
+  track('ad_done', { kind, lvl: li + 1 });
+  sound('gate'); // a quiet play beat on a FREE grant (never on a purchase — see CLAUDE.md)
+  g();
+  adTailTimer = setTimeout(adClose, reducedMotion() ? 500 : AD_TAIL_MS);
+}
+// cancel: closes the slot without granting anything (level change, Restart, Close after the grant)
+function adClose() {
+  clearTimeout(adTimer); adTimer = 0;
+  clearInterval(adTickTimer); adTickTimer = 0;
+  clearTimeout(adTailTimer); adTailTimer = 0;
+  adCb = null; adModal.hidden = true;
+}
+btnAdSkip.onclick = adClose;
 
 // ---------- buttons ----------
 btnRestart.onclick = () => { if (over || paused) return; track('restart', li + 1); loadLevel(li); };
@@ -1128,7 +1211,7 @@ function drawBlockShape(b, px, py, inset, st) {
   };
   // shadowed base + opaque fill + hatch texture, all inside the union shape
   ctx.save();
-  ctx.shadowColor = 'rgba(4,14,34,.55)'; ctx.shadowBlur = st.shadow; ctx.shadowOffsetY = st.lift;
+  ctx.shadowColor = THEME.shadow; ctx.shadowBlur = st.shadow; ctx.shadowOffsetY = st.lift;
   ctx.fillStyle = st.dark;
   shape(); ctx.fill();
   ctx.restore();
@@ -1146,7 +1229,7 @@ function drawBlockShape(b, px, py, inset, st) {
   // ink halo (dark, outside) then the coloured outline on top: the seam between two
   // same-colour blocks is now dark-ink / paper gutter / dark-ink, never colour on colour
   ctx.lineCap = 'square'; ctx.lineJoin = 'miter';
-  ctx.strokeStyle = 'rgba(6,18,40,.85)'; ctx.lineWidth = 5.5;
+  ctx.strokeStyle = THEME.halo; ctx.lineWidth = 5.5; // the ink rim under the coloured outline
   edges(); ctx.stroke();
   ctx.strokeStyle = st.edge || st.dark; ctx.lineWidth = st.edge ? 3.4 : 2.6;
   edges(); ctx.stroke();
@@ -1346,9 +1429,9 @@ function render() {
     const closed = !alive[g.color];
     const fl = gateFlash[g.color];
     if (fl >= 0 && fl < 0.6) {
-      // closing flash: a bright ring swelling off the tab
+      // closing flash: a ring swelling off the tab, in the paper's own flash ink
       const u = fl / 0.6, grow = 4 + u * 14;
-      ctx.strokeStyle = `rgba(255,255,255,${(1 - u) * 0.9})`; ctx.lineWidth = 3;
+      ctx.strokeStyle = `rgba(${THEME.flash},${(1 - u) * 0.9})`; ctx.lineWidth = 3;
       rr(gx - grow, gy - grow, w + grow * 2, h + grow * 2, 6 + grow); ctx.stroke();
     }
     if (closed) ctx.globalAlpha = 0.3;
@@ -1384,7 +1467,7 @@ function render() {
   for (const [sx, sy] of L.stones) {
     const x = bx + sx * cell, y = by + sy * cell;
     ctx.save();
-    ctx.shadowColor = 'rgba(4,14,34,.55)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3;
+    ctx.shadowColor = THEME.shadow; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3;
     ctx.fillStyle = THEME.stoneBody;
     ctx.fillRect(x + 4, y + 4, cell - 8, cell - 8);
     ctx.shadowColor = 'transparent';
@@ -1440,7 +1523,7 @@ function render() {
       main: c.main, dark: c.dark, lite: c.lite, glyph: c.glyph,
       shadow: dragging ? 12 : 6, lift: dragging ? 5 : 3,
       // on the fail card the stranded blocks breathe with a white edge so the rescue shows what it buys
-      edge: stranded ? `rgba(255,255,255,${0.35 + pulse * 0.6})` : null,
+      edge: stranded ? `rgba(${THEME.flash},${0.35 + pulse * 0.6})` : null,
     });
     ctx.restore();
   }
@@ -1456,26 +1539,27 @@ function render() {
     if (g.side === 'left') { gx = bx - th - 3; gy = by + g.start * cell; w = th; h = along; }
     if (g.side === 'right') { gx = bx + bw + 3; gy = by + g.start * cell; w = th; h = along; }
     ctx.save();
-    // the block, lit where it stands: the shape the player was dragging is the thing that lined up.
-    // It fades out well before the tab's ring does — by the time the block flies, only the gate glows
+    // the block, marked where it stands: the shape the player was dragging is the thing that lined
+    // up. Outlined in the paper's flash ink on every skin, plus a highlight wash where the paper is
+    // dark enough for one to read. It fades out well before the tab's ring does.
     const bf = Math.max(0, 1 - a.t / (alignFlashS() * 0.42));
     if (bf > 0 && a.from && L.blocks[a.bi]) {
-      ctx.fillStyle = `rgba(255,255,255,${bf * 0.6})`;
-      for (const [cx, cy] of L.blocks[a.bi].cells) {
-        rr(bx + (a.from[0] + cx) * cell + inset, by + (a.from[1] + cy) * cell + inset, cell - inset * 2, cell - inset * 2, 3);
-        ctx.fill();
-      }
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for (const [cx, cy] of L.blocks[a.bi].cells) { x0 = Math.min(x0, cx); y0 = Math.min(y0, cy); x1 = Math.max(x1, cx + 1); y1 = Math.max(y1, cy + 1); }
+      rr(bx + (a.from[0] + x0) * cell + inset, by + (a.from[1] + y0) * cell + inset,
+         (x1 - x0) * cell - inset * 2, (y1 - y0) * cell - inset * 2, 4);
+      if (THEME.flashWash) { ctx.fillStyle = `rgba(255,255,255,${bf * THEME.flashWash})`; ctx.fill(); }
+      ctx.strokeStyle = `rgba(${THEME.flash},${bf * 0.9})`; ctx.lineWidth = 3; ctx.stroke();
     }
     // the gutter between the block and its gate: the lane, briefly open
-    ctx.fillStyle = `rgba(255,255,255,${e * 0.6})`;
+    ctx.fillStyle = `rgba(${THEME.flash},${e * 0.6})`;
     if (g.side === 'top') ctx.fillRect(bx + g.start * cell, by - 3, along, 3);
     if (g.side === 'bottom') ctx.fillRect(bx + g.start * cell, by + bh, along, 3);
     if (g.side === 'left') ctx.fillRect(bx - 3, by + g.start * cell, 3, along);
     if (g.side === 'right') ctx.fillRect(bx + bw, by + g.start * cell, 3, along);
-    // the gate tab itself, washed white and ringed
-    ctx.fillStyle = `rgba(255,255,255,${e * 0.6})`;
-    rr(gx, gy, w, h, 4); ctx.fill();
-    ctx.strokeStyle = `rgba(255,255,255,${e * 0.95})`; ctx.lineWidth = 3;
+    // the gate tab: ringed in the paper's flash ink on every skin, washed only on dark papers
+    if (THEME.flashWash) { ctx.fillStyle = `rgba(255,255,255,${e * THEME.flashWash})`; rr(gx, gy, w, h, 4); ctx.fill(); }
+    ctx.strokeStyle = `rgba(${THEME.flash},${e * 0.95})`; ctx.lineWidth = 3;
     const grow = 2 + u * 12;
     rr(gx - grow, gy - grow, w + grow * 2, h + grow * 2, 5 + grow); ctx.stroke();
     ctx.restore();

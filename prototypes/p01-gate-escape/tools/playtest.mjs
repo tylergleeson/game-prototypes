@@ -256,7 +256,7 @@ try {
   // rescue is a rewarded-ad slot: the placeholder ad card runs first, nothing is granted until it completes
   await page.click('#btnRescue');
   const during = await page.evaluate(() => ({ ad: window.GE.adUp, left: window.GE.movesLeft, over: window.GE.over }));
-  await page.waitForFunction(() => !window.GE.adUp, null, { timeout: 4000 });
+  await page.waitForFunction(() => !window.GE.adUp, null, { timeout: 9000 });
   const after = await page.evaluate(() => window.GE.movesLeft);
   if (during.ad && during.left === 0 && during.over && after === 3) console.log('rescue ok: ad placeholder shown first, then +3 moves granted');
   else { failures++; console.error(`rescue FAIL: ${JSON.stringify({ during, after })}`); }
@@ -304,7 +304,7 @@ const hudBtns = () => page.evaluate(() => ({ undo: document.getElementById('btnU
   // Rescue then Undo: the losing move comes back WITH the +3 (moves 4, left 1+3), and the
   // rescue stays spent — the next fail card on this level offers Retry only
   await page.click('#btnRescue');
-  await page.waitForFunction(() => !window.GE.adUp, null, { timeout: 4000 });
+  await page.waitForFunction(() => !window.GE.adUp, null, { timeout: 9000 });
   const r3 = await page.evaluate(() => { const a = { left: window.GE.movesLeft, canUndo: window.GE.canUndo }; window.GE.undo(); return { ...a, moves: window.GE.moves, leftAfter: window.GE.movesLeft, over: window.GE.over }; });
   await shuffleL1();
   await page.waitForSelector('#failModal:not([hidden])', { timeout: 2500 });
@@ -468,7 +468,7 @@ const burnLevel = () => page.evaluate(() => {
   const flow0 = await page.evaluate(() => ({ enabled: !document.getElementById('btnHint').disabled, hint: !!window.GE.hint }));
   await page.click('#btnHint');
   const flow1 = await page.evaluate(() => ({ ad: window.GE.adUp, hint: !!window.GE.hint, left: window.GE.movesLeft }));
-  await page.waitForFunction(() => !window.GE.adUp && window.GE.hint, null, { timeout: 4000 });
+  await page.waitForFunction(() => !window.GE.adUp && window.GE.hint, null, { timeout: 9000 });
   const flow2 = await page.evaluate(() => ({ hint: !!window.GE.hint, disabled: document.getElementById('btnHint').disabled, left: window.GE.movesLeft }));
   const solved = await page.evaluate(() => {
     let steps = 0;
@@ -560,7 +560,7 @@ const burnLevel = () => page.evaluate(() => {
   else { failures++; console.error('fail sheet FAIL:', JSON.stringify(r)); }
   // rescue is once per ATTEMPT by design: spent within the attempt, offered again after a Restart
   await page.click('#btnRescue');
-  await page.waitForFunction(() => !window.GE.adUp, null, { timeout: 4000 });
+  await page.waitForFunction(() => !window.GE.adUp, null, { timeout: 9000 });
   const failUp = await page.evaluate(() => document.body.classList.contains('fail-up'));
   await burnLevel(); await page.waitForSelector('#failModal:not([hidden])', { timeout: 3000 });
   const again = await page.evaluate(() => !document.getElementById('btnRescue').hidden);
@@ -792,7 +792,7 @@ const beatRow = () => page.evaluate(() => (document.getElementById('winDaily').h
   await page.screenshot({ path: `${shotDir}/streak-repair-card.png` });
   await page.click('#btnStreakRepair');
   const adUp = await page.evaluate(() => window.GE.adUp);
-  await page.waitForFunction(() => !window.GE.adUp && document.getElementById('streakModal').hidden, null, { timeout: 4000 });
+  await page.waitForFunction(() => !window.GE.adUp && document.getElementById('streakModal').hidden, null, { timeout: 9000 });
   const rep = await S();
   const reOffer = await page.evaluate(() => window.GE_MENU.checkStreak()); // gap is 1 now: no card
   await winL1(); const rep2 = await S();
@@ -963,7 +963,7 @@ const beatRow = () => page.evaluate(() => (document.getElementById('winDaily').h
   // the rescue saves the attempt (no life); Restart mid-level is free too
   await failNow();
   await lp.click('#btnRescue');
-  await lp.waitForFunction(() => !window.GE.adUp, null, { timeout: 4000 });
+  await lp.waitForFunction(() => !window.GE.adUp, null, { timeout: 9000 });
   const resc = await LV();
   const rescState = await lp.evaluate(() => ({ left: window.GE.movesLeft, over: window.GE.over }));
   await lp.evaluate(() => document.getElementById('btnRestart').click()); await lp.waitForTimeout(80);
@@ -1009,7 +1009,7 @@ const beatRow = () => page.evaluate(() => (document.getElementById('winDaily').h
   await lp.click('#levelGrid .tile[data-level="6"]'); // gated entry at 0 lives → the card again (appearance #2)
   await lp.click('#btnLifeRefill');
   const adDuring = await lp.evaluate(() => ({ ad: window.GE.adUp, n: window.GE.lives }));
-  await lp.waitForFunction(() => !window.GE.adUp, null, { timeout: 4000 });
+  await lp.waitForFunction(() => !window.GE.adUp, null, { timeout: 9000 });
   const g1 = await LV();
   const cardGone = await lp.evaluate(() => document.getElementById('livesModal').hidden);
   await lp.click('#levelGrid .tile[data-level="6"]'); await lp.waitForTimeout(60); // enter L6 with the granted life
@@ -1194,6 +1194,282 @@ const trailOf = t => {
     && idx.levels && idx.tiles === 30 && idx.log && leg;
   if (ok) console.log('landing ok: 3 interactive elements (Play + Levels + How to play), stamp "' + back.stamp + '", "' + back.cta + '" lands on L12 in one tap; the field log and the 30-tile index live on the sheet index');
   else { failures++; console.error('landing FAIL:', JSON.stringify({ fresh, played, back, backPlayed, idx, leg })); }
+}
+
+// ---------- paper skins: every surface re-inks (2026-09-02) ----------
+// User report: "the themes don't all work for changing the colors." True — several surfaces were
+// literals rather than tokens, so a sepia or whiteprint drawing was still read through cyanotype
+// navy: every modal/screen scrim, the card shadow, the objective-chip fill, the legend's divider
+// and (on the canvas) every "it lit up" white — the gate-close ring, the fail card's stranded
+// edge and the whole alignment beat, which was INVISIBLE on Whiteprint. All of them now route
+// through THEMES[].css / THEME.*. This check holds every one of them.
+const lumOf = ([r, g, b]) => { const f = c => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+const contrast = (a, b) => { const l1 = lumOf(a), l2 = lumOf(b); return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05); };
+const rgbOf = s => { const m = String(s).match(/[\d.]+/g).map(Number); return [m[0], m[1], m[2]]; };
+// read a real rendered pixel out of an element by screenshotting it and decoding in-page
+const pixelOf = async (sel, fx, fy) => {
+  const el = await page.$(sel);
+  if (!el) return null;
+  const buf = await el.screenshot();
+  return page.evaluate(([d, fx, fy]) => new Promise(res => {
+    const img = new Image();
+    img.onload = () => { const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+      const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+      const p = x.getImageData(Math.round(img.width * fx), Math.round(img.height * fy), 1, 1).data;
+      res([p[0], p[1], p[2]]); };
+    img.src = d;
+  }), ['data:image/png;base64,' + buf.toString('base64'), fx, fy]);
+};
+{
+  await page.evaluate(() => { localStorage.setItem('ge_prog', JSON.stringify({ u: 29, s: Array(30).fill(3), skins: ['sepia', 'night', 'white'] })); localStorage.removeItem('ge_motion'); });
+  await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L);
+  await page.waitForTimeout(400);
+  const THEMES = ['cyan', 'sepia', 'night', 'white'];
+  // the canvas keys every paper must define — a new skin cannot silently omit one and fall back
+  // to a hardcoded colour
+  const keysOk = await page.evaluate(() => {
+    const need = ['paper', 'grid', 'border', 'tick', 'stoneBody', 'stoneHatch', 'stoneEdge', 'route', 'spark', 'arrow', 'flash', 'shadow', 'halo', 'legendInk', 'legendGrid', 'legendText', 'legendAmber'];
+    const bad = [];
+    for (const id in window.GE.themes) for (const k of need) if (window.GE.themes[id][k] === undefined || window.GE.themes[id][k] === '') bad.push(id + '.' + k);
+    for (const id in window.GE.themes) if (typeof window.GE.themes[id].flashWash !== 'number') bad.push(id + '.flashWash');
+    return bad;
+  });
+  const seen = {}, contrasts = {}, flashDelta = {};
+  for (const t of THEMES) {
+    await page.evaluate(t => { window.GE.setTheme(t); window.GE.load(10); }, t);
+    await page.waitForTimeout(320);
+    // 1. the canvas: paper, grid, board border, a stone
+    const m = await page.evaluate(() => { const cv = document.getElementById('cv'); return { ...window.GE.metrics, dpr: cv.width / cv.clientWidth, stone: window.GE.L.stones[0] }; });
+    const cpx = await page.evaluate(m => {
+      const c = document.getElementById('cv').getContext('2d');
+      const at = (x, y) => Array.from(c.getImageData(Math.round(x * m.dpr), Math.round(y * m.dpr), 1, 1).data).slice(0, 3).join(',');
+      return {
+        paper: at(m.bx - 10, m.by - 10),
+        grid: at(m.bx + m.cell, m.by + m.cell * 0.5),
+        border: at(m.bx - 0.5, m.by + m.cell * 2),
+        stone: at(m.bx + (m.stone[0] + 0.5) * m.cell, m.by + (m.stone[1] + 0.5) * m.cell),
+      };
+    }, m);
+    // 2. the DOM chrome that used to be hardcoded
+    await page.evaluate(() => window.GE_MENU.show('levels'));
+    await page.waitForTimeout(220);
+    const dom = await page.evaluate(() => {
+      const g = (sel, prop) => { const e = document.querySelector(sel); return e ? getComputedStyle(e)[prop] : 'MISSING'; };
+      return {
+        screenScrim: g('#levels', 'backgroundColor'), menuScrim: g('#menu', 'backgroundColor'),
+        modalScrim: g('#pauseModal', 'backgroundColor'), failScrim: g('#failModal', 'backgroundColor'),
+        adScrim: g('#adModal', 'backgroundColor'), cardShadow: g('#adModal .card', 'boxShadow'),
+        chipFill: g('#hudGoal .chip', 'backgroundColor'), legendDiv: g('.legend .div', 'borderTopColor'),
+        hintBorder: g('#btnHint', 'borderTopColor'), sheetBg: g('#levels .tblock', 'backgroundColor'),
+        stampInk: g('#menuStamp', 'color'), resetInk: g('.foot button', 'color'),
+      };
+    });
+    seen[t] = { ...cpx, ...dom };
+    // 3. contrast floors on the real rendered sheet and card
+    const sheetPx = await pixelOf('#levels .tblock', 0.5, 0.985);
+    const cs = await page.evaluate(() => ({
+      ink: getComputedStyle(document.querySelector('#levels .shead h2')).color,
+      dim: getComputedStyle(document.querySelector('#levels .foot')).color,
+      amber: getComputedStyle(document.querySelector('#levels .chap b')).color,
+    }));
+    await page.evaluate(() => { window.GE_MENU.show(null); window.GE.load(0); });
+    await page.waitForTimeout(120);
+    await page.evaluate(() => window.GE.rewarded('rescue', () => {}));
+    await page.waitForTimeout(250);
+    const cardPx = await pixelOf('#adModal .card', 0.5, 0.03);
+    const cc = await page.evaluate(() => ({
+      ink: getComputedStyle(document.getElementById('adTitle')).color,
+      dim: getComputedStyle(document.getElementById('adSub')).color,
+    }));
+    await page.evaluate(() => window.GE.load(0)); // cancels the slot, grants nothing
+    await page.waitForTimeout(120);
+    contrasts[t] = {
+      inkOnSheet: +contrast(rgbOf(cs.ink), sheetPx).toFixed(2),
+      dimOnSheet: +contrast(rgbOf(cs.dim), sheetPx).toFixed(2),
+      amberOnSheet: +contrast(rgbOf(cs.amber), sheetPx).toFixed(2),
+      inkOnCard: +contrast(rgbOf(cc.ink), cardPx).toFixed(2),
+      dimOnCard: +contrast(rgbOf(cc.dim), cardPx).toFixed(2),
+    };
+    // 4. the alignment beat has to be VISIBLE on this paper — it used to be hardcoded white, so
+    // on Whiteprint the player got no "it lined up" cue at all. Sample the gate tab across the
+    // whole beat (the block has to finish its capped-speed glide first) and keep the biggest delta.
+    await page.evaluate(() => window.GE.load(10));
+    await page.waitForTimeout(260);
+    const plan = await page.evaluate(() => {
+      for (let i = 0; i < window.GE.L.blocks.length; i++) {
+        const r = window.GE.route(i);
+        if (!r || r.path.length < 3) continue;
+        const g = window.GE.L.gates.find(g => g.side === r.side && g.color === window.GE.L.blocks[i].color);
+        if (g) return { bi: i, path: r.path, side: r.side, g };
+      }
+      return null;
+    });
+    const m2 = await page.evaluate(() => window.GE.metrics);
+    const th = m2.cell * 0.42, g = plan.g;
+    // three points outward from the board edge at the gate's centre: the lane gutter bar, a
+    // quarter into the tab (NOT its centre — the tab's white glyph is stamped there and would
+    // mask a white wash entirely), and where the swelling ring passes
+    const n = { left: [-1, 0], right: [1, 0], top: [0, -1], bottom: [0, 1] }[g.side];
+    const mid = (g.start + g.len / 2) * m2.cell;
+    const e0 = g.side === 'left' ? [m2.bx, m2.by + mid] : g.side === 'right' ? [m2.bx + m2.w * m2.cell, m2.by + mid]
+      : g.side === 'top' ? [m2.bx + mid, m2.by] : [m2.bx + mid, m2.by + m2.h * m2.cell];
+    const at = d => [e0[0] + n[0] * d, e0[1] + n[1] * d];
+    const pts = [at(1.5), at(3 + th * 0.25), at(3 + th + 7)];
+    const sampleGate = () => page.evaluate(ps => { const cv = document.getElementById('cv'), c = cv.getContext('2d'), d = cv.width / cv.clientWidth;
+      return ps.map(p => Array.from(c.getImageData(Math.round(p[0] * d), Math.round(p[1] * d), 1, 1).data).slice(0, 3)); }, pts);
+    const calm = await sampleGate();
+    await page.evaluate(pl => window.GE.dragVia(pl.bi, pl.path.slice(1), pl.side), plan);
+    let best = 0;
+    for (let k = 0; k < 26; k++) {
+      const lit = await sampleGate();
+      for (let j = 0; j < pts.length; j++) best = Math.max(best, ...[0, 1, 2].map(i => Math.abs(lit[j][i] - calm[j][i])));
+      await page.waitForTimeout(25);
+    }
+    flashDelta[t] = best;
+    await page.waitForTimeout(700);
+  }
+  await page.evaluate(() => window.GE.setTheme('cyan'));
+  // sepia and whiteprint are the papers where a cyanotype leak is unmistakable: every surface
+  // above must differ from the default paper's value on BOTH of them
+  const props = Object.keys(seen.cyan);
+  const leaks = props.filter(k => seen.sepia[k] === seen.cyan[k] || seen.white[k] === seen.cyan[k]);
+  const floors = Object.entries(contrasts).filter(([, c]) => Object.values(c).some(v => v < 4.5));
+  const dim = Object.entries(flashDelta).filter(([, d]) => d < 18);
+  // the two constant brand fills still have to carry their own labels
+  const brand = await page.evaluate(() => ({
+    primary: [getComputedStyle(document.querySelector('.gatebtn')).color, getComputedStyle(document.querySelector('.gatebtn')).backgroundColor],
+    grant: getComputedStyle(document.documentElement).getPropertyValue('--grant').trim(),
+    grant2: getComputedStyle(document.documentElement).getPropertyValue('--grant2').trim(),
+  }));
+  const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const brandC = { primary: +contrast(rgbOf(brand.primary[0]), rgbOf(brand.primary[1])).toFixed(2),
+    grant: +contrast([255, 255, 255], hex(brand.grant)).toFixed(2), grant2: +contrast([255, 255, 255], hex(brand.grant2)).toFixed(2) };
+  const brandOk = Object.values(brandC).every(v => v >= 4.5);
+  if (!keysOk.length && !leaks.length && !floors.length && !dim.length && brandOk)
+    console.log('themes ok: all ' + props.length + ' inked surfaces differ from the cyanotype on both light papers; '
+      + 'contrast floors hold (worst ' + Math.min(...Object.values(contrasts).flatMap(c => Object.values(c))).toFixed(2)
+      + ':1); the alignment beat is visible on every paper (min delta ' + Math.min(...Object.values(flashDelta)) + '); '
+      + 'brand fills carry their labels (amber ' + brandC.primary + ':1, grant ' + brandC.grant + ':1)');
+  else { failures++; console.error('themes FAIL:', JSON.stringify({ keysOk, leaks, floors, dim, brandC, sample: { cyan: seen.cyan, white: seen.white } })); }
+}
+
+// ---------- the rewarded slot reads as an ad, not a glitch (2026-09-02) ----------
+// User report: "when you click on the ad, it disappears way too quickly." The 1.2 s bar is now a
+// ~3 s countdown ring that names its reward. The contract that matters: the grant lands ONLY on
+// completion, and the way out (Close) only appears once it has landed — there is no way to leave
+// early and still be paid. GE.rewarded(kind, grant) is unchanged.
+{
+  await page.evaluate(() => { window.GE.motionOn = true; window.GE.load(0); });
+  await page.waitForTimeout(120);
+  const adState = () => page.evaluate(() => ({
+    up: window.GE.adUp, got: window.__got,
+    title: document.getElementById('adTitle').textContent,
+    sub: document.getElementById('adSub').textContent,
+    count: document.getElementById('adCount').textContent,
+    countUp: !document.getElementById('adCount').hidden,
+    tick: !document.getElementById('adTick').hasAttribute('hidden'),
+    earned: !document.getElementById('adGrant').hidden,
+    skip: !document.getElementById('btnAdSkip').hidden,
+  }));
+  await page.evaluate(() => { window.__got = 0; window.GE.rewarded('rescue', () => { window.__got++; }); });
+  await page.waitForTimeout(300);
+  const a0 = await adState();
+  // a tap on the scrim must NOT close a rewarded slot (leaving early forfeits the reward)
+  const box = await (await page.$('#adModal')).boundingBox();
+  await page.mouse.click(box.x + 8, box.y + 8);
+  await page.waitForTimeout(120);
+  const a1 = await adState();
+  await page.waitForTimeout(1400);
+  const a2 = await adState();                       // mid-countdown: still nothing granted, no way out
+  await page.waitForFunction(() => window.__got === 1, null, { timeout: 4000 });
+  const a3 = await adState();                       // the grant moment: tick, earned row, Close
+  await page.click('#btnAdSkip');
+  await page.waitForTimeout(80);
+  const a4 = await adState();                       // Close dismisses at once and grants nothing more
+  // cancelling mid-countdown grants nothing at all
+  await page.evaluate(() => { window.__got = 0; window.GE.rewarded('hint', () => { window.__got++; }); });
+  await page.waitForTimeout(700);
+  const naming = await adState();
+  await page.evaluate(() => window.GE.load(1));     // a level change cancels the slot
+  await page.waitForTimeout(3600);
+  const cancelled = await adState();
+  // reduced motion still runs the full slot and still grants
+  await page.evaluate(() => { window.GE.motionOn = false; window.__got = 0; window.GE.load(0); window.GE.rewarded('life', () => { window.__got++; }); });
+  await page.waitForTimeout(1200);
+  const rm1 = await adState();
+  await page.waitForFunction(() => window.__got === 1, null, { timeout: 4000 });
+  const rm2 = await adState();
+  await page.evaluate(() => { window.GE.motionOn = true; });
+  await page.waitForTimeout(900);
+  await page.evaluate(() => window.GE.rewarded('rescue', () => {}));
+  await page.waitForTimeout(700);
+  await page.screenshot({ path: shotDir + '/ad-countdown.png' });
+  await page.waitForFunction(() => !window.GE.adUp, null, { timeout: 9000 });
+  const ok = a0.up && a0.got === 0 && !a0.skip && !a0.tick && !a0.earned && a0.countUp && /\+3 moves/.test(a0.sub) && a0.title === 'Rescue'
+    && a1.up && a1.got === 0 && !a1.skip                       // the scrim tap did nothing
+    && a2.up && a2.got === 0 && !a2.skip && +a2.count < +a0.count
+    && a3.got === 1 && a3.tick && a3.earned && a3.skip && !a3.countUp
+    && !a4.up && a4.got === 1
+    && naming.title === 'Hint' && /the next move/.test(naming.sub)
+    && !cancelled.up && cancelled.got === 0
+    && rm1.up && rm1.got === 0 && !rm1.skip && rm2.got === 1 && rm2.tick;
+  if (ok) console.log('ad slot ok: ~3 s countdown naming its reward ("' + a0.sub.trim() + '"), no grant and no way out before it completes '
+    + '(scrim tap ignored), grant + EARNED + Close on completion, Close dismisses; a level change mid-countdown grants nothing; reduced motion still pays out');
+  else { failures++; console.error('ad slot FAIL:', JSON.stringify({ a0, a1, a2, a3, a4, naming, cancelled, rm1, rm2 })); }
+}
+
+// ---------- tap outside a sheet to put it down (2026-09-02) ----------
+// User report: "in the pause menu during play, clicking outside the menu should resume the game."
+// Applied wherever dismissal is safe; the fail sheet, the win card, the rewarded slot and the
+// streak-repair card stay explicit because dismissing them spends something.
+{
+  const tapScrim = async sel => { const b = await (await page.$(sel)).boundingBox(); await page.mouse.click(b.x + 6, b.y + 6); await page.waitForTimeout(140); };
+  // tap an INERT part of the sheet: the middle of the pause card is the "How to play" button
+  const tapCard = async sel => { const b = await (await page.$(sel)).boundingBox(); await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2); await page.waitForTimeout(140); };
+  await page.evaluate(() => { window.GE.load(21); window.GE.dragVia(1, [[window.GE.pos[1][0], window.GE.pos[1][1] - 1]], null); });
+  await page.waitForTimeout(120);
+  await page.evaluate(() => document.getElementById('btnMenu').click());
+  await page.waitForTimeout(160);
+  const pauseUp = await page.evaluate(() => ({ up: !document.getElementById('pauseModal').hidden, paused: window.GE.paused }));
+  await tapCard('#pauseModal .card h2');   // the "Paused" heading — inside the sheet, not a control
+  const onCard = await page.evaluate(() => ({ up: !document.getElementById('pauseModal').hidden, paused: window.GE.paused }));
+  await tapScrim('#pauseModal');
+  const onScrim = await page.evaluate(() => ({ up: !document.getElementById('pauseModal').hidden, paused: window.GE.paused, moves: window.GE.moves }));
+  // levels + legend opened over the pause card: the scrim goes back one layer, not to the menu
+  await page.evaluate(() => document.getElementById('btnMenu').click()); await page.waitForTimeout(140);
+  await page.click('#btnPauseLevels'); await page.waitForTimeout(200);
+  await tapScrim('#levels');
+  const backToPause = await page.evaluate(() => ({ levels: !document.getElementById('levels').hidden, pause: !document.getElementById('pauseModal').hidden, paused: window.GE.paused }));
+  await page.click('#btnPauseLegend'); await page.waitForTimeout(220);
+  await tapScrim('#legend');
+  const legendBack = await page.evaluate(() => ({ legend: !document.getElementById('legend').hidden, pause: !document.getElementById('pauseModal').hidden }));
+  await page.click('#btnResume'); await page.waitForTimeout(140);
+  // the fail sheet must NOT be dismissable by the scrim — it is a decision with consequences
+  await page.evaluate(() => window.GE.load(0));
+  await burnLevel();
+  await page.waitForSelector('#failModal:not([hidden])', { timeout: 2500 });
+  await tapScrim('#failModal');
+  const failStays = await page.evaluate(() => ({ up: !document.getElementById('failModal').hidden, over: window.GE.over }));
+  await page.click('#btnRetry'); await page.waitForTimeout(160);
+  // the win card must not be dismissable either
+  await page.evaluate(() => { window.GE.load(0); window.GE.dragVia(0, [], 'right'); });
+  await page.waitForSelector('#winModal:not([hidden])', { timeout: 3000 });
+  await tapScrim('#winModal');
+  const winStays = await page.evaluate(() => !document.getElementById('winModal').hidden);
+  await page.click('#btnNext'); await page.waitForTimeout(160);
+  // the survey card is safe to put down
+  await page.evaluate(() => window.GE_MENU.show('levels')); await page.waitForTimeout(200);
+  await page.click('#btnSurvey'); await page.waitForTimeout(200);
+  await tapScrim('#surveyModal');
+  const surveyGone = await page.evaluate(() => document.getElementById('surveyModal').hidden);
+  await page.evaluate(() => window.GE_MENU.show('menu')); await page.waitForTimeout(160);
+  const ok = pauseUp.up && pauseUp.paused && onCard.up && onCard.paused
+    && !onScrim.up && !onScrim.paused && onScrim.moves === 1
+    && !backToPause.levels && backToPause.pause && backToPause.paused
+    && !legendBack.legend && legendBack.pause
+    && failStays.up && failStays.over && winStays && surveyGone;
+  if (ok) console.log('scrim dismiss ok: a tap outside the pause card resumes (a tap on the card does not); levels/legend over pause go back one layer; the survey card closes — the fail sheet and the win card stay explicit');
+  else { failures++; console.error('scrim dismiss FAIL:', JSON.stringify({ pauseUp, onCard, onScrim, backToPause, legendBack, failStays, winStays, surveyGone })); }
 }
 
 // ---------- beacon (2026-08-31) ----------

@@ -112,13 +112,13 @@ await moment('m2-rescue', () => {
   await page.click('#btnPlay');
   await page.waitForTimeout(600);
   await burn(page);
-  await page.waitForSelector('#failModal:not([hidden])', { timeout: 4000 });
+  await page.waitForSelector('#failModal:not([hidden])', { timeout: 9000 });
   await page.waitForTimeout(900); // board rises above the sheet; stranded blocks pulse
   await still(page, 'm2-fail-sheet-ghost-route');
   await page.click('#btnRescue');
   await page.waitForTimeout(600);
   await still(page, 'm2-rescue-ad-placeholder');
-  await page.waitForFunction(() => !window.GE.adUp, null, { timeout: 4000 });
+  await page.waitForFunction(() => !window.GE.adUp, null, { timeout: 9000 });
   await page.waitForTimeout(400); // the +3 lands green on the counter
   await still(page, 'm2-rescue-plus3');
   // spend the rescued moves on the solver's reference line (real play, may not finish — that's honest)
@@ -144,7 +144,7 @@ await moment('m3-hint', () => {
   await page.click('#btnHint');
   await page.waitForTimeout(600);
   await still(page, 'm3-hint-ad-placeholder');
-  await page.waitForFunction(() => !window.GE.adUp && window.GE.hint, null, { timeout: 4000 });
+  await page.waitForFunction(() => !window.GE.adUp && window.GE.hint, null, { timeout: 9000 });
   await page.waitForTimeout(1200); // the route marches
   await still(page, 'm3-hint-ghost-route');
   await page.waitForTimeout(2600);
@@ -162,7 +162,7 @@ await moment('m4-chest', () => {
   for (const mv of solutions[7]) { await drag(page, mv.bi, mv.path, mv.side, 300); await page.waitForTimeout(350); }
   await page.waitForSelector('#winModal:not([hidden])', { timeout: 3000 });
   await page.waitForTimeout(900); // stars land
-  await page.waitForSelector('#winChest:not([hidden])', { timeout: 4000 });
+  await page.waitForSelector('#winChest:not([hidden])', { timeout: 9000 });
   await page.waitForTimeout(500); // lid mid-swing + sparks
   await still(page, 'm4-chest-opening');
   await page.waitForTimeout(900);
