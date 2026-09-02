@@ -117,7 +117,7 @@
   .card .stars span.off { color:var(--star-off); animation:starin .3s ease-out both; }
   @keyframes starpop { from { transform:scale(0) rotate(-40deg); opacity:0; } 60% { transform:scale(1.35) rotate(6deg); opacity:1; } to { transform:scale(1) rotate(0); opacity:1; } }
   @keyframes starin { from { transform:scale(.6); opacity:0; } }
-  .spark { position:absolute; width:7px; height:7px; border-radius:50%; pointer-events:none; } /* burst host: any position:relative parent (star row, chest row, sheet header) */
+  .spark { position:absolute; width:7px; height:7px; border-radius:50%; pointer-events:none; } /* burst host: any position:relative parent (star row, certification row, sheet header) */
   /* win-card meta: running star total + what comes next, ruled off like a title-block field row */
   .card .meta { display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--line2); margin:0 0 14px; }
   .card .meta > * { padding:7px 6px 8px; border-right:1px solid var(--line2); }
@@ -126,21 +126,25 @@
   .card .meta .v { font-weight:800; font-size:15px; font-variant-numeric:tabular-nums; }
   .card .meta .v small { display:block; font:600 11px/1.2 var(--mono); color:var(--dim); margin-top:3px; }
   .card .meta .v b { color:var(--amber-ink); }
-  /* chest reveal on the win card: only when this win crossed a sheet's chest threshold */
-  .card .chest-row { position:relative; display:flex; align-items:center; gap:10px; text-align:left; border:1px solid var(--line2); padding:8px 10px; margin:0 0 6px; animation:pop .45s cubic-bezier(.34,1.56,.64,1) both; }
-  .card .chest-row .chest-ico { width:34px; height:29px; flex:none; color:var(--amber-ink); animation:chestpop .6s cubic-bezier(.34,1.56,.64,1) both; }
-  .card .chest-row > div { flex:1; min-width:0; }
-  .card .chest-row .k { display:block; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); margin-bottom:4px; }
-  .card .chest-row .v { font-weight:800; font-size:15px; }
-  .card .chest-row button { width:auto; margin:0; padding:8px 12px; font-size:14px; }
-  .card .chest-row button:disabled { opacity:1; color:var(--amber-ink); border-color:var(--amber-ink); }
-  @keyframes chestpop { from { transform:scale(.4) rotate(-12deg); } 60% { transform:scale(1.25) rotate(4deg); } to { transform:scale(1) rotate(0); } }
-  /* chest glyph, drawn in the sheet's ink: the lid swings open when the sheet reaches its threshold */
-  .chest-ico { display:inline-block; vertical-align:-3px; width:16px; height:14px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; overflow:visible; }
-  .chest-ico .lid { transform-origin:2px 8px; transition:transform .5s cubic-bezier(.34,1.56,.64,1); }
-  .chest-ico.open .lid { transform:rotate(-40deg); }
-  .chest-ico.open .star { display:block; }
-  .chest-ico .star { display:none; fill:currentColor; stroke:none; }
+  /* certification reveal on the win card: only when this win crossed a sheet's 24 star mark */
+  .card .cert-row { position:relative; display:flex; align-items:center; gap:10px; text-align:left; border:1px solid var(--line2); padding:8px 10px; margin:0 0 6px; animation:pop .45s cubic-bezier(.34,1.56,.64,1) both; }
+  .card .cert-row .cert-ico { width:34px; height:29px; flex:none; color:var(--amber-ink); animation:certstamp .6s cubic-bezier(.34,1.56,.64,1) both; }
+  .card .cert-row > div { flex:1; min-width:0; }
+  .card .cert-row .k { display:block; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); margin-bottom:4px; }
+  .card .cert-row .v { font-weight:800; font-size:15px; }
+  .card .cert-row button { width:auto; margin:0; padding:8px 12px; font-size:14px; }
+  .card .cert-row button:disabled { opacity:1; color:var(--amber-ink); border-color:var(--amber-ink); }
+  /* a stamp lands: it comes in oversized and settles slightly off-square, like a real one */
+  @keyframes certstamp { from { transform:scale(1.7) rotate(-13deg); opacity:0; } 55% { transform:scale(.92) rotate(3deg); opacity:1; } to { transform:scale(1) rotate(-3deg); } }
+  /* certification stamp, drawn in the sheet's ink: a dashed pending frame with a blank rule until
+     the sheet is certified, then a solid frame with the star stamped into it */
+  .cert-ico { display:inline-block; vertical-align:-3px; width:16px; height:14px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; overflow:visible; }
+  .cert-ico .frame { stroke-dasharray:3 2.4; }
+  .cert-ico.on .frame { stroke-dasharray:none; }
+  .cert-ico .rule { opacity:.7; }
+  .cert-ico.on .rule { display:none; }
+  .cert-ico.on .star { display:block; }
+  .cert-ico .star { display:none; fill:currentColor; stroke:none; }
   .card button {
     position:relative; width:100%; border:0; border-radius:8px; padding:14px; font-size:17px; font-weight:800;
     cursor:pointer; margin-top:8px; color:#fff;
@@ -219,7 +223,7 @@
   .fields button { border:0; cursor:pointer; }
   .fields button .v { color:var(--amber-ink); }
   /* paper picker: one swatch per skin (a tiny sheet in that paper's colours); locked ones carry the
-     chest they come from; the caption names the choice — the same control lives on the pause card */
+     certification they come from; the caption names the choice — the same control lives on the pause card */
   .papers { display:flex; align-items:center; gap:8px; border:1px solid var(--line2); margin-top:12px; padding:7px 10px; }
   .papers .k { font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); margin-right:2px; }
   .papers .sw { display:flex; gap:7px; }
@@ -228,7 +232,7 @@
   .papers .paper.on { outline:2px solid var(--amber-ink); outline-offset:2px; }
   .papers .paper.locked { opacity:.5; }
   .papers .paper.locked::after { display:none; }
-  .papers .paper .chest-ico { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:15px; height:13px; color:var(--pl); }
+  .papers .paper .cert-ico { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:15px; height:13px; color:var(--pl); }
   .papers .cap { flex:1; text-align:right; font-weight:700; font-size:13px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .papers .cap.lock { color:var(--dim); font-weight:600; }
   .card .papers { margin:8px 0 0; padding:8px 10px; }
@@ -247,9 +251,6 @@
   @keyframes stamppop { from { transform:rotate(-7deg) scale(2.1); opacity:0; } 60% { transform:rotate(-7deg) scale(.92); opacity:1; } to { transform:rotate(-7deg) scale(1); opacity:1; } }
   .card .daily-row .k { display:block; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); margin-bottom:4px; }
   .card .daily-row .v { font-weight:800; font-size:14px; }
-  /* streak repair card: sits above the title block (screens are z-20); offered once per streak,
-     no pressure timer, no guilt copy — Escape or "Start fresh" declines */
-  #streakModal { z-index:25; }
   .gatebtn {
     position:relative; display:flex; align-items:center; justify-content:center; gap:12px; width:100%; margin-top:18px;
     border:0; border-radius:8px; padding:17px 14px; background:var(--amber); color:#1a2a44;
@@ -304,12 +305,12 @@
   .grid .chap > span:first-child { white-space:nowrap; }
   .grid .chap:first-child { margin-top:0; }
   .grid .chap b { color:var(--amber-ink); letter-spacing:.06em; }
-  /* chest per sheet: progress toward its threshold; opened chests name their paper */
-  .grid .chap .chest { position:relative; display:inline-flex; align-items:center; gap:5px; margin-left:auto; white-space:nowrap; letter-spacing:.04em; text-transform:none; font-size:10.5px; }
-  .grid .chap .chest b { letter-spacing:.04em; }
-  .grid .chap .chest .chest-ico { color:var(--dim); }
-  .grid .chap .chest.open .chest-ico { color:var(--amber-ink); }
-  .grid .chap .chest.opening .chest-ico { animation:chestpop .6s cubic-bezier(.34,1.56,.64,1) both; }
+  /* certification per sheet: progress toward 24 stars; a certified sheet names the paper it earned */
+  .grid .chap .cert { position:relative; display:inline-flex; align-items:center; gap:5px; margin-left:auto; white-space:nowrap; letter-spacing:.04em; text-transform:none; font-size:10.5px; }
+  .grid .chap .cert b { letter-spacing:.04em; }
+  .grid .chap .cert .cert-ico { color:var(--dim); }
+  .grid .chap .cert.on .cert-ico { color:var(--amber-ink); }
+  .grid .chap .cert.stamping .cert-ico { animation:certstamp .6s cubic-bezier(.34,1.56,.64,1) both; }
   .tile {
     aspect-ratio:1; border:1.5px solid var(--tile-line); border-radius:4px; background:var(--fill);
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; cursor:pointer;
@@ -333,7 +334,7 @@
   .legend .li b { display:block; font-size:15px; }
   .legend .div { border-top:1px dashed var(--line2); margin:4px 0 2px; padding-top:8px; font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); }
   .legend .mi { display:flex; align-items:baseline; gap:8px; font-size:13px; color:var(--dim); }
-  .legend .mi .g { flex:none; width:58px; text-align:right; font-weight:800; font-size:12.5px; color:var(--ink); }
+  .legend .mi .g { flex:none; width:82px; text-align:right; font-weight:800; font-size:12.5px; color:var(--ink); } /* 82px: the widest label is "Certification" at 81px — right-aligned, so every row's copy still starts on one line */
   .legend .li span { color:var(--dim); font-size:13px; }
   /* press-depth beat, unified: every tappable control dips on :active (cards already translateY(3)) */
   #hud button:not(:disabled):active { transform:translateY(2px); }
@@ -379,10 +380,9 @@
   .mstones .ms .mark { display:block; font-size:15px; line-height:1; color:var(--amber-ink); margin-bottom:1px; }
   #surveyLast { font:600 11px var(--mono); color:var(--dim); margin-bottom:12px; }
   #surveyModal { z-index:25; } /* the survey card opens over the title block (screens are z-20) */
-  @media (prefers-reduced-motion: reduce) { .gatebtn, .gatebtn .blk, .tblock, .card, .card .stars span, #toast, #btnHint.nudge, .chest-ico, .card .chest-row, .card .daily-row, .card .daily-row .stamp, .landing .sub, .landing .stamp, .landing .row, .landing .gatebtn, .landing .title::after { animation:none; } .chest-ico .lid { transition:none; } }
+  @media (prefers-reduced-motion: reduce) { .gatebtn, .gatebtn .blk, .tblock, .card, .card .stars span, #toast, #btnHint.nudge, .cert-ico, .card .cert-row, .card .daily-row, .card .daily-row .stamp, .landing .sub, .landing .stamp, .landing .row, .landing .gatebtn, .landing .title::after { animation:none; } }
   /* the Motion toggle (pause card) forces the same reduced path via body.reduce-motion */
-  body.reduce-motion .gatebtn, body.reduce-motion .gatebtn .blk, body.reduce-motion .tblock, body.reduce-motion .card, body.reduce-motion .card .stars span, body.reduce-motion #toast, body.reduce-motion #btnHint.nudge, body.reduce-motion .chest-ico, body.reduce-motion .card .chest-row, body.reduce-motion .card .daily-row, body.reduce-motion .card .daily-row .stamp, body.reduce-motion .landing .sub, body.reduce-motion .landing .stamp, body.reduce-motion .landing .row, body.reduce-motion .landing .gatebtn, body.reduce-motion .landing .title::after { animation:none; }
-  body.reduce-motion .chest-ico .lid { transition:none; }
+  body.reduce-motion .gatebtn, body.reduce-motion .gatebtn .blk, body.reduce-motion .tblock, body.reduce-motion .card, body.reduce-motion .card .stars span, body.reduce-motion #toast, body.reduce-motion #btnHint.nudge, body.reduce-motion .cert-ico, body.reduce-motion .card .cert-row, body.reduce-motion .card .daily-row, body.reduce-motion .card .daily-row .stamp, body.reduce-motion .landing .sub, body.reduce-motion .landing .stamp, body.reduce-motion .landing .row, body.reduce-motion .landing .gatebtn, body.reduce-motion .landing .title::after { animation:none; }
   body.reduce-motion .adring .tick path, body.reduce-motion #adModal .daily-row.grant { animation:none; }
   @media (prefers-reduced-motion: reduce) { .adring .tick path, #adModal .daily-row.grant { animation:none; } }
   body.reduce-motion #hud .moves.low { animation:none; }
@@ -415,9 +415,9 @@
         <div><span class="k">Stars</span><span class="v" id="winTotal">0 / 90</span></div>
         <div><span class="k">Next</span><span class="v" id="winNext">Level 2</span></div>
       </div>
-      <div class="chest-row" id="winChest" hidden>
-        <svg class="chest-ico open" viewBox="0 0 24 20" aria-hidden="true"><g class="lid"><path d="M2 8V5.5A3.5 3.5 0 0 1 5.5 2h13A3.5 3.5 0 0 1 22 5.5V8"/><path d="M2 8h20"/></g><rect x="2" y="8" width="20" height="10" rx="1.5"/><path d="M10.5 8v4h3V8"/><path class="star" d="M12 9.2l.9 1.9 2.1.3-1.5 1.4.4 2.1-1.9-1-1.9 1 .4-2.1-1.5-1.4 2.1-.3z"/></svg>
-        <div><span class="k">Chest opened</span><span class="v" id="winChestName">Sepia draft</span></div>
+      <div class="cert-row" id="winCert" hidden>
+        <svg class="cert-ico on" viewBox="0 0 24 20" aria-hidden="true"><rect class="frame" x="2" y="2.5" width="20" height="15" rx="2.5"/><path class="rule" d="M7.5 10h9"/><path class="star" d="M12 5.6l1.55 3.28 3.45.52-2.5 2.53.6 3.62L12 13.83l-3.1 1.72.6-3.62-2.5-2.53 3.45-.52z"/></svg>
+        <div><span class="k">Sheet certified</span><span class="v" id="winCertName">Sepia draft</span></div>
         <button class="ghost" id="btnTrySkin">Try it</button>
       </div>
       <div class="daily-row" id="winDaily" hidden>
@@ -439,7 +439,7 @@
     </div>
   </div>
 
-  <!-- rewarded-ad placeholder (rescue / hint / streak repair / life refill). A deliberate ad
+  <!-- rewarded-ad placeholder (rescue / hint / life refill). A deliberate ad
        slot, not a flash: a ~3 s countdown ring that names the reward, the grant landing only on
        completion, and a Close that appears only once the reward has actually been earned.
        Dismissing early (a level change, Restart) grants nothing, and the scrim is NOT tappable
@@ -477,19 +477,6 @@
       <button class="ghost" id="btnPauseHaptics" hidden>Haptics: on</button>
       <div class="papers" id="pausePapers" aria-label="Paper"><span class="k">Paper</span><div class="sw"></div><span class="cap"></span></div>
       <button class="ghost" id="btnPauseHome">Main menu</button>
-    </div>
-  </div>
-
-  <!-- streak repair: shown on launch only when exactly one day was missed on a ≥2-day streak,
-       once per streak. The repair is the same free rewarded flow as rescue/hint; declining (or
-       Escape) simply starts a fresh streak — no countdown, no guilt copy. -->
-  <div class="modal" id="streakModal" hidden>
-    <div class="card">
-      <span class="no">FIELD LOG</span>
-      <h2>Streak paused</h2>
-      <p id="streakSub"></p>
-      <button class="rescue" id="btnStreakRepair"><span class="ad">AD</span> Repair streak <small>· watch to keep it</small></button>
-      <button class="ghost" id="btnStreakDecline">Start fresh</button>
     </div>
   </div>
 
@@ -595,9 +582,9 @@
         <div class="div">AROUND THE GAME</div>
         <div class="mi" id="legendLives"><span class="g">♥ Lives</span><span>Retrying a failed level costs one (from level 6). They refill over time; a rescue saves the attempt instead.</span></div>
         <div class="mi"><span class="g">Quests</span><span>Three each day, shared by everyone. Finish all three to bank a streak freeze (hold up to 2).</span></div>
-        <div class="mi"><span class="g">Streak</span><span>One clear a day keeps it going. A banked freeze covers a missed day.</span></div>
+        <div class="mi"><span class="g">Streak</span><span>One clear a day keeps it going. A banked freeze covers a missed day; otherwise it simply starts again.</span></div>
         <div class="mi"><span class="g">Survey</span><span>Weekly points — 1 per clear, +1 at par — with stamps at 3, 7, 12 and 20.</span></div>
-        <div class="mi"><span class="g">Chests</span><span>24 ★ on a sheet opens its chest: a new paper for the drawing.</span></div>
+        <div class="mi"><span class="g">Certification</span><span>24 ★ on a sheet certifies it: a new paper for the drawing.</span></div>
       </div>
     </div>
   </div>

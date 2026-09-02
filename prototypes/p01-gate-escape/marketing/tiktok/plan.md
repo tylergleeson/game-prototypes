@@ -105,7 +105,7 @@ in B it lands on TestFlight (friction: Apple ID + TestFlight app); in C on the s
   engagement — *Retention Is the Reach Multiplier*, `02_algorithm`), long enough for a
   Hook → Hold → Payoff loop (*Looping*, `03_video_formula`): hook (burned text + first
   drag, 0–3 s) → hold (the board state the viewer is now solving, 3–8 s) → payoff (exit,
-  stars, chest or the honest fail sheet, 8–13 s) → CTA card 1.6 s.
+  stars, certification or the honest fail sheet, 8–13 s) → CTA card 1.6 s.
 
 ## 5. The organic → Spark Ads flywheel
 

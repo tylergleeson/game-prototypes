@@ -29,7 +29,7 @@ Hook IDs are stable and referenced by file names (`b01-v01_H01_m2_raw.mp4`) and 
 | H05 | Which block has to move first? (6) | m3 corked L10 board | Question | ✓ |
 | H06 | Every level is machine-proved solvable. (5) | t03 L1 → L2 clears | Statement | ✓ |
 | H07 | Stuck? The blueprint shows the move. (6) | m3 hint route | Question | ✓ |
-| H08 | What opens at 24 stars? (5) | m4 chest reveal | Question | ✓* |
+| H08 | What happens at 24 stars? (5) | m4 certification reveal | Question | ✓* |
 | H09 | The gate only takes its own shape. (7) | t02 legend / m1 gates | Statement | ✓ |
 
 ## Challenge / dare — H10–H17
@@ -89,12 +89,12 @@ Hook IDs are stable and referenced by file names (`b01-v01_H01_m2_raw.mp4`) and 
 
 | id | hook (words) | moment | type | sound-off |
 |---|---|---|---|---|
-| H43 | Every 24 stars opens a chest (6) | m4 chest reveal | Statement | ✓* |
-| H44 | Chests are cosmetic. Still want it. (6) | m4 chest → Try it (Sepia) | Statement | ✓* |
+| H43 | Every 24 stars certifies a sheet (6) | m4 certification reveal | Statement | ✓* |
+| H44 | Certification is cosmetic. Still want it. (6) | m4 certification → Try it (Sepia) | Statement | ✓* |
 | H45 | Three quests a day. Freeze banked. (6) | t10 quests DONE row | Statement | ✓* |
 | H46 | Day 4 of the streak. Don't break it. (8) | t01 streak row | Statement | ✓* |
 | H47 | Miss a day? A freeze saves it. (7) | t10 freeze banked / t01 notice | Question | ✓* |
-| H48 | 30 levels. Three sheets. Two chests left. (7) | t12 level select | Statement | ✓* |
+| H48 | 30 levels. Three sheets. Two to certify. (7) | t12 level select | Statement | ✓* |
 | H49 | Weekly survey stamp at 20 points. (6) | t11 Field Survey card | Statement | ✓* |
 | H50 | Lives refill. The puzzle waits. (5) | t13 lives card (calm timer) | Statement | ✓* |
 
@@ -113,8 +113,10 @@ Hook IDs are stable and referenced by file names (`b01-v01_H01_m2_raw.mp4`) and 
 - H15 asserts the *design* (spike at L20–25 per the CrazyLabs curve in the README), not
   player behaviour — we have no quit data yet. Once the beacon is live, level-funnel data
   may earn a "most people stall here" hook; not before.
-- H23 ("Out of lives") is only usable in the lives-ON build (default ON, flag-gated).
-- H51 ("Day 7") shows a save the engine itself built — twelve levels cleared through the solver's own drag physics across seven consecutive days advanced with `GE.now`, the engine's test clock — so the streak, quests, survey points and chest are the game's own bookkeeping, not typed-in numbers. It is still a simulated week, and the report says so; swap in the founder's real day-7 save when one exists.
+- H23 ("Out of lives") is only usable in the `?lives=1` build. Lives are OFF by default
+  as of 2026-09-02, so this hook must never run against the shipped build — it would
+  advertise a gate the player will not meet.
+- H51 ("Day 7") shows a save the engine itself built — twelve levels cleared through the solver's own drag physics across seven consecutive days advanced with `GE.now`, the engine's test clock — so the streak, quests, survey points and sheet certification are the game's own bookkeeping, not typed-in numbers. It is still a simulated week, and the report says so; swap in the founder's real day-7 save when one exists.
 - Hooks that name a moment inside a rewarded slot (hint, rescue, refill) must show the
   game's own AD tag when the tap is on screen, or cut around the placeholder card as the
   promo does — never imply the reward is free once monetized.

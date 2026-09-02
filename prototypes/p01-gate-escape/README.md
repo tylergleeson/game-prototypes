@@ -66,21 +66,23 @@ Built to the hybrid-casual grammar:
   running star total (ticks up) and the next level's block count and par;
   titles rotate with milestone lines at L5/10/20; sub-3-star wins offer
   "Replay for ★★★". Cards share the title block's drafting-sheet styling.
-- **Chests and paper skins** (the star sink): the level select groups levels into three
-  sheets of ten; each sheet has a chest that opens at **24 of its 30 stars**
-  (`CHEST_STARS` in `menu.js`) and rewards a cosmetic paper skin — Sepia draft,
-  Night vellum, Whiteprint (Cyanotype is the default). Nothing is gated on a
-  chest. The chapter header shows the chest and `★ 18/30 · 6 to open`; the win
-  that crosses the threshold adds a `Chest opened — <paper>` row with **Try it**
-  to the win card (lid swings open, sparks, chime). A **Paper** picker on the
-  title block and the pause card lists the skins (locked ones show the chest
-  they come from). Skins change only the drafting sheet — page, ink, rules,
+- **Sheet certification and paper skins** (the star sink): the level select groups levels
+  into three sheets of ten; each sheet is **certified at 24 of its 30 stars**
+  (`CERT_STARS` in `menu.js`) and rewards a cosmetic paper skin — Sepia draft,
+  Night vellum, Whiteprint (Cyanotype is the default). Nothing is gated on
+  certification. The chapter header carries a stamp glyph — a dashed pending frame with
+  `★ 18/30 · 6 to certify`, or a solid stamped frame naming the paper once earned (the
+  star is drawn only once certified, so the two states differ in SHAPE, not just colour).
+  The win that crosses the threshold adds a `Sheet certified — <paper>` row with **Try it**
+  to the win card (the stamp lands, sparks, chime). A **Paper** picker on the
+  title block and the pause card lists the skins (locked ones show the pending
+  stamp of the sheet they come from). Skins change only the drafting sheet — page, ink, rules,
   cards, the canvas paper/grid/border and the stones' ink (`THEMES` in
   `game.js` → CSS custom properties + the render's paper values); block and
   gate colours, glyphs, the block halo and the HUD/state colours are never
   touched, and the default skin is pixel-identical to the pre-skin build. The
   amber/red/green *text* inks darken on the two light papers so they still clear
-  4.5:1. Persisted in `ge_prog` (`skin`, `skins`, `seen`); `chest_open` /
+  4.5:1. Persisted in `ge_prog` (`skin`, `skins`, `seen`); `cert_earned` /
   `skin_select` tracked.
 - **Daily quests + streak with freezes** (the retention pair, upgraded to the playbook):
   the title block carries a drafting-log **quest list** — three quests roll each local day,
@@ -90,19 +92,26 @@ Built to the hybrid-casual grammar:
   a ✓ stamp; a completion adds a quiet stamped `QUEST` row to the win card, and all three
   bank ONE **streak freeze** (max 2 held, `DONE` row). The streak day-mark stays "≥1 clear";
   the row shows `4 days · 3 of last 7 days · 1 freeze held`. A missed day consumes a banked
-  freeze automatically with a calm `Freeze used — streak safe` notice at next launch; with
-  no freeze, missing exactly **one** day still offers the once-per-streak ad repair
-  (decline/Escape = fresh start, no guilt copy, nothing gated). State in `ge_streak` /
+  freeze automatically with a calm `Freeze used — streak safe` notice at next launch. With
+  **no freeze banked the streak simply lapses in silence** — there is no repair surface at
+  all: no card, no ad, no offer at the moment of loss (the once-per-streak repair ad was
+  DELETED, not disabled, on 2026-09-02). The counter clears at launch and the next clear
+  starts a new streak at 1, exactly as day one did; the bot asserts the absence of
+  `#streakModal` / `#btnStreakRepair` / `#btnStreakDecline`. State in `ge_streak` /
   `ge_quests`; every date flows through the overridable `GE.now`. Tracked: `quest_done`,
-  `quests_all_done`, `streak_day`, `streak_freeze_used`, `streak_repair_offered/taken/declined`.
+  `quests_all_done`, `streak_day`, `streak_freeze_used`.
 - **Field Survey** (weekly personal ladder, `ge_ladder`): 1 point per clear, +1 bonus at
   par; milestone stamps at 3/7/12/20 on a weekly log card (the `FIELD SURVEY` row on the
   title block opens it); the 20-point stamp is a surveyor's mark (⌖) shown beside the
   streak row for the rest of that week. Resets each ISO week; only last week's result line
   is kept. No leaderboard, no comparison — every participant can finish. Tracked:
   `ladder_point`, `ladder_milestone`.
-- **Lives** (flag-gated, default ON — `LIVES_ENABLED` in `game.js`, overridable via
-  `ge_flags {"lives":0}`, `?lives=0`, or `GE.livesEnabled`): five hearts in the HUD and on
+- **Lives** (flag-gated, **default OFF** since 2026-09-02 — `LIVES_ENABLED` in `game.js`,
+  overridable via `ge_flags {"lives":1}`, `?lives=1`, or `GE.livesEnabled`): the shipped
+  game has **no energy gate at all** — no hearts in the HUD, no field-log row, no legend
+  row, and a failed level can be retried forever. The system below is still built and still
+  fully bot-tested under `?lives=1`, so re-enabling it is a one-constant decision. When on:
+  five hearts in the HUD and on
   the title block. **L1–5 never cost a life** (the onboarding runway); from L6, a failed
   attempt that ends in Retry costs one — the rescue SAVES the attempt (no life), Restart
   mid-level and winning are free. Refill one life per 25 minutes derived from a **single
@@ -158,8 +167,8 @@ Built to the hybrid-casual grammar:
 - [x] Reviewer session #1 actioned (`reviews/p01-run-20260830-1835/dev-report.md`): win/fail juice, undo, star meter, ghost routes, tighter budget, stones from L5
 - [x] Breaker session #1 actioned (`reviews/p01-break-20260831-0005/dev-report.md`): undo/rescue/exit-window/pointercancel hardening
 - [x] Parallel critic ×2 + breaker sessions actioned (`reviews/p01-par-20260831-0056-s1/dev-report.md`): multitouch fix, hint slot, block seams, fail-sheet fit, win-card meta, curve retune (L6, L12–16)
-- [x] Cosmetic chapter chests + paper skins (`reviews/p01-par-20260831-0056-s1/chests-report.md`): chest at 24/30 per sheet, three skins, Paper picker, win-card reveal
-- [x] Daily goal (3 clears/day, title-block row, quiet GOAL stamp on the win card) + calendar-day streak with best-streak beat and a once-per-streak repair card (rewarded placeholder, decline = fresh start); dates flow through the overridable `GE.now` so the bots simulate days (`reviews/p01-par-20260831-0056-s1/meta-report.md`)
+- [x] Cosmetic sheet certification + paper skins (`reviews/p01-par-20260831-0056-s1/chests-report.md`): certified at 24/30 per sheet, three skins, Paper picker, win-card reveal (shipped as "chests"; renamed to Sheet Certification 2026-09-02)
+- [x] Daily goal (3 clears/day, title-block row, quiet GOAL stamp on the win card) + calendar-day streak with best-streak beat; dates flow through the overridable `GE.now` so the bots simulate days (`reviews/p01-par-20260831-0056-s1/meta-report.md`). The streak-repair card that shipped with it was deleted on 2026-09-02 — a lapsed streak now resets silently.
 - [x] Analytics beacon: `beacon.js` (anonymous install/session ids, batched, fail-safe, disabled while `BEACON_URL` is empty — zero network, bot-verified) + Cloudflare Worker/D1 collector and retention/funnel report in `tools/beacon/` (repo root; not deployed yet)
 - [x] Ad-moment capture (`tools/showcase.json` + `tools/capture.mjs` at the repo root): four real-gameplay moments filmed at iPhone size into `marketing/` (stills + webm), plus the itch cover
 - [x] itch.io bundle (`tools/build-itch.mjs` → `dist/itch/gate-escape-itch.zip`, index.html at the zip root) and page copy in `marketing/itch-page.md`; embed verified at 412×732 and 960×720

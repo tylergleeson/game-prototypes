@@ -83,14 +83,25 @@ for (let i = 0; i < solutions.length; i++) {
   }
 }
 
-// lives: default ON, and the 30-level par run consumes nothing (wins are free)
+// lives: OFF by default (2026-09-02 research round — the shipped game has no energy gate).
+// Every lives surface must be absent, not merely inert: no hearts in the HUD, no field-log row,
+// no legend row. The economy itself is still built and still fully exercised further down under
+// ?lives=1, so turning it back on stays a one-constant decision.
 {
-  const l = await page.evaluate(() => ({ on: window.GE.livesEnabled, n: window.GE.lives, cls: document.body.classList.contains('lives-on'), hud: document.getElementById('hudLives').hidden ? null : document.getElementById('hudLives').textContent }));
-  if (l.on && l.n === 5 && l.cls && l.hud === '♥♥♥♥♥') console.log('lives ok: default ON, HUD hearts 5/5 — the 30-level par run loses no lives');
-  else { failures++; console.error('lives par-run FAIL:', JSON.stringify(l)); }
+  const l = await page.evaluate(() => {
+    window.GE_MENU.show('legend');
+    const r = { on: window.GE.livesEnabled, n: window.GE.lives, cls: document.body.classList.contains('lives-on'),
+      hud: document.getElementById('hudLives').hidden, box: document.getElementById('menuLivesBox').hidden,
+      legend: document.getElementById('legendLives').hidden };
+    window.GE_MENU.show(null);
+    return r;
+  });
+  if (!l.on && l.n === 5 && !l.cls && l.hud && l.box && l.legend)
+    console.log('lives ok: OFF by default — no HUD hearts, no field-log row, no legend row; GE.lives reports a full bank and nothing is ever spent');
+  else { failures++; console.error('lives default-off FAIL:', JSON.stringify(l)); }
 }
 
-// chests + paper skins (2026-08-31): 90/90 stars opens all three chests and unlocks every skin;
+// sheet certification + paper skins (2026-08-31): 90/90 stars certifies all three sheets and unlocks every skin;
 // picking a paper swaps the CSS tokens and the canvas paper instantly; the default paper is the
 // build-before-skins pixel (rgba(255,255,255,.045) over the page → [255,255,255,11])
 const paperPx = () => page.evaluate(() => {
@@ -102,12 +113,12 @@ const DEFAULT_PAPER = '[255,255,255,11]';
   const prog = await page.evaluate(() => window.GE_MENU.prog);
   const stats = await page.evaluate(() => JSON.parse(localStorage.getItem('ge_stats') || '{}'));
   await page.evaluate(() => window.GE_MENU.show('levels')); await page.waitForTimeout(80);
-  const heads = await page.evaluate(() => [...document.querySelectorAll('#levelGrid .chap .chest')].map(c => ({ open: c.classList.contains('open'), text: c.textContent.replace(/\s+/g, ' ').trim() })));
-  const allOpen = heads.length === 3 && heads.every(h => h.open) && /Sepia draft$/.test(heads[0].text) && /Night vellum$/.test(heads[1].text) && /Whiteprint$/.test(heads[2].text);
+  const heads = await page.evaluate(() => [...document.querySelectorAll('#levelGrid .chap .cert')].map(c => ({ on: c.classList.contains('on'), text: c.textContent.replace(/\s+/g, ' ').trim() })));
+  const allOn = heads.length === 3 && heads.every(h => h.on) && /Sepia draft$/.test(heads[0].text) && /Night vellum$/.test(heads[1].text) && /Whiteprint$/.test(heads[2].text);
   const skinsOk = ['sepia', 'night', 'white'].every(id => (prog.skins || []).includes(id));
-  if (allOpen && skinsOk && stats.chest_open === 3) console.log(`chests ok: 3/3 open after 90 stars (${heads.map(h => h.text).join(' | ')}); chest_open tracked ×3`);
-  else { failures++; console.error('chests FAIL:', JSON.stringify({ heads, skins: prog.skins, chest_open: stats.chest_open })); }
-  await page.screenshot({ path: `${shotDir}/levels-chests.png` });
+  if (allOn && skinsOk && stats.cert_earned === 3) console.log(`certification ok: 3/3 sheets certified after 90 stars (${heads.map(h => h.text).join(' | ')}); cert_earned tracked ×3`);
+  else { failures++; console.error('certification FAIL:', JSON.stringify({ heads, skins: prog.skins, cert_earned: stats.cert_earned })); }
+  await page.screenshot({ path: `${shotDir}/levels-certified.png` });
   // skin select from the title block: CSS variable, body colour, canvas paper pixel, persistence
   await page.evaluate(() => window.GE.load(11)); await page.waitForTimeout(80);
   const px0 = JSON.stringify(await paperPx());
@@ -611,57 +622,62 @@ const burnLevel = () => page.evaluate(() => {
   else { failures++; console.error('objective row FAIL:', JSON.stringify({ c0, c1, col })); }
 }
 
-// chest progress copy at a partial total, and the win that crosses the threshold: seed sheet 1 with
-// 21 stars (L1–7 at 3), no skins → header reads "3 to open", swatches locked, paper is the default;
-// a par win on L8 makes 24 → chest_open, the win card's chest row names Sepia draft, Try it applies it
+// certification copy at a partial total, and the win that crosses the threshold: seed sheet 1 with
+// 21 stars (L1–7 at 3), no skins → header reads "3 to certify", swatches locked (pending stamp: a
+// dashed frame with NO star — the shape cue, not colour, carries the state); a par win on L8 makes
+// 24 → cert_earned, the win card's row reads "Sheet certified — Sepia draft", Try it applies it
 {
   await page.evaluate(() => { localStorage.setItem('ge_prog', JSON.stringify({ u: 29, s: [3, 3, 3, 3, 3, 3, 3] })); localStorage.setItem('ge_stats', '{}'); });
   await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L);
   await page.evaluate(() => window.GE_MENU.show('levels')); await page.waitForTimeout(80);
   const h0 = await page.evaluate(() => {
-    const ch = [...document.querySelectorAll('#levelGrid .chap .chest')];
-    return { text: ch[0].textContent.replace(/\s+/g, ' ').trim(), open: ch[0].classList.contains('open'), t2: ch[1].textContent.replace(/\s+/g, ' ').trim(), theme: window.GE.theme,
-      locked: document.querySelectorAll('#menuPapers .paper.locked').length, chestGlyphs: document.querySelectorAll('#menuPapers .paper.locked .chest-ico').length };
+    const ch = [...document.querySelectorAll('#levelGrid .chap .cert')];
+    return { text: ch[0].textContent.replace(/\s+/g, ' ').trim(), on: ch[0].classList.contains('on'), t2: ch[1].textContent.replace(/\s+/g, ' ').trim(), theme: window.GE.theme,
+      locked: document.querySelectorAll('#menuPapers .paper.locked').length, certGlyphs: document.querySelectorAll('#menuPapers .paper.locked .cert-ico').length,
+      // pending stamp: the star is not drawn yet, so locked/earned differ in SHAPE, not just colour
+      pendingStar: getComputedStyle(document.querySelector('#menuPapers .paper.locked .cert-ico .star')).display };
   });
-  await page.screenshot({ path: `${shotDir}/levels-chest-closed.png` });
+  await page.screenshot({ path: `${shotDir}/levels-cert-pending.png` });
   // a locked swatch explains itself instead of switching
   await page.evaluate(() => window.GE_MENU.show('levels')); await page.waitForTimeout(60);
   await page.click('#btnPaperSepia');
   const lockTap = await page.evaluate(() => ({ cap: document.querySelector('#menuPapers .cap').textContent, theme: window.GE.theme }));
-  const okCopy = h0.text === '★ 21/30 · 3 to open' && !h0.open && h0.t2 === '★ 0/30 · 24 to open' && h0.theme === 'cyan' && h0.locked === 3 && h0.chestGlyphs === 3
-    && lockTap.cap === 'Sheet 1 chest · opens at 24 ★' && lockTap.theme === 'cyan';
-  if (okCopy) console.log(`chest copy ok: "${h0.text}" / "${h0.t2}"; 3 swatches locked; locked tap → "${lockTap.cap}"`);
-  else { failures++; console.error('chest copy FAIL:', JSON.stringify({ h0, lockTap })); }
+  const okCopy = h0.text === '★ 21/30 · 3 to certify' && !h0.on && h0.t2 === '★ 0/30 · 24 to certify' && h0.theme === 'cyan' && h0.locked === 3 && h0.certGlyphs === 3
+    && h0.pendingStar === 'none' && lockTap.cap === 'Sheet 1 · certified at 24 ★' && lockTap.theme === 'cyan';
+  if (okCopy) console.log(`certification copy ok: "${h0.text}" / "${h0.t2}"; 3 swatches locked with an unstamped frame; locked tap → "${lockTap.cap}"`);
+  else { failures++; console.error('certification copy FAIL:', JSON.stringify({ h0, lockTap })); }
   // the crossing win
   await page.evaluate(() => window.GE.load(7)); await page.waitForTimeout(60);
   await page.evaluate(sol => { for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side); }, solutions[7]);
   await page.waitForSelector('#winModal:not([hidden])', { timeout: 2500 });
-  const c0 = await page.evaluate(() => ({ chest: !document.getElementById('winChest').hidden }));
-  await page.waitForSelector('#winChest:not([hidden])', { timeout: 3000 });
-  await page.waitForTimeout(700); // lid swing + sparks
-  await page.screenshot({ path: `${shotDir}/win-chest.png` });
+  const c0 = await page.evaluate(() => ({ cert: !document.getElementById('winCert').hidden }));
+  await page.waitForSelector('#winCert:not([hidden])', { timeout: 3000 });
+  await page.waitForTimeout(700); // the stamp lands + sparks
+  await page.screenshot({ path: `${shotDir}/win-certified.png` });
   const c1 = await page.evaluate(() => {
     const p = window.GE_MENU.prog, st = JSON.parse(localStorage.getItem('ge_stats') || '{}');
-    return { name: document.getElementById('winChestName').textContent, lid: document.querySelector('#winChest .chest-ico').classList.contains('open'), tryLabel: document.getElementById('btnTrySkin').textContent,
-      tryDisabled: document.getElementById('btnTrySkin').disabled, skins: p.skins, sheet1: p.s.slice(0, 10).reduce((a, b) => a + (b || 0), 0), chest_open: st.chest_open, theme: window.GE.theme };
+    return { k: document.querySelector('#winCert .k').textContent, name: document.getElementById('winCertName').textContent,
+      stamped: document.querySelector('#winCert .cert-ico').classList.contains('on'),
+      star: getComputedStyle(document.querySelector('#winCert .cert-ico .star')).display, tryLabel: document.getElementById('btnTrySkin').textContent,
+      tryDisabled: document.getElementById('btnTrySkin').disabled, skins: p.skins, sheet1: p.s.slice(0, 10).reduce((a, b) => a + (b || 0), 0), cert_earned: st.cert_earned, theme: window.GE.theme };
   });
   await page.click('#btnTrySkin'); await page.waitForTimeout(120);
   const c2 = await page.evaluate(() => ({ theme: window.GE.theme, saved: JSON.parse(localStorage.getItem('ge_prog')).skin, tryLabel: document.getElementById('btnTrySkin').textContent, tryDisabled: document.getElementById('btnTrySkin').disabled,
     skin_select: JSON.parse(localStorage.getItem('ge_stats')).skin_select, bg: getComputedStyle(document.documentElement).getPropertyValue('--bg1').trim() }));
   c2.px = JSON.stringify(await paperPx());
-  await page.screenshot({ path: `${shotDir}/win-chest-tried.png` });
-  // the next win on the same sheet does not re-open the chest; the header now names the paper without replaying the beat
+  await page.screenshot({ path: `${shotDir}/win-certified-tried.png` });
+  // the next win on the same sheet does not re-certify it; the header now names the paper without replaying the beat
   await page.click('#btnNext'); await page.waitForTimeout(60);
   await page.evaluate(sol => { for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side); }, solutions[8]);
   await page.waitForSelector('#winModal:not([hidden])', { timeout: 2500 }); await page.waitForTimeout(1300);
-  const c3 = await page.evaluate(() => ({ chest: !document.getElementById('winChest').hidden, chest_open: JSON.parse(localStorage.getItem('ge_stats')).chest_open }));
+  const c3 = await page.evaluate(() => ({ cert: !document.getElementById('winCert').hidden, cert_earned: JSON.parse(localStorage.getItem('ge_stats')).cert_earned }));
   await page.evaluate(() => window.GE_MENU.show('levels')); await page.waitForTimeout(80);
-  const c4 = await page.evaluate(() => { const ch = document.querySelector('#levelGrid .chap .chest'); return { text: ch.textContent.replace(/\s+/g, ' ').trim(), open: ch.classList.contains('open'), opening: ch.classList.contains('opening') }; });
-  const okChest = !c0.chest && c1.name === 'Sepia draft' && c1.lid && c1.tryLabel === 'Try it' && !c1.tryDisabled && c1.skins.includes('sepia') && c1.sheet1 === 24 && c1.chest_open === 1 && c1.theme === 'cyan'
+  const c4 = await page.evaluate(() => { const ch = document.querySelector('#levelGrid .chap .cert'); return { text: ch.textContent.replace(/\s+/g, ' ').trim(), on: ch.classList.contains('on'), stamping: ch.classList.contains('stamping') }; });
+  const okCert = !c0.cert && c1.k === 'Sheet certified' && c1.name === 'Sepia draft' && c1.stamped && c1.star !== 'none' && c1.tryLabel === 'Try it' && !c1.tryDisabled && c1.skins.includes('sepia') && c1.sheet1 === 24 && c1.cert_earned === 1 && c1.theme === 'cyan'
     && c2.theme === 'sepia' && c2.saved === 'sepia' && c2.tryLabel === 'On' && c2.tryDisabled && c2.skin_select === 1 && c2.bg === '#dcc7a1' && c2.px !== DEFAULT_PAPER
-    && !c3.chest && c3.chest_open === 1 && c4.text === '★ 27/30 · Sepia draft' && c4.open && !c4.opening;
-  if (okChest) console.log(`chest open ok: L8 par win → 24 ★ → "Chest opened — Sepia draft" after the stars; Try it → theme sepia (paper ${c2.px}), persisted, skin_select tracked; no repeat on L9; header "${c4.text}"`);
-  else { failures++; console.error('chest open FAIL:', JSON.stringify({ c0, c1, c2, c3, c4 })); }
+    && !c3.cert && c3.cert_earned === 1 && c4.text === '★ 27/30 · Sepia draft' && c4.on && !c4.stamping;
+  if (okCert) console.log(`certification ok: L8 par win → 24 ★ → "Sheet certified — Sepia draft" after the stars; Try it → theme sepia (paper ${c2.px}), persisted, skin_select tracked; no repeat on L9; header "${c4.text}"`);
+  else { failures++; console.error('certification FAIL:', JSON.stringify({ c0, c1, c2, c3, c4 })); }
 }
 
 // haptics (native-only surface): in a browser both toggles stay hidden and every beat is a
@@ -782,42 +798,36 @@ const beatRow = () => page.evaluate(() => (document.getElementById('winDaily').h
   else { failures++; console.error('freeze cap FAIL:', JSON.stringify({ f: st4.freezes, capRow, qad: st4.stats.quests_all_done })); }
 }
 
-// the ad repair remains the fallback when no freeze is held — once per streak, decline = fresh
+// THE REPAIR SURFACE IS GONE (2026-09-02 research round). A missed day with no banked freeze
+// lapses the streak SILENTLY: no card, no ad, no offer at the moment of loss, no guilt copy.
+// This check asserts the ABSENCE of the surface — the ids are not in the DOM at all and the word
+// cannot be found in the markup — plus the honest consequences: nothing pops on launch, the
+// counter is cleared truthfully, no streak_repair_* event can ever be recorded again, and the
+// next clear starts a fresh streak at 1 exactly as day one did.
 {
   await page.evaluate(() => { const s = JSON.parse(localStorage.getItem('ge_streak')); s.freezes = 0; localStorage.setItem('ge_streak', JSON.stringify(s)); });
-  await readyAgain(); await setDay(5);
-  const off1 = await page.evaluate(() => window.GE_MENU.checkStreak());
-  const card = await page.evaluate(() => ({ up: !document.getElementById('streakModal').hidden, sub: document.getElementById('streakSub').textContent }));
-  await page.waitForTimeout(450);
-  await page.screenshot({ path: `${shotDir}/streak-repair-card.png` });
-  await page.click('#btnStreakRepair');
-  const adUp = await page.evaluate(() => window.GE.adUp);
-  await page.waitForFunction(() => !window.GE.adUp && document.getElementById('streakModal').hidden, null, { timeout: 9000 });
-  const rep = await S();
-  const reOffer = await page.evaluate(() => window.GE_MENU.checkStreak()); // gap is 1 now: no card
-  await winL1(); const rep2 = await S();
-  const repairOk = off1 === true && card.up && /^Your 3-day streak — repair it\?$/.test(card.sub) && adUp
-    && rep.len === 3 && !!rep.repairUsedFor && rep.stats.streak_repair_offered === 1 && rep.stats.streak_repair_taken === 1
-    && reOffer === false && rep2.len === 4;
-  if (repairOk) console.log('streak repair ok: no freeze → one missed day offers the card once; ad → repaired; today\'s clear lands len 4 (= len+1)');
-  else { failures++; console.error('streak repair FAIL:', JSON.stringify({ off1, card, adUp, repLen: rep.len, used: rep.repairUsedFor, offered: rep.stats.streak_repair_offered, taken: rep.stats.streak_repair_taken, reOffer, rep2len: rep2.len })); }
-  // a second miss on the SAME streak gets no second repair; a NEW streak earns its own; decline = fresh
-  await setDay(7);
-  const off2 = await page.evaluate(() => window.GE_MENU.checkStreak());
-  await winL1(); const fresh = await S();
-  await setDay(8); await winL1(); const s8 = await S();
-  await setDay(10);
-  const off3 = await page.evaluate(() => window.GE_MENU.checkStreak());
-  await page.click('#btnStreakDecline');
-  const dec = await S();
-  await winL1(); const s10 = await S();
-  const onceOk = off2 === false && fresh.len === 1 && !fresh.repairUsedFor && s8.len === 2
-    && off3 === true && dec.len === 0 && dec.lastDate === null && dec.stats.streak_repair_declined === 1
-    && s10.len === 1 && s10.stats.streak_repair_offered === 2;
-  if (onceOk) console.log('streak repair ok: once per streak (2nd miss → no offer, fresh at 1); a new streak is offered its own; decline → fresh at 1');
-  else { failures++; console.error('streak once/decline FAIL:', JSON.stringify({ off2, freshLen: fresh.len, s8len: s8.len, off3, decLen: dec.len, decLast: dec.lastDate, declined: dec.stats.streak_repair_declined, s10len: s10.len, offered: s10.stats.streak_repair_offered })); }
+  await readyAgain(); await setDay(5); // a 2-day gap on a 3-day streak: the case that used to be sold
+  const before = await S();
+  const gone = await page.evaluate(() => ({
+    ids: ['streakModal', 'btnStreakRepair', 'btnStreakDecline'].filter(id => document.getElementById(id)),
+    word: /repair/i.test(document.body.innerHTML),
+  }));
+  const r = await page.evaluate(() => window.GE_MENU.checkStreak());
+  const after = await page.evaluate(() => ({
+    modals: [...document.querySelectorAll('.modal')].filter(m => !m.hidden).map(m => m.id),
+    ...window.GE_MENU.streak, stats: JSON.parse(localStorage.getItem('ge_stats') || '{}'),
+    row: (window.GE_MENU.show('levels'), document.getElementById('fStreak').innerText.replace(/\s+/g, ' ').trim()),
+  }));
+  await page.waitForTimeout(250);
+  await page.screenshot({ path: `${shotDir}/streak-lapsed-silently.png` });
+  await winL1(); const next = await S();
+  const noRepair = gone.ids.length === 0 && !gone.word && before.len === 3 && r === false
+    && after.modals.length === 0 && after.len === 0 && after.lastDate === null && after.best === 3
+    && !('streak_repair_offered' in after.stats) && !('streak_repair_taken' in after.stats) && !('streak_repair_declined' in after.stats)
+    && /^—/.test(after.row) && next.len === 1;
+  if (noRepair) console.log(`no repair surface ok: a 2-day gap with 0 freezes lapses a 3-day streak silently — zero modals up, field log reads "${after.row}", best kept at 3, next clear starts at 1; #streakModal / #btnStreakRepair / #btnStreakDecline absent from the DOM and no streak_repair_* event exists`);
+  else { failures++; console.error('repair-surface FAIL:', JSON.stringify({ gone, beforeLen: before.len, r, after, nextLen: next.len })); }
 }
-
 // menu rows: quests fresh, streak "n of last 7 days" + freezes held, persisted across a real reload
 {
   await page.evaluate(() => { for (const k of ['ge_streak', 'ge_quests']) localStorage.removeItem(k); });
@@ -827,7 +837,7 @@ const beatRow = () => page.evaluate(() => (document.getElementById('winDaily').h
   await page.screenshot({ path: `${shotDir}/menu-quests-fresh.png` });
   await page.evaluate(() => {
     const day = o => { const x = new Date(Date.now() - o * 864e5); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
-    localStorage.setItem('ge_streak', JSON.stringify({ len: 4, best: 4, lastDate: day(0), repairUsedFor: null, freezes: 1, marks: [day(0), day(1), day(2), day(4)] }));
+    localStorage.setItem('ge_streak', JSON.stringify({ len: 4, best: 4, lastDate: day(0), freezes: 1, marks: [day(0), day(1), day(2), day(4)] }));
   });
   await page.reload(); await page.waitForFunction(() => window.GE && window.GE.L);
   await page.waitForTimeout(400);
@@ -914,11 +924,14 @@ const beatRow = () => page.evaluate(() => (document.getElementById('winDaily').h
   else { failures++; console.error('motion FAIL:', JSON.stringify({ m0, m1, m2, m3 })); }
 }
 
-// ---------- lives (flag-gated, default ON) ----------
-// L1–5 never cost; from L6 a fail ending in Retry costs one; the rescue saves the attempt;
-// Restart mid-level and wins are free; refill is one life / 25 min off a single anchor
-// (clock-change-safe); the empty state is a calm card that never blocks browsing; ?lives=0
-// removes everything and GE.livesEnabled restores it live
+// ---------- lives (flag-gated, default OFF — this whole block is the ?lives=1 sub-run) ----------
+// The economy does not ship on by default any more, but it must stay TESTED, so every rule below
+// is still exercised against the real engine with the flag forced on: L1–5 never cost; from L6 a
+// fail ending in Retry costs one; the rescue saves the attempt; Restart mid-level and wins are
+// free; refill is one life / 25 min off a single anchor (clock-change-safe); the empty state is a
+// calm card that never blocks browsing. The tail of the block then checks the SHIPPED default —
+// a plain load has no lives surface at all and consumes nothing — and that GE.livesEnabled
+// restores the whole system live, which is how a bot or a future experiment turns it back on.
 {
   const lctx = await browser.newContext({ viewport: { width: 420, height: 780 } });
   const lp = await lctx.newPage();
@@ -940,7 +953,7 @@ const beatRow = () => page.evaluate(() => (document.getElementById('winDaily').h
   });
   const failNow = async () => { await burnOn(lp); await lp.waitForSelector('#failModal:not([hidden])', { timeout: 3000 }); };
   const LV = () => lp.evaluate(() => ({ n: window.GE.lives, info: window.GE.livesInfo, ls: JSON.parse(localStorage.getItem('ge_lives') || 'null'), stats: JSON.parse(localStorage.getItem('ge_stats') || '{}'), hud: document.getElementById('hudLives').textContent }));
-  await lp.goto('file://' + root + 'index.html');
+  await lp.goto('file://' + root + 'index.html?lives=1'); // forced on: the economy under test
   await lReady();
   // L1–5 are the runway: fail L3 and Retry — nothing is charged
   await lp.evaluate(() => { localStorage.setItem('ge_stats', '{}'); window.GE.load(2); });
@@ -1023,9 +1036,10 @@ const beatRow = () => page.evaluate(() => (document.getElementById('winDaily').h
     && entered.lvl === 5 && !entered.menu && again.card && again.refill && again.n === 0 && again.stats.lives_empty === 3 && again.stats.life_lost === 1;
   if (grantOk) console.log('lives ok: rewarded +1 lands after the ad, once per card appearance (re-offered on the next); entry is free, Retry spends the granted life');
   else { failures++; console.error('lives ad-refill FAIL:', JSON.stringify({ adDuring, g1n: g1.n, cardGone, refills: g1.stats.life_ad_refill, entered, again })); }
-  // flag off: ?lives=0 removes every surface and consumes nothing; the GE setter restores live
+  // the shipped default: a plain load has no lives surface at all and consumes nothing; the GE
+  // setter still restores the whole system live (bots, and any future re-enable experiment)
   const fp = await lctx.newPage();
-  await fp.goto('file://' + root + 'index.html?lives=0');
+  await fp.goto('file://' + root + 'index.html');
   await fp.waitForFunction(() => window.GE && window.GE.L);
   const f0 = await fp.evaluate(() => ({ on: window.GE.livesEnabled, cls: document.body.classList.contains('lives-on'), hud: document.getElementById('hudLives').hidden, menuBox: document.getElementById('menuLivesBox').hidden }));
   await fp.evaluate(() => { localStorage.setItem('ge_stats', '{}'); window.GE.load(5); });
@@ -1037,7 +1051,7 @@ const beatRow = () => page.evaluate(() => (document.getElementById('winDaily').h
   await fp.evaluate(() => { window.GE.livesEnabled = true; });
   const f2 = await fp.evaluate(() => ({ on: window.GE.livesEnabled, hud: document.getElementById('hudLives').hidden, n: window.GE.lives }));
   const flagOk = !f0.on && !f0.cls && f0.hud && f0.menuBox && !f1.stats.life_lost && f1.lvl === 5 && f1.moves === 0 && !f1.card && f2.on && !f2.hud && f2.n === 0;
-  if (flagOk) console.log('lives ok: ?lives=0 removes every lives surface and consumes nothing (Retry free at "0"); GE.livesEnabled=true restores them live');
+  if (flagOk) console.log('lives ok: the default load has no lives surface and consumes nothing (Retry free at "0"); GE.livesEnabled=true restores them live');
   else { failures++; console.error('lives flag FAIL:', JSON.stringify({ f0, f1lost: f1.stats.life_lost, f1lvl: f1.lvl, f1moves: f1.moves, f1card: f1.card, f2 })); }
   await lctx.close();
 }
@@ -1315,16 +1329,28 @@ const pixelOf = async (sel, fx, fy) => {
       : g.side === 'top' ? [m2.bx + mid, m2.by] : [m2.bx + mid, m2.by + m2.h * m2.cell];
     const at = d => [e0[0] + n[0] * d, e0[1] + n[1] * d];
     const pts = [at(1.5), at(3 + th * 0.25), at(3 + th + 7)];
-    const sampleGate = () => page.evaluate(ps => { const cv = document.getElementById('cv'), c = cv.getContext('2d'), d = cv.width / cv.clientWidth;
-      return ps.map(p => Array.from(c.getImageData(Math.round(p[0] * d), Math.round(p[1] * d), 1, 1).data).slice(0, 3)); }, pts);
-    const calm = await sampleGate();
-    await page.evaluate(pl => window.GE.dragVia(pl.bi, pl.path.slice(1), pl.side), plan);
-    let best = 0;
-    for (let k = 0; k < 26; k++) {
-      const lit = await sampleGate();
-      for (let j = 0; j < pts.length; j++) best = Math.max(best, ...[0, 1, 2].map(i => Math.abs(lit[j][i] - calm[j][i])));
-      await page.waitForTimeout(25);
-    }
+    // Sampled IN-PAGE on every animation frame for the whole beat. This used to be 26 driver-side
+    // polls 25 ms apart; each poll is a round trip, so the beat regularly fell between two samples
+    // and the check failed at random (reproduced on the pre-Pass-1 build too: whiteprint scored 2
+    // and 4 out of 4 runs). One rAF loop sees ~180 frames and has no race at all.
+    const { best, frames } = await page.evaluate(async ({ pts, plan, ms }) => {
+      const cv = document.getElementById('cv'), c = cv.getContext('2d'), d = cv.width / cv.clientWidth;
+      const read = () => pts.map(p => Array.from(c.getImageData(Math.round(p[0] * d), Math.round(p[1] * d), 1, 1).data).slice(0, 3));
+      const calm = read();
+      window.GE.dragVia(plan.bi, plan.path.slice(1), plan.side);
+      let best = 0, frames = 0;
+      const t0 = performance.now();
+      await new Promise(res => {
+        const step = () => {
+          const lit = read(); frames++;
+          for (let j = 0; j < pts.length; j++) for (let i = 0; i < 3; i++) best = Math.max(best, Math.abs(lit[j][i] - calm[j][i]));
+          if (performance.now() - t0 < ms) requestAnimationFrame(step); else res();
+        };
+        requestAnimationFrame(step);
+      });
+      return { best, frames };
+    }, { pts, plan, ms: 1500 });
+    if (frames < 40) { failures++; console.error(`themes FAIL: only ${frames} frames sampled on ${t} — the alignment-beat measurement did not run`); }
     flashDelta[t] = best;
     await page.waitForTimeout(700);
   }
@@ -1420,8 +1446,8 @@ const pixelOf = async (sel, fx, fy) => {
 
 // ---------- tap outside a sheet to put it down (2026-09-02) ----------
 // User report: "in the pause menu during play, clicking outside the menu should resume the game."
-// Applied wherever dismissal is safe; the fail sheet, the win card, the rewarded slot and the
-// streak-repair card stay explicit because dismissing them spends something.
+// Applied wherever dismissal is safe; the fail sheet, the win card and the rewarded slot stay
+// explicit because dismissing them spends something.
 {
   const tapScrim = async sel => { const b = await (await page.$(sel)).boundingBox(); await page.mouse.click(b.x + 6, b.y + 6); await page.waitForTimeout(140); };
   // tap an INERT part of the sheet: the middle of the pause card is the "How to play" button
@@ -1522,7 +1548,7 @@ const pixelOf = async (sel, fx, fy) => {
 }
 
 // Reset progress is a two-tap arm: one tap changes nothing but the label (runs last: it wipes progress
-// — chests close with the stars and the paper returns to the cyanotype)
+// — certifications lapse with the stars and the paper returns to the cyanotype)
 {
   await page.evaluate(() => window.GE_MENU.show('levels'));
   await page.waitForTimeout(60);
@@ -1530,8 +1556,8 @@ const pixelOf = async (sel, fx, fy) => {
   await page.click('#btnReset');
   const r1 = await page.evaluate(() => ({ prog: JSON.stringify(window.GE_MENU.prog), label: document.getElementById('btnReset').textContent }));
   await page.click('#btnReset');
-  const r2 = await page.evaluate(() => ({ prog: JSON.stringify(window.GE_MENU.prog), label: document.getElementById('btnReset').textContent, theme: window.GE.theme, open: document.querySelectorAll('#levelGrid .chap .chest.open').length }));
-  if (r1.prog === p0 && /again/i.test(r1.label) && r2.prog === '{"u":0,"s":[]}' && !/again/i.test(r2.label) && r2.theme === 'cyan' && r2.open === 0) console.log('reset ok: first tap arms, second erases (chests closed, paper back to cyanotype)');
+  const r2 = await page.evaluate(() => ({ prog: JSON.stringify(window.GE_MENU.prog), label: document.getElementById('btnReset').textContent, theme: window.GE.theme, certified: document.querySelectorAll('#levelGrid .chap .cert.on').length }));
+  if (r1.prog === p0 && /again/i.test(r1.label) && r2.prog === '{"u":0,"s":[]}' && !/again/i.test(r2.label) && r2.theme === 'cyan' && r2.certified === 0) console.log('reset ok: first tap arms, second erases (certifications lapse, paper back to cyanotype)');
   else { failures++; console.error('reset FAIL:', JSON.stringify({ p0, r1, r2 })); }
 }
 

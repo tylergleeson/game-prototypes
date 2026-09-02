@@ -33,8 +33,10 @@ come back, new shapes, four colours — and a proper spike in the twenties.
   the ad slots are free placeholders — nothing is sold, nothing is gated.)
 - **A drafting-table world**: cyanotype blueprint art, stamped gates, generated
   audio, colour-blind-safe glyphs on every block and gate.
-- **Daily goal and streaks** with a fair one-time repair — and chests of paper
-  skins (Sepia draft, Night vellum, Whiteprint) at 24★ a sheet. Cosmetic only.
+- **Daily goal and streaks** — no repair to buy, no card at the moment of loss; a
+  missed day just starts the count again.
+- **Sheet certification**: 24★ on a sheet certifies it and unlocks a paper skin
+  (Sepia draft, Night vellum, Whiteprint). Cosmetic only.
 - Works with touch or mouse. ~40 KB, loads instantly, fully offline.
 
 *This is a prototype in live testing — telemetry is anonymous (no accounts, no
@@ -63,8 +65,8 @@ Every shot is real gameplay at iPhone size; nothing staged. From `shots/` and
 3. `marketing/m3-hint-ghost-route.png` — the hint's ghost route on L10.
 4. `marketing/m2-fail-sheet-ghost-route.png` — the "So close!" sheet with the
    board fitted above it.
-5. `marketing/m4-chest-open-try-it.png` — a 3-star win opening the Sheet 1 chest.
-6. `shots/levels-chests.png` — the sheet index with chests and stars.
+5. `marketing/m4-chest-open-try-it.png` — a 3-star win certifying Sheet 1.
+6. `shots/levels-certified.png` — the sheet index with certification stamps and stars.
 7. `shots/menu-daily-streak4.png` — the title block with the daily-goal and
    streak row.
 

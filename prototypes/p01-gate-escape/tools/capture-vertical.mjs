@@ -301,17 +301,17 @@ const recipes = {
       await h.w(2600);
     },
   },
-  // L8 par clear crossing Sheet 1's 24★ with the game's own exit / star / chest audio.
+  // L8 par clear crossing Sheet 1's 24★ with the game's own exit / star / certification audio.
   'v-asmr-l8': {
-    note: 'L8: six par drags in one take with the engine\'s exit whoosh chain, stars, then the 24★ chest (Sepia draft) — audio is the game\'s generated synth.',
+    note: 'L8: six par drags in one take with the engine\'s exit whoosh chain, stars, then the 24★ sheet certification (Sepia draft) — audio is the game\'s generated synth.',
     seed: () => { localStorage.setItem('ge_prog', JSON.stringify({ u: 29, s: [3, 3, 3, 3, 3, 3, 3] })); localStorage.setItem('ge_level', '7'); localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1, twice: 1, undo: 1 })); },
     async run(h) {
       await h.click('#btnPlay'); await h.w(1000);
       h.mark('board');
       await h.playSolution(7, 260, 380);
       await h.winUp(); h.mark('win');
-      await h.page.waitForSelector('#winChest:not([hidden])', { timeout: 6000 }); h.mark('chest');
-      await h.w(1400); await h.still('chest');
+      await h.page.waitForSelector('#winCert:not([hidden])', { timeout: 6000 }); h.mark('cert');
+      await h.w(1400); await h.still('cert');
       await h.w(2600);
     },
   },
@@ -354,7 +354,7 @@ const recipes = {
   // (GE.now, the engine's own test clock, advances the day between sessions; every clear is the
   // solver's route through GE.dragVia). Filmed on a fresh page with the real clock.
   'v-day7': {
-    note: 'Save built by the engine itself: 12 levels cleared over 7 simulated consecutive days (GE.now), so the streak, quests, survey and 24★ chest are the engine\'s own bookkeeping; then title block → Play → L13 first two real drags.',
+    note: 'Save built by the engine itself: 12 levels cleared over 7 simulated consecutive days (GE.now), so the streak, quests, survey and 24★ certification are the engine\'s own bookkeeping; then title block → Play → L13 first two real drags.',
     async prepare(h) {
       const plan = [2, 2, 1, 2, 2, 1, 2]; // levels cleared per day (12 total)
       const base = Date.now();

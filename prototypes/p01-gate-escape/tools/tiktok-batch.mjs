@@ -20,7 +20,7 @@
 //
 // Native 9:16 sources (tools/capture-vertical.mjs → marketing/vertical/*.mp4, already 1080x1920
 // with the hook band and the bottom 25% left empty by the game's own layout) are placed
-// full-frame — no letterbox, no grid, no box — so the fail sheet, quest rows and chest reveal
+// full-frame — no letterbox, no grid, no box — so the fail sheet, quest rows and certification reveal
 // keep their native text size. A clip with `audio: true` keeps its source audio (the engine's
 // generated synth, tapped by the capture tool) under the mix (`sourceGain`, default 1.0).
 //

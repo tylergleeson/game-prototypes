@@ -6,7 +6,7 @@ main" timestamps) and the feature tour chapters (`tour-report.md`, t01–t14). H
 from `hooks.md`. Narration lines N1–N9 are the cached ElevenLabs lines in
 `marketing/narration/` (N1 `01-hook` "One drag. One move. Any route." · N2 `02-title` ·
 N3 `03-hint` "Ghost routes show the way in. A hint when you're stuck. A rescue when you're
-one drag from freedom." · N4 `04-chest` "Earn stars. Open chests. Change the paper." ·
+one drag from freedom." · N4 `04-cert` "Earn stars. Certify the sheet. Change the paper." ·
 N5 `05-meta` · N6 `06-tag` "Gate Escape. Draw your way out." · N7 `07-legend` · N8
 `08-survey` · N9 `09-lives`). "Trending-sound placeholder" = the founder picks a current
 sound **only if** the account's sound library allows it and it is used purely as a bed
@@ -52,13 +52,15 @@ from freedom); formats marked ◎ are UGC concepts the founder films on a phone.
 - **Caption:** "Which block did you pick? Wrong answers get a reply."
 - **Why:** Ask-a-question share hack; comments are the KPI for this family.
 
-## 04 Every 24 stars opens a chest (batch-01 v04)
+## 04 Every 24 stars certifies a sheet (batch-01 v04)
 - **Format:** raw gameplay / progression · **Phase:** A/B/C · **Hook:** H43 (Statement)
-- **Shots:** 0.0–1.2 last L8 drags (promo 29.5–30.7) → 1.2–6.6 stars + "Chest opened ·
+- **Shots:** 0.0–1.2 last L8 drags (promo 29.5–30.7) → 1.2–6.6 stars + "Sheet certified ·
   Sepia draft · Try it" (30.7–36.1) → 6.6–9.1 Whiteprint paper on the same board
   (36.1–38.6) → CTA.
 - **Sound:** N4 at 1.2, N6 at CTA; bed.
-- **Honesty:** caption states "cosmetic paper skins; nothing is locked behind chests".
+- **Honesty:** caption states "cosmetic paper skins; nothing is locked behind certification".
+- **Stale footage (2026-09-02):** the promo cut and `m4-chest.webm` still show the old
+  treasure-chest glyph and "Chest opened" copy. Re-shoot before this concept runs again.
 
 ## 05 ★ Rescued with 3 moves. Still failed. (batch-01 v05)
 - **Format:** raw gameplay, honest fail · **Phase:** A/B/C · **Hook:** H18 (Context)
@@ -152,10 +154,10 @@ from freedom); formats marked ◎ are UGC concepts the founder films on a phone.
 
 ## 15 ◎ UGC: "I said one more level"
 - **Format:** UGC POV, phone in bed/on sofa · **Phase:** A/B · **Hook:** H25 "One more sheet, then bed." (Statement)
-- **Founder shoots:** 0–2 phone tilted, level select with sheet 1 stars and the chest
-  header "★ 21/30 · 3 to open" (seed via the game's own progress — play to it, do not
-  fake) → 2–10 L8 played for real; if it clears at par the chest opens on camera → 10–13
-  the chest reveal / or the honest "Replay for ★★★" → CTA.
+- **Founder shoots:** 0–2 phone tilted, level select with sheet 1 stars and the sheet
+  header "★ 21/30 · 3 to certify" (seed via the game's own progress — play to it, do not
+  fake) → 2–10 L8 played for real; if it clears at par the sheet is certified on camera →
+  10–13 the certification stamp / or the honest "Replay for ★★★" → CTA.
 - **On-screen:** hook; timestamp overlay "00:41" is allowed only if it is the real clock.
 - **Sound:** trending-sound placeholder low + phone audio; N6 at CTA.
 - **Honesty:** whichever outcome happens is the cut; never re-shoot to fake a clear.
@@ -170,11 +172,12 @@ from freedom); formats marked ◎ are UGC concepts the founder films on a phone.
 - **Sound:** founder's voice (talk-through, 5 Keys to On-Camera Communication: energy up,
   pauses trimmed); N6 at CTA.
 
-## 17 What opens at 24 stars?
+## 17 What happens at 24 stars?
 - **Format:** curiosity / reveal · **Phase:** A/B/C · **Hook:** H08 (Question)
-- **Shots:** 0–3 level select, sheet 1 header "★ 23/30 · 1 to open" (tour t12 or
-  re-capture seeded 23★) → 3–7 the crossing win (m4-chest.webm 8.5–12.0) → 7–11 chest lid
-  swings, sparks, "Sepia draft · Try it" (12.0–14.8) → 11–13 Try it tapped, the sheet turns
+- **Shots:** 0–3 level select, sheet 1 header "★ 23/30 · 1 to certify" (tour t12 or
+  re-capture seeded 23★) → 3–7 the crossing win (`m4-chest.webm` 8.5–12.0 — STALE, shows
+  the old chest glyph; re-capture) → 7–11 the stamp lands, sparks, "Sepia draft · Try it"
+  (12.0–14.8) → 11–13 Try it tapped, the sheet turns
   sepia (promo 36.1 region for Whiteprint; re-capture for Sepia) → CTA.
 - **Sound:** N4 at 3.0; N6 at CTA.
 - **Caption:** "cosmetic only — the puzzle is the point".

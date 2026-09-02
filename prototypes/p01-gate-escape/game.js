@@ -79,7 +79,7 @@ const pushVis = (bi, x, y) => { (visQ[bi] || (visQ[bi] = [])).push([x, y]); };
 // block inside a wall, an interpolation across an unwalked gap could
 function snapVis(bi) { visQ[bi] = []; pendingSettle[bi] = false; if (pos[bi]) disp[bi] = [pos[bi][0], pos[bi][1]]; }
 
-// ---------- paper skins (cosmetic, chest rewards) ----------
+// ---------- paper skins (cosmetic, sheet-certification rewards) ----------
 // A skin changes ONLY the drafting sheet: page gradient, ink, rules, card tints, the canvas
 // paper/grid/border and the stones' ink. Block and gate colours, glyphs and the block halo are
 // never touched, so the 3-second read is identical on every paper. `css` maps to the custom
@@ -224,16 +224,20 @@ function track(ev, data) {
   } catch (e) { /* storage may be unavailable; play on */ }
 }
 
-// ---------- lives (flag-gated, default ON) ----------
+// ---------- lives (flag-gated, default OFF) ----------
 // Five hearts. Levels 1–5 are the onboarding runway and never cost anything; from L6 on, a
 // failed attempt that ends in RETRY costs one life — the rescue SAVES the attempt (no life),
 // Restart mid-level costs nothing, winning costs nothing. Refill: one life per 25 minutes,
 // derived from a single anchor timestamp (never five timers); conservative under clock changes
 // (a backwards jump only re-anchors — the player is never accused, and a forward jump can at
 // most fill to 5). Out of lives: a calm card — timer, one rewarded +1 per appearance, back to
-// menu — that never blocks the menu or level browsing. Flag: LIVES_ENABLED below, overridable
-// via localStorage ge_flags {"lives":0}, the ?lives=0 URL param, or GE.livesEnabled (bots).
-const LIVES_ENABLED = true, LIVES_MAX = 5, LIFE_MS = 25 * 60 * 1000, LIVES_FREE_LEVELS = 5;
+// menu — that never blocks the menu or level browsing.
+// SHIPPED DEFAULT: OFF (2026-09-02). The research round chose a calmer product — no energy
+// gate — but the whole economy below stays built and tested, so turning it back on is one
+// constant. Flag: LIVES_ENABLED below, overridable via localStorage ge_flags {"lives":1},
+// the ?lives=1 URL param, or GE.livesEnabled (bots). With it off every lives surface is
+// hidden, livesNow() reports a full bank and nothing is ever spent.
+const LIVES_ENABLED = false, LIVES_MAX = 5, LIFE_MS = 25 * 60 * 1000, LIVES_FREE_LEVELS = 5;
 let livesOn = (() => {
   let on = LIVES_ENABLED;
   try { const f = JSON.parse(localStorage.getItem('ge_flags') || '{}'); if ('lives' in f) on = !!+f.lives; } catch (e) {}
@@ -1004,7 +1008,6 @@ const AD_RING = 326.7;    // 2πr for the r=52 ring in index.html
 const AD_KIND = {
   rescue: { title: 'Rescue', reward: '+3 moves' },
   hint:   { title: 'Hint', reward: 'the next move' },
-  streak: { title: 'Streak repair', reward: 'your streak back' },
   life:   { title: '+1 life', reward: '+1 life' },
 };
 function rewarded(kind, grant) {
@@ -1623,8 +1626,8 @@ function sound(kind, n = 0) {
     else { blip(445 * k, 0.17, 'sine', 0.21, 0, 400 * k); blip(668 * k, 0.09, 'triangle', 0.08, 0.02); blip(1100 * k, 0.09, 'sine', 0.06, 0.07); }
   }
   else if (kind === 'hint') { blip(660, 0.1, 'sine', 0.12); blip(990, 0.14, 'sine', 0.1, 0.08); }
-  // chest: a latch click, then a rising three-note chime
-  else if (kind === 'chest') { blip(240, 0.05, 'square', 0.08); blip(784, 0.16, 'triangle', 0.16, 0.12); blip(1046, 0.16, 'triangle', 0.16, 0.24); blip(1568, 0.3, 'sine', 0.18, 0.36, 120); }
+  // certification: a stamp press, then a rising three-note chime
+  else if (kind === 'cert') { blip(240, 0.05, 'square', 0.08); blip(784, 0.16, 'triangle', 0.16, 0.12); blip(1046, 0.16, 'triangle', 0.16, 0.24); blip(1568, 0.3, 'sine', 0.18, 0.36, 120); }
   else if (kind === 'gate') { blip(1046, 0.18, 'triangle', 0.14, 0.08); blip(1568, 0.22, 'sine', 0.1, 0.14); }
   else if (kind === 'star') blip(880 * Math.pow(1.25, n) * j, 0.16, 'triangle', 0.18, 0, 200);
   else if (kind === 'undo') blip(520, 0.12, 'sine', 0.14, 0, -220);
@@ -1680,10 +1683,10 @@ window.GE = {
   // overridable clock: the daily-goal / streak logic (menu.js) reads dates through this, so
   // bots simulate day changes without touching the system clock (assign GE.now = () => fakeMs)
   now: () => Date.now(),
-  rewarded, // the placeholder rewarded-ad flow — menu.js's streak repair runs the same contract as rescue/hint
+  rewarded, // the placeholder rewarded-ad flow — the free rescue/hint grants run this contract
   // paper skins: id + table for menu.js and the bots; setTheme repaints instantly (next frame)
   get theme() { return themeId; }, get themes() { return THEMES; }, setTheme,
-  burst, sound, // the chest reveal on the win card reuses the third-star burst and the generated audio
+  burst, sound, // the certification reveal on the win card reuses the third-star burst and the generated audio
   // drawing helpers shared with menu.js (legend); ctx is swapped for the call
   draw(c, fn) { const o = ctx; ctx = c; try { fn({ rr, drawGlyph, drawBlockShape, COLORS }); } finally { ctx = o; } },
   load: loadLevel,

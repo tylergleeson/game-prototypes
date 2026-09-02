@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Feature-tour video for Gate Escape (p01): ONE continuous, fully scripted recording of the
 // real game at iPhone size (402×874 @2x) walking through every feature — menu, legend, first
-// wins, corners, stones, hint, fail/rescue, undo + star meter, chests + paper skins, daily
+// wins, corners, stones, hint, fail/rescue, undo + star meter, certification + paper skins, daily
 // quests + streak freezes, Field Survey, level select, lives — with a slim blueprint caption
 // strip rendered INTO the film (a flex footer below the game, never over the board).
 //
@@ -159,7 +159,7 @@ await page.waitForFunction(() => window.GE && window.GE.L);
 await w(300);
 
 // ---- SEG A · ch 01–02: title block + how to play -----------------------------------------
-// A lively mid-game save: sheet 1 past its chest (Sepia owned), a 4-day streak with a banked
+// A lively mid-game save: sheet 1 certified (Sepia owned), a 4-day streak with a banked
 // freeze, one quest stamped, Field Survey mid-week — every row on the title block has content.
 await seed(() => {
   const day = n => { const d = new Date(Date.now() - n * 864e5); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
@@ -174,7 +174,7 @@ await seed(() => {
   localStorage.setItem('ge_prog', JSON.stringify({ u: 11, s: [3, 3, 2, 3, 3, 2, 3, 3, 3, 1, 2, 3], skins: ['sepia'], seen: [0] }));
   localStorage.setItem('ge_level', '11');
   localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1, twice: 1, undo: 1 }));
-  localStorage.setItem('ge_streak', JSON.stringify({ len: 4, best: 6, lastDate: day(1), repairUsedFor: null, freezes: 1, marks: [day(1), day(2), day(3), day(5)] }));
+  localStorage.setItem('ge_streak', JSON.stringify({ len: 4, best: 6, lastDate: day(1), freezes: 1, marks: [day(1), day(2), day(3), day(5)] }));
   localStorage.setItem('ge_quests', JSON.stringify({ date: day(0), ids, prog: { [ids[0]]: T[ids[0]], [ids[1]]: half(T[ids[1]]) }, done: [ids[0]], all: false }));
   localStorage.setItem('ge_ladder', JSON.stringify({ week: isoWeek(Date.now()), pts: 8, ms: [3, 7], last: { week: 'last', pts: 14 } }));
 });
@@ -186,7 +186,7 @@ await page.click('#btnLegend');
 await w(2600); // the corner-route demo animates at the top of the legend
 await page.evaluate(() => { const el = document.querySelector('#legend .tblock'); el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }); });
 await w(1400);
-await w(2000); // the "Around the game" rows: lives, quests, streak, survey, chests
+await w(2000); // the "Around the game" rows: quests, streak, survey, certification
 await still('02-around-the-game');
 await page.click('#btnLegendBack');
 await w(500);
@@ -286,24 +286,24 @@ await solveOut(4, 280);
 await winUp();
 await w(1500);
 
-// ---- SEG F · ch 09: a win crosses 24★ → chest → Try it → skin cycle mid-game -------------
+// ---- SEG F · ch 09: a win crosses 24★ → certification → Try it → skin cycle mid-game ------
 // A late-game player: sheets 2 and 3 long since cleared (their papers owned), sheet 1 at 21★
-// with L8 uncleared — this par win carries sheet 1 across its chest threshold.
+// with L8 uncleared — this par win carries sheet 1 across its certification threshold.
 await seed(() => {
   const s = [3, 3, 3, 3, 3, 3, 3, 0, 0, 0]; for (let i = 10; i < 30; i++) s[i] = 3;
   localStorage.setItem('ge_prog', JSON.stringify({ u: 29, s, skins: ['night', 'white'], seen: [1, 2] }));
   localStorage.setItem('ge_level', '7');
   localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1, twice: 1, undo: 1 }));
 });
-await caption(9, "24★ opens the sheet's chest — a new paper for the drawing");
+await caption(9, '24★ certifies the sheet — a new paper for the drawing');
 await page.click('#btnPlay');
 await w(900);
 for (const mv of solutions[7]) { await drag(mv.bi, mv.path, mv.side, 240); await w(280); }
 await winUp();
 await w(1300); // stars land…
-await page.waitForSelector('#winChest:not([hidden])', { timeout: 9000 });
+await page.waitForSelector('#winCert:not([hidden])', { timeout: 9000 });
 await w(1400); // …the lid swings open with sparks
-await still('06-chest-open');
+await still('06-sheet-certified');
 await page.click('#btnTrySkin'); // Sepia draft applies instantly, mid-win-card
 await w(1400);
 await page.click('#btnNext'); // L9 on Sepia paper
@@ -337,7 +337,7 @@ await seed(() => {
   localStorage.setItem('ge_level', '2');
   localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1, twice: 1, undo: 1 }));
   localStorage.setItem('ge_quests', JSON.stringify({ date: day(0), ids, prog, done: [], all: false }));
-  localStorage.setItem('ge_streak', JSON.stringify({ len: 3, best: 5, lastDate: day(1), repairUsedFor: null, freezes: 0, marks: [day(1), day(3), day(5)] }));
+  localStorage.setItem('ge_streak', JSON.stringify({ len: 3, best: 5, lastDate: day(1), freezes: 0, marks: [day(1), day(3), day(5)] }));
   localStorage.setItem('ge_ladder', JSON.stringify({ week: isoWeek(Date.now()), pts: 10, ms: [3, 7], last: { week: 'last', pts: 14 } }));
 });
 await caption(10, "Three daily quests, shared by all — this clear finishes today's set");
@@ -361,7 +361,7 @@ await page.click('#btnSurvey');
 await w(2400); // 12 pts · stamps at 3 / 7 / 12
 await page.click('#btnSurveyClose');
 await w(400);
-await caption(12, 'Three sheets of ten — stars, chests and papers at a glance');
+await caption(12, 'Three sheets of ten — stars, certifications and papers at a glance');
 await page.click('#btnLevels');
 await w(1500);
 await page.evaluate(() => { const el = document.querySelector('#levels .tblock'); el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }); });

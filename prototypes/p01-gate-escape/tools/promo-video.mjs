@@ -2,15 +2,15 @@
 // Promo trailers for Gate Escape (p01) — THREE narrated 402×874 portrait cuts from one
 // filming pass (H.264 + AAC, 30 fps):
 //
-//   marketing/videos/promo-30s.mp4   ~30 s teaser — hook, plan, chest, flourish, end card
+//   marketing/videos/promo-30s.mp4   ~30 s teaser — hook, plan, certification, flourish, end card
 //   marketing/videos/promo.mp4       ~55 s main cut — + hint, rescue, papers, meta montage
 //   marketing/videos/promo-2min.mp4  ~1:55 extended — + legend, L2, meter/undo, stones→hint
 //                             continuity, longer holds, Field Survey, lives card
 //
 // READABILITY IS A HARD RULE on every cut: any shot bearing text the viewer should read
-// (win cards, quest rows, chest reveal, fail sheet, captions, end card) holds at least
+// (win cards, quest rows, certification reveal, fail sheet, captions, end card) holds at least
 // ~0.35 s per word of essential copy, never under 2 s (2.5–3 s+ for the fail sheet and
-// chest reveal), and the text is fully legible before the outgoing transition starts —
+// certification reveal), and the text is fully legible before the outgoing transition starts —
 // card holds are 1.0× only; speed-ups (≤1.15×) touch pure drag/exit motion exclusively.
 // The per-cut table printed at the end lists every part's readable hold (duration minus
 // both transition overlaps) for the report.
@@ -66,7 +66,7 @@ const LINES = [
   { f: '01-hook.mp3',   text: 'One drag. One move. Any route.' },
   { f: '02-title.mp3',  text: 'This is Gate Escape — the blueprint puzzle where every level is a machine-verified plan.' },
   { f: '03-hint.mp3',   text: "Ghost routes show the way in. A hint when you're stuck. A rescue when you're one drag from freedom." },
-  { f: '04-chest.mp3',  text: 'Earn stars. Open chests. Change the paper.' },
+  { f: '04-cert.mp3',   text: 'Earn stars. Certify the sheet. Change the paper.' },
   { f: '05-meta.mp3',   text: 'Daily quests. A streak worth keeping. Thirty levels of pure routing.' },
   { f: '06-tag.mp3',    text: 'Gate Escape. Draw your way out.' },
   { f: '07-legend.mp3', text: 'Learn it in one screen. Blocks, gates, stones — one rule.' },
@@ -276,7 +276,7 @@ const L = await film('L-legend', async S => {
   await S.w(4800);
   S.mark('scroll');
   await S.page.evaluate(() => { const el = document.querySelector('#legend .tblock'); el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }); });
-  await S.w(5000); // the lives/quests/streak/survey/chests rows
+  await S.w(5000); // the quests/streak/survey/certification rows
 });
 
 // -- M · the star meter turns amber → red, undo refunds the move (tour ch07)
@@ -370,15 +370,15 @@ const D = await film('D-rescue', async S => {
   await S.w(4100);
 });
 
-// -- E · chest: the L8 par win carries sheet 1 across 24★ — chest, Sepia, Night, Whiteprint
-const E = await film('E-chest', async S => {
+// -- E · certification: the L8 par win carries sheet 1 across 24★ — stamp, Sepia, Night, Whiteprint
+const E = await film('E-cert', async S => {
   await S.seed(() => {
     const s = [3, 3, 3, 3, 3, 3, 3, 0, 0, 0]; for (let i = 10; i < 30; i++) s[i] = 3;
     localStorage.setItem('ge_prog', JSON.stringify({ u: 29, s, skins: ['night', 'white'], seen: [1, 2] }));
     localStorage.setItem('ge_level', '7');
     localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1, twice: 1, undo: 1 }));
   });
-  await S.caption('EARN <b>STARS</b> · OPEN <b>CHESTS</b> · CHANGE THE <b>PAPER</b>');
+  await S.caption('EARN <b>STARS</b> · <b>CERTIFY</b> THE SHEET · CHANGE THE <b>PAPER</b>');
   await S.page.click('#btnPlay');
   await S.w(800);
   const mvs = solutions[7];
@@ -387,9 +387,9 @@ const E = await film('E-chest', async S => {
   await S.drag(mvs[mvs.length - 1].bi, mvs[mvs.length - 1].path, mvs[mvs.length - 1].side, 260);
   await S.winUp();
   S.mark('win'); // stars land on the card…
-  await S.page.waitForSelector('#winChest:not([hidden])', { timeout: 9000 });
-  S.mark('chest'); // …the lid swings open
-  await S.w(5200); // long hold — "Chest opened · Sepia draft · Try it" gets read
+  await S.page.waitForSelector('#winCert:not([hidden])', { timeout: 9000 });
+  S.mark('cert'); // …the stamp comes down
+  await S.w(5200); // long hold — "Sheet certified · Sepia draft · Try it" gets read
   await S.page.click('#btnTrySkin');
   S.mark('sepia');
   await S.w(2800);
@@ -422,7 +422,7 @@ const F = await film('F-meta', async S => {
     localStorage.setItem('ge_level', '2');
     localStorage.setItem('ge_tips', JSON.stringify({ corner: 1, stone: 1, twice: 1, undo: 1 }));
     localStorage.setItem('ge_quests', JSON.stringify({ date: day(0), ids, prog, done: [], all: false }));
-    localStorage.setItem('ge_streak', JSON.stringify({ len: 3, best: 5, lastDate: day(1), repairUsedFor: null, freezes: 0, marks: [day(1), day(3), day(5)] }));
+    localStorage.setItem('ge_streak', JSON.stringify({ len: 3, best: 5, lastDate: day(1), freezes: 0, marks: [day(1), day(3), day(5)] }));
     localStorage.setItem('ge_ladder', JSON.stringify({ week: isoWeek(Date.now()), pts: 10, ms: [3, 7], last: { week: 'last', pts: 14 } }));
   });
   await S.caption('DAILY <b>QUESTS</b> · A <b>STREAK</b> WORTH KEEPING');
@@ -567,7 +567,7 @@ const CUT_30 = [
   clip(A, A.at.win + 0.02, A.at.win + 3.4, { trans: 'cut', label: 'hook win card' }),
   clip(B, B.at.board - 0.1, B.at.win + 3.4, { narLine: 1, label: 'L1 ghost plan + stars' }),
   clip(E, E.at.lastMove - 0.25, E.at.win + 0.02, { narLine: 3, speed: 1.1, label: 'L8 final drags' }),
-  clip(E, E.at.win + 0.02, E.at.chest + 4.4, { trans: 'cut', label: 'stars + chest reveal' }),
+  clip(E, E.at.win + 0.02, E.at.cert + 4.4, { trans: 'cut', label: 'stars + certification' }),
   clip(G, G.at.board + 0.25, G.at.board + 3.55, { speed: 1.1, label: 'flourish' }),
   clip(H, 0.6, 6.8, { narLine: 5, trans: 'circleopen', tdur: 0.4, endcard: true, label: 'end card' }),
 ];
@@ -582,7 +582,7 @@ const CUT_MAIN = [
   clip(D, D.at.plus3 - 0.3, D.at.plus3 + 2.2, { trans: 'cut', label: 'rescue +3 lands' }),
   clip(D, D.at.win + 0.02, D.at.win + 3.3, { trans: 'cut', label: 'rescue win card' }),
   clip(E, E.at.lastMove - 0.25, E.at.win + 0.02, { narLine: 3, speed: 1.1, label: 'L8 final drags' }),
-  clip(E, E.at.win + 0.02, E.at.chest + 4.4, { trans: 'cut', label: 'stars + chest reveal' }),
+  clip(E, E.at.win + 0.02, E.at.cert + 4.4, { trans: 'cut', label: 'stars + certification' }),
   clip(E, E.at.white + 0.05, E.at.white + 2.8, { trans: 'slideleft', tdur: 0.25, label: 'whiteprint paper' }),
   clip(F, F.at.title + 0.1, F.at.title + 3.8, { narLine: 4, label: 'quest rows' }),
   clip(F, F.at.done + 0.3, F.at.done + 4.0, { trans: 'slideleft', tdur: 0.25, label: 'quests DONE + freeze' }),
@@ -607,7 +607,7 @@ const CUT_2MIN = [
   clip(D, D.at.plus3 - 0.4, D.at.win + 0.02, { trans: 'cut', label: 'rescue +3 drags' }),
   clip(D, D.at.win + 0.02, D.at.win + 3.6, { trans: 'cut', label: 'rescue win card' }),
   clip(E, E.at.lastMove - 0.25, E.at.win + 0.02, { narLine: 3, label: 'L8 final drags' }),
-  clip(E, E.at.win + 0.02, E.at.chest + 4.8, { trans: 'cut', label: 'stars + chest reveal' }),
+  clip(E, E.at.win + 0.02, E.at.cert + 4.8, { trans: 'cut', label: 'stars + certification' }),
   clip(E, E.at.sepia + 0.05, E.at.sepia + 2.75, { trans: 'slideleft', tdur: 0.25, label: 'sepia paper' }),
   clip(E, E.at.night + 0.05, E.at.night + 2.65, { trans: 'slideleft', tdur: 0.25, label: 'night paper' }),
   clip(E, E.at.white + 0.05, E.at.white + 2.9, { trans: 'slideleft', tdur: 0.25, label: 'whiteprint paper' }),
@@ -702,13 +702,13 @@ const R30 = assemble('promo-30s', CUT_30, vid + 'promo-30s.mp4');
 const RMAIN = assemble('promo-main', CUT_MAIN, vid + 'promo.mp4');
 const R2M = assemble('promo-2min', CUT_2MIN, vid + 'promo-2min.mp4');
 
-// ---- stills: hook, mid, chest reveal, end card — per cut ----
+// ---- stills: hook, mid, certification, end card — per cut ----
 for (const [cut, file, R] of [['30s', vid + 'promo-30s.mp4', R30], ['main', vid + 'promo.mp4', RMAIN], ['2min', vid + 'promo-2min.mp4', R2M]]) {
   const find = lbl => R.parts.find(p => p.label === lbl);
   const stillAt = {
     '01-hook': R.parts[0].start + 1.2,
     '02-mid': (find('hint route + follow') || find('L1 ghost plan + stars')).start + 1.4,
-    '03-chest': find('stars + chest reveal').start + 2.8,
+    '03-cert': find('stars + certification').start + 2.8,
     '04-endcard': R.vDur - 1.2,
   };
   for (const [n, t] of Object.entries(stillAt))

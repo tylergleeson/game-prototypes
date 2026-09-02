@@ -115,7 +115,8 @@ The curve follows the hybrid-casual "CrazyLabs" discipline:
 ------------------
 The entire game is an architect's blueprint: cyanotype-blue paper, white
 line work, a drafting title block as the menu, the how-to-play as the
-drawing's "legend," level select as a "sheet index" with per-sheet chests.
+drawing's "legend," level select as a "sheet index" with a certification
+stamp per sheet.
 Blocks are cross-hatched solids with corner registration marks; gates are
 tabs on the wall with matching hatch + symbol; stones are cross-hatched
 voids. Everything the player can act on has solid fill plus outline
@@ -143,28 +144,43 @@ rule.
 
 7. META & RETENTION SYSTEMS (ALL SHIPPED)
 -----------------------------------------
-Stars & chests: stars accumulate per sheet of 10 levels; at 24 stars a
-sheet's chest opens and grants a cosmetic paper skin. Chests are purely
-cosmetic, fully deterministic (no randomness), and previewable.
+(Updated 2026-09-02 after the research round. Two things changed: lives are
+now OFF by default, and the streak-repair ad was deleted outright. Both are
+noted in place below.)
+
+Stars & sheet certification: stars accumulate per sheet of 10 levels; at 24
+stars the sheet is CERTIFIED and grants a cosmetic paper skin. Certification
+is purely cosmetic, fully deterministic (no randomness), and previewable.
+The sheet header carries a stamp glyph — a dashed pending frame while short,
+a solid stamped frame with a star once earned, so the state reads by shape
+and not by colour alone. (This mechanic shipped as a treasure "chest"; only
+the language and the glyph changed on 2026-09-02, never the 24-star rule.)
 
 Daily quests: three per day, deterministically seeded from the date (e.g.
 "clear 3 levels," "win at par," "use zero undos"). Completing all three
 banks a streak freeze.
 
 Streak: consecutive-day play streak shown as "N of last 7 days" marks.
-Missing a day consumes a banked freeze (max 2) before breaking; a broken
-streak can be repaired once via the (free, simulated) rewarded-ad flow.
+Missing a day consumes a banked freeze (max 2) before breaking. With no
+freeze banked the streak LAPSES SILENTLY — as of 2026-09-02 there is no
+repair surface of any kind: no card, no ad, no offer at the moment of loss.
+The counter simply clears and the next clear starts a new streak at 1. The
+open question is no longer whether to sell the repair but whether the silent
+reset READS as calm rather than as something quietly going missing; the next
+critic session is scoped to answer that.
 
 Weekly ladder ("Field Survey"): a personal points ladder — 1 point per
 clear, +1 at par — with stamps at 3 / 7 / 12 / 20 points per week. There
 is no leaderboard and no social comparison; it is self-competition only.
 
-Lives: 5 lives; losing a level from L6 onward costs one (L1-5 are free;
-rescue preserves the life). Refill: one life per 25 minutes, or a full
-refill via the rewarded-ad flow. Lives ship ON but are flag-gated
-(`?lives=0` disables the system entirely) because the team is genuinely
-uncertain the friction earns its retention keep — researcher opinion
-welcome (Q6).
+Lives: OFF BY DEFAULT as of 2026-09-02 (the research round's answer to Q6).
+The shipped game has no energy gate at all — no hearts anywhere, and a
+failed level can be retried forever. The system is not deleted, only
+defaulted off: `?lives=1` (or `ge_flags {"lives":1}`, or `GE.livesEnabled`)
+restores the whole economy, which the playtest bot still exercises end to
+end so the code cannot rot. When on: 5 lives; losing a level from L6 onward
+costs one (L1-5 are free; rescue preserves the life); refill one life per 25
+minutes, or a rewarded-ad refill.
 
 Hints & undo: as above; undo is unlimited and free (the puzzle is the
 product; input error should never be punished).
@@ -173,8 +189,11 @@ product; input error should never be punished).
 8. MONETIZATION STANCE (CURRENT: NONE ACTIVE)
 ---------------------------------------------
 Nothing is for sale and no real ads run. The design reserves:
-- Rewarded-ad placements: rescue (+3 moves), hint, streak repair, life
-  refill. All currently simulated with a 1.2 s placeholder bar.
+- Rewarded-ad placements: rescue (+3 moves), hint, and — only if lives are
+  ever turned back on — the life refill. The streak-repair placement was
+  removed on 2026-09-02: selling a player their streak back at the moment
+  they lost it is exactly the pressure this product does not want. All
+  remaining slots are simulated with a ~3 s placeholder countdown.
 - Future IAP candidates: cosmetic papers, a one-time "remove ads."
 Hard rules already encoded for whenever money ships:
 - NEVER celebratory feedback (confetti/chimes/flashes) on a purchase
@@ -211,8 +230,8 @@ Hard rules already encoded for whenever money ships:
    should be expressible in drafting-sheet vernacular (stamps, revisions,
    sheet numbers, approval seals, red-line markup...).
 
-Everything else — including whether lives survive, the chest economy, the
-ladder shape, session pacing — is open to challenge.
+Everything else — including whether lives ever come back, the certification
+economy, the ladder shape, session pacing — is open to challenge.
 
 
 11. LINEAGE & SELF-ASSESSED POSITIONING (FOR THE RESEARCHER TO CORRECT)
@@ -241,7 +260,12 @@ stamped sequence (an "approval chain").
 - No live retention or funnel data exists (analytics disabled, no store
   release). All difficulty/retention tuning is from design convention and
   bot-verified par, not player telemetry.
-- The lives system's net effect is unmeasured (see section 7).
+- The lives system's net effect is still unmeasured; rather than ship an
+  unmeasured friction we defaulted it OFF (section 7). If it ever returns it
+  should return as a measured experiment, not as a default.
+- The silent streak lapse is untested on real players: with the repair card
+  gone, nobody has watched a player notice their streak is missing. This is
+  the single riskiest copy decision of the simplify pass.
 - The recent menu simplification moved quests/streak/ladder one tap deeper;
   we accepted a possible engagement cost for a calmer first impression and
   want a second opinion (Q7).

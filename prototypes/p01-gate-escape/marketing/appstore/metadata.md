@@ -41,9 +41,11 @@ come back, new shapes, a fourth colour — and a proper spike in the twenties.
 - A DRAFTING-TABLE WORLD: cyanotype blueprint art, stamped gates, generated
   audio, and a shape stamped on every block and gate so colour is never the
   only cue.
-- DAILY GOAL AND STREAKS with a fair one-time repair — and chests of paper
-  skins (Sepia draft, Night vellum, Whiteprint) at 24 stars a sheet. Cosmetic
-  only; nothing is ever locked behind them.
+- DAILY GOAL AND STREAKS with nothing to buy back. A missed day simply starts
+  the count again — no card, no ad, no pressure at the moment you lose it.
+- SHEET CERTIFICATION: 24 stars on a sheet certifies it and unlocks a paper
+  skin (Sepia draft, Night vellum, Whiteprint). Cosmetic only; nothing is ever
+  locked behind them.
 - Small, fast, offline. No account, no sign-in.
 
 ## Keywords (100 chars max, comma-separated, no spaces)

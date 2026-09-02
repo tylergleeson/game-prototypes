@@ -12,10 +12,11 @@
   let resetArmed = false, resetTimer = 0;
   const CHAPTERS = ['Foundations', 'Corked', 'The spike'];
   const PER = Math.ceil(N / CHAPTERS.length); // levels per sheet
-  // chests: one per sheet, opens at CHEST_STARS of the sheet's 30. The reward is a paper skin —
-  // cosmetic only; nothing is ever gated on a chest (the funnel test needs every level reachable)
-  const CHEST_STARS = 24;
-  const CHEST_SKINS = ['sepia', 'night', 'white']; // sheet 1, 2, 3 → GE.themes ids
+  // sheet certification: one per sheet, awarded at CERT_STARS of the sheet's 30. The reward is a
+  // paper skin — cosmetic only; nothing is ever gated on it (the funnel test needs every level
+  // reachable). Same deterministic threshold it always was; only the language is the surveyor's.
+  const CERT_STARS = 24;
+  const CERT_SKINS = ['sepia', 'night', 'white']; // sheet 1, 2, 3 → GE.themes ids
   const DEFAULT_SKIN = 'cyan';
 
   // ---------- progress: highest unlocked level + best stars per level (+ paper skin, unlocked skins) ----------
@@ -30,14 +31,16 @@
   const sheetMax = c => Math.min(PER, N - c * PER) * 3;
   const skins = () => prog.skins || [];
   const unlocked = id => id === DEFAULT_SKIN || skins().includes(id);
-  const chestLabel = id => `Sheet ${CHEST_SKINS.indexOf(id) + 1} chest · opens at ${CHEST_STARS} ★`;
+  const certLabel = id => `Sheet ${CERT_SKINS.indexOf(id) + 1} · certified at ${CERT_STARS} ★`;
   // a save that already clears a threshold (older build, seeded progress) owns that skin; the
-  // opening beat then plays the first time its header is seen (prog.seen)
-  for (let c = 0; c < CHEST_SKINS.length; c++) if (sheetStars(c) >= CHEST_STARS && !unlocked(CHEST_SKINS[c])) prog.skins = [...skins(), CHEST_SKINS[c]];
+  // stamp beat then plays the first time its header is seen (prog.seen)
+  for (let c = 0; c < CERT_SKINS.length; c++) if (sheetStars(c) >= CERT_STARS && !unlocked(CERT_SKINS[c])) prog.skins = [...skins(), CERT_SKINS[c]];
   GE.setTheme(unlocked(prog.skin) ? prog.skin : DEFAULT_SKIN);
 
   // ---------- paper skins ----------
-  const CHEST_SVG = open => `<svg class="chest-ico${open ? ' open' : ''}" viewBox="0 0 24 20" aria-hidden="true"><g class="lid"><path d="M2 8V5.5A3.5 3.5 0 0 1 5.5 2h13A3.5 3.5 0 0 1 22 5.5V8"/><path d="M2 8h20"/></g><rect x="2" y="8" width="20" height="10" rx="1.5"/><path d="M10.5 8v4h3V8"/><path class="star" d="M12 9.2l.9 1.9 2.1.3-1.5 1.4.4 2.1-1.9-1-1.9 1 .4-2.1-1.5-1.4 2.1-.3z"/></svg>`;
+  // the certification stamp: a dashed pending frame with a blank rule, or — once the sheet is
+  // certified — a solid frame with the star stamped into it (shape cue, not colour alone)
+  const CERT_SVG = certified => `<svg class="cert-ico${certified ? ' on' : ''}" viewBox="0 0 24 20" aria-hidden="true"><rect class="frame" x="2" y="2.5" width="20" height="15" rx="2.5"/><path class="rule" d="M7.5 10h9"/><path class="star" d="M12 5.6l1.55 3.28 3.45.52-2.5 2.53.6 3.62L12 13.83l-3.1 1.72.6-3.62-2.5-2.53 3.45-.52z"/></svg>`;
   function setSkin(id, from) {
     if (!unlocked(id) || !GE.themes[id]) return false;
     GE.setTheme(id); // instant: the next frame draws on the new paper; ge:theme refreshes the pickers
@@ -47,7 +50,7 @@
     return true;
   }
   // the picker: one swatch per skin (a tiny sheet in that paper's colours), the current one outlined,
-  // locked ones dimmed with the chest they come from; the caption names the choice
+  // locked ones dimmed with the certification they come from; the caption names the choice
   const capTimers = new Map();
   function caption(host, text, lock) {
     const cap = host.querySelector('.cap');
@@ -65,9 +68,9 @@
       b.id = prefix + id[0].toUpperCase() + id.slice(1);
       b.dataset.skin = id;
       b.style.setProperty('--p1', t.swatch[0]); b.style.setProperty('--p2', t.swatch[1]); b.style.setProperty('--pl', t.swatch[2]);
-      b.setAttribute('aria-label', 'Paper: ' + t.name + (lock ? ', locked. ' + chestLabel(id) : ''));
-      if (lock) b.innerHTML = CHEST_SVG(false);
-      b.onclick = () => { if (lock) caption(host, chestLabel(id), true); else setSkin(id, prefix === 'btnPaper' ? 'menu' : 'pause'); };
+      b.setAttribute('aria-label', 'Paper: ' + t.name + (lock ? ', locked. ' + certLabel(id) : ''));
+      if (lock) b.innerHTML = CERT_SVG(false);
+      b.onclick = () => { if (lock) caption(host, certLabel(id), true); else setSkin(id, prefix === 'btnPaper' ? 'menu' : 'pause'); };
       sw.appendChild(b);
     }
     caption(host, GE.themes[GE.theme].name);
@@ -169,19 +172,19 @@
     const per = PER;
     for (let i = 0; i < N; i++) {
       if (i % per === 0) {
-        // chapter rule: a header per sheet of ten with its star count and the sheet's chest —
-        // progress toward the threshold, or the paper it opened (no gate: every level stays reachable)
-        const c = i / per, got = sheetStars(c), open = got >= CHEST_STARS, skin = GE.themes[CHEST_SKINS[c]];
-        const fresh = open && !(prog.seen || []).includes(c); // first sight of an open chest: play the beat here
+        // chapter rule: a header per sheet of ten with its star count and the sheet's certification —
+        // progress toward the threshold, or the paper it earned (no gate: every level stays reachable)
+        const c = i / per, got = sheetStars(c), done = got >= CERT_STARS, skin = GE.themes[CERT_SKINS[c]];
+        const fresh = done && !(prog.seen || []).includes(c); // first sight of a certified sheet: stamp it here
         const h = document.createElement('div');
         h.className = 'chap';
         h.innerHTML = `<span>Sheet ${c + 1} · ${CHAPTERS[c] || ''}</span>`
-          + `<span class="chest${open && !fresh ? ' open' : ''}${fresh ? ' opening' : ''}" title="Chest opens at ${CHEST_STARS} ★">${CHEST_SVG(open && !fresh)} <b>★ ${got}/${sheetMax(c)}</b> · ${open ? (skin ? skin.name : 'open') : `${CHEST_STARS - got} to open`}</span>`;
+          + `<span class="cert${done && !fresh ? ' on' : ''}" title="Certified at ${CERT_STARS} ★">${CERT_SVG(done && !fresh)} <b>★ ${got}/${sheetMax(c)}</b> · ${done ? (skin ? skin.name : 'certified') : `${CERT_STARS - got} to certify`}</span>`;
         g.appendChild(h);
         if (fresh) {
           prog.seen = [...(prog.seen || []), c]; save();
-          const ch = h.querySelector('.chest'), ico = h.querySelector('.chest-ico');
-          setTimeout(() => { if (!ico.isConnected) return; ch.classList.add('open'); ico.classList.add('open'); GE.burst(ico); GE.sound('chest'); }, 400);
+          const ch = h.querySelector('.cert'), ico = h.querySelector('.cert-ico');
+          setTimeout(() => { if (!ico.isConnected) return; ch.classList.add('on', 'stamping'); ico.classList.add('on'); GE.burst(ico); GE.sound('cert'); }, 400);
         }
       }
       const locked = i > prog.u;
@@ -209,7 +212,7 @@
       return;
     }
     prog = { u: 0, s: [] }; save();
-    GE.setTheme(DEFAULT_SKIN); // chests close with the stars; the sheet goes back to cyanotype
+    GE.setTheme(DEFAULT_SKIN); // certifications lapse with the stars; the sheet goes back to cyanotype
     GE.load(0); show('levels');
   };
 
@@ -236,8 +239,7 @@
   // ---------- tap outside to dismiss ----------
   // A sheet is a sheet: tapping the paper around it puts it down, exactly as its own dismiss
   // control does. Only where dismissal is SAFE — the fail sheet (a rescue decision), the win card
-  // (a choice), the rewarded-ad slot (leaving early forfeits the reward) and the streak-repair
-  // card (dismiss = start fresh, i.e. the streak is spent) all stay explicit.
+  // (a choice) and the rewarded-ad slot (leaving early forfeits the reward) all stay explicit.
   // A press that starts on the sheet and drifts onto the scrim is a drag, not a dismiss, so the
   // pointerdown AND the click both have to land on the scrim itself.
   function dismissOnScrim(host, dismiss) {
@@ -261,7 +263,6 @@
     if (!$('surveyModal').hidden) { $('btnSurveyClose').click(); return; }
     if (!$('freezeModal').hidden) { $('btnFreezeOk').click(); return; }
     if (!$('livesModal').hidden) { $('btnLivesHome').click(); return; }
-    if (!$('streakModal').hidden) { $('btnStreakDecline').click(); return; } // dismiss = decline (fresh streak)
     if (!screens.legend.hidden) $('btnLegendBack').click();
     else if (!screens.levels.hidden) $('btnLevelsBack').click();
     else if (screens.menu.hidden) $('btnMenu').click();
@@ -287,29 +288,29 @@
     else show('menu');
   };
 
-  // ---------- win card: chest reveal ----------
+  // ---------- win card: sheet certification ----------
   // only when this win carried the sheet across its threshold; the row pops in after the stars
-  // have landed, the lid swings open with sparks and a chime, and Try it applies the paper
-  let chestTimer = 0, chestSkin = null;
-  const winChest = $('winChest'), btnTry = $('btnTrySkin');
-  function revealChest(id) {
-    chestSkin = id;
-    const ico = winChest.querySelector('.chest-ico');
-    $('winChestName').textContent = GE.themes[id].name;
+  // have landed, the stamp comes down with sparks and a chime, and Try it applies the paper
+  let certTimer = 0, certSkin = null;
+  const winCert = $('winCert'), btnTry = $('btnTrySkin');
+  function revealCert(id) {
+    certSkin = id;
+    const ico = winCert.querySelector('.cert-ico');
+    $('winCertName').textContent = GE.themes[id].name;
     btnTry.disabled = GE.theme === id; btnTry.textContent = btnTry.disabled ? 'On' : 'Try it';
-    ico.classList.remove('open');
-    winChest.hidden = false;
-    chestTimer = setTimeout(() => { ico.classList.add('open'); GE.burst(ico); GE.sound('chest'); }, 140);
+    winCert.hidden = false; // unhiding restarts the row's pop and the stamp's delayed landing
+    certTimer = setTimeout(() => { if (ico.isConnected) { GE.burst(ico); GE.sound('cert'); } }, GE.reduced ? 0 : 450);
   }
-  btnTry.onclick = () => { if (chestSkin && setSkin(chestSkin, 'win')) { btnTry.disabled = true; btnTry.textContent = 'On'; } };
+  btnTry.onclick = () => { if (certSkin && setSkin(certSkin, 'win')) { btnTry.disabled = true; btnTry.textContent = 'On'; } };
 
   // ---------- daily quests + streak (freezes, week marks) + weekly ladder ----------
   // Three quests roll each local day, deterministically from the date (every player shares the
   // day's set); the templates are safe telemetry facts — never ad views, boosters or spending,
   // and nothing a content change could make impossible. Completing all three banks ONE streak
   // freeze (max 2 held). The streak day-mark stays "≥1 level cleared"; a missed day consumes a
-  // banked freeze automatically (calm notice at next launch); the once-per-streak ad repair
-  // remains the fallback and declining still just starts fresh. The Field Survey is a weekly
+  // banked freeze automatically (calm notice at next launch). With no freeze banked the streak
+  // simply starts again — there is NO repair surface: nothing to watch, nothing to buy, no card
+  // at the moment of loss (2026-09-02: the streak-repair ad was deleted, not disabled). The Field Survey is a weekly
   // personal ladder: 1 point per clear, +1 at par, stamps at 3/7/12/20 — no leaderboard, no
   // comparison, everyone can finish. All dates flow through GE.now() so bots simulate days;
   // state lives in separate keys: ge_streak / ge_quests / ge_ladder.
@@ -324,7 +325,7 @@
     blocks12: { label: 'Clear 12 blocks',              target: 12, gain: d => d.blocks },
   };
   const FREEZE_MAX = 2, MILESTONES = [3, 7, 12, 20];
-  let streak = { len: 0, best: 0, lastDate: null, repairUsedFor: null, freezes: 0, marks: [] };
+  let streak = { len: 0, best: 0, lastDate: null, freezes: 0, marks: [] };
   try { const s = JSON.parse(localStorage.getItem('ge_streak') || 'null'); if (s && typeof s.len === 'number') streak = { ...streak, ...s }; } catch (e) {}
   if (!Array.isArray(streak.marks)) streak.marks = [];
   if (!Number.isInteger(streak.freezes)) streak.freezes = 0;
@@ -377,7 +378,7 @@
     if (streak.lastDate !== today) {
       const gap = streak.lastDate ? dayGap(streak.lastDate, today) : 99;
       if (gap === 1 && streak.len > 0) streak.len++;
-      else { streak.len = 1; streak.repairUsedFor = null; } // a fresh streak gets a fresh repair
+      else streak.len = 1;                                   // a lapsed streak simply starts again
       streak.lastDate = today;
       if (streak.len > streak.best) { newBest = streak.len >= 2; streak.best = streak.len; } // day one is not an announcement
       track('streak_day', { len: streak.len });
@@ -462,8 +463,9 @@
     }, GE.reduced ? 0 : 1150);
   });
   // launch check: banked freezes cover the missed day(s) automatically (calm notice, nothing to
-  // buy); otherwise exactly one missed day on a ≥2-day streak gets the once-per-streak ad repair
-  const streakModal = $('streakModal');
+  // buy). Otherwise the streak lapses SILENTLY — the counter is cleared here so the field log
+  // tells the truth on the next frame, and the player is shown nothing at all. No card, no offer,
+  // no "you lost it" beat: the next clear starts a new streak at 1 exactly as day one did.
   function checkStreak() {
     const today = dayStr(GE.now());
     if (!streak.lastDate || streak.len < 1) return false;
@@ -480,12 +482,9 @@
       refreshDaily();
       return 'freeze';
     }
-    if (streak.len >= 2 && gap === 2 && !streak.repairUsedFor) {
-      $('streakSub').textContent = `Your ${streak.len}-day streak — repair it?`;
-      streakModal.hidden = false;
-      track('streak_repair_offered', { len: streak.len });
-      return true;
-    }
+    streak.len = 0; streak.lastDate = null; // lapsed: cleared quietly, best/marks/freezes untouched
+    saveStreak();
+    refreshDaily();
     return false;
   }
   $('btnFreezeOk').onclick = () => { $('freezeModal').hidden = true; };
@@ -501,40 +500,22 @@
   }
   $('btnSurvey').onclick = () => { renderSurvey(); $('surveyModal').hidden = false; };
   $('btnSurveyClose').onclick = () => { $('surveyModal').hidden = true; };
-  $('btnStreakRepair').onclick = () => {
-    if (streakModal.hidden || GE.adUp) return;
-    GE.rewarded('streak', () => {
-      streak.lastDate = dayStr(GE.now() - 864e5); // yesterday: today's first clear extends the streak
-      streak.repairUsedFor = streak.lastDate;     // once per streak (cleared when a fresh streak starts)
-      saveStreak();
-      track('streak_repair_taken', { len: streak.len });
-      streakModal.hidden = true;
-      refreshDaily();
-    });
-  };
-  $('btnStreakDecline').onclick = () => {
-    track('streak_repair_declined', { len: streak.len });
-    streak.len = 0; streak.lastDate = null; streak.repairUsedFor = null; // today's first clear starts fresh at 1
-    saveStreak();
-    streakModal.hidden = true;
-    refreshDaily();
-  };
 
   // ---------- engine events ----------
-  window.addEventListener('ge:load', () => { show(null); pauseModal.hidden = true; GE.paused = false; levelsFrom = 'menu'; clearTimeout(chestTimer); winChest.hidden = true; clearTimeout(dailyTimer); winDaily.hidden = true; });
+  window.addEventListener('ge:load', () => { show(null); pauseModal.hidden = true; GE.paused = false; levelsFrom = 'menu'; clearTimeout(certTimer); winCert.hidden = true; clearTimeout(dailyTimer); winDaily.hidden = true; });
   window.addEventListener('ge:win', e => {
     const { lvl, stars, last } = e.detail;
     const before = starsTotal(), sheet = Math.floor(lvl / PER), sheetBefore = sheetStars(sheet);
     prog.s[lvl] = Math.max(prog.s[lvl] || 0, stars);
     prog.u = Math.max(prog.u, Math.min(lvl + 1, N - 1));
-    clearTimeout(chestTimer); winChest.hidden = true;
-    if (sheetBefore < CHEST_STARS && sheetStars(sheet) >= CHEST_STARS && CHEST_SKINS[sheet]) {
-      const id = CHEST_SKINS[sheet];
+    clearTimeout(certTimer); winCert.hidden = true;
+    if (sheetBefore < CERT_STARS && sheetStars(sheet) >= CERT_STARS && CERT_SKINS[sheet]) {
+      const id = CERT_SKINS[sheet];
       if (!unlocked(id)) prog.skins = [...skins(), id];
       prog.seen = [...(prog.seen || []), sheet]; // the beat plays here, not again on the sheet index
-      track('chest_open', { sheet: sheet + 1, skin: id, lvl: lvl + 1 });
+      track('cert_earned', { sheet: sheet + 1, skin: id, lvl: lvl + 1 });
       const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      chestTimer = setTimeout(() => revealChest(id), reduced ? 0 : 1000);
+      certTimer = setTimeout(() => revealCert(id), reduced ? 0 : 1000);
     }
     save();
     // win-card meta: the star total ticks up once the stars have landed; the next sheet is named
@@ -683,8 +664,8 @@
 
 
   show('menu');
-  checkStreak(); // the repair offer rides over the title block on launch (and only then)
-  window.GE_MENU = { show, get prog() { return prog; }, setSkin, CHEST_STARS, CHEST_SKINS,
+  checkStreak(); // freeze notice / silent lapse, resolved once on launch (and only then)
+  window.GE_MENU = { show, get prog() { return prog; }, setSkin, CERT_STARS, CERT_SKINS,
     // the landing's whole interactive surface: Play + two quiet entries, nothing else
     landing: () => [...screens.menu.querySelectorAll('button, a, input, select, textarea, [role="button"], [tabindex]')]
       .filter(b => !b.hidden && b.getClientRects().length > 0).map(b => b.id || b.className),

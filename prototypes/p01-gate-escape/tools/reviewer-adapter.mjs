@@ -27,20 +27,24 @@ taps — the primary CTA (Play / Continue - Level N / Resume level N), Levels an
 Paper picker, Sound) lives on the Levels screen, the sheet index; in-game the HUD has hint (?, ghosts the next reference move — an exit route,
 or a dashed outline where a block should park; one per board position), undo (↶, one step, refunds the move), restart (↻) and pause (☰), shows the stars the
 current pace would earn, and an objective row of blocks left per color.
-Stars have a cosmetic sink: each sheet of ten levels on the level select has a chest that opens at 24 of its 30 stars and rewards a paper skin
+Stars have a cosmetic sink: each sheet of ten levels on the level select is CERTIFIED at 24 of its 30 stars and rewards a paper skin
 (Sepia draft / Night vellum / Whiteprint; Cyanotype is the default). Skins change only the drafting sheet (page, ink, grid, cards) — never block,
-gate or HUD state colours — and nothing is gated on a chest. The "Paper" picker on the sheet index and the pause card lists the skins; a locked swatch
-shows the chest it comes from. A win that opens a chest adds a "Chest opened — <paper>" row with a "Try it" button to the win card.
+gate or HUD state colours — and nothing is gated on certification. The sheet header carries a stamp glyph: a dashed pending frame with "N to certify",
+or a solid stamped frame naming the paper once earned. The "Paper" picker on the sheet index and the pause card lists the skins; a locked swatch shows
+the pending stamp of the sheet it comes from. The win that crosses 24 adds a "Sheet certified — <paper>" row with a "Try it" button to the win card.
 Daily quests + streak (sheet index): THREE quests roll each local day, deterministically from the date (all players share the day's set), from safe
 telemetry templates (clear N levels / earn N stars / clear N at par / clear without undo / without hints / clear N blocks — never ad views or spending).
 Each shows a progress bar and a ✓ stamp on the sheet index; a quest completion adds a quiet stamped row to the win card. Completing ALL 3 banks one
 STREAK FREEZE (max 2 held, shown on the streak row). The streak is consecutive calendar days with ≥1 clear; the row also shows "N of last 7 days".
-A missed day consumes a banked freeze automatically (calm "Freeze used — streak safe" notice at next launch); with no freeze, missing exactly one day
-offers ONE streak repair per streak at launch (rewarded-ad placeholder, free); declining or Escape starts fresh. Nothing is gated on any of it.
+A missed day consumes a banked freeze automatically (calm "Freeze used — streak safe" notice at next launch). With no freeze banked the streak simply
+LAPSES SILENTLY — there is no repair surface at all: no card, no ad, no offer at the moment of loss; the counter clears and the next clear starts a new
+streak at 1. Nothing is gated on any of it. (Worth a reviewer's attention: does the silent reset read as calm, or as something going missing?)
 Field Survey (weekly ladder, "Field survey" row on the sheet index opens the log card): 1 point per level clear, +1 bonus at par; milestone stamps at
 3/7/12/20 points; the 20-point stamp is a surveyor's mark (⌖) shown next to the streak row for the rest of that week. Resets each ISO week; no
 leaderboard, only last week's result is kept. Dates all come from GE.now (overridable for testing).
-Lives (default ON, flag-gated via ?lives=0 / ge_flags / GE.livesEnabled): five hearts, HUD top-left and sheet index. Levels 1–5 NEVER cost a life.
+Lives (DEFAULT OFF — flag-gated via ?lives=1 / ge_flags / GE.livesEnabled): the shipped game has NO energy gate; there are no hearts anywhere and a
+failed level can be retried forever. Everything in this paragraph therefore describes what ?lives=1 turns on, and is not what a normal session shows:
+five hearts, HUD top-left and sheet index. Levels 1–5 NEVER cost a life.
 From L6 on, a failed attempt that ends in Retry costs one life; taking the rescue does NOT (it saves the attempt); Restart mid-level and winning cost
 nothing. Refill one life per 25 minutes (single anchor timestamp, GE.now-based); at zero lives, entering L6+ shows a calm card (refill timer + one
 rewarded +1 per appearance + Back to menu) — the menu and level browsing are never blocked, and L1–5 stay playable.
@@ -55,12 +59,10 @@ top-left origin; its cells are listed absolute.`,
     btnResume: 'pause: Resume', btnPauseRestart: 'pause: Restart level', btnPauseLegend: 'pause: How to play',
     btnPauseSound: 'pause: toggle sound', btnPauseLevels: 'pause: Levels', btnPauseHome: 'pause: Main menu',
     btnNext: 'win card: Next level', btnReplay: 'win card: Replay for three stars (sub-3-star wins only)', btnRetry: 'fail card: Retry level', btnRescue: 'fail card: +3 moves rescue',
-    btnTrySkin: 'win card: Try it — apply the paper skin the chest just opened (only shown on a win that opened a chest)',
-    btnPaperCyan: 'sheet index: Paper → Cyanotype (default)', btnPaperSepia: 'sheet index: Paper → Sepia draft (Sheet 1 chest)', btnPaperNight: 'sheet index: Paper → Night vellum (Sheet 2 chest)', btnPaperWhite: 'sheet index: Paper → Whiteprint (Sheet 3 chest)',
+    btnTrySkin: 'win card: Try it — apply the paper skin the sheet\'s certification just earned (only shown on the win that crosses 24 ★)',
+    btnPaperCyan: 'sheet index: Paper → Cyanotype (default)', btnPaperSepia: 'sheet index: Paper → Sepia draft (Sheet 1 certification)', btnPaperNight: 'sheet index: Paper → Night vellum (Sheet 2 certification)', btnPaperWhite: 'sheet index: Paper → Whiteprint (Sheet 3 certification)',
     btnPausePaperCyan: 'pause: Paper → Cyanotype', btnPausePaperSepia: 'pause: Paper → Sepia draft', btnPausePaperNight: 'pause: Paper → Night vellum', btnPausePaperWhite: 'pause: Paper → Whiteprint',
     btnHaptics: 'sheet index: toggle haptics (native app only — hidden in a browser)', btnPauseHaptics: 'pause: toggle haptics (native app only)',
-    btnStreakRepair: 'streak-repair card: repair the streak (rewarded-ad placeholder, ~1.2 s; shown at launch only when exactly one day was missed, once per streak)',
-    btnStreakDecline: 'streak-repair card: Start fresh — decline the repair; today\'s first clear starts a new streak at 1 (Escape does the same)',
     btnPauseMotion: 'pause: toggle Motion on/off — off forces the reduced-motion rendering path (persisted)',
     btnFreezeOk: 'freeze-notice card: Continue — dismiss the "Freeze used — streak safe" notice',
     btnSurvey: 'sheet index: Field survey row — open the weekly log card (points + milestone stamps)',
@@ -102,7 +104,7 @@ top-left origin; its cells are listed absolute.`,
       return {
         level: GE.level, L: GE.L, pos: GE.pos, moves: GE.moves, movesLeft: GE.movesLeft,
         over: GE.over, paused: GE.paused, metrics: GE.metrics, rect: { left: r.left, top: r.top },
-        screens: { menu: vis('menu'), levels: vis('levels'), legend: vis('legend'), pause: vis('pauseModal'), win: vis('winModal'), fail: vis('failModal'), ad: vis('adModal'), streak: vis('streakModal'), freeze: vis('freezeModal'), lives: vis('livesModal'), survey: vis('surveyModal') },
+        screens: { menu: vis('menu'), levels: vis('levels'), legend: vis('legend'), pause: vis('pauseModal'), win: vis('winModal'), fail: vis('failModal'), ad: vis('adModal'), freeze: vis('freezeModal'), lives: vis('livesModal'), survey: vis('surveyModal') },
         streak: (window.GE_MENU && window.GE_MENU.streak) || null,
         quests: window.GE_MENU ? window.GE_MENU.questInfo() : null,
         ladder: window.GE_MENU ? { ...window.GE_MENU.ladder } : null,
@@ -112,7 +114,7 @@ top-left origin; its cells are listed absolute.`,
         menuQuests: vis('levels') ? [...document.querySelectorAll('#menuQuests .q')].map(r => r.innerText.replace(/\s+/g, ' ').trim()) : null,
         hint: GE.hint ? { block: GE.hint.bi, path: GE.hint.path, exit: GE.hint.side || null } : null,
         paper: GE.theme, skins: (window.GE_MENU && window.GE_MENU.prog.skins) || [],
-        chestRow: vis('winChest') ? document.querySelector('#winChest').innerText.replace(/\s+/g, ' ').trim() : null,
+        certRow: vis('winCert') ? document.querySelector('#winCert').innerText.replace(/\s+/g, ' ').trim() : null,
         winText: vis('winModal') ? document.querySelector('#winModal .card').innerText.replace(/\s+/g, ' ').trim() : null,
         failText: vis('failModal') ? document.querySelector('#failModal .card').innerText.replace(/\s+/g, ' ').trim() : null,
         rescueHidden: document.getElementById('btnRescue').hidden,
@@ -133,7 +135,7 @@ top-left origin; its cells are listed absolute.`,
       })),
       gates: L.gates.map(g => ({ color: COLOR[g.color], side: g.side, lanes: `${g.start}..${g.start + g.len - 1}` })),
       winCard: raw.winText, failCard: raw.failText, rescueAvailable: raw.screens.fail && !raw.rescueHidden, hintShown: raw.hint,
-      paper: raw.paper, skinsUnlocked: raw.skins, chestOpened: raw.chestRow,
+      paper: raw.paper, skinsUnlocked: raw.skins, sheetCertified: raw.certRow,
       daily: raw.streak ? { streakDays: raw.streak.len, bestStreak: raw.streak.best, weekMarks: (raw.streak.marks || []).length, freezes: raw.streak.freezes || 0 } : null,
       quests: raw.quests, ladder: raw.ladder, lives: raw.lives,
       winBeat: raw.winDaily, menuDailyRow: raw.menuDaily, menuQuests: raw.menuQuests,
