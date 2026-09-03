@@ -36,7 +36,8 @@
   #notes .n { font-size:12.5px; line-height:1.35; padding:5px 0; border-bottom:1px dashed rgba(214,238,255,.15); }
   #notes .n .m { font:600 10px/1 ui-monospace,Menlo,monospace; letter-spacing:.1em; color:var(--dim); margin-right:6px; }
   #notes .n .s { font-weight:700; text-transform:uppercase; font-size:10px; letter-spacing:.08em; margin-right:6px; }
-  .critical { color:#ff8078; } .major { color:var(--amber); } .minor { color:#72d8ff; } .nit { color:var(--dim); }
+  #notes .n .th { font:600 10px/1 ui-monospace,Menlo,monospace; color:#9ad9b6; background:rgba(95,232,155,.12); border:1px solid rgba(95,232,155,.3); border-radius:4px; padding:2px 5px; margin-right:6px; }
+  .critical { color:#ff8078; } .major { color:var(--amber); } .minor { color:#72d8ff; } .nit { color:var(--dim); } .positive { color:#5fe89b; }
   #notes .empty { color:var(--dim); font-size:12px; }
   body.side #stage { align-items:flex-start; padding-left:14px; }
   body.side #panel { left:auto; right:12px; top:14px; bottom:auto; transform:none; width:440px; }
@@ -110,24 +111,34 @@
     say({ say = '', thought = '', note = null, thinking = false }) {
       $('say').textContent = say; $('say').className = thinking ? 'think' : '';
       $('thought').textContent = thought ? 'thinks: ' + thought : '';
-      $('note').textContent = note ? '📝 ' + note.text : '';
+      const pos = note && note.kind === 'positive';
+      $('note').textContent = note ? (pos ? '👍 ' : '📝 ') + note.text : '';
       if (note) {
         notes.push(note);
         const list = $('notes'); if (notes.length === 1) list.innerHTML = '';
         const d = document.createElement('div'); d.className = 'n';
-        d.innerHTML = `<span class="m">t${note.turn} · L${note.level}</span><span class="s ${note.severity}">${note.severity} · ${note.area}</span>${note.text.replace(/</g, '&lt;')}`;
+        const esc = s => String(s == null ? '' : s).replace(/</g, '&lt;');
+        // the computed severity is what the panel shows — the rater's own label rides along in
+        // brackets when the two disagree, because that disagreement is itself worth seeing live
+        const sev = pos ? 'positive' : (note.severity || 'nit');
+        const score = note.severityScore != null ? ` ${note.severityScore}` : '';
+        const dis = !pos && note.raterSeverity && note.raterSeverity !== note.severity ? ` (said ${esc(note.raterSeverity)})` : '';
+        d.innerHTML = `<span class="m">t${note.turn} · L${note.level}${note.rater ? ' · ' + esc(note.rater) : ''}</span>`
+          + `<span class="s ${sev}">${esc(sev)}${score} · ${esc(note.area)}</span>`
+          + (note.theme ? `<span class="th">${esc(note.theme)}</span>` : '')
+          + esc(note.text) + dis;
         list.prepend(d);
         $('notesBtn').textContent = `Notes (${notes.length})`;
       }
     },
     busy(b) { $('busy').hidden = !b; },
-    mode({ persona, label, who, slot, device, levels }) {
+    mode({ persona, label, who, slot, device, levels, rater }) {
       $('panel').classList.toggle('breaker', persona === 'breaker');
       const lbl = document.body.classList.contains('panelmode') && persona === 'breaker' ? 'BREAKER' : (label || 'REVIEWER');
-      document.querySelector('#hdr .who').innerHTML = lbl + ' · <b>' + who.replace(/</g, '&lt;') + '</b>';
-      const chip = [slot ? 'SLOT ' + slot : null, device || null, levels ? 'L' + levels : null].filter(Boolean).join(' · ');
+      document.querySelector('#hdr .who').innerHTML = lbl + (rater ? ' ' + String(rater).replace(/</g, '&lt;') : '') + ' · <b>' + who.replace(/</g, '&lt;') + '</b>';
+      const chip = [rater ? 'RATER ' + rater : slot ? 'SLOT ' + slot : null, device || null, levels ? 'L' + levels : null].filter(Boolean).join(' · ');
       $('chip').textContent = chip; $('chip').hidden = !chip;
-      document.title = (device || 'Reviewer studio') + (levels ? ' · L' + levels : '');
+      document.title = (rater ? 'Rater ' + rater + ' · ' : '') + (device || 'Reviewer studio') + (levels ? ' · L' + levels : '');
     },
     hidePanel(h) { $('panel').style.visibility = h ? 'hidden' : 'visible'; },
   };

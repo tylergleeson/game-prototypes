@@ -86,43 +86,63 @@ Menu, level select, how-to-play, pause, completion, sound toggle — in `menu.js
 ### 5.1 The studio console
 `tools/reviewer-server.mjs` (repo root) drives the real game and serves a tiny localhost API any agent can use with curl:
 
-- `GET /state` → rules, buttons, `screen`, `summary` (board, blocks, gates, moves/par, cards, HUD text, JS errors), `budget` (`done`, `reason`, level range / minutes, cleared), a phone-only **screenshot**.
-- `POST /say` `{say, thought, note}` → shows on the floating panel, appends to `live.md`, collects `notes.json`.
+- `GET /state` → rules, buttons, `schema` (the live note contract — enums, required fields, the severity formula), `screen`, `summary` (board, blocks, gates, moves/par, cards, HUD text, JS errors), `budget` (`done`, `reason`, level range / minutes, cleared), the `build` and `os` read from the page, a phone-only **screenshot**.
+- `POST /say` `{say, thought, note}` → validates the note, computes its severity, shows it on the floating panel, appends to `live.md`, collects `notes.json`. An invalid note is a 400 with the missing fields named, and is not logged.
 - `POST /act` → `drag` (planned, validated route via real gestures), `tap`, `hint`, `wait`; breaker tools `raw_drag` (verbatim gesture, off-board allowed, hold/cancel), `tap × N`, `sequence`, `key`, `reload`, `inspect` (HUD vs engine vs storage vs buttons vs errors).
 - `POST /end {review}` → `review.md`, `notes.json`, `log.json`; shuts the simulator down.
 
-Targets: `--target sim` (default: the real app in the Xcode Simulator; panel in a small popup window beneath the phone; `--slot N --of K` runs identical device copies side by side, laid out by `tools/studio-layout.mjs`) or `--target chrome` (exact-size iPhone frame in Chromium). Budget by `--levels A-B` (ends when B is cleared) and/or `--minutes M`. `--persona critic|breaker`, `--fresh` (clean install), `--start N`.
+Targets: `--target sim` (default: the real app in the Xcode Simulator; panel in a small popup window beneath the phone; `--slot N --of K` runs identical device copies side by side, laid out by `tools/studio-layout.mjs`) or `--target chrome` (exact-size iPhone frame in Chromium). Budget by `--levels A-B` (ends when B is cleared) and/or `--minutes M`. `--persona critic|breaker`, `--rater A` (names an independent rater in a multi-rater round), `--fresh` (clean install), `--start N`.
 
 Per game: `prototypes/<game>/tools/reviewer-adapter.mjs` — `rules` text, `buttons` map (every id a persona may tap), `raw()/summarize()` (what the persona sees), `perform()` (drags through real pointer gestures with route planning), `hint()` (in-engine solver), `rawDrag/inspect/key` attack tools, `ios` bundle info, `startAt()`.
 
-Harness self-test without a model: `node tools/reviewer-dry.mjs --levels 2` (solver-driven play through the console).
+Harness self-test without a model: `node tools/reviewer-dry.mjs --levels 2` (solver-driven play through the console; it also posts one full-schema note and fails if the console does not compute the severity itself or does not refuse an under-specified note).
 
-### 5.2 The note schema (the contract between personas and developers)
-Every note: `{turn, level, persona, area, severity, text}` —
-`area ∈ legibility|controls|feedback|difficulty|onboarding|ui|art|audio|monetization|retention|originality|bug|other`,
-`severity ∈ nit|minor|major|critical`. Breaker notes are written as
-`REPRO: … · EXPECTED: … · ACTUAL: … · EVIDENCE: …`. `live.md` carries the spoken line and
-private thought per turn; `review.md` is the persona's formal write-up (score, ranked
-improvements with what-you-saw / why-it-matters / what-to-change; for the breaker: bugs
-ranked by severity, exploits ruled in/out, regression suggestions).
+Fuzz layer: `prototypes/<game>/tools/monkey-soak.mjs --seed S --minutes M` drives the real game with a seeded RNG — random drags, taps, bursts, Escapes and reloads across undo / rescue / hint / the ad slot / pause / every modal / the daily / the survey — and asserts a short invariant list after **every** action. It exists because the named checks only test interactions someone anticipated. A 60 s fixed-seed soak runs inside `playtest.mjs`; a failure writes its whole action trace next to the tool, and that trace is the repro.
+
+### 5.2 The note schema (the contract between personas and developers) — v2
+`notes.json` is `{schema: 2, session, severity, counts, notes: […]}`. The rater writes:
+
+| Field | |
+|---|---|
+| `kind` | `issue` (default) or `positive` — something that works, filed so the developer knows what not to change |
+| `area` | `legibility\|controls\|feedback\|difficulty\|onboarding\|ui\|art\|audio\|monetization\|retention\|originality\|bug\|other` |
+| `theme` | kebab-case slug — **the key notes are merged on across raters**; it names the problem, not the moment |
+| `heuristic` | `legibility\|feedback\|control\|challenge\|pacing\|onboarding\|fairness\|accessibility\|honesty` — a tag, deliberately not the rubric |
+| `frequency` · `impact` · `persistence` | 1–4 · 1–4 · 1–2 — the decomposed severity |
+| `severity` | the rater's OWN label, kept beside the computed one |
+| `text` | what you saw · why it matters · what you'd change (breaker: `REPRO: … · EXPECTED: … · ACTUAL: …`) |
+| `evidence` `causes` `playerImpact` `reproRate` `positives` | the professional-report fields: the artefact, the hypothesis, the player-facing consequence, hits/attempts |
+
+The console adds `id, turn, level, persona, rater, build (window.GE_BUILD), device, os, locale`
+and **computes the severity that counts**: `round(frequency × impact × persistence / 8)` → 0–4 →
+`nit / nit / minor / major / critical`. A single rater's severity is never trusted on its own.
+An incomplete note is refused with a 400 and the list of missing fields; nothing is logged.
+`live.md` carries the spoken line and private thought per turn; `review.md` opens with a **Method**
+block (rater, build, device, OS, scope, prioritisation key, and the standing limitation that no real
+player took part), then the write-up, then a positives section, then findings grouped by theme with
+the most severe group first.
 
 ### 5.3 Sessions
-- **Single**: `/review-session --persona critic --levels 1-10`.
-- **Parallel** (same iPhone model, identical copies): `/review-session --sessions "critic:1-10,critic:11-20,breaker:21-30"` → layout tool → three consoles (`--slot i --of 3`, ports 7410+i) → all personas spawned in one message → wait for all → **one** developer pass over all run dirs.
+- **Default — three independent raters**: `/review-session` ⇒ `--sessions "critic:A,critic:B,critic:C"`, three copies of the same iPhone, same level range, at the same time, each blind to the others. The developer pass merges by `theme` and prioritises on the **mean** severity, with the number of raters who found a theme independently as the tie-break. One rater's rating is not a severity source and must never be relayed as the round's.
+- **Entry grammar**: `persona[:X][:Y]`, where a part matching `\d+-\d+` is a level range and anything else is a rater id — `critic:A`, `critic:11-20`, `critic:11-20:B`.
+- **Coverage split** (different ground rather than repeated ground): `--sessions "critic:1-10,critic:11-20,breaker:21-30"` → layout tool → three consoles (`--slot i --of 3`, ports 7410+i) → all personas spawned in one message → wait for all → **one** developer pass over all run dirs.
+- **Single rater**: only for re-checking one fix. Say so in the report.
 - Don't stream commentary into the chat (the panel + `live.md` carry it); relay only the filed result.
 
 ### 5.4 The developer pass (how notes become code)
 Prompt template: `.claude/skills/review-session/prompts/developer.md`. The contract:
 
-1. **Triage every note and every ranked review item** (deduplicated across sessions) into
+0. **Merge the raters before triaging anything.** Group every note across every run dir by `theme`; per theme take the **mean `severityScore` across raters** and round it the way the console does; record `raters: n/3`. That mean is the priority, never any single rater's number, and a theme two or three raters found independently outranks a higher-severity theme only one saw. Where the raters' scores spread by 2 or more, say so — the disagreement usually means the problem is conditional, and the condition is what to fix. Collect the `kind: "positive"` notes into a **do not change** list and check the diff against it.
+1. **Triage every merged theme and every ranked review item** into
    **DO NOW** (bugs, copy, feedback/juice, UI, onboarding, legibility),
    **DESIGN CHANGE** (rules, par, limits, generation — do it only if the case is strong *and* the tooling can re-verify; else write a proposal with reasoning),
-   **SKIP** (harness artifacts, duplicates, retracted notes, rule violations — one-line reason each).
+   **SKIP** (harness artifacts, duplicates, retracted notes, rule violations — one-line reason each),
+   each with an **effort** estimate (S / M / L) and a **MoSCoW label** (Must / Should / Could / Won't have this time).
 2. **Reproduce first** (through hooks / synthetic pointer events in a Playwright script). "Not reproducible as filed" is a valid, valuable outcome — twice it exposed the *real* bug underneath.
 3. **Fix root causes**, keep the engine contract intact, match the art direction.
 4. **Add a regression check** to `tools/playtest.mjs` for every fixed bug and shipped feature.
-5. **Verify**: web bot → rebuild bundles (`build-single`, `build-app`, `build-itch`) → `cap sync` → iOS bot → simulators down. Paste the result lines; no placeholders.
-6. **Report** `reviews/<run>/dev-report.md`: the triage table (turn/session, severity, area, decision, change or reason), files touched, verification lines, before/after screenshots, open proposals with reasoning.
+5. **Verify**: web bot → rebuild bundles (`build-single`, `build-app`, `build-itch`) → `cap sync` → iOS bot → simulators down. Paste the result lines; no placeholders. For any note about an interleaving rather than a fixed sequence, run two seeds of the monkey soak as well.
+6. **Report** `reviews/<run>/dev-report.md`: method (rater count, builds, severity scheme), the merged findings table (theme · raters n/3 · mean score · label · area · heuristic · effort · MoSCoW · decision · change), rater disagreements, the do-not-change list, files touched, verification lines, before/after screenshots, open proposals with reasoning, and a **SKIP log naming every note not actioned with its reason** — nothing is dropped silently, because "won't have this time" is recorded precisely so it cannot be quietly reintroduced or quietly forgotten.
 
 Then the lead re-runs the bot, views the after-shots, commits with credit to every pass absorbed, republishes the artifact, and records anything the user must decide.
 
