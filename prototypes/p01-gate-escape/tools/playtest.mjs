@@ -587,7 +587,7 @@ const burnLevel = () => page.evaluate(() => {
   // 3", printed only when the run was worse). It is the PROXIMITY line — one line, always there,
   // always the same two numbers — so the sentence must not mention a best at all and the line
   // must carry it on both the first clear and the worse repeat.
-  const okCopy = w1.moves === 3 && /Solved in 3 moves · par 1$/.test(w1.sub) && !/best/.test(w1.sub) && w1.geLevel === '1' && /^Level 2\d+ blocks · par \d+$/.test(w1.next) && w1.no === 'SHEET 01'
+  const okCopy = w1.moves === 3 && /Solved in 3 moves · par 1$/.test(w1.sub) && !/best/.test(w1.sub) && w1.geLevel === '1' && /^Level 2\d+ blocks · par \d+$/.test(w1.next) && w1.no === 'SHEET 01 · LEVEL 01'
     && !w1.proxHidden && w1.prox === 'your best 3 · par 1'
     && w1t === `★ ${total} / ${solutions.length * 3}` && w2.moves === 5 && !/best/.test(w2.sub) && w2.prox === 'your best 3 · par 1' && w2.best === 3;
   if (okCopy) console.log(`win card ok: "par 1" (never "best") in the sentence, the proximity line "${w2.prox}" under it on both the first clear and a worse repeat, ge_level advanced on the win, meta shows star total + next level`);
@@ -3952,7 +3952,11 @@ const pixelOf = async (sel, fx, fy) => {
     // not a copy of it that can drift (the fallback in menu.js is only for a table that
     // predates the manifest)
     const shipped = await pg.evaluate(() => (typeof DAILIES !== 'undefined' && DAILIES.curve) || null);
-    const legend = await pg.evaluate(() => { window.GE_MENU.show('legend'); return {
+    const legend = await pg.evaluate(() => { window.GE_MENU.show('legend');
+      // the reference rows live in the "More" fold now (round 3): open it, then read them —
+      // innerText of a closed <details> is empty, and what is asserted below is the COPY
+      document.getElementById('legendMore').open = true;
+      return {
       curve: (document.getElementById('legendCurve') || {}).textContent,
       daily: document.getElementById('legendDaily').innerText.replace(/\s+/g, ' ').trim(),
       report: document.getElementById('legendReport').innerText.replace(/\s+/g, ' ').trim(),
@@ -4572,7 +4576,9 @@ const pixelOf = async (sel, fx, fy) => {
     await pg.waitForTimeout(200);
     await pg.screenshot({ path: `${shotDir}/m1-broken-day.png` });
     // the legend says so, in the streak card, on the same build
-    const legend = await pg.evaluate(() => { window.GE_MENU.show('legend'); window.GE_MENU.refreshLegendRows(); return document.getElementById('legendStreak').innerText.replace(/\s+/g, ' ').trim(); });
+    const legend = await pg.evaluate(() => { window.GE_MENU.show('legend'); window.GE_MENU.refreshLegendRows();
+      document.getElementById('legendMore').open = true; // the reference rows sit in the "More" fold (round 3)
+      return document.getElementById('legendStreak').innerText.replace(/\s+/g, ' ').trim(); });
     // ...and with no list shipped, nothing changes: the same gap lapses the streak
     const control = await openM(null, { ge_prog: JSON.stringify({ u: 19, s: stars(12), rv: ['cert', 'daily', 'survey', 'papers'], d0: 'pre' }) });
     const lapsed = await control.pg.evaluate(async () => {
@@ -4788,6 +4794,276 @@ const pixelOf = async (sel, fx, fy) => {
       && DTC.curveFor('2026-09-05').key === 'peak' && DTC.curveFor('2026-09-07').key === 'easy';
     if (curveOk) console.log(`daily curve published ok: DAILIES.curve is the generator's own WEEK table (${DTC.curve.join(' ')}), curveSpec matches DAILY_CURVE field for field, and all ${DTC.rows.length} boards are the archetype their weekday advertises — Saturday is "${DTC.curveFor('2026-09-05').label}" (${DTC.curveFor('2026-09-05').summary})`);
     else { failures++; console.error('daily curve published FAIL:', JSON.stringify({ table, curve: DTC.curve, specOk, mismatch })); }
+  }
+}
+
+// ---- round 3 review (three blind raters, 2026-09-03) ----
+// Four bugs and one restructuring, each pinned where it broke:
+//   * the win card's corner label named the LEVEL and called it a SHEET, and the title rotation
+//     still spent the word "sheet" on an ordinary clear — so level 2 read "SHEET 02 / Sheet
+//     filed!" with the certification reveal under it, two clears into a forty-level game;
+//   * the colourblind ink presets could not be reached THROUGH THE STUDIO: the adapter's tap
+//     branch used Playwright Locator methods the studio's page shim does not have. The control
+//     was never broken, the harness was — and a harness that reports a working accessibility
+//     shelf as dead is a bug in the same sense;
+//   * the Daily Draft's CLEAN token ("no undo, no hint, no rescue") could be earned off five
+//     console hints, because the console's solver was outside the record;
+//   * board chrome ghosted through the half-transparent screen scrim (the hint button's AD badge
+//     over "How to play");
+//   * "How to play" folded its reference prose under More.
+{
+  const openR = async (seed, day) => {
+    const ctx = await browser.newContext({ viewport: { width: 420, height: 780 } });
+    const pg = await ctx.newPage();
+    const errs = [];
+    pg.on('pageerror', e => errs.push(e.message));
+    await pg.goto('file://' + root + 'index.html');
+    await pg.waitForFunction(() => window.GE && window.GE.L);
+    await pg.evaluate(s => { localStorage.clear(); for (const k in s || {}) localStorage.setItem(k, s[k]); }, seed || null);
+    await pg.reload();
+    await pg.waitForFunction(() => window.GE && window.GE.L && window.GE_MENU);
+    if (day) await pg.evaluate(d => { const t = new Date(d + 'T10:00:00').getTime(); window.GE.now = () => t; }, day);
+    return { ctx, pg, errs };
+  };
+
+  // 1. THE WIN CARD NAMES THE SHEET IT IS ON, and no ordinary clear claims one is finished.
+  //    "SHEET 0N" was String(level + 1): on level 2 it said SHEET 02 while the player was two
+  //    clears into sheet 1 of four, and the title rotation put "Sheet filed!" on that same card
+  //    (all three raters; B confirmed 3/3 on levels 1-3). The label is now derived from the
+  //    ten-level grouping every other surface uses and states the level beside it.
+  {
+    const { ctx, pg, errs } = await openR();
+    const cards = [];
+    for (let i = 0; i < 11; i++) {
+      await pg.evaluate(({ i, sol }) => { window.GE.load(i); for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side); },
+        { i, sol: solutions[i] });
+      await pg.waitForSelector('#winModal:not([hidden])', { timeout: 3000 });
+      await pg.waitForTimeout(1250); // the certification row lands on a 1 s timer; read the settled card
+      cards.push(await pg.evaluate(() => ({
+        no: document.getElementById('winNo').textContent,
+        title: document.getElementById('winTitle').textContent,
+        cert: !document.getElementById('winCert').hidden,
+        row: document.getElementById('winDaily').hidden ? null : document.getElementById('winDaily').innerText.replace(/\s+/g, ' ').trim(),
+      })));
+      if (i === 1) await pg.screenshot({ path: `${shotDir}/r3-win-l2.png` });
+      await pg.click('#btnNext');
+      await pg.waitForTimeout(120);
+    }
+    await ctx.close();
+    // the label: the sheet is floor(level / 10), the level keeps its own number
+    const labels = cards.every((c, i) => c.no === `SHEET ${String(Math.floor(i / 10) + 1).padStart(2, '0')} · LEVEL ${String(i + 1).padStart(2, '0')}`);
+    // certification vocabulary — "sheet", "approved", "certified", "stamp" — is reserved for the
+    // moment a sheet is actually certified. No clear title may borrow it, in the rotation or out.
+    const src = fs.readFileSync(root + 'game.js', 'utf8');
+    const rotation = JSON.parse(((src.match(/const WIN_TITLES = (\[[^\]]+\])/) || [])[1] || '[]').replace(/'/g, '"'));
+    const reserved = /sheet|approved|certifi|stamp/i;
+    const titlesClean = rotation.length >= 5 && !rotation.some(t => reserved.test(t))
+      && !cards.some(c => reserved.test(c.title));
+    // ...and the certification ROW appears on exactly the card that earned it: sheet 1 crosses
+    // 24 of its 30 stars on the eighth 3-star clear, and nowhere before it
+    const certAt = cards.map((c, i) => (c.cert ? i + 1 : 0)).filter(Boolean);
+    const ok = labels && titlesClean && JSON.stringify(certAt) === '[8]' && !cards[1].cert
+      && /Sheet certification/.test(cards[1].row || '') && !errs.length;
+    if (ok) console.log(`win card sheet label ok: levels 1-11 print "${cards[0].no}" … "${cards[10].no}" — the sheet derived from the ten-level grouping, the level beside it — no clear title spends the certification vocabulary ("${rotation.join('", "')}"), and the certified row appears on level ${certAt[0]} only, where sheet 1 crosses 24 ★`);
+    else { failures++; console.error('win card sheet label FAIL:', JSON.stringify({ cards, rotation, certAt, labels, titlesClean, errs })); }
+  }
+
+  // 2. THE INK PRESETS ARE APPLIED BY A REAL TAP, on both shelves. The existing accessibility
+  //    guard proved the palettes themselves (contrast floors, simulated separation, glyphs) by
+  //    calling GE.setPalette directly — which is exactly why three raters could report the
+  //    shelf as dead without this file noticing. This one presses the buttons.
+  {
+    const { ctx, pg, errs } = await openR();
+    const px = () => pg.evaluate(() => {
+      const cv = document.getElementById('cv'), c = cv.getContext('2d'), d = cv.width / cv.clientWidth, m = window.GE.metrics;
+      const b = window.GE.L.blocks[0], p = window.GE.pos[0];
+      const s = c.getImageData(Math.round((m.bx + (p[0] + b.cells[0][0] + 0.5) * m.cell) * d), Math.round((m.by + (p[1] + b.cells[0][1] + 0.5) * m.cell) * d), 1, 1).data;
+      return [s[0], s[1], s[2]].join(',');
+    });
+    await pg.evaluate(() => { window.GE_MENU.show(null); window.GE.load(11); });
+    await pg.waitForTimeout(280);
+    const before = { palette: await pg.evaluate(() => window.GE.palette), px: await px() };
+    // the pause card
+    await pg.click('#btnMenu');
+    await pg.waitForTimeout(220);
+    await pg.click('#pauseInks [data-ink="deuteranopia"]');
+    await pg.waitForTimeout(320);
+    const paused = await pg.evaluate(() => ({
+      palette: window.GE.palette,
+      on: [...document.querySelectorAll('#pauseInks .ink')].filter(b => b.classList.contains('on')).map(b => b.dataset.ink),
+      caption: document.querySelector('#pauseInks .cap').textContent,
+      ink0: window.GE.inks[0].main,
+    }));
+    paused.px = await px();
+    await pg.screenshot({ path: `${shotDir}/r3-pause-deuteranopia.png` });
+    await pg.evaluate(() => document.getElementById('btnResume').click());
+    await pg.waitForTimeout(200);
+    await pg.screenshot({ path: `${shotDir}/r3-board-deuteranopia.png` });
+    // ...and the same control on the sheet index
+    await pg.evaluate(() => window.GE_MENU.show('levels'));
+    await pg.waitForTimeout(200);
+    await pg.click('#menuInks [data-ink="tritanopia"]');
+    await pg.waitForTimeout(280);
+    const idx = await pg.evaluate(() => ({ palette: window.GE.palette,
+      on: [...document.querySelectorAll('#menuInks .ink')].filter(b => b.classList.contains('on')).map(b => b.dataset.ink) }));
+    // ...and the choice is still there after a reload
+    await pg.reload();
+    await pg.waitForFunction(() => window.GE && window.GE.L && window.GE_MENU);
+    const kept = await pg.evaluate(() => window.GE.palette);
+    await ctx.close();
+    const ok = before.palette === 'default'
+      && paused.palette === 'deuteranopia' && JSON.stringify(paused.on) === '["deuteranopia"]'
+      && paused.px !== before.px && /Deuteranopia/i.test(paused.caption)
+      && idx.palette === 'tritanopia' && JSON.stringify(idx.on) === '["tritanopia"]'
+      && kept === 'tritanopia' && !errs.length;
+    if (ok) console.log(`ink preset tap ok: tapping the D tile on the PAUSE card switches the preset (default → deuteranopia, block ink ${before.px} → ${paused.px}, caption "${paused.caption.trim()}"), the tile that is on moves with it, the same shelf on the sheet index switches to tritanopia, and the choice survives a reload`);
+    else { failures++; console.error('ink preset tap FAIL:', JSON.stringify({ before, paused, idx, kept, errs })); }
+  }
+
+  // 3. THE CLEAN TOKEN IS FORFEITED BY EVERY ASSIST. The rule is published in three places
+  //    ("no undo, no hint and no rescue") and the rescue half is pinned by the G1 guard above.
+  //    This pins the other two, plus the assist a CONSOLE hands out: rater B solved a recorded
+  //    draft with five studio hints and the shareable field report still read CLEAN · ★★★,
+  //    because the studio's solver never told the engine anything.
+  {
+    const DTR = new Function(fs.readFileSync(root + 'dailies.js', 'utf8') + '\nreturn DAILIES;')();
+    const dsolR = JSON.parse(fs.readFileSync(root + 'tools/daily-solutions.json', 'utf8'));
+    const run = async (idx, assist) => {
+      const DATE = DTR.dateAt(idx), sol = dsolR[DTR.rowFor(DATE).i];
+      const { ctx, pg, errs } = await openR(null, DATE);
+      await pg.evaluate(() => { window.GE.load(0); window.GE.loadDaily(); });
+      await pg.waitForTimeout(160);
+      if (assist === 'undo') await pg.evaluate(({ sol }) => { const mv = sol[0]; window.GE.dragVia(mv.bi, mv.path, mv.side); window.GE.undo(); }, { sol });
+      if (assist === 'hint') { await pg.click('#btnHint'); await pg.waitForTimeout(3600); }
+      if (assist === 'console') {
+        const { game } = await import('file://' + root + 'tools/reviewer-adapter.mjs');
+        // the STUDIO's page shim, reproduced exactly: a locator with isVisible() and click(), an
+        // evaluate, and a Proxy that throws on anything else — count()/nth()/first() are Playwright
+        // Locator methods the studio does not have, and reaching for one is what broke the ink tap
+        const strict = o => new Proxy(o, { get(t, k) {
+          if (typeof k === 'string' && !(k in t)) throw new TypeError(`el.${k} is not a function`);
+          return t[k]; } });
+        const shim = strict({
+          evaluate: (...a) => pg.evaluate(...a),
+          locator: sel => strict({
+            isVisible: () => pg.evaluate(s => { const el = document.querySelector(s); return !!el && !el.hidden && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden'; }, sel),
+            click: () => pg.evaluate(s => { const el = document.querySelector(s); if (!el) return 'missing'; if (el.disabled) return 'disabled'; el.click(); return 'ok'; }, sel),
+          }),
+          click: sel => pg.evaluate(s => { const el = document.querySelector(s); if (!el) return 'missing'; el.click(); return 'ok'; }, sel),
+          waitForTimeout: ms => pg.waitForTimeout(ms),
+        });
+        const said = await game.hint(await game.raw(shim), shim);
+        // the same shim drives the accessibility shelf the raters could not reach
+        await pg.evaluate(() => document.getElementById('btnMenu').click());
+        await pg.waitForTimeout(220);
+        const tapped = await game.perform(shim, { type: 'tap', button: 'ink:deuteranopia' }, await game.raw(shim));
+        const missing = await game.perform(shim, { type: 'tap', button: 'ink:nonesuch' }, await game.raw(shim));
+        await pg.evaluate(() => { document.getElementById('btnResume').click(); window.GE.setPalette('default'); });
+        await pg.waitForTimeout(200);
+        var console_ = { said, tapped, missing, palette: await pg.evaluate(() => window.GE.palette) };
+      }
+      await pg.evaluate(({ sol }) => { for (const mv of sol) window.GE.dragVia(mv.bi, mv.path, mv.side); }, { sol });
+      await pg.waitForSelector('#winModal:not([hidden])', { timeout: 3000 });
+      await pg.waitForTimeout(240);
+      const out = await pg.evaluate(() => {
+        window.GE_MENU.openDraft();
+        return { report: window.GE.dailyShareText(), cur: window.GE.dailyInfo.cur,
+          winReport: document.getElementById('winReport').textContent,
+          sub: document.getElementById('winSub').textContent,
+          cleanRow: !document.getElementById('draftClean').hidden };
+      });
+      if (assist) await pg.screenshot({ path: `${shotDir}/r3-draft-${assist}.png` });
+      await ctx.close();
+      return { ...out, assist, errs, console: assist === 'console' ? console_ : null };
+    };
+    const clean = await run(200, null);
+    const undo = await run(201, 'undo');
+    const hint = await run(202, 'hint');
+    const csl = await run(203, 'console');
+    const token = r => (r.report || '').split('\n')[3] || null;
+    // ...and the win card's own superlative goes with it: a par clear that leaned on an assist is
+    // stated as a number against par, never as "perfect!"
+    const forfeited = r => token(r) === null && !/CLEAN/.test(r.report || '') && !/CLEAN/.test(r.winReport || '')
+      && !r.cleanRow && !/perfect/.test(r.sub || '') && /par \d+$/.test(r.sub || '');
+    const c = csl.console || {};
+    const ok = clean.cur.state === 'won' && token(clean) === 'CLEAN' && clean.cleanRow && /perfect/.test(clean.sub)
+      && clean.cur.undos === 0 && clean.cur.hints === 0 && !clean.cur.rescued
+      && undo.cur.undos === 1 && forfeited(undo)
+      && hint.cur.hints === 1 && forfeited(hint)
+      && csl.cur.hints === 1 && forfeited(csl)
+      // ...the console says so in the same breath as the answer
+      && /charged as hint 1 on this attempt/.test(c.said || '') && /forfeits the CLEAN token/.test(c.said || '')
+      // ...and the shim that could not reach the ink shelf now does, without a Locator method
+      && c.tapped === 'tapped ink deuteranopia' && c.palette === 'default'
+      && /is not on screen right now/.test(c.missing || '')
+      && ![clean, undo, hint, csl].some(r => r.errs.length);
+    if (ok) console.log(`CLEAN forfeit ok: a clean draft prints CLEAN (${clean.cur.moves}/${clean.cur.par}, ★${clean.cur.stars}); ONE undo, ONE HUD hint and ONE studio-console hint each file their assist and each drop the token from the card and the shared report — the console now charges the assist it hands out and says so ("…${(c.said || '').slice(-72)}")`);
+    else { failures++; console.error('CLEAN forfeit FAIL:', JSON.stringify({ clean, undo, hint, csl }, null, 1).slice(0, 3000)); }
+  }
+
+  // 4. NO BOARD CHROME BLEEDS THROUGH A SCREEN. The sheet index and How to play are drawn over a
+  //    half-transparent scrim so the drawing shows through the drafting sheet; the HUD is not part
+  //    of the drawing, and its amber AD badge read as a stray ad chip floating over How to play.
+  {
+    const { ctx, pg, errs } = await openR();
+    await pg.evaluate(() => { window.GE_MENU.show(null); window.GE.load(11); });
+    await pg.waitForTimeout(200);
+    const onBoard = await pg.evaluate(() => +getComputedStyle(document.getElementById('hud')).opacity);
+    const under = {};
+    for (const scr of ['levels', 'legend', 'menu']) {
+      await pg.evaluate(s => window.GE_MENU.show(s), scr);
+      await pg.waitForTimeout(520); // #hud fades over .25s: read it settled, not mid-fade
+      under[scr] = await pg.evaluate(() => {
+        const cs = id => getComputedStyle(document.getElementById(id));
+        // the AD badge's own painted opacity is the product of every ancestor's
+        let el = document.querySelector('#btnHint .ad'), o = 1;
+        for (; el && el !== document.body; el = el.parentElement) o *= +getComputedStyle(el).opacity;
+        return { hud: +cs('hud').opacity, goal: +cs('hudGoal').opacity, taps: cs('hud').pointerEvents,
+          badge: +o.toFixed(3), cls: document.body.classList.contains('screen-up') };
+      });
+    }
+    await pg.evaluate(() => window.GE_MENU.show('legend'));
+    await pg.waitForTimeout(300);
+    await pg.screenshot({ path: `${shotDir}/r3-legend-no-adchip.png` });
+    await ctx.close();
+    const ok = onBoard === 1 && ['levels', 'legend', 'menu'].every(s => under[s].hud === 0 && under[s].goal === 0
+      && under[s].badge === 0 && under[s].taps === 'none' && under[s].cls) && !errs.length;
+    if (ok) console.log('screen chrome ok: the HUD, the objective chips and the hint button’s AD badge are painted at zero opacity and take no taps under every full screen (sheet index, How to play, the landing) — and are fully back on the board');
+    else { failures++; console.error('screen chrome FAIL:', JSON.stringify({ onBoard, under, errs })); }
+  }
+
+  // 5. HOW TO PLAY teaches the verb above the fold and files the reference under More. The
+  //    diagram plus the four picture rows are the mental model; the settings pointer stays with
+  //    them (a rater named it as the screen's strength), and the paragraphs go behind one tap.
+  {
+    const { ctx, pg, errs } = await openR();
+    await pg.evaluate(() => window.GE_MENU.show('legend'));
+    await pg.waitForTimeout(320);
+    const cold = await pg.evaluate(() => {
+      // innerText is what is RENDERED: a row inside a closed fold reads as empty, which is the
+      // same answer a player (or a screen reader walking the page) gets
+      const vis = id => { const el = document.getElementById(id); return !!el && !el.hidden && !!el.innerText.trim(); };
+      const more = document.getElementById('legendMore');
+      return { open: more.open, summary: more.querySelector('summary').textContent.replace(/\s+/g, ' ').trim(),
+        access: document.getElementById('legendAccess').innerText.replace(/\s+/g, ' ').trim(),
+        settingsShown: vis('legendSettings'), reportRow: vis('legendReport'),
+        rows: [...document.querySelectorAll('#legend .li')].filter(el => !el.hidden).length,
+        words: document.querySelector('#legend .legend').innerText.trim().split(/\s+/).length };
+    });
+    await pg.screenshot({ path: `${shotDir}/r3-legend-cold.png` });
+    await pg.click('#legendMore > summary');
+    await pg.waitForTimeout(200);
+    const opened = await pg.evaluate(() => ({
+      settings: document.getElementById('legendSettings').innerText.replace(/\s+/g, ' ').trim(),
+      words: document.querySelector('#legend .legend').innerText.trim().split(/\s+/).length }));
+    await pg.screenshot({ path: `${shotDir}/r3-legend-more.png` });
+    await ctx.close();
+    const ok = cold.open === false && cold.rows === 4 && !cold.settingsShown && !cold.reportRow
+      && /shape as well as a colour/.test(cold.access) && /Inks/.test(cold.access) && /Drag step/.test(cold.access)
+      && /colourblind presets/.test(opened.settings) && /never changes a board, a par or a move limit/.test(opened.settings.replace('Nothing there changes', 'never changes'))
+      && cold.words <= 110 && opened.words >= cold.words + 40 && !errs.length;
+    if (ok) console.log(`how to play fold ok: a cold open is the diagram, ${cold.rows} picture rows and one shape-cue line — ${cold.words} words, down from ${opened.words} — with the inks and drag-step pointer still on it ("More · …"), and one tap on the fold restores every reference row`);
+    else { failures++; console.error('how to play fold FAIL:', JSON.stringify({ cold, opened, errs })); }
   }
 }
 

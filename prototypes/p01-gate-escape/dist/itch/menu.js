@@ -321,6 +321,12 @@
   let legendAnim = false, demoT0 = 0;
   function show(name) {
     for (const k in screens) screens[k].hidden = k !== name;
+    // Every full-page screen is drawn over a HALF-TRANSPARENT scrim, so whatever the board layer is
+    // showing ghosts through it — including the HUD's amber AD badge on the hint button, which read
+    // as a stray ad chip floating over "How to play" (B t3). The board itself is meant to show
+    // through (that is the drafting sheet lying on the drawing); the CHROME is not, and it is also
+    // untappable under a screen, so it has nothing to say there.
+    document.body.classList.toggle('screen-up', !!name);
     document.body.classList.toggle('menu-up', name === 'menu');
     if (name === 'menu') refreshMenu();
     if (name === 'levels') { refreshLog(); buildGrid(); }
@@ -615,6 +621,10 @@
     const d = disclosure(), g = (id, on) => { const el = $(id); if (el) el.hidden = !on; };
     g('legendLives', GE.livesEnabled);
     g('legendCert', d.cert); g('legendDaily', d.daily && draftReady());
+    // the FIELD REPORT is the draft's share text: it is a paragraph about CLEAN, "rescued" and a
+    // par bar for a mode the player has not been shown yet, and it was the one always-on row on a
+    // screen everything else is staged onto (C t4). It arrives with the draft it describes.
+    g('legendReport', d.daily && draftReady());
     // The approval chain is the hardest rule in the game and it lives on Sheet 4. Handing it to a
     // player who has not cleared level 1 — which is what "How to play" did, cold, from the landing
     // (t4) — is the one screen that contradicted staged disclosure. It is gated on the same derived
@@ -1330,7 +1340,13 @@
     save();
     // win-card meta: the star total ticks up once the stars have landed; the next sheet is named
     const after = starsTotal();
-    $('winNo').textContent = 'SHEET ' + String(lvl + 1).padStart(2, '0');
+    // The card's corner label. It read 'SHEET ' + the LEVEL number, so level 2 announced "SHEET 02"
+    // while the player was two clears into sheet 1 of four — the counter had nothing to do with the
+    // ten-level groupings every other surface uses, and on level 2 it arrived under a "Sheet filed!"
+    // headline and the certification reveal (all three raters, 2026-09-03). The sheet is derived the
+    // same way the grid derives it, and the level keeps its own number beside it.
+    $('winNo').textContent = 'SHEET ' + String(sheet + 1).padStart(2, '0')
+      + ' \u00b7 LEVEL ' + String(lvl + 1).padStart(2, '0');
     const nx = LEVELS[lvl + 1];
     $('winNext').innerHTML = last ? `All ${N} clear` : `Level ${lvl + 2}<small>${nx.blocks.length} blocks · par ${nx.par}</small>`;
     const total = $('winTotal');

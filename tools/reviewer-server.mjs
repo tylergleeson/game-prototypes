@@ -177,7 +177,7 @@ const body = req => new Promise(r => { let s = ''; req.on('data', c => (s += c))
 // one action (sequence may nest one level)
 async function doAction(action, raw, depth = 0) {
   switch (action.type) {
-    case 'hint': return game.hint(raw);
+    case 'hint': return game.hint(raw, view); // the view lets an adapter CHARGE the assist it hands out
     case 'inspect': return JSON.stringify(await game.inspect(view));
     case 'raw_drag': return game.rawDrag(view, raw, action);
     case 'key': return game.key(view, action.key || 'Escape');

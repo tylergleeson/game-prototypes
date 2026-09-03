@@ -113,7 +113,11 @@
   /* under the fail sheet the board rises and shrinks so the position being bet on stays fully visible
      (game.js measures and sets the transform inline: fitBoardAboveSheet) */
   #hud { transition:opacity .25s; }
-  body.menu-up #hud, body.menu-up #hudGoal, body.menu-up #hudSeq { opacity:0; pointer-events:none; }
+  /* the HUD is board chrome: it goes down under ANY full screen (the sheet index and How to play
+     are drawn over a 50%-opacity scrim, so anything left up ghosts through them — B t3's stray AD
+     chip over How to play was the hint button's badge) */
+  body.menu-up #hud, body.menu-up #hudGoal, body.menu-up #hudSeq,
+  body.screen-up #hud, body.screen-up #hudGoal, body.screen-up #hudSeq { opacity:0; pointer-events:none; }
   .modal {
     position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
     background:var(--scrim); z-index:10;
@@ -419,6 +423,14 @@
   .legend .mi { display:flex; align-items:baseline; gap:8px; font-size:13px; color:var(--dim); }
   .legend .mi .g { flex:none; width:82px; text-align:right; font-weight:800; font-size:12.5px; color:var(--ink); } /* 82px: the widest label is "Certification" at 81px — right-aligned, so every row's copy still starts on one line */
   .legend .li span { color:var(--dim); font-size:13px; }
+  /* the reference fold: a control, drawn like the sheet's other quiet rows */
+  .legend .more > .foldbody { display:flex; flex-direction:column; gap:10px; padding-top:10px; }
+  .legend .more > summary { cursor:pointer; list-style:none; border-top:1px dashed var(--line2); padding-top:8px;
+    font:600 10px/1 var(--mono); letter-spacing:.18em; color:var(--dim); text-transform:uppercase; }
+  .legend .more > summary::-webkit-details-marker { display:none; }
+  .legend .more > summary::after { content:' \203A'; display:inline-block; transition:transform .2s; }
+  .legend .more[open] > summary::after { transform:rotate(90deg); }
+  .legend .more > summary:active { transform:translateY(2px); }
   /* press-depth beat, unified: every tappable control dips on :active (cards already translateY(3)) */
   #hud button:not(:disabled):active { transform:translateY(2px); }
   .ghostbtn:active { transform:translateY(2px); background:var(--fill2); }
@@ -864,15 +876,28 @@
         <div class="li"><canvas id="symMoves" width="128" height="88"></canvas><div><b>Moves</b><span>One drag = one move. ★★★ at par · ★★ one over. Undo (↶) gives a move back; ? shows the next move.</span></div></div>
         <!-- pass 5: the approval chain. Hidden until a chained sheet exists (pass 6). -->
         <div class="li" id="liSeq" hidden><canvas id="symSeq" width="128" height="88"></canvas><div><b>Approval chain</b><span>Numbered blocks leave in order. The solid stamp is next up; the outlined ones wait.</span></div></div>
-        <div class="mi" id="legendAccess"><span class="g">Reading the board</span><span>Every block carries a shape as well as a colour — circle, triangle, diamond, star — and its gate carries the same one, so the match never depends on telling two inks apart. Under <b>Inks</b> on the sheet index or the pause card there are three colourblind presets and a custom set you pick yourself; under <b>Drag step</b> you choose how far a finger travels before a block steps a cell. Nothing there changes a board, a par or a move limit.</span></div>
-        <div class="div" id="legendMetaDiv">AROUND THE GAME</div>
-        <div class="mi" id="legendLives"><span class="g">♥ Lives</span><span>Retrying a failed level costs one (from level 6). They refill over time; a rescue saves the attempt instead.</span></div>
-        <div class="mi" id="legendDaily"><span class="g">Daily draft</span><span>One board a day, numbered from the table’s first day and the same board for every player, with its own par. A new draft appears at midnight on this device’s own clock. An attempt is resolved by the day it finishes on: if midnight passes while the board is still open, that day is filed NOT CLEARED and the new day’s draft is ready. The week has a published shape: <b id="legendCurve">Mon and Tue easy, Wed and Sun medium, Thu and Fri hard, Sat the peak</b>. Your first attempt is the one that is recorded; after it closes, the day is practice.</span></div>
-        <div class="mi" id="legendReport"><span class="g">Field report</span><span>The share text: the day and its number, whether you cleared it, and your moves against par — shown as stars and as a bar of the same number. Never how the board was solved. It ends in one token or none. CLEAN is the only award and means you used no undo, no hint and no rescue. A rescue prints instead as a plain “rescued” and adds 3 moves to the total you file, so a rescued run can never read as a clean one.</span></div>
-        <div class="mi" id="legendSurvey"><span class="g">Field survey</span><span>One sheet a week: a stamp for every day you clear a level, two contracts you pick from the four the week offers, and point marks at 3, 7, 12 and 20 (1 point per clear, +1 at par).</span></div>
-        <div class="mi" id="legendContracts"><span class="g">Contracts</span><span>Swap freely until one of them earns a mark, then the pair is set for the week. File one and you bank a weather delay (hold up to 2); file both and the sheet gets its seal.</span></div>
-        <div class="mi" id="legendStreak"><span class="g">Streak</span><span>One clear a day keeps it going. A banked weather delay covers a missed day; otherwise it simply starts again. If a day is marked <b>broken</b> — a day this build could not be played through no fault of yours — it is excused: it is neither stamped nor missed, it shows as a dot on the spine, and the streak carries straight across it. There are no accounts: your streak and your draft records are kept on this device only, so reinstalling the app starts them over.</span></div>
-        <div class="mi" id="legendCert"><span class="g">Certification</span><span>24 ★ on a sheet certifies it: a new paper for the drawing.</span></div>
+        <div class="mi" id="legendAccess"><span class="g">Reading the board</span><span>Every block carries a shape as well as a colour — circle, triangle, diamond, star — and its gate carries the same one, so the match never depends on telling two inks apart. Colourblind <b>Inks</b> and <b>Drag step</b> are under More below, and on the pause card.</span></div>
+        <!-- Everything below the diagram is REFERENCE: true, worth having, and not what a player
+             opening this screen before level 1 came for (the 2026-09-03 round, C t4 — the diagram already
+             teaches the verb, and the prose under it is what makes the screen a wall of text). It is
+             folded, not cut: one tap opens it, and it stays open for the rest of the session. -->
+        <details class="more" id="legendMore">
+          <summary>More &#183; inks, drag step, and the rest of the game</summary>
+          <!-- the fold's body is its own flex column: `display` on a <details> itself is the one
+               property WebKit has historically mishandled (a styled details can fail to collapse),
+               and this ships inside a WKWebView -->
+          <div class="foldbody">
+          <div class="mi" id="legendSettings"><span class="g">Settings</span><span>Under <b>Inks</b> on the sheet index or the pause card there are three colourblind presets and a custom set you pick yourself; under <b>Drag step</b> you choose how far a finger travels before a block steps a cell. Nothing there changes a board, a par or a move limit.</span></div>
+          <div class="div" id="legendMetaDiv">AROUND THE GAME</div>
+          <div class="mi" id="legendLives"><span class="g">♥ Lives</span><span>Retrying a failed level costs one (from level 6). They refill over time; a rescue saves the attempt instead.</span></div>
+          <div class="mi" id="legendDaily"><span class="g">Daily draft</span><span>One board a day, numbered from the table’s first day and the same board for every player, with its own par. A new draft appears at midnight on this device’s own clock. An attempt is resolved by the day it finishes on: if midnight passes while the board is still open, that day is filed NOT CLEARED and the new day’s draft is ready. The week has a published shape: <b id="legendCurve">Mon and Tue easy, Wed and Sun medium, Thu and Fri hard, Sat the peak</b>. Your first attempt is the one that is recorded; after it closes, the day is practice.</span></div>
+          <div class="mi" id="legendReport"><span class="g">Field report</span><span>The share text: the day and its number, whether you cleared it, and your moves against par — shown as stars and as a bar of the same number. Never how the board was solved. It ends in one token or none. CLEAN is the only award and means you used no undo, no hint and no rescue. A rescue prints instead as a plain “rescued” and adds 3 moves to the total you file, so a rescued run can never read as a clean one.</span></div>
+          <div class="mi" id="legendSurvey"><span class="g">Field survey</span><span>One sheet a week: a stamp for every day you clear a level, two contracts you pick from the four the week offers, and point marks at 3, 7, 12 and 20 (1 point per clear, +1 at par).</span></div>
+          <div class="mi" id="legendContracts"><span class="g">Contracts</span><span>Swap freely until one of them earns a mark, then the pair is set for the week. File one and you bank a weather delay (hold up to 2); file both and the sheet gets its seal.</span></div>
+          <div class="mi" id="legendStreak"><span class="g">Streak</span><span>One clear a day keeps it going. A banked weather delay covers a missed day; otherwise it simply starts again. If a day is marked <b>broken</b> — a day this build could not be played through no fault of yours — it is excused: it is neither stamped nor missed, it shows as a dot on the spine, and the streak carries straight across it. There are no accounts: your streak and your draft records are kept on this device only, so reinstalling the app starts them over.</span></div>
+          <div class="mi" id="legendCert"><span class="g">Certification</span><span>24 ★ on a sheet certifies it: a new paper for the drawing.</span></div>
+          </div>
+        </details>
       </div>
     </div>
   </div>

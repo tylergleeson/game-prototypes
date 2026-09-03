@@ -1409,7 +1409,12 @@ function maybeFail() {
 // "Approved", "certified" and "stamp" are the words the 24-star certification and the Sheet 4 seal
 // use. Spending them on an ordinary clear (t10: "Sheet approved!" on L2) teaches the player to skim
 // exactly the words that will later carry meaning, so the rotation stays neutral drafting flavour.
-const WIN_TITLES = ['Level clear!', 'Sheet filed!', 'Cleared to par!', 'Drawing done!', 'Checked and filed!'];
+// The word SHEET belongs to the same family and was still in the rotation: "Sheet filed!" landed on
+// level 2 — the very card the certification reveal introduces itself on — and all three raters of
+// the 2026-09-03 round read it as "you have finished a sheet of ten" two levels into the game
+// (A t15, B t9/t13). A sheet is filed when it is CERTIFIED and never by clearing one drawing on it,
+// so no title in the rotation may name one. Titles here describe THIS drawing, nothing larger.
+const WIN_TITLES = ['Level clear!', 'Squared away!', 'Cleared to par!', 'Drawing done!', 'Checked and filed!'];
 function winTitleFor(stars) {
   if (isDaily()) return dailyPractice ? 'Practice run cleared' : 'Daily draft filed!';
   const n = li + 1;
@@ -1458,10 +1463,16 @@ function win() {
   // par is the target, never "best"; the player's own best is a separate fact once one exists
   // the draft keeps no personal best: one board, one recorded attempt, no ladder to climb
   const prev = daily || test ? 0 : best[li];
+  // "perfect!" is the one superlative on the card, and it is spent only on a par clear the player
+  // made unaided. A par run steered by the hint is still a par run — the stars, which are read off
+  // the move count, are untouched — but calling it perfect is the same overclaim as CLEAN on a
+  // hinted draft (the 2026-09-03 round, B t35: "CLEAN · ★★★ · Solved in 7 moves — perfect!" after five
+  // hints). An assisted par clear states its number against par instead, and claims nothing.
+  const assisted = winUndos > 0 || winHints > 0;
   winSub.textContent = recDraft && rescued
     ? `Solved in ${moves} moves · rescue +${RESCUE_MOVES} · filed as ${filedMoves} · par ${L.par}`
     : `Solved in ${moves} move${moves === 1 ? '' : 's'}`
-      + (stars === 3 ? ' — perfect!' : ` · par ${L.par}`);
+      + (stars === 3 && !assisted ? ' — perfect!' : ` · par ${L.par}`);
   if (!daily && !test && (!prev || moves < prev)) { best[li] = moves; try { localStorage.setItem('ge_best', JSON.stringify(best)); } catch (e) {} }
   // ...and the proximity line under it: the best after this attempt against par. It used to be a
   // tail on the sentence above ("· your best 9"), printed only when the run was worse than the
@@ -2568,6 +2579,21 @@ window.GE = {
   route: findRoute,   // (bi, {ignoreSeq}?) -> the drag out, or null; respects the chain by default
   solve: solveFrom,   // reference next move from any position (bots / reviewer console)
   showHint,           // show the hint directly (skips the ad stub; the button never does)
+  // What the attempt has been helped by so far. The Daily Draft's CLEAN token is "no undo, no
+  // hint, no rescue", so these two numbers are the record's, not a debug read-out.
+  get assists() { return { undos: attemptUndos, hints: attemptHints }; },
+  // A console, bot or harness that hands the player their next move has spent an ASSIST, whether
+  // or not the tap went through the HUD button. The reviewer console's own solver was outside the
+  // record entirely: a draft steered by five of its hints still filed hints: 0 and printed
+  // CLEAN · ★★★ on the shareable field report (the 2026-09-03 round, B t35). Charging is ALL this does —
+  // nothing is drawn, nothing is shown, and a decided attempt refuses it.
+  noteAssist(kind) {
+    if (over) return false;
+    if (kind === 'hint') attemptHints++;
+    else if (kind === 'undo') attemptUndos++;
+    else return false;
+    return true;
+  },
   // programmatic drag: mirrors player physics exactly
   drag(bi, tx, ty) {
     if (over || !pos[bi]) return false;

@@ -221,6 +221,9 @@ await still('01-title-block');
 await caption(2, 'How to play — blocks, gates, stones… and everything around the game');
 await page.click('#btnLegend');
 await w(2600); // the corner-route demo animates at the top of the legend
+// the reference rows live behind the "More" fold now — open it, the way the tour's narration says
+await page.evaluate(() => { const m = document.getElementById('legendMore'); if (m) m.open = true; });
+await w(400);
 await page.evaluate(() => { const el = document.querySelector('#legend .tblock'); el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }); });
 await w(1400);
 await w(2400); // "Around the game": survey, daily draft, certification, approval chain

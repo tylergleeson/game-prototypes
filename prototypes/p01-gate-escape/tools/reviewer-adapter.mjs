@@ -261,21 +261,36 @@ top-left origin; its cells are listed absolute.`,
       // index otherwise — the same two controls live in both places.
       if (id.startsWith('ink:') || id.startsWith('step:')) {
         const kind = id.startsWith('ink:') ? 'ink' : 'step', val = id.slice(kind.length + 1);
-        const el = page.locator(`#pauseInks [data-${kind}="${val}"], #pauseDrag [data-${kind}="${val}"], #menuInks [data-${kind}="${val}"], #menuDrag [data-${kind}="${val}"]`);
-        const n = await el.count();
-        let hit = null;
-        for (let i = 0; i < n; i++) if (await el.nth(i).isVisible()) { hit = el.nth(i); break; }
-        if (!hit) return `error: ${kind} "${val}" is not on screen right now (open Levels or the pause card)`;
-        await hit.click();
-        return `tapped ${kind} ${val}`;
+        // ONE selector at a time, and only isVisible()/click() on each. The studio drives the game
+        // through a small page SHIM (tools/reviewer-lib.mjs) whose locator offers exactly those two
+        // methods — `count()`/`nth()` exist on a real Playwright Locator and nowhere else, so this
+        // branch answered every colourblind-preset tap of the 2026-09-03 round with
+        // "el.count is not a function" and all three raters filed the accessibility shelf as broken
+        // (A t36, B t41, C t33). The control itself was fine. Nothing here may reach past the shim.
+        const sels = [`#pauseInks`, `#pauseDrag`, `#menuInks`, `#menuDrag`]
+          .map(host => `${host} [data-${kind}="${val}"]`);
+        for (const sel of sels) {
+          const el = page.locator(sel);
+          let vis = false;
+          try { vis = await el.isVisible(); } catch (e) { vis = false; } // no such element on this surface
+          if (!vis) continue;
+          const r = await el.click();
+          if (r === 'missing') continue;
+          return `tapped ${kind} ${val}`;
+        }
+        return `error: ${kind} "${val}" is not on screen right now (open Levels or the pause card)`;
       }
       // the survey's contract rows are data-bound buttons, not fixed ids
       if (id.startsWith('contract:')) {
         const cid = id.slice(9);
+        // shim-safe, exactly as above: isVisible() and click(), and the click's own return value
+        // is what reports a disabled row (the shim answers 'disabled'; a real page answers nothing)
         const el = page.locator(`#surveyContracts button[data-contract="${cid}"]`);
-        if (!(await el.count()) || !(await el.first().isVisible())) return `error: contract "${cid}" is not on the sheet right now (open the Field survey first; ids come from summarize().survey.contracts)`;
-        if (await el.first().isDisabled()) return `tapped contract ${cid} — it is disabled: either it is already FILED, or the week's one post-progress swap has been used and the pair is set`;
-        await el.first().click();
+        let vis = false;
+        try { vis = await el.isVisible(); } catch (e) { vis = false; }
+        if (!vis) return `error: contract "${cid}" is not on the sheet right now (open the Field survey first; ids come from summarize().survey.contracts)`;
+        const r = await el.click();
+        if (r === 'disabled') return `tapped contract ${cid} — it is disabled: either it is already FILED, or the week's one post-progress swap has been used and the pair is set`;
         return `tapped contract ${cid}`;
       }
       if (!this.buttons[id]) return `error: unknown button "${id}"`;
@@ -324,15 +339,33 @@ top-left origin; its cells are listed absolute.`,
   },
   key(page, key) { return page.evaluate(k => { document.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true })); return 'pressed ' + k; }, key); },
 
-  hint(raw) {
+  // The console's hint is the SAME assist the HUD's ? button sells: a hint is a rewarded-ad slot in
+  // play, and on the Daily Draft any hint at all forfeits the CLEAN token. This solver used to sit
+  // outside the record, so a draft steered by five console hints still filed hints: 0 and printed
+  // CLEAN · ★★★ on the shareable field report (the 2026-09-03 round, B t35). It is now charged to the
+  // attempt through the engine (GE.noteAssist) before the line is read out, and the charge is
+  // stated in the answer so the reviewer's own narration cannot claim a clean run either.
+  async hint(raw, page) {
     if (!raw.L || raw.screens.menu) return 'No level in play.';
     const mv = solveNext(raw);
     if (!mv) return 'The solver found no solution from this position within a few extra moves — consider restarting the level.';
+    let charged = null;
+    if (page) {
+      try {
+        charged = await page.evaluate(`(() => { const GE = window.GE;
+          if (!GE || typeof GE.noteAssist !== 'function') return null;
+          const ok = GE.noteAssist('hint');
+          return { ok, hints: GE.assists ? GE.assists.hints : null, daily: GE.isDaily, practice: GE.dailyInfo ? GE.dailyInfo.practice : null };
+        })()`);
+      } catch (e) { charged = null; }
+    }
     const b = raw.L.blocks[mv.bi];
     const chain = raw.seq && raw.seq.chained ? ` (the approval chain is on: stamp ${raw.seq.next} is next out)` : '';
+    const price = !charged || !charged.ok ? ''
+      : ` [charged as hint ${charged.hints} on this attempt — in play this is a rewarded ad, and on a recorded draft it forfeits the CLEAN token]`;
     return `Designer's reference solution from here${chain}: drag block #${mv.bi} (${COLOR[b.color]}${b.seq ? `, stamp ${b.seq}` : ''})` +
       (mv.side ? ` and push it out through the ${mv.side} gate` : ` to origin (${mv.to[0]},${mv.to[1]})`) +
-      `. ${mv.remaining} drag(s) remain in that line.`;
+      `. ${mv.remaining} drag(s) remain in that line.` + price;
   },
 };
 
