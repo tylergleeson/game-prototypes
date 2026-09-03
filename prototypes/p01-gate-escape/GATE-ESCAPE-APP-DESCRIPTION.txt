@@ -1,0 +1,689 @@
+GATE ESCAPE — COMPLETE APP DESCRIPTION FOR RESEARCH
+====================================================
+Prepared 2026-09-03 against build REV 2026-09-02 · 23:43 (branch main, commit e4f705c).
+Companion to GAME-DESIGN-BRIEF.txt (which states the design thesis, constraints and
+the researcher questions from the first round). THIS document is the exhaustive layer:
+every screen, control, path, rule, number, data field, and use case as actually shipped,
+plus how the app is built, tested and reviewed — so a researcher can (a) understand the
+product in full, (b) map it against the market and state-of-the-art apps, and (c) judge
+our review/iteration process against best practice and suggest what to borrow.
+
+Where this document and the brief disagree, this one is newer and code-sourced.
+
+CONTENTS
+  0. What it is, in one breath
+  1. Who uses it — user types and use cases
+  2. The complete screen map (every screen, control, dismissal rule, copy)
+  3. Core play — rules, controls, feel, help systems
+  4. Levels — all 40, the curve, shapes, colours, the approval chain
+  5. Meta systems — stars/certification, papers, Daily Draft, Field Survey, streak,
+     staged first-run, lives (dormant), settings
+  6. Data model and determinism (what the app stores, where, and why nothing is random)
+  7. Accessibility and legibility guarantees
+  8. Monetization posture (none active) and reserved surfaces
+  9. Technical architecture — web engine, iOS shell, builds, build stamp, analytics
+ 10. How it is built, tested and reviewed — the "factory"
+ 11. Marketing and store collateral inventory
+ 12. Known gaps and open items
+ 13. Questions for the researcher
+
+
+0. WHAT IT IS, IN ONE BREATH
+----------------------------
+A single-finger block-escape puzzle drawn as an architect's blueprint. Coloured
+polyomino blocks sit on a small grid; coloured gates sit on the walls. Drag a block —
+any distance, around corners — and it escapes when it reaches a wall gate of its own
+colour that spans every lane it occupies. One drag is one move, no matter how far.
+Clear every block within the level's move limit; hit the solver-proven minimum ("par")
+for three stars. There is no clock anywhere. 40 levels in four "sheets" of ten, a new
+identical-for-everyone Daily Draft every day, one weekly meta sheet (the Field Survey),
+cosmetic certification rewards, and a first mechanic twist on Sheet 4: blocks stamped
+with approval numbers that must leave in order. Native iOS (installed via developer
+signing today; not yet on the App Store), a shareable single-file web build, no
+monetization, no accounts, no server.
+
+
+1. WHO USES IT — USER TYPES AND USE CASES
+-----------------------------------------
+1.1 Players (the product)
+- FIRST-TIME PLAYER: opens to a calm cover sheet with three taps (Play / Levels / How to
+  play) and a vignette of a block gliding out of its gate. Level 1 has one block, L1–3
+  auto-show a ghost route, and the first four levels allow four spare moves. Meta systems
+  are hidden until earned (see 5.6). Use case: understand the verb in under a minute,
+  clear a sheet in ~10 minutes.
+- RETURNING PLAYER: Continue takes them straight to the next level; from the first
+  return day the cover shows a passive status line (draft filed? survey days stamped?).
+  Use case: a 3–10 minute session — today's Daily Draft, a couple of campaign levels,
+  a survey stamp.
+- MASTERY PLAYER ("par chaser"): 3★ requires exactly optimal play; 2★ is within one of
+  par; replay-for-★★★ is offered on any non-perfect win; the live star meter shows what
+  is still attainable mid-level; undo is free. Use case: certify sheets (24★ of 30) to
+  unlock papers and the Approval stamp; beat L20 (the exam) at par.
+- DAILY PLAYER: one board a day, same for everyone, own par, one recorded attempt then
+  unlimited practice; a spoiler-free FIELD REPORT to share. Use case: appointment play
+  and light social comparison without leaderboards.
+- SHARER: copies/shares the FIELD REPORT text (system share sheet on iOS, clipboard on
+  web). It never contains the solution.
+- ACCESSIBILITY USERS: colour is never the only signal (every colour has a printed symbol
+  on blocks and gates); reduced motion (system setting or in-game toggle) shortens or
+  halves every animation; sound and haptics are independent toggles; every screen is
+  designed to be read in 3 seconds with sound off.
+1.2 Internal users (the way the product is made)
+- THE FOUNDER/LEAD (one person): makes taste and scope decisions, verifies every change
+  independently, commits, installs to the phone, owns accounts and money.
+- DEVELOPER AGENTS: AI subagents that change source under a written spec, must leave the
+  bot green, and write a report; they never commit.
+- CRITIC PERSONA ("Juno Adler"): an AI first-play reviewer that plays the real build in a
+  visible iPhone-sized window, narrates, files notes and a scored review.
+- BREAKER PERSONA ("Mara Voss"): an adversarial-QA AI that only hunts bugs (raw gestures,
+  races, persistence, exploits) and files REPRO/EXPECTED/ACTUAL reports.
+- BOTS (not agents): a headless browser bot that beats all 40 levels at par through the
+  real engine plus 109 regression checks; an in-app iOS bot verified by XCUITest.
+- MARKETING WORKERS: scripts (and an AI persona for TikTok batches) that record real
+  gameplay into tours, trailers and vertical ads; nothing is filmed by hand.
+- LATER: App Store reviewer; external playtesters via TestFlight; a researcher (you).
+
+
+2. THE COMPLETE SCREEN MAP
+--------------------------
+Every screen below lists: trigger → controls (ids in brackets for cross-reference with
+the code) → copy → dismissal rule. "Scrim" = tapping outside the sheet.
+
+2.1 COVER SHEET (the cold open; #menu)
+- Trigger: app launch; back-target from Levels and How to play.
+- Controls (exactly three, by contract): PLAY [btnPlay] whose label is "Play" on a fresh
+  install, "Continue — Level N" normally, or "Resume level N" if a level was abandoned
+  mid-play; LEVELS [btnLevels]; HOW TO PLAY [btnLegend].
+- Copy: title treatment "GATE ESCAPE" in a drafting title block; strapline "Drag every
+  block out through the gate of its color."; a stamp line [menuStamp] reading
+  "New sheet · 40 levels" (fresh) or "Level N / 40 · ★ S" plus " · D-day streak" when a
+  streak is live; a passive status line [menuStatus] (see 5.6); a build revision line
+  [menuBuild] "REV YYYY-MM-DD · HH:MM" stamped at build time.
+- On a fresh install the sheet shows a small vignette: a red block gliding out through
+  its gate (teaches the verb before the first tap).
+- Rule: the status line is a div, never a button; it appears only from the first return
+  day, states at most two finished facts, and may never carry a countdown, a call to
+  action or a loss.
+
+2.2 SHEET INDEX (level select + field log; #levels)
+- Trigger: Levels from the cover or from Pause (remembers where to return).
+- Header fields: current level, total stars.
+- DAILY DRAFT row [btnDaily] (hidden until disclosed, see 5.6): "DAILY DRAFT · 3 SEP"
+  with state READY ("First attempt is recorded"), "★★☆ FILED — Record closed · replays
+  are practice", or "NOT CLEARED · 2 of 5 out — Record closed · replays are practice".
+  Tap: READY → pre-board card (2.9); after the record closes → the result card (2.10).
+- FIELD SURVEY row [btnSurvey] (hidden until disclosed): "FIELD SURVEY · 3/7 · 9 pts",
+  a ⌖ mark at 20 points, and a "SELECT 2" badge while the week's contracts are unchosen.
+  Tap → the survey sheet (2.11).
+- LIVES row: hidden unless the dormant lives economy is flagged on (5.8).
+- LEVEL GRID: 40 tiles in four chapters — "Foundations" (1–10), "Corked" (11–20),
+  "The spike" (21–30), "Sign-off" (31–40). Each chapter header carries a certification
+  chip: "★ got/30 · N to certify" (dashed pending frame) or the reward's name once
+  certified (solid stamped frame). Tiles show cleared/star state; locked tiles are
+  disabled; the current level is outlined.
+- PAPER PICKER [menuPapers]: one swatch per paper (Cyanotype default, Sepia draft, Night
+  vellum, Whiteprint) drawn as a tiny sheet in that paper's colours; the current one is
+  outlined; locked ones are dimmed and labelled with the certification that earns them.
+  Tapping a locked swatch explains what unlocks it; tapping an unlocked one re-inks the
+  whole game instantly.
+- STAMP SHELF [menuAppr] (hidden until disclosed): the Approval stamp (Sheet 4's reward),
+  previewable before it is earned.
+- Toggles: "Sound on/off" [btnSound], "Haptics on/off" [btnHaptics] (native only).
+- RESET PROGRESS [btnReset]: two-tap arm — first tap "Tap again to erase all progress",
+  auto-disarms after 4 s; second tap erases everything (progress, survey, streak, daily,
+  papers, tips).
+- Dismissal: Back [btnLevelsBack], scrim tap, or Escape — all go back one layer.
+
+2.3 HOW TO PLAY (the drawing's legend; #legend)
+- Trigger: How to play from the cover or Pause.
+- Rows (label — copy, with animated symbol demos):
+  Block — "Slides anywhere, corners included."
+  Gate — "Same color and symbol: push through to escape."
+  Stone — "Never moves."
+  Moves — "One drag = one move. ★★★ at par · ★★ one over. Undo (↶) gives a move back;
+          ? shows the next move."
+  Approval chain (appears once Sheet 4 is reachable) — "Numbered blocks leave in order.
+          The solid stamp is next up; the outlined ones wait."
+  ♥ Lives (only when the lives flag is on) — "Retrying a failed level costs one (from
+          level 6). They refill over time; a rescue saves the attempt instead."
+  Daily draft — "One board a day, the same board for every player, with its own par.
+          The first attempt is the one that is recorded; after that the day is practice.
+          The field report you can share says how the day went, never how it was solved."
+  Field survey — "One sheet a week: a stamp for every day you clear a level, two
+          contracts you pick from the four the week offers, and point marks at 3, 7, 12
+          and 20 (1 point per clear, +1 at par)."
+  Contracts — "Swap freely until one of them earns a mark, then the pair is set for the
+          week. File one and you bank a weather delay (hold up to 2); file both and the
+          sheet gets its seal."
+  Streak — "One clear a day keeps it going. A banked weather delay covers a missed day;
+          otherwise it simply starts again."
+  Certification — "24 ★ on a sheet certifies it: a new paper for the drawing."
+- The legend also demonstrates the drag-around-corners rule with a moving symbol, and
+  the one-drag/one-move sentence is machine-checked against the engine's actual star
+  bands so copy can never drift from rules.
+- Dismissal: Back, scrim, Escape.
+
+2.4 PLAY SCREEN (the board)
+- HUD: "Level N" (or "DAILY DRAFT · 3 Sep" / "PRACTICE · NOT RECORDED"), "M moves"
+  remaining with the live star meter "★★★ par P" beneath it, the objective row (one chip
+  per colour: symbol + count of blocks still in), the NEXT ▸ ② chip on chained levels,
+  and four buttons: hint [btnHint] (with a small "AD" tag), undo [btnUndo], restart
+  [btnRestart], menu/pause [btnMenu]. On a recorded daily attempt a RECORDED chip sits in
+  the HUD.
+- The board: cyanotype paper, grid, cross-hatched blocks with corner registration marks
+  and a centred symbol, gate tabs on the walls with matching hatch + symbol, stones as
+  cross-hatched voids. Chained blocks carry a numbered revision stamp on their first
+  cell; the next-up block's stamp is solid with a chevron and a dashed on-deck ring;
+  waiting blocks' stamps are outlined at reduced alpha. On loading a chained level a
+  dashed 1→2→3 polyline draws once over the board (static under reduced motion).
+- One-shot tips (each shown once ever, toast style): "One drag can turn corners. The
+  whole route is one move." (L3); "Stones never move. Route around them." (first stone
+  level); "Everything is corked. Sometimes a block has to move twice." (first level whose
+  par exceeds its block count); "Undo is free — it gives the move back too." (first time
+  a player goes over par with work left); "Numbered blocks leave in order. The solid
+  stamp is next." (first chained level). Non-tip toast: "No way out from here — try Undo
+  or Restart." when the hint solver finds nothing.
+- Idle nudge: after 20 s without input the hint button gently animates.
+
+2.5 PAUSE SHEET (#pauseModal)
+- Trigger: the menu button; not available over the win/fail cards or during the last
+  block's exit animation.
+- Sub-line: "Level N · M moves left", or "Daily draft · 3 Sep · M moves left", or
+  "Practice · not recorded · 3 Sep · M moves left".
+- Controls: Resume, Restart level, Levels, How to play, "Sound: on/off", "Motion: on/off",
+  "Haptics: on/off" (native), a paper picker, Main menu.
+- Dismissal: scrim tap = Resume; Escape closes the deepest open card first.
+
+2.6 WIN CARD (#winModal)
+- Header "SHEET 01"-style sheet number (or "DAILY DRAFT", "PRACTICE · NOT RECORDED",
+  "TEST BOARD" for bot-injected boards); the Approval stamp inked in the corner once
+  earned.
+- Stars with a burst (three-star wins add a third burst; none under reduced motion);
+  title rotates through "Level clear!", "Sheet filed!", "Cleared to par!", "Drawing
+  done!", "Checked and filed!", with specials "Five in the drawer!" (5), "N levels
+  drafted!" (10/20), "Every level clear!" (40), "Daily draft filed!", "Practice run
+  cleared".
+- Sub-line: "Solved in M moves — perfect!" (3★) or "Solved in M moves · par P" plus
+  " · your best B" when a previous best exists.
+- Meta rows (campaign only): "Stars S / 120"; "Next: Level N+1" with its block count and
+  par; "All 40 clear" on the last.
+- Certification row: "Sheet certified" + reward name + a "Try it" button (papers) when a
+  sheet just crossed 24★.
+- Quiet NEW row (one per reveal, once ever; also survey/streak facts): e.g. stamp SEAL
+  "Survey sealed · Both contracts filed · fragment 1"; FILED "Contract filed · Clear 12
+  levels" or "Weather delay banked · 1 held"; BEST "New best streak · 6 days in a row";
+  the three disclosure reveals (see 5.6).
+- Daily block (recorded draft only): the FIELD REPORT rendered verbatim + "Share field
+  report".
+- Buttons: Next (disabled ~1.2 s to prevent double-taps), "Replay for ★★★" (hidden on a
+  perfect win or the last level).
+- Dismissal: explicit only — never scrim (it carries consequences).
+
+2.7 FAIL SHEET (#failModal, a bottom sheet over the frozen board)
+- Headline is a reading of the true position: "So close!" ONLY when exactly one block
+  remains and it is one drag from its gate; "Out of moves" when nothing escaped;
+  otherwise "Nearly there". Sub: "K of N blocks escaped — out of moves." Hint line: "The
+  last block is one drag from its gate." / "L left — one is a single drag from its gate."
+  / "L blocks left to clear." The block that could escape is ghosted on the board (state
+  truth: the engine computes it; nothing is staged).
+- First-ever failure adds a one-time teach line about the rescue.
+- Recorded-daily variant adds: "This is today's recorded attempt. The rescue keeps it
+  open — retrying, or leaving the board, files it as NOT CLEARED."
+- Buttons: RESCUE [btnRescue] "AD +3 moves · watch to continue" (daily: "· keep today's
+  record open"); RETRY [btnRetry] "Retry level" (recorded daily: "End today's attempt —
+  record NOT CLEARED").
+- Dismissal: explicit only.
+
+2.8 AD SLOT (#adModal; the simulated rewarded-ad placement)
+- Trigger: Rescue, Hint, or (dormant) life refill.
+- "AD SLOT" sheet in blueprint style: title (e.g. "Rescue") and "Watch to earn +3 moves"
+  (or "the next move"); a 3-second countdown ring; on completion an EARNED row and a
+  Close button; the static line "PROTOTYPE · NO AD IS SHOWN · FREE".
+- Rules: the grant fires exactly once, at completion; there is no Close until then; the
+  scrim is deliberately not tappable; leaving early forfeits the reward; cancel grants
+  nothing. Reduced motion steps the ring instead of sweeping it (same 3 s).
+
+2.9 DAILY DRAFT PRE-BOARD CARD (#recModal)
+- Trigger: tapping the READY draft row.
+- "DAILY DRAFT · 3 SEP" / "Today's draft" / "Same board for everyone today." / a
+  RECORDED row: "Your first attempt is the one recorded — A rescue keeps it open ·
+  retrying or leaving files the result".
+- Buttons: "Start today's draft", "Back". Scrim = Back (never Start).
+
+2.10 DAILY DRAFT RESULT CARD (#draftModal)
+- Trigger: tapping the draft row after the record closed; also reachable from the win
+  card's daily block.
+- "Draft filed" / "Draft not cleared"; sub-line with the date, cleared state and undo/hint
+  counts; Moves M/L; Route N% (won) or Blocks out K/N (lost); a RESCUED fact stamp in
+  plain ink (never celebratory) when the rescue was taken; the FIELD REPORT text verbatim.
+- Buttons: Share (primary on a win, quiet on a loss), Practice ("Play again · not
+  recorded"), Close.
+
+2.11 FIELD SURVEY SHEET (#surveyModal)
+- "WEEK 36"; sub-line "6-day streak · 3 of 7 days · 9 points" (or "No streak running")
+  plus a weather-delay note when relevant.
+- DAY SPINE: seven cells M T W T F S S with glyphs ✓ (day stamped), ~ (weather delay
+  covered it), ○ (no clear), · (to come, or before you started — dotted); a key line
+  "✓ day stamped   ~ weather delay   ○ no clear   · to come" with "(dotted = before you
+  started)" when applicable.
+- WEATHER DELAYS HELD: "1 of 2 · covers a missed day automatically" or "· file a
+  contract to bank one".
+- CONTRACTS: header "SET FOR THE WEEK" / "CHOOSE 2" / "SWAP FREE"; four rows with
+  progress bars and TAKE/DROP/FILED chips.
+- MARKS: 3 · 7 · 12 · 20 with the ⌖ at 20.
+- SEAL: "File 1 · bank a weather delay — file both · seal the week · 1/2" or "Sealed · N
+  fragments held".
+- LAST WEEK: "Last week: 21 points · 2/2 filed · sealed" or "A fresh survey sheet opens
+  every Monday."
+- Dismissal: Close, scrim, Escape.
+
+2.12 WEATHER DELAY NOTICE (#freezeModal) — shown at launch when a missed day was covered:
+"Weather delay used — survey day covered · 1 left" / Continue (scrim = Continue).
+
+2.13 OUT OF LIVES (#livesModal) — dormant unless the lives flag is on: hearts, "Next life
+in 12:40 · full in 1:03:20", "+1 life · watch to refill", "Back to menu".
+
+2.14 There is no settings screen, no account, no login, no notifications, no store.
+
+
+3. CORE PLAY — RULES, CONTROLS, FEEL, HELP
+------------------------------------------
+3.1 Board and pieces
+- Grids from 4×5 (L1) to 7×9; cells hold a block cell, a stone (immovable 1×1), or
+  nothing.
+- Shapes: 1×1, 1×2, 2×1, 1×3, 3×1, 2×2 square, and four L-triomino orientations
+  (ten shapes total).
+- Colours and symbols (never colour alone): red ● circle, cyan ▲ triangle, green ◆
+  diamond, amber ★ star. Up to four colours per level.
+- Gates: coloured tabs on the outer walls, 1–4 lanes wide, with the colour's symbol.
+3.2 The exit rule (checked cell-exactly)
+- A block exits only through a gate of its own colour, only when flush against that
+  wall, and only when the gate covers EVERY lane the block occupies. No partial or
+  misaligned exits exist in the rules.
+- Approval chain (Sheet 4): a block with a stamp number may exit only while its number
+  is the lowest still on the board. Movement is never gated — only exits. Undo restores
+  the chain automatically (the rule is derived from which blocks remain, not stored).
+3.3 Movement and the move economy
+- One finger, one verb: drag. The block walks cell-by-cell under the finger through free
+  space, turning corners; it never passes through blocks, stones or walls. Reaching a
+  valid gate mid-drag exits it. Releasing ends the move. ONE DRAG = ONE MOVE regardless
+  of distance or corners. A drag that ends where it started costs nothing.
+- Each level has a move LIMIT and a PAR (solver-proven minimum). Stars: 3 at ≤ par
+  (i.e. exactly optimal — par cannot be beaten), 2 at par+1, 1 otherwise. The HUD star
+  meter shows the stars still attainable given moves spent and blocks left.
+- Limits: par+4 on L1–4, par+3 on L5–10, par+2 from L11 onward — with one exception:
+  L31–32 par+4 and L33–34 par+3 while the approval chain is being taught; par+2 again
+  from L35. Daily drafts are always par+3.
+3.4 Help systems
+- UNDO: one step, refunds the move, restores the whole board (and the chain), free and
+  unlimited. Using it ends the exit pitch-chain.
+- HINT ("?"): the in-engine solver computes the next optimal move and ghosts its exact
+  drag route (or parking spot) on the blueprint until the board changes. It respects the
+  approval chain. It is behind the ad slot. If no solution exists from here, the toast
+  says so.
+- RESCUE: on failure, +3 moves once per attempt via the ad slot; the board state is
+  preserved (never re-dealt).
+- RESTART: resets the level; on a recorded daily attempt it closes the record as NOT
+  CLEARED (the fail sheet says so first).
+3.5 Feel (all timings from the engine)
+- Pickup: a 70 ms press dip; per-cell haptic ticks while walking (rate-limited); a damped
+  snap on release.
+- Exit choreography: the rendered block walks the exact cell path the logic took (34 ms
+  per cell, catch-up bounded at 260 ms so a long flick never lags the finger); at the
+  aligned cell the gate's lanes and the block's footprint flash (0.34 s, ink-coloured per
+  paper), a 90 ms held beat, then the flight with a particle burst, a screen shake and a
+  rising pitch — consecutive exits within ~4 s climb in pitch (a combo feel with no score).
+  Reduced motion: 13 ms/cell, 100 ms lag, 40 ms hold, 0.2 s flash, half the particles,
+  no shake.
+- Sound kinds: tap, exit (three-variant climbing), hint, cert, gate (a gate "closes"
+  with a flash when its last block leaves), star, undo, win, fail. Haptic beats on iOS:
+  pick, step, settle, exit (a Core Haptics "whoosh"), win, low (moves), fail.
+
+
+4. LEVELS — ALL 40, THE CURVE, THE CHAIN
+----------------------------------------
+4.1 The table (level: board / blocks / stones / colours / par / limit / chain)
+Sheet 1 "Foundations"
+ 1: 4×5 / 1 / 0 / 1 / 1 / 5      2: 4×5 / 2 / 0 / 2 / 2 / 6      3: 5×6 / 3 / 0 / 1 / 3 / 7
+ 4: 5×7 / 4 / 0 / 2 / 4 / 8      5: 5×7 / 4 / 1 / 2 / 4 / 7      6: 6×8 / 5 / 1 / 2 / 6 / 9
+ 7: 6×8 / 5 / 0 / 2 / 5 / 8      8: 6×8 / 6 / 0 / 3 / 6 / 9      9: 6×8 / 6 / 0 / 3 / 6 / 9
+10: 6×8 / 6 / 0 / 3 / 7 / 10
+Sheet 2 "Corked"
+11: 6×8 / 6 / 2 / 3 / 6 / 8     12: 6×8 / 6 / 2 / 3 / 7 / 9     13: 6×8 / 6 / 2 / 3 / 7 / 9
+14: 6×8 / 5 / 1 / 3 / 5 / 7     15: 6×8 / 6 / 1 / 3 / 7 / 9     16: 6×8 / 6 / 1 / 3 / 7 / 9
+17: 7×9 / 7 / 2 / 4 / 8 / 10    18: 6×8 / 7 / 2 / 4 / 9 / 11    19: 6×8 / 7 / 2 / 4 / 9 / 11
+20: 6×7 / 7 / 2 / 4 / 10 / 12   ← THE EXAM (only 6×7 board; 6 of 7 blocks corked)
+Sheet 3 "The spike"
+21: 6×8 / 6 / 1 / 3 / 6 / 8     ← relief (only board on the sheet with no deadlock)
+22: 6×8 / 6 / 2 / 3 / 7 / 9     23: 7×9 / 7 / 2 / 4 / 8 / 10    24: 6×8 / 7 / 2 / 4 / 9 / 11
+25: 6×8 / 7 / 2 / 4 / 9 / 11    26: 7×9 / 7 / 2 / 4 / 8 / 10    27: 6×8 / 7 / 2 / 4 / 9 / 11
+28: 6×8 / 7 / 2 / 4 / 9 / 11    29: 7×9 / 7 / 3 / 4 / 8 / 10    30: 6×8 / 7 / 2 / 4 / 9 / 11
+Sheet 4 "Sign-off" (approval chains)
+31: 5×7 / 4 / 0 / 2 / 4 / 8 / chain 2 (teaching: the chain matches the natural order)
+32: 6×8 / 5 / 0 / 3 / 6 / 10 / chain 2   33: 6×8 / 6 / 1 / 3 / 7 / 10 / chain 3
+34: 6×8 / 6 / 1 / 3 / 7 / 10 / chain 3   35: 6×8 / 6 / 2 / 4 / 8 / 10 / chain 3
+36: 7×9 / 7 / 1 / 4 / 8 / 10 / chain 4   37: 7×9 / 7 / 2 / 4 / 9 / 11 / chain 3
+38: 7×9 / 7 / 2 / 4 / 9 / 11 / chain 4   39: 6×8 / 7 / 2 / 4 / 10 / 12 / chain 4
+40: 6×8 / 7 / 2 / 4 / 10 / 12 / chain 4
+4.2 How the curve is shaped
+- Difficulty is measured as par minus block count — the drags the best line spends
+  repositioning rather than clearing. L16–30 runs 1 1 2 2 3 0 1 1 2 2 1 2 2 1 2: L20 is
+  the strict local maximum (an insight level, not a bigger pile: the only 6×7 board, six
+  of seven blocks corked at the opening, two colours queueing on one edge), L21–22 are
+  relief, L23–25 a second rise cresting below the exam, L26–30 recombine taught ideas.
+  The bot asserts this profile so a future retune cannot flatten it.
+- Introduction schedule: one block (L1) → two colours (L2) → longer blocks (L3–4) →
+  stones (L5) → a third colour (L8) → corking/"move twice" (Sheet 2) → L-shapes and
+  squares mid-teens → a fourth colour and 7×9 boards (L17+) → approval chains (L31+),
+  chain length 2 → 3 → 4, and the chain's cost in extra moves rising from 0 (teaching)
+  to +3 by L40.
+- Every level is generated by a spec (board size, colours, shapes allowed, block/stone
+  counts, gate slack, required excess, structural flags such as "corked" or "shared
+  side") and accepted only if the solver proves it solvable, its par lands in the spec's
+  band, its hint cost stays under a latency ceiling (so the in-game hint answers in
+  < ~150 ms on a phone), and — for chained levels — the chain genuinely costs moves
+  versus the unchained board. Per-level seeds mean retuning one level leaves every other
+  level byte-identical (the bot pins hashes of L1–15 and L16–30 separately).
+
+
+5. META SYSTEMS
+---------------
+5.1 Stars and Sheet Certification
+- Each level pays up to 3★; a sheet holds 30. At 24★ a sheet is CERTIFIED (the chapter
+  chip flips from a dashed pending frame to a solid stamped frame; a "cert" sound; the
+  win card shows "Sheet certified" + the reward).
+- Rewards: Sheet 1 → Sepia draft paper; Sheet 2 → Night vellum; Sheet 3 → Whiteprint;
+  Sheet 4 → the Approval stamp (a cosmetic seal inked on every win card thereafter).
+  Deterministic and previewable; the word "chest" was retired because it implies
+  randomness.
+5.2 Papers (themes)
+- Four papers re-ink the entire drawing (canvas and chrome) through tokens: Cyanotype
+  (default), Sepia draft, Night vellum, Whiteprint. Every surface — scrims, shadows,
+  legend rules, HUD chips, the alignment flash — is tokenised and machine-checked per
+  paper for contrast floors (≥ 4.5:1 on key chrome). Selected from the sheet index or
+  the pause sheet.
+5.3 Daily Draft
+- One board per calendar day, identical for every player, precomputed and
+  solver-verified: 365 rows shipped starting 2026-09-01 (19.7 KB), seeded from the date
+  string, with a weekday rhythm — Mon/Tue easy (6×8, 2 colours, 4 blocks), Wed/Sun mid
+  (3 colours, 5 blocks, 1 stone), Thu/Fri hard (6 blocks, 2 stones), Sat peak (7×9, 4
+  colours, 7 blocks). Limit is always par+3.
+- Append-only guarantee: a lock file hashes every row up to today; regenerating the
+  table aborts if any past row would change. Past a table's end, the runtime maps the
+  date onto a verified row rather than generating anything.
+- Play rules: the draft row appears after the third campaign clear. Tapping READY shows
+  the pre-board card stating that the first attempt is the recorded one. The record
+  CLOSES on the first resolution: a win, or a failure resolved by Retry/leaving the board
+  (the rescue keeps the attempt open and is recorded as a fact). Afterwards the day is
+  PRACTICE · NOT RECORDED forever (HUD, pause, win card all say so). Drafts never touch
+  campaign progress, stars, the unlock pointer, certification or the Continue CTA (a
+  regression check proves byte-identical campaign state before/during/after).
+- FIELD REPORT (shareable, spoiler-free). Format:
+    GATE ESCAPE · FIELD REPORT
+    3 Sep 2026 · CLEARED
+    ★★☆
+    ■■■■■■■□
+    8 moves / par 7 · 88% route
+    undo 0 · hint 0
+  The bar is par filled cells then (moves − par) open cells, capped at 20 with "+n";
+  losses show "NOT CLEARED" with blocks out instead of the bar; "· rescued" is appended
+  as a fact. Only the codepoints ★ ☆ ■ □ · plus ASCII are allowed (pinned by a check),
+  and the text never contains coordinates or a move list — a rejected design was a
+  per-move exit/park grid, which would leak the optimal line on a global board.
+- Delivery: iOS share sheet → clipboard → a selectable text box, in that fallback order.
+5.4 Field Survey (the one weekly meta sheet)
+- Replaces the earlier daily quests + streak card + weekly ladder with one surface.
+- The week (ISO week, Monday start) deterministically offers 4 of these 8 contracts:
+  Clear 12 levels · Clear 20 levels · Earn 30 stars · Earn 45 stars · Clear 8 levels at
+  par · Clear 5 levels without undo · Clear 8 levels without hints · Clear 60 blocks.
+  The player takes 2; swapping is free until a taken contract earns progress, then the
+  pair is set for the week.
+- Day spine: any win (campaign or draft) stamps today.
+- Points and marks: 1 point per clear, +1 at par; marks at 3, 7, 12, 20.
+- Filing one contract banks a WEATHER DELAY (hold up to 2); filing both SEALS the week
+  and yields a fragment (a collectible count).
+- Missed day: if a delay is banked it is spent automatically and stamped "~" on the
+  spine (a launch notice says so); with none banked the streak simply restarts — no
+  modal, no ask, no repair ad.
+- Week rollover keeps only the "last week" line. Existing saves migrated once from the
+  old quest/ladder keys; the streak record itself was never altered.
+5.5 Streak
+- Consecutive days with at least one clear; shown on the cover stamp line and the survey
+  header; best-ever kept; "New best streak" surfaces as a quiet win-card row. There is no
+  streak repair purchase or ad (deleted on purpose).
+5.6 Staged first-run (progressive disclosure)
+- The sheet index opens bare. Reveals are derived from progress, not stored flags:
+  Sheet Certification (+ paper picker) after 2 clears; Daily Draft after 3; Field Survey
+  after 5 — with the EASIEST offered contract preselected as a worked example (ranked by
+  expected clears; never a contract that can score zero on a clear). Each reveal
+  announces itself exactly once, as a quiet NEW row painted with the win card:
+  "Sheet certification · 24 ★ on a sheet earns its paper", "Daily draft · One board a
+  day, the same for everyone", "Field survey · A week to fill in · one contract taken".
+- From the first return day the cover carries the passive status line (≤ 2 facts:
+  "Today's draft is filed" · "3 of 7 survey days").
+- First failure teaches the rescue once. The approval-chain legend row appears once
+  Sheet 4 is reachable.
+5.7 Lives (dormant, flag-gated)
+- Shipped OFF by default after the research round. When enabled (?lives=1 or a flag in
+  local storage): 5 lives, L1–5 free, a failed retry from L6 costs one, the rescue
+  preserves the attempt, one life refills per 25 minutes, full refill via the ad slot, a
+  hearts row in the HUD and sheet index, an out-of-lives card. Fully regression-tested
+  in both states.
+5.8 Settings and toggles
+- Sound, Haptics (native), Motion (reduce animations) — each persisted; the system
+  reduce-motion preference is also honoured. Reset progress (two-tap). No account, no
+  cloud save, no notifications.
+
+
+6. DATA MODEL AND DETERMINISM
+-----------------------------
+- Everything lives in the device's local storage (WebView localStorage on iOS):
+  ge_prog {u unlock pointer, s[] stars per level, skin, skins[], appr, seen[], rv[]
+  reveals played, d0 first-clear date} · ge_level (resume) · ge_best (best per level) ·
+  ge_streak {len, best, lastDate, freezes, marks[]} · ge_survey {week, offered[],
+  chosen[], prog{}, filed[], days{}, delays[], pts, ms[], seal, frags, last} ·
+  ge_daily {cur{date,state,moves,par,stars,undos,hints,rescued,cleared}, practice,
+  hist[≤30]} · ge_sound · ge_haptics · ge_motion · ge_tips (one-shot tips shown) ·
+  ge_stats (event counters) · ge_flags (dormant systems) · ge_lives · ge_iid (anonymous
+  install id for the disabled beacon).
+- Nothing is random at runtime: levels and dailies are static verified data; contract
+  offers are seeded from the week; the only randomness is particle decoration.
+- The engine exposes a test surface (window.GE / GE_MENU: read state, act through the
+  finger's code path, override the clock, load any level/daily/test board, ask the
+  solver) that bots and reviewer personas drive — the same hooks the player's finger
+  ultimately calls.
+
+
+7. ACCESSIBILITY AND LEGIBILITY GUARANTEES (hard rules)
+-------------------------------------------------------
+- 3-second sound-off legibility of every screen.
+- Colour never carries meaning alone: symbols on blocks and gates; certification states,
+  next-up stamps and paper swatches all differ by shape or fill, not hue.
+- Everything the player can act on has solid fill plus outline.
+- Reduced motion (system or toggle) shortens or halves every animation; nothing is
+  skipped that carries information (the alignment flash still shows, briefly).
+- Contrast floors per paper are machine-checked; text minimum sizes are enforced.
+- One verb, no mid-play chrome, no timers anywhere.
+
+
+8. MONETIZATION POSTURE
+-----------------------
+Nothing is for sale and no real ads run. Reserved surfaces already built as free
+simulated ad slots: rescue (+3 moves at failure), hint (the next move), life refill
+(dormant). Hard rules for whenever money ships: no celebratory feedback on a purchase
+event; every currency grant/spend gets a ledger entry and any transaction UI shows
+opening balance, cost, reward, closing balance; no win language on a net-negative
+outcome; paid random rewards are permanently off the roadmap. The research round's
+recommended launch model (not built): rewarded rescue + rewarded hint + a one-time
+"Supporter Edition" (remove forced ads) + fixed cosmetic paper folios; later paid
+expansion sheets. Deferred: fail packs, ad-skip tickets, subscriptions, passes.
+
+
+9. TECHNICAL ARCHITECTURE
+-------------------------
+- Engine: zero-dependency HTML + canvas JavaScript (index.html, game.js ≈ engine,
+  menu.js ≈ every screen outside the board, levels.js, dailies.js, beacon.js). No build
+  step for development; three build targets: a single self-contained HTML file (used for
+  the private shareable artifact), an itch.io zip, and app/www (installable PWA with a
+  service worker + the Capacitor web directory).
+- iOS: Capacitor shell (SwiftPM, no CocoaPods) around a WKWebView, with a native
+  HapticsDriver (UIKit generators + one Core Haptics pattern), a launch-argument bot
+  bridge (-autoplay runs the in-app bot and mirrors its status into an accessibility
+  label), and a studio bridge (-studio <url>: the app polls a local console for
+  JavaScript to run so reviewer personas can drive the real app in the Simulator).
+  Privacy manifest and usage strings included. Installed to the founder's iPhone by
+  developer signing (wireless once paired); TestFlight/App Store pending a unique store
+  name ("Gate Escape" is taken; candidate "Gate Escape: Blueprint Puzzle").
+- Build stamp: every build writes build-info.js with the local date-time; the cover
+  sheet shows it as "REV YYYY-MM-DD · HH:MM" so any install or artifact identifies its
+  build at a glance.
+- Analytics: an anonymous batched beacon exists but ships disabled (BEACON_URL empty →
+  the bot asserts zero network requests across a full run). Event catalogue when
+  enabled: session_start, heartbeat (60 s while visible), level_start, win, fail,
+  restart, retry, undo, hint, hint_none, hint_nudge, block_exit, seq_refused,
+  rescue_offer_tap, rescue_used, ad_start, ad_done, replay, skin_select, cert_earned,
+  streak_day, survey_day, survey_point, survey_mark, survey_seal, contract_select,
+  contract_preselect, contract_filed, weather_delay_used, survey_migrated, daily_enter,
+  daily_confirm, daily_confirm_back, daily_started/won/lost/practice, daily_report,
+  daily_share, daily_shared, ftue_reveal, lives_* (dormant). No device identifiers, no
+  third-party SDKs. Planned endpoint: a tiny collector on the founder's other product's
+  API; missing today: a streak-lapse event.
+
+
+10. HOW IT IS BUILT, TESTED AND REVIEWED (the "factory")
+-------------------------------------------------------
+This is the part we most want benchmarked. One founder plus AI agents in fixed roles,
+with machine verification as the gate for every change.
+10.1 Content pipeline
+- tools/gen-core.mjs holds the ONE tool-side copy of the rules (shapes, movement, exit,
+  chain), the generator and the breadth-first solver; generate.mjs holds the 40-level
+  curve spec + per-level seeds; solve-paths.mjs records optimal action replays
+  (solutions.json). generate-dailies.mjs produces the year of drafts with the lock.
+  Regenerating with unchanged specs is byte-identical (asserted).
+10.2 The commit gate
+- node tools/playtest.mjs: a headless Chromium bot replays every level's optimal solution
+  through the real engine and asserts moves/limit/par per level, then runs 109 named
+  regression checks — one per shipped feature or fixed bug — covering star bands, the
+  limits schedule, the sawtooth profile, certification (4 sheets), papers and contrast,
+  undo/rescue interplay, hint solver + latency, exit-glide legality (0 illegal frames),
+  reduced motion, all tips, the ad slot's grant-only-on-completion rule, scrim/Escape
+  dismissal rules, the landing's exactly-3-interactive-elements contract, staged
+  disclosure walk with a real day+1 reload, survey roll/select/lock/migration/spine/
+  delays/seal/rollover, daily determinism across two browser contexts, record-once,
+  loss/rescue semantics, share-text regex + codepoint allowlist + spoiler assertion,
+  par replay of sampled drafts, table fallback, lock hash, bundle size, approval-chain
+  rule checks (illegal exit refused, chain advance, undo restores order, hint legality)
+  plus a rule-parity oracle (200 random reachable positions compared engine-vs-tools:
+  zero mismatches), the fail-headline bands on purpose-built boards, "bundles fresh"
+  (byte-exact staleness check of all three build outputs), the beacon-off no-network
+  assertion, and store-screenshot capture. Runtime ≈ 2 minutes.
+- tools/playtest-ios.sh: rebuilds app/www, syncs the shell, runs an XCUITest that launches
+  the app with -autoplay; the in-app bot dismisses any launch notice, plays all 40
+  levels, exercises the rescue, and reports BOT PASS 40/40; screenshots are exported;
+  simulators are shut down.
+- A change ships only when both are green; the lead re-runs the web bot independently
+  before every commit and reads the new screenshots.
+10.3 Personas and the review loop
+- A local studio console drives the real build (Chromium frame or the iOS Simulator) and
+  exposes a tiny API: look (state + screenshot), say (narration + a note in a fixed
+  schema: area, severity, text), act (drag/tap/hint/wait; for the breaker also raw
+  gestures, tap bursts, sequences, key events, reload, inspect), end (files review.md,
+  notes.json, log.md).
+- CRITIC sessions: first-play reviews against the hybrid-casual bar, budgeted by level
+  range or minutes, run singly or three in parallel on identical Simulator copies laid
+  out side by side, each with its own commentary panel.
+- BREAKER sessions: adversarial QA with a written attack plan (input abuse, timing races,
+  state consistency, economy exploits, persistence, every screen's every button).
+- DEVELOPER PASS: one pass consumes every report: triage each note DO NOW / DESIGN
+  CHANGE / SKIP (with reasons), reproduce through the hooks before fixing, fix root
+  causes, add a regression check per fix, verify with both bots, write dev-report.md;
+  the lead verifies, commits, republishes.
+- Research → rules: external research is turned into an audit table, then into
+  bright-line rules in the repo's instructions file so later passes cannot regress them.
+10.4 A worked example: the research round (2026-09-02)
+- Input: your first report. Output, in one evening: 9 passes (tooling refactor with a
+  byte-identical proof; lives off + certification rename; Field Survey merge with
+  migration; Daily Draft engine + data; staged first-run + draft UI; approval-chain
+  engine + rendering; Sheet 4 generation with hint-latency gating; the sawtooth reshape
+  with tighter limits; collateral + iOS bot) → a critic session (7/10; 20 notes) → a
+  developer pass (17 fixed, 1 design change, 1 skipped with measured evidence, 1
+  deferred pending data) → fresh install to the founder's phone. Cross-checks between
+  agents caught five integration bugs before commit; the personas' "not reproducible"
+  verdicts were backed by measurements, not opinion. Regression checks grew from 68 to
+  109.
+10.5 Model economics
+- Lead on the top model; developers/personas on the mid tier; exploration and documents
+  on the light tier; escalate a failed pass one tier up rather than loop.
+
+
+11. MARKETING AND STORE COLLATERAL (all generated from real gameplay)
+--------------------------------------------------------------------
+- Videos: feature tour (3:19, 17 chapters), promo cuts 30 s / 60 s / 2 min (narrated;
+  three lines await re-recording after the round), seven native 9:16 vertical captures
+  (asmr-L8, chain-L31, day1, day7, fail-retry, legend-L3, solve-L14).
+- TikTok: a hook library (58 hooks, retired ones struck through), 20 scripted concepts,
+  a testing cadence, a playable-ad spec, two rendered batches of five with manifests and
+  performance templates.
+- App Store kit: name candidate "Gate Escape: Blueprint Puzzle", subtitle "Drag blocks
+  out, one move each", description, keywords, six 6.9" and six 13" screenshots (L1,
+  L12, L12-win, L22, L22-win, fail-offer); an itch.io page.
+- The 30 s promo's first ten seconds deliberately show a corner-turning one-drag route,
+  "★★★ AT PAR · AND THERE IS NO CLOCK", and the Sheet-4 out-of-turn park, closing on
+  "40 MACHINE-VERIFIED LEVELS · NO CLOCK" — the research's three asks.
+
+
+12. KNOWN GAPS AND OPEN ITEMS
+-----------------------------
+- No live player telemetry yet (beacon disabled; no store release): all difficulty and
+  retention tuning is design convention + solver par + AI-persona play.
+- Certification threshold (24/30) is unmeasured; a proposal to move it to 21 waits on a
+  real star distribution.
+- Three narration lines for the trailers need re-recording.
+- Streak-lapse telemetry missing; a solver performance win identified but not taken.
+- TestFlight/App Store blocked only on the listing name; no external humans have played
+  the current build yet.
+- Colour-cycling gates, closing gates, seasonal sheets, leaderboards, community levels
+  and all monetization are explicitly deferred.
+
+
+13. QUESTIONS FOR THE RESEARCHER
+--------------------------------
+MARKET
+Q1. Given the full feature map above, which current apps are the closest analogues on
+    each axis — core verb (free-routing block escape), meta (daily identical puzzle +
+    weekly contracts + certification cosmetics), and posture (no timer, no lives, no
+    randomness) — and what do their public metrics say about each axis?
+Q2. Which features in state-of-the-art casual puzzle apps (2025–2026) would slot into
+    this design without breaking section 7's guarantees or the no-randomness contract —
+    ranked by expected retention value for a solo developer?
+Q3. Daily-puzzle design: what do the best implementations (Wordle-class dailies, NYT
+    Games, Puzzmo, Linkedin games, etc.) do about first-attempt recording, practice
+    modes, spoiler-safe sharing, and archive access that we should adopt or avoid?
+Q4. Weekly contract/"choose 2 of 4" systems: evidence on choice-driven weekly goals vs
+    fixed daily quests for retention and perceived autonomy.
+Q5. The approval-chain mechanic: precedents for order-constrained clearing in casual
+    puzzles, and evidence on how far a rule-changing sheet can go before comprehension
+    drops.
+REVIEW PROCESS (section 10)
+Q6. How does our verification stack (solver-proven levels, 109 regression checks, an
+    in-app iOS bot, AI critic/breaker personas, one developer pass per round) compare
+    with how best-in-class studios test and tune? What do they do that we don't —
+    e.g. telemetry-driven difficulty tuning, funnel instrumentation standards, cohort
+    A/B on level order, human playtest panels, accessibility audits, crash/ANR gates,
+    LiveOps cadence, release trains?
+Q7. What is state of the art for AI-assisted QA and playtesting in games today
+    (automated agents, synthetic players, difficulty predictors, UX heuristics
+    checkers)? Which tools or papers should we look at, and which of our checks are
+    naive by comparison?
+Q8. What telemetry event model and KPIs would a top studio consider the minimum for a
+    soft launch of a game like this (beyond our section 9 catalogue), and what
+    thresholds mark "kill", "iterate", "scale"?
+Q9. Persona reviews: how do experienced studios structure heuristic/expert review so
+    findings are reproducible and prioritised? Is our note schema (area, severity,
+    text; REPRO/EXPECTED/ACTUAL for bugs) missing anything that makes triage better?
+Q10. What would you change about the ORDER we iterate — research → rules → passes →
+    critic → developer pass — for the next cycle, and what should the next cycle's
+    single most important measurement be?
+
+Attach: GAME-DESIGN-BRIEF.txt (thesis, constraints, lineage). The playable web build
+and a TestFlight invite are available on request.
