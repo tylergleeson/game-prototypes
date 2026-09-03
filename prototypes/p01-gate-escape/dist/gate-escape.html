@@ -35,6 +35,12 @@
   /* the draft's one-recorded-attempt rule, stated on the board for as long as it is true */
   #hud .lvl .rec { display:inline-block; margin-top:3px; font:700 9px/1 var(--mono); letter-spacing:.16em;
                    color:var(--amber-ink); border:1px solid var(--amber-ink); padding:3px 5px 2px; }
+  /* the tough-one stamp (round 2 M1): a drafting note on the three boards the estimator says a
+     noisy player genuinely stalls on. Plain ink on the paper, the same weight as RECORDED --
+     it is a fact about the board, not a warning and not an apology. */
+  #hud .lvl .tough { display:inline-block; margin-top:3px; font:800 9px/1 var(--mono); letter-spacing:.16em;
+                     color:var(--ink); border:1px dashed var(--line2); padding:3px 5px 2px; }
+  #hud .lvl .tough small { display:block; margin-top:2px; font:600 8px/1 var(--mono); letter-spacing:.1em; color:var(--dim); text-transform:none; }
   /* moves = the score: counter on top, the stars this pace still earns underneath */
   #hud .moves { position:relative; text-align:center; font-weight:800; font-size:18px; line-height:1.05; transition:color .25s; }
   #hud .moves .meter { display:block; font:600 11px/1 var(--mono); letter-spacing:.06em; color:var(--dim); margin-top:3px; white-space:nowrap; }
@@ -125,6 +131,10 @@
   @keyframes starin { from { transform:scale(.6); opacity:0; } }
   .spark { position:absolute; width:7px; height:7px; border-radius:50%; pointer-events:none; } /* burst host: any position:relative parent (star row, certification row, sheet header) */
   /* win-card meta: running star total + what comes next, ruled off like a title-block field row */
+  /* the proximity line: the player's own filed best against par, on the win card and the fail
+     sheet. Monospaced because it is two numbers, dim because it is a footnote to the result. */
+  .card p.prox { font:700 12px/1.3 var(--mono); letter-spacing:.06em; color:var(--dim); margin:-6px 0 12px; }
+  .modal.sheet .card p.prox { margin:-2px 0 10px; }
   .card .meta { display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--line2); margin:0 0 14px; }
   .card .meta > * { padding:7px 6px 8px; border-right:1px solid var(--line2); }
   .card .meta > :last-child { border-right:0; }
@@ -247,6 +257,23 @@
   .papers .cap.lock { color:var(--dim); font-weight:600; }
   .card .papers { margin:8px 0 0; padding:8px 10px; }
   .card .papers .cap { font-size:12px; }
+  /* ---- accessibility shelf (round 2 M1): ink presets, the four-ink custom picker and the
+     control-sensitivity step. Built on the paper picker's own row so the sheet index and the
+     pause card gain one more shelf rather than a new kind of surface. ---- */
+  .papers .ink { position:relative; width:30px; height:30px; border-radius:3px; cursor:pointer; padding:0; border:1.5px solid var(--line2);
+                 background:var(--fill); display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; overflow:hidden; }
+  .papers .ink i { display:block; }
+  .papers .ink.on { outline:2px solid var(--amber-ink); outline-offset:2px; }
+  /* the preset is named in the caption, but a shelf of four coloured squares needs the shape cue
+     the board itself uses -- so each swatch carries the palette's initial in ink */
+  .papers .ink b { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+                   font:800 11px/1 var(--mono); color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.75); }
+  .papers .pick { display:flex; gap:5px; align-items:center; }
+  .papers .pick input[type=color] { width:26px; height:26px; padding:0; border:1.5px solid var(--line2); border-radius:3px; background:none; cursor:pointer; }
+  .papers .step { display:flex; gap:5px; }
+  .papers .step button { font:700 11px/1 var(--mono); letter-spacing:.08em; padding:7px 8px; border:1.5px dashed var(--line2);
+                         background:none; color:var(--ink); border-radius:4px; cursor:pointer; }
+  .papers .step button.on { border-style:solid; border-color:var(--amber-ink); color:var(--amber-ink); }
   /* THE APPROVAL STAMP — Sheet 4's certification reward (pass 6), the sign-off sheet's own mark. It is a cosmetic and only a
      cosmetic: a stamp in the corner of the win card, nothing gated behind it, no new paper and so
      no new theme tokens. Pending and earned differ in SHAPE, never in colour alone — an empty
@@ -360,6 +387,13 @@
     background:repeating-linear-gradient(45deg,transparent 0 4px,var(--lock-hatch) 4px 5px);
   }
   .tile:not(.locked):active { transform:scale(.94); }
+  /* the tough-one tile (round 2 M1): a drafting note stamped across the bottom of the three
+     boards the estimator says a noisy player stalls on. A dashed rule and plain ink — it is a
+     fact about the board, and turning it amber would make it read as a reward or a warning. */
+  .tile.tough { border-style:dashed; }
+  .tile .tg { position:absolute; left:0; right:0; bottom:2px; font:800 7px/1 var(--mono); letter-spacing:.03em; color:var(--ink); opacity:.72; }
+  .tile { position:relative; }
+  .tile.locked .tg { display:none; }
   .foot { display:flex; justify-content:space-between; align-items:center; margin-top:14px; color:var(--dim); font-size:12px; }
   .foot button { background:none; border:0; color:var(--dim); text-decoration:underline; font:600 12px system-ui; cursor:pointer; }
   .foot button.arm { color:var(--red-ink); }
@@ -527,7 +561,7 @@
 </style>
 
   <div id="hud">
-    <div class="lvl"><div id="hudLevel">Level 1</div><span class="rec" id="hudRec" hidden>RECORDED</span><div class="hearts" id="hudLives" hidden aria-label="Lives"></div></div>
+    <div class="lvl"><div id="hudLevel">Level 1</div><span class="rec" id="hudRec" hidden>RECORDED</span><span class="tough" id="hudTough" hidden>TOUGH ONE</span><div class="hearts" id="hudLives" hidden aria-label="Lives"></div></div>
     <div class="moves" id="hudMovesBox"><span id="hudMoves">0</span> <span id="hudUnit">moves</span><span class="meter" aria-label="Stars at this pace"><span id="hudMeter"><span>★</span><span>★</span><span>★</span></span><em id="hudPar">par 1</em></span></div>
     <div class="right">
       <button id="btnHint" aria-label="Hint: show the next move (rewarded ad)" disabled><span class="ad">AD</span>?</button>
@@ -550,6 +584,7 @@
       <div class="stars" id="winStars" aria-live="polite"></div>
       <h2 id="winTitle">Level clear!</h2>
       <p id="winSub"></p>
+      <p class="prox" id="winProx" hidden></p>
       <div class="meta" id="winMeta">
         <div><span class="k">Stars</span><span class="v" id="winTotal">0 / 120</span></div>
         <div><span class="k">Next</span><span class="v" id="winNext">Level 2</span></div>
@@ -580,6 +615,7 @@
       <h2 id="failTitle">Out of moves</h2>
       <p id="failSub"></p>
       <p class="hint" id="failHint"></p>
+      <p class="prox" id="failProx" hidden></p>
       <p class="teach" id="failTeach" hidden></p>
       <!-- the recorded draft only: what the two buttons cost, said before either is pressed -->
       <p class="teach rec" id="failDaily" hidden></p>
@@ -625,6 +661,8 @@
       <button class="ghost" id="btnPauseMotion">Motion: on</button>
       <button class="ghost" id="btnPauseHaptics" hidden>Haptics: on</button>
       <div class="papers" id="pausePapers" aria-label="Paper"><span class="k">Paper</span><div class="sw"></div><span class="cap"></span></div>
+      <div class="papers" id="pauseInks" aria-label="Block colours"><span class="k">Inks</span><div class="sw"></div><div class="pick" hidden></div><span class="cap"></span></div>
+      <div class="papers" id="pauseDrag" aria-label="Control sensitivity"><span class="k">Drag step</span><div class="step"></div><span class="cap"></span></div>
       <button class="ghost" id="btnPauseHome">Main menu</button>
     </div>
   </div>
@@ -790,6 +828,8 @@
       <div class="grid" id="levelGrid"></div>
       <div class="papers" id="menuPapers" aria-label="Paper"><span class="k">Paper</span><div class="sw"></div><span class="cap"></span></div>
       <div class="papers" id="menuAppr" aria-label="Approval stamp" hidden><span class="k">Stamp</span><div class="sw"></div><span class="cap"></span></div>
+      <div class="papers" id="menuInks" aria-label="Block colours"><span class="k">Inks</span><div class="sw"></div><div class="pick" hidden></div><span class="cap"></span></div>
+      <div class="papers" id="menuDrag" aria-label="Control sensitivity"><span class="k">Drag step</span><div class="step"></div><span class="cap"></span></div>
       <div class="row srow">
         <button class="ghostbtn tog" id="btnSound" aria-label="Toggle sound">Sound <b id="fSound">on</b></button>
         <button class="ghostbtn tog" id="btnHaptics" aria-label="Toggle haptics" hidden>Haptics <b id="fHaptics">on</b></button>
@@ -810,20 +850,21 @@
         <div class="li"><canvas id="symMoves" width="128" height="88"></canvas><div><b>Moves</b><span>One drag = one move. ★★★ at par · ★★ one over. Undo (↶) gives a move back; ? shows the next move.</span></div></div>
         <!-- pass 5: the approval chain. Hidden until a chained sheet exists (pass 6). -->
         <div class="li" id="liSeq" hidden><canvas id="symSeq" width="128" height="88"></canvas><div><b>Approval chain</b><span>Numbered blocks leave in order. The solid stamp is next up; the outlined ones wait.</span></div></div>
+        <div class="mi" id="legendAccess"><span class="g">Reading the board</span><span>Every block carries a shape as well as a colour — circle, triangle, diamond, star — and its gate carries the same one, so the match never depends on telling two inks apart. Under <b>Inks</b> on the sheet index or the pause card there are three colourblind presets and a custom set you pick yourself; under <b>Drag step</b> you choose how far a finger travels before a block steps a cell. Nothing there changes a board, a par or a move limit.</span></div>
         <div class="div" id="legendMetaDiv">AROUND THE GAME</div>
         <div class="mi" id="legendLives"><span class="g">♥ Lives</span><span>Retrying a failed level costs one (from level 6). They refill over time; a rescue saves the attempt instead.</span></div>
         <div class="mi" id="legendDaily"><span class="g">Daily draft</span><span>One board a day, numbered from the table’s first day and the same board for every player, with its own par. A new draft appears at midnight on this device’s own clock. An attempt is resolved by the day it finishes on: if midnight passes while the board is still open, that day is filed NOT CLEARED and the new day’s draft is ready. The week has a published shape: <b id="legendCurve">Mon and Tue easy, Wed and Sun medium, Thu and Fri hard, Sat the peak</b>. Your first attempt is the one that is recorded; after it closes, the day is practice.</span></div>
         <div class="mi" id="legendReport"><span class="g">Field report</span><span>The share text: the day and its number, whether you cleared it, and your moves against par — shown as stars and as a bar of the same number. Never how the board was solved. It ends in one token or none. CLEAN is the only award and means you used no undo, no hint and no rescue. A rescue prints instead as a plain “rescued” and adds 3 moves to the total you file, so a rescued run can never read as a clean one.</span></div>
         <div class="mi" id="legendSurvey"><span class="g">Field survey</span><span>One sheet a week: a stamp for every day you clear a level, two contracts you pick from the four the week offers, and point marks at 3, 7, 12 and 20 (1 point per clear, +1 at par).</span></div>
         <div class="mi" id="legendContracts"><span class="g">Contracts</span><span>Swap freely until one of them earns a mark, then the pair is set for the week. File one and you bank a weather delay (hold up to 2); file both and the sheet gets its seal.</span></div>
-        <div class="mi" id="legendStreak"><span class="g">Streak</span><span>One clear a day keeps it going. A banked weather delay covers a missed day; otherwise it simply starts again. There are no accounts: your streak and your draft records are kept on this device only, so reinstalling the app starts them over.</span></div>
+        <div class="mi" id="legendStreak"><span class="g">Streak</span><span>One clear a day keeps it going. A banked weather delay covers a missed day; otherwise it simply starts again. If a day is marked <b>broken</b> — a day this build could not be played through no fault of yours — it is excused: it is neither stamped nor missed, it shows as a dot on the spine, and the streak carries straight across it. There are no accounts: your streak and your draft records are kept on this device only, so reinstalling the app starts them over.</span></div>
         <div class="mi" id="legendCert"><span class="g">Certification</span><span>24 ★ on a sheet certifies it: a new paper for the drawing.</span></div>
       </div>
     </div>
   </div>
 
   <script>
-window.GE_BUILD = '2026-09-03 · 11:59';
+window.GE_BUILD = '2026-09-03 · 13:06';
 window.BEACON_URL = window.BEACON_URL || ''; // '' = beacon disabled (zero network) — artifact builds stay offline
 const LEVELS = [{"w":4,"h":5,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":1,"y":2}],"gates":[{"color":0,"side":"right","start":2,"len":3}],"par":1,"moves":5},{"w":4,"h":5,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[1,0]],"x":2,"y":3},{"color":1,"cells":[[0,0]],"x":2,"y":1}],"gates":[{"color":0,"side":"right","start":1,"len":3},{"color":1,"side":"top","start":2,"len":2}],"par":2,"moves":6},{"w":5,"h":6,"stones":[],"blocks":[{"color":0,"cells":[[0,0]],"x":4,"y":0},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":1},{"color":0,"cells":[[0,0],[0,1]],"x":4,"y":2}],"gates":[{"color":0,"side":"bottom","start":0,"len":3}],"par":3,"moves":7},{"w":5,"h":7,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[1,0]],"x":1,"y":2},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":3},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":4},{"color":0,"cells":[[0,0]],"x":3,"y":0}],"gates":[{"color":0,"side":"left","start":2,"len":4},{"color":1,"side":"bottom","start":0,"len":4}],"par":4,"moves":8},{"w":5,"h":7,"stones":[[4,3]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":1,"y":1},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":6},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":0,"y":0},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":1}],"gates":[{"color":0,"side":"left","start":3,"len":3},{"color":1,"side":"bottom","start":1,"len":4}],"par":4,"moves":7},{"w":6,"h":8,"stones":[[5,4]],"blocks":[{"color":0,"cells":[[0,0],[1,0]],"x":3,"y":1},{"color":1,"cells":[[0,0],[0,1]],"x":0,"y":0},{"color":1,"cells":[[0,0],[0,1]],"x":0,"y":5},{"color":1,"cells":[[0,0],[0,1]],"x":5,"y":2},{"color":1,"cells":[[0,0]],"x":1,"y":3}],"gates":[{"color":0,"side":"top","start":0,"len":2},{"color":1,"side":"top","start":3,"len":2}],"par":6,"moves":9},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0]],"x":0,"y":1},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":2},{"color":0,"cells":[[0,0]],"x":4,"y":3},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":5},{"color":1,"cells":[[0,0]],"x":5,"y":4}],"gates":[{"color":0,"side":"right","start":0,"len":4},{"color":1,"side":"bottom","start":1,"len":4}],"par":5,"moves":8},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":5,"y":4},{"color":2,"cells":[[0,0],[1,0]],"x":2,"y":1},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":1,"y":4},{"color":1,"cells":[[0,0],[0,1]],"x":1,"y":2},{"color":1,"cells":[[0,0],[1,0]],"x":2,"y":6}],"gates":[{"color":0,"side":"right","start":2,"len":4},{"color":1,"side":"bottom","start":2,"len":4},{"color":2,"side":"top","start":3,"len":3}],"par":6,"moves":9},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":2},{"color":1,"cells":[[0,0],[0,1]],"x":2,"y":6},{"color":2,"cells":[[0,0],[0,1]],"x":0,"y":6},{"color":2,"cells":[[0,0],[0,1]],"x":1,"y":1},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":5},{"color":2,"cells":[[0,0],[0,1]],"x":1,"y":3}],"gates":[{"color":0,"side":"left","start":3,"len":4},{"color":1,"side":"left","start":0,"len":3},{"color":2,"side":"right","start":0,"len":4}],"par":6,"moves":9},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":3},{"color":2,"cells":[[0,0],[0,1]],"x":2,"y":3},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":7},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":5,"y":1},{"color":1,"cells":[[0,0],[1,0]],"x":1,"y":7}],"gates":[{"color":0,"side":"right","start":2,"len":4},{"color":1,"side":"bottom","start":2,"len":4},{"color":2,"side":"left","start":2,"len":2}],"par":7,"moves":10},{"w":6,"h":8,"stones":[[0,7],[4,6]],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":2,"y":3},{"color":1,"cells":[[0,0],[1,0]],"x":1,"y":5},{"color":2,"cells":[[0,0]],"x":1,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":3,"y":0},{"color":1,"cells":[[0,0]],"x":3,"y":4},{"color":0,"cells":[[0,0],[0,1]],"x":4,"y":2}],"gates":[{"color":0,"side":"top","start":2,"len":3},{"color":1,"side":"right","start":2,"len":3},{"color":2,"side":"left","start":3,"len":2}],"par":6,"moves":8},{"w":6,"h":8,"stones":[[2,6],[0,7]],"blocks":[{"color":0,"cells":[[0,0]],"x":5,"y":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":3,"y":4},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":3},{"color":0,"cells":[[0,0],[0,1]],"x":3,"y":6},{"color":2,"cells":[[0,0],[1,0]],"x":1,"y":2}],"gates":[{"color":0,"side":"top","start":2,"len":3},{"color":1,"side":"left","start":3,"len":3},{"color":2,"side":"right","start":2,"len":2}],"par":7,"moves":9},{"w":6,"h":8,"stones":[[0,5],[1,6]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":0,"y":2},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":3},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":4},{"color":1,"cells":[[0,0],[1,0]],"x":4,"y":6},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":3,"y":6}],"gates":[{"color":0,"side":"left","start":1,"len":3},{"color":1,"side":"top","start":3,"len":3},{"color":2,"side":"bottom","start":1,"len":4}],"par":7,"moves":9},{"w":6,"h":8,"stones":[[5,7]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[1,1]],"x":4,"y":2},{"color":1,"cells":[[0,0],[0,1]],"x":0,"y":3},{"color":2,"cells":[[0,0],[0,1]],"x":2,"y":5},{"color":1,"cells":[[0,0],[0,1]],"x":4,"y":6},{"color":1,"cells":[[0,0],[0,1]],"x":3,"y":6}],"gates":[{"color":0,"side":"top","start":2,"len":3},{"color":1,"side":"bottom","start":0,"len":3},{"color":2,"side":"right","start":0,"len":3}],"par":5,"moves":7},{"w":6,"h":8,"stones":[[4,0]],"blocks":[{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":4},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":2,"y":6},{"color":2,"cells":[[0,0],[1,0]],"x":3,"y":3},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":4},{"color":1,"cells":[[0,0],[1,0]],"x":0,"y":2},{"color":2,"cells":[[0,0],[0,1]],"x":5,"y":1}],"gates":[{"color":0,"side":"left","start":0,"len":3},{"color":1,"side":"left","start":5,"len":3},{"color":2,"side":"bottom","start":3,"len":2}],"par":7,"moves":9},{"w":6,"h":8,"stones":[[1,2]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":0},{"color":1,"cells":[[0,0],[0,1]],"x":5,"y":4},{"color":2,"cells":[[0,0]],"x":2,"y":7},{"color":2,"cells":[[0,0],[1,0]],"x":2,"y":3},{"color":2,"cells":[[0,0],[0,1]],"x":5,"y":2},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":0}],"gates":[{"color":0,"side":"right","start":0,"len":4},{"color":1,"side":"left","start":5,"len":2},{"color":2,"side":"left","start":1,"len":2}],"par":7,"moves":9},{"w":7,"h":9,"stones":[[5,6],[0,8]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":5},{"color":1,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":2},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":4,"y":2},{"color":3,"cells":[[0,0],[0,1]],"x":3,"y":6},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":0},{"color":3,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":4},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":4,"y":5}],"gates":[{"color":0,"side":"right","start":2,"len":3},{"color":1,"side":"top","start":0,"len":3},{"color":2,"side":"bottom","start":1,"len":3},{"color":3,"side":"left","start":1,"len":4}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[1,1],[5,1]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":4},{"color":1,"cells":[[0,0],[0,1]],"x":4,"y":0},{"color":2,"cells":[[0,0],[0,1],[1,1]],"x":3,"y":5},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":4},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":1,"y":6},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":3,"y":2},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":3}],"gates":[{"color":0,"side":"right","start":4,"len":3},{"color":1,"side":"top","start":4,"len":2},{"color":2,"side":"bottom","start":0,"len":2},{"color":3,"side":"bottom","start":2,"len":3}],"par":9,"moves":11},{"w":6,"h":8,"stones":[[1,1],[5,1]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":4},{"color":1,"cells":[[0,0],[0,1]],"x":4,"y":0},{"color":2,"cells":[[0,0],[0,1],[1,1]],"x":3,"y":5},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":4},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":1,"y":6},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":3,"y":2},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":3}],"gates":[{"color":0,"side":"right","start":4,"len":3},{"color":1,"side":"top","start":4,"len":2},{"color":2,"side":"bottom","start":0,"len":2},{"color":3,"side":"bottom","start":2,"len":3}],"par":9,"moves":11},{"w":6,"h":7,"stones":[[0,4],[4,4]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":2},{"color":1,"cells":[[1,0],[1,1],[0,1]],"x":1,"y":1},{"color":2,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":2},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":4},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":0},{"color":0,"cells":[[0,0],[1,0],[1,1]],"x":4,"y":5},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":0,"y":5}],"gates":[{"color":0,"side":"top","start":1,"len":2},{"color":1,"side":"right","start":5,"len":2},{"color":2,"side":"left","start":5,"len":2},{"color":3,"side":"top","start":3,"len":2}],"par":10,"moves":12},{"w":6,"h":8,"stones":[[4,6]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":6},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":5},{"color":2,"cells":[[0,0],[1,0]],"x":0,"y":3},{"color":2,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":0},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":1,"y":3},{"color":2,"cells":[[0,0],[0,1]],"x":1,"y":5}],"gates":[{"color":0,"side":"bottom","start":0,"len":3},{"color":1,"side":"left","start":3,"len":4},{"color":2,"side":"top","start":3,"len":2}],"par":6,"moves":8},{"w":6,"h":8,"stones":[[4,2],[5,4]],"blocks":[{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":3,"y":3},{"color":1,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":2,"y":6},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":0},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":3},{"color":2,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":0},{"color":0,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":5}],"gates":[{"color":0,"side":"bottom","start":1,"len":2},{"color":1,"side":"top","start":3,"len":3},{"color":2,"side":"left","start":0,"len":4}],"par":7,"moves":9},{"w":7,"h":9,"stones":[[4,8],[1,5]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[1,1]],"x":2,"y":3},{"color":1,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":1},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":0,"y":2},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":2,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":0,"y":0},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":6},{"color":2,"cells":[[0,0],[1,0]],"x":4,"y":7}],"gates":[{"color":0,"side":"left","start":7,"len":2},{"color":1,"side":"left","start":2,"len":2},{"color":2,"side":"right","start":7,"len":2},{"color":3,"side":"top","start":2,"len":3}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[1,0],[3,2]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":0},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":1},{"color":2,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":2,"y":3},{"color":3,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":6},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":0,"y":2},{"color":0,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":6},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":5,"y":0}],"gates":[{"color":0,"side":"left","start":2,"len":3},{"color":1,"side":"bottom","start":3,"len":3},{"color":2,"side":"top","start":0,"len":4},{"color":3,"side":"right","start":0,"len":2}],"par":9,"moves":11},{"w":6,"h":8,"stones":[[5,2],[3,4]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":2,"y":6},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":5},{"color":2,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":3},{"color":3,"cells":[[0,0],[0,1],[1,1]],"x":3,"y":1},{"color":3,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":6},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":4,"y":3},{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":1,"y":1}],"gates":[{"color":0,"side":"left","start":3,"len":2},{"color":1,"side":"top","start":0,"len":3},{"color":2,"side":"left","start":5,"len":2},{"color":3,"side":"left","start":0,"len":2}],"par":9,"moves":11},{"w":7,"h":9,"stones":[[4,0],[2,4]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":4},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":5,"y":7},{"color":2,"cells":[[0,0],[0,1]],"x":4,"y":1},{"color":3,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":1},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":2},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":4},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":3}],"gates":[{"color":0,"side":"top","start":1,"len":2},{"color":1,"side":"right","start":4,"len":4},{"color":2,"side":"left","start":3,"len":3},{"color":3,"side":"right","start":0,"len":2}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[3,1],[0,7]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":6},{"color":1,"cells":[[0,0],[1,0]],"x":3,"y":3},{"color":2,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":4},{"color":3,"cells":[[0,0],[1,0]],"x":4,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":2,"y":6},{"color":1,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":1},{"color":0,"cells":[[0,0],[1,0],[1,1]],"x":1,"y":3}],"gates":[{"color":0,"side":"top","start":1,"len":2},{"color":1,"side":"top","start":3,"len":3},{"color":2,"side":"right","start":1,"len":2},{"color":3,"side":"bottom","start":1,"len":3}],"par":9,"moves":11},{"w":6,"h":8,"stones":[[3,7],[1,1]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1]],"x":4,"y":6},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":0},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":3},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":3,"y":1},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":6},{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":1,"y":3},{"color":3,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":0}],"gates":[{"color":0,"side":"right","start":2,"len":2},{"color":1,"side":"right","start":4,"len":4},{"color":2,"side":"left","start":2,"len":3},{"color":3,"side":"bottom","start":1,"len":4}],"par":9,"moves":11},{"w":7,"h":9,"stones":[[0,1],[2,5],[4,5]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":3},{"color":1,"cells":[[0,0],[1,0]],"x":2,"y":7},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":4},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":7},{"color":3,"cells":[[0,0],[1,0],[1,1]],"x":3,"y":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":1},{"color":3,"cells":[[0,0],[1,0],[0,1]],"x":5,"y":3}],"gates":[{"color":0,"side":"left","start":5,"len":4},{"color":1,"side":"right","start":1,"len":3},{"color":2,"side":"top","start":4,"len":3},{"color":3,"side":"top","start":1,"len":3}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[3,3],[0,3]],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":0,"y":4},{"color":1,"cells":[[0,0],[0,1]],"x":1,"y":4},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":1,"y":1},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":2,"y":6},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":5},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":1},{"color":0,"cells":[[0,0],[0,1]],"x":5,"y":2}],"gates":[{"color":0,"side":"left","start":1,"len":2},{"color":1,"side":"right","start":1,"len":3},{"color":2,"side":"left","start":5,"len":3},{"color":3,"side":"top","start":3,"len":2}],"par":9,"moves":11},{"w":5,"h":7,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":1,"y":3},{"color":1,"cells":[[0,0]],"x":4,"y":1,"seq":2},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":3,"seq":1},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":1}],"gates":[{"color":0,"side":"left","start":3,"len":4},{"color":1,"side":"right","start":2,"len":4}],"par":4,"moves":8},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":4,"y":3,"seq":1},{"color":1,"cells":[[0,0],[1,0]],"x":0,"y":4},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":2},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":1},{"color":2,"cells":[[0,0],[1,0]],"x":1,"y":1,"seq":2}],"gates":[{"color":0,"side":"left","start":2,"len":2},{"color":1,"side":"top","start":0,"len":3},{"color":2,"side":"bottom","start":1,"len":4}],"par":6,"moves":10},{"w":6,"h":8,"stones":[[4,5]],"blocks":[{"color":0,"cells":[[0,0],[1,0]],"x":2,"y":5,"seq":1},{"color":1,"cells":[[0,0]],"x":2,"y":7,"seq":2},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":4},{"color":1,"cells":[[0,0],[0,1]],"x":1,"y":1},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":0,"y":3},{"color":2,"cells":[[0,0],[0,1]],"x":3,"y":6,"seq":3}],"gates":[{"color":0,"side":"bottom","start":3,"len":3},{"color":1,"side":"top","start":1,"len":4},{"color":2,"side":"left","start":3,"len":4}],"par":7,"moves":10},{"w":6,"h":8,"stones":[[2,7]],"blocks":[{"color":0,"cells":[[0,0]],"x":4,"y":0},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":3,"seq":3},{"color":2,"cells":[[0,0],[0,1]],"x":0,"y":0},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":3,"seq":1},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":4,"seq":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":1,"y":2}],"gates":[{"color":0,"side":"bottom","start":0,"len":3},{"color":1,"side":"left","start":3,"len":3},{"color":2,"side":"right","start":1,"len":3}],"par":7,"moves":10},{"w":6,"h":8,"stones":[[2,5],[2,4]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[1,1]],"x":4,"y":2,"seq":2},{"color":1,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":5,"seq":3},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":0},{"color":3,"cells":[[0,0],[1,0],[1,1]],"x":3,"y":0,"seq":1},{"color":1,"cells":[[0,0],[1,0]],"x":0,"y":2},{"color":2,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":4}],"gates":[{"color":0,"side":"right","start":4,"len":3},{"color":1,"side":"bottom","start":0,"len":2},{"color":2,"side":"left","start":4,"len":3},{"color":3,"side":"left","start":2,"len":2}],"par":8,"moves":10},{"w":7,"h":9,"stones":[[1,2]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":0,"y":1,"seq":4},{"color":1,"cells":[[0,0],[1,0],[0,1]],"x":4,"y":5,"seq":3},{"color":2,"cells":[[0,0],[0,1]],"x":2,"y":4,"seq":2},{"color":3,"cells":[[0,0],[1,0]],"x":4,"y":1,"seq":1},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":4,"y":2},{"color":2,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":5,"y":7},{"color":2,"cells":[[0,0],[1,0]],"x":1,"y":3}],"gates":[{"color":0,"side":"right","start":0,"len":4},{"color":1,"side":"left","start":3,"len":2},{"color":2,"side":"bottom","start":1,"len":3},{"color":3,"side":"right","start":6,"len":2}],"par":8,"moves":10},{"w":7,"h":9,"stones":[[2,7],[6,0]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":4},{"color":1,"cells":[[0,0],[0,1]],"x":5,"y":3,"seq":1},{"color":2,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":1,"y":1,"seq":2},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":5,"y":1},{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":3,"y":7},{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":0,"y":3,"seq":3},{"color":1,"cells":[[0,0],[1,0]],"x":5,"y":7}],"gates":[{"color":0,"side":"bottom","start":0,"len":3},{"color":1,"side":"top","start":0,"len":2},{"color":2,"side":"right","start":6,"len":2},{"color":3,"side":"left","start":2,"len":2}],"par":9,"moves":11},{"w":7,"h":9,"stones":[[6,5],[2,2]],"blocks":[{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":0,"y":1},{"color":1,"cells":[[0,0],[1,0]],"x":5,"y":2},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":3,"y":0},{"color":3,"cells":[[0,0],[1,0],[1,1]],"x":2,"y":5,"seq":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":5,"seq":4},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":1,"y":6,"seq":3},{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":2,"y":3,"seq":1}],"gates":[{"color":0,"side":"left","start":4,"len":2},{"color":1,"side":"top","start":4,"len":3},{"color":2,"side":"bottom","start":3,"len":2},{"color":3,"side":"bottom","start":0,"len":3}],"par":9,"moves":11},{"w":6,"h":8,"stones":[[0,2],[0,3]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[1,1]],"x":4,"y":3},{"color":1,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":1},{"color":2,"cells":[[0,0],[0,1]],"x":2,"y":3,"seq":4},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":0},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":4,"seq":1},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":5,"seq":3},{"color":0,"cells":[[0,0],[0,1]],"x":0,"y":5,"seq":2}],"gates":[{"color":0,"side":"top","start":0,"len":2},{"color":1,"side":"top","start":2,"len":3},{"color":2,"side":"left","start":0,"len":2},{"color":3,"side":"right","start":4,"len":4}],"par":10,"moves":12},{"w":6,"h":8,"stones":[[5,4],[4,3]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1]],"x":1,"y":4},{"color":1,"cells":[[0,0],[0,1],[1,1]],"x":3,"y":4,"seq":1},{"color":2,"cells":[[0,0],[1,0]],"x":1,"y":0,"seq":3},{"color":3,"cells":[[0,0],[1,0]],"x":0,"y":6,"seq":4},{"color":1,"cells":[[0,0],[0,1],[1,1]],"x":3,"y":6},{"color":0,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":1,"seq":2},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":0}],"gates":[{"color":0,"side":"left","start":1,"len":3},{"color":1,"side":"top","start":1,"len":3},{"color":2,"side":"right","start":2,"len":2},{"color":3,"side":"bottom","start":4,"len":2}],"par":10,"moves":12}];
 
@@ -1029,13 +1070,90 @@ DAILIES.curveFor = function (d) {
 /* Gate Escape — drag colored blocks out through matching gates. */
 
 // ---------- palette (each color also gets a glyph for colorblind players) ----------
-// drafting inks on blueprint paper
-const COLORS = [
-  { main: '#ff8078', dark: '#c24d46', lite: '#ffb3ac', glyph: 'circle' },
-  { main: '#72d8ff', dark: '#3d9cc4', lite: '#b5ecff', glyph: 'triangle' },
-  { main: '#5fe89b', dark: '#2fae67', lite: '#a5f5c8', glyph: 'diamond' },
-  { main: '#ffd04d', dark: '#c99a1e', lite: '#ffe9a8', glyph: 'star' },
-];
+// drafting inks on blueprint paper.
+//
+// The GLYPH is the accessible channel and it never moves: circle / triangle / diamond / star are
+// the block's identity on every preset (CLAUDE.md: a shape cue wherever colour is the mechanic).
+// The ink is the flavour on top of it.
+//
+// Round 2 M1 (backlog #24): the four inks are a PRESET. `COLORS` is mutated in place rather than
+// reassigned, so every module that captured the array — menu.js's legend drawings, the HUD's
+// objective chips, the particle burst — follows a change without re-binding anything.
+//
+// The three dichromacy presets were not chosen by eye. Each candidate set was pushed through a
+// Vienot/Brettel LMS simulation of the deficiency it is named for and scored on the SMALLEST
+// CIE76 dE between any two of its four inks; the shipped sets are the ones that maximise that
+// number while holding the shipped default's own ink-halo and white-glyph contrast floors. The
+// default palette scores 17 / 22 / 3 under the three simulations (its red and green collapse for
+// a deuteranope; its cyan and green are three units apart for a tritanope, which is nothing).
+// The presets score 48 / 51 / 37. Those numbers are re-derived from the same simulation by the
+// bot's `colourblind presets` check, so a hand-edited hex cannot quietly undo the work.
+const INK_GLYPHS = ['circle', 'triangle', 'diamond', 'star'];
+// hsv round-trip, so one derivation makes every preset's outline and corner-dot inks: the
+// outline is the ink at 0.76 value / 1.18 saturation, the dot is the ink at 0.55 saturation.
+// Applied to the shipped default it reproduces the hand-picked literals to within a couple of
+// levels per channel — which is why the default keeps its literals and nothing else needs any.
+function rgbOfHex(h) { const m = String(h).replace('#', ''); return [0, 2, 4].map(i => parseInt(m.slice(i, i + 2), 16) || 0); }
+function hexOfRgb(r) { return '#' + r.map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join(''); }
+function rgb2hsv([r, g, b]) {
+  r /= 255; g /= 255; b /= 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  let h = 0;
+  if (d) { if (mx === r) h = ((g - b) / d) % 6; else if (mx === g) h = (b - r) / d + 2; else h = (r - g) / d + 4; h *= 60; if (h < 0) h += 360; }
+  return [h, mx ? d / mx : 0, mx];
+}
+function hsv2rgb([h, s, v]) {
+  const c = v * s, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = v - c;
+  let r, g, b;
+  if (h < 60) [r, g, b] = [c, x, 0]; else if (h < 120) [r, g, b] = [x, c, 0]; else if (h < 180) [r, g, b] = [0, c, x];
+  else if (h < 240) [r, g, b] = [0, x, c]; else if (h < 300) [r, g, b] = [x, 0, c]; else [r, g, b] = [c, 0, x];
+  return [r, g, b].map(u => (u + m) * 255);
+}
+const shadeInk = (hex, ds, dv) => { const [h, s, v] = rgb2hsv(rgbOfHex(hex)); return hexOfRgb(hsv2rgb([h, Math.min(1, s * ds), Math.min(1, v * dv)])); };
+const PALETTES = {
+  default: {
+    name: 'Drafting inks', sub: 'the shipped four',
+    inks: ['#ff8078', '#72d8ff', '#5fe89b', '#ffd04d'],
+    // kept as literals so the default build is pixel-identical to every build before this pass
+    dark: ['#c24d46', '#3d9cc4', '#2fae67', '#c99a1e'],
+    lite: ['#ffb3ac', '#b5ecff', '#a5f5c8', '#ffe9a8'],
+  },
+  deuteranopia: { name: 'Deuteranopia', sub: 'green-blind', inks: ['#ffaa80', '#1fb4ff', '#5aedd5', '#ffd500'] },
+  protanopia:   { name: 'Protanopia',   sub: 'red-blind',   inks: ['#ff8861', '#9ae6ed', '#9eed00', '#df80ff'] },
+  tritanopia:   { name: 'Tritanopia',   sub: 'blue-blind',  inks: ['#ff8080', '#1fecff', '#9aa8ed', '#ffd500'] },
+  // the fourth option is not a preset: it is the player's own four inks, picked one at a time.
+  // It starts from the default so the picker opens on something rather than on nothing.
+  custom:       { name: 'Custom inks',  sub: 'pick all four', inks: ['#ff8078', '#72d8ff', '#5fe89b', '#ffd04d'], own: 1 },
+};
+const COLORS = INK_GLYPHS.map(g => ({ main: '#000', dark: '#000', lite: '#000', glyph: g }));
+let paletteId = 'default';
+function applyPalette(id, own) {
+  const p = PALETTES[id] || PALETTES.default;
+  const inks = (id === 'custom' && Array.isArray(own) && own.length === 4 ? own : p.inks).map(h => (/^#[0-9a-f]{6}$/i.test(h) ? h : '#888888'));
+  if (id === 'custom') PALETTES.custom.inks = inks.slice();
+  for (let i = 0; i < 4; i++) {
+    COLORS[i].main = inks[i];
+    COLORS[i].dark = p.dark ? p.dark[i] : shadeInk(inks[i], 1.18, 0.76);
+    COLORS[i].lite = p.lite ? p.lite[i] : shadeInk(inks[i], 0.55, 1);
+    COLORS[i].glyph = INK_GLYPHS[i];
+  }
+  paletteId = PALETTES[id] ? id : 'default';
+}
+// persisted before anything is drawn, so a reload never flashes the default inks first
+try {
+  const st = JSON.parse(localStorage.getItem('ge_ink') || 'null');
+  if (st && PALETTES[st.id]) applyPalette(st.id, st.own); else applyPalette('default');
+} catch (e) { applyPalette('default'); }
+// the setter: repaints on the next frame (render reads COLORS every frame), rebuilds the HUD's
+// objective chips (their fill is an inline custom property) and tells menu.js to redraw the legend
+function setPalette(id, own) {
+  if (!PALETTES[id]) return false;
+  applyPalette(id, own);
+  try { localStorage.setItem('ge_ink', JSON.stringify({ id, own: id === 'custom' ? PALETTES.custom.inks : undefined })); } catch (e) {}
+  if (L) { gateFlash = COLORS.map(() => -1); buildGoal(); updateHud(); }
+  window.dispatchEvent(new CustomEvent('ge:palette', { detail: { id, inks: COLORS.map(c => c.main) } }));
+  return true;
+}
 
 // ---------- native shell (Capacitor) ----------
 // In the iOS app the Capacitor bridge exposes plugins; in a plain browser NATIVE is null and
@@ -1344,6 +1462,7 @@ function showLivesCard() {
   track('lives_empty', li + 1);
   document.getElementById('livesModal').hidden = false;
   updateLivesUI();
+  armCard(document.querySelector('#livesModal .card'));
 }
 // entry gate: entering L6+ needs a life in the bank (entry itself costs nothing); L1–5 always open
 function livesGate(target) {
@@ -1406,12 +1525,27 @@ let settleT = [];      // per-block seconds since a released drag settled (overs
 let attemptUndos = 0, attemptHints = 0; // per-attempt counters, ride on ge:win (daily quests)
 let winTimers = [];
 let toastTimer = 0;
-let adTimer = 0, adTickTimer = 0, adTailTimer = 0, adCb = null;
+let adTimer = 0, adTickTimer = 0, adTailTimer = 0, adCb = null, adKind = null;
 
 // the first level whose par exceeds its block count: "a block has to move twice"
 const FIRST_TWICE = LEVELS.findIndex(l => l.par > l.blocks.length);
 // the first level with a stone: "stones never move"
 const FIRST_STONE = LEVELS.findIndex(l => l.stones.length > 0);
+// ---------- "tough one" labels (round 2 M1, backlog #22; T1's estimator picked the levels) ----------
+// A drafting note on the three boards a noisy player genuinely stalls on, printed BEFORE the
+// player concludes it is them. The levels are not a guess: T1's stochastic estimator ran seven
+// human-proxy agents 200 times each on every level, and these are the three whose pass rate
+// falls off a cliff -- L20 at 7%, L24 at 13%, L25 at 11%, against 62% at L19 and 96% at L21.
+// `hardest` is printed only where the level is the STRICT minimum of its own sheet of ten (L20
+// in sheet 2, L25 in sheet 3); L24 is a tough board next to a tougher one and says only that.
+// The bot re-derives both facts from tools/difficulty.json, so a retune cannot leave the label
+// lying, and it is a LABEL only -- no board, no par and no move limit changed with it. L25 in
+// particular has zero headroom (best-5% == the limit) and was explicitly not tightened.
+const TOUGH = { 19: { hardest: 1 }, 23: {}, 24: { hardest: 1 } };
+const toughAt = i => (i >= 0 && i < LEVELS.length ? TOUGH[i] || null : null);
+const TOUGH_LABEL = 'TOUGH ONE';
+const toughNote = i => { const t = toughAt(i); return t ? (t.hardest ? 'the sheet\u2019s hardest' : 'among this sheet\u2019s hardest') : ''; };
+
 // per-level personal best (moves) — the win card never calls par "best"
 let best = {};
 try { best = JSON.parse(localStorage.getItem('ge_best') || '{}') || {}; } catch (e) {}
@@ -1438,6 +1572,7 @@ let dailyRow = -1, dailyWrapped = false; // which table row, and whether the dat
 let dailyPractice = false; // this play is after the day's record closed — it counts for nothing
 let dailyPending = null;   // a fail waiting on the rescue decision (see closePendingDaily)
 let resumeLevel = li;      // the last REAL level loaded: the daily must not disturb it
+let resumePolicy = null;   // menu.js installs the campaign's Continue rule (see GE.resume)
 
 // One more virtual index, immediately past the draft: a board handed in by the
 // automated checks (`GE.loadTest`). It exists so a rule can be verified on a
@@ -1729,6 +1864,7 @@ function loadLevel(i) {
   adClose();
   paintDailyChip();
   hudPar.textContent = 'par ' + L.par;
+  paintTough();
   winModal.hidden = true; failModal.hidden = true;
   document.body.classList.remove('fail-up'); cv.style.transform = '';
   hudBox.classList.remove('boost');
@@ -1746,6 +1882,17 @@ function loadLevel(i) {
   if (li === 2) tip('corner', 'One drag can turn corners. The whole route is one move.');
   if (li === FIRST_STONE) tip('stone', 'Stones never move. Route around them.');
   if (li === FIRST_TWICE) tip('twice', 'Everything is corked. Sometimes a block has to move twice.');
+}
+
+// the tough-one stamp on the HUD: the campaign levels only (a draft is a draft, and a test board
+// is not play), and it says the same two things the tile in the sheet index says.
+function paintTough() {
+  const el = document.getElementById('hudTough');
+  if (!el) return;
+  const t = !isDaily() && !isTest() ? toughAt(li) : null;
+  showEl(el, !!t);
+  if (t) el.innerHTML = TOUGH_LABEL + ' <small></small>';
+  if (t) el.lastChild.textContent = toughNote(li);
 }
 
 // objective row: one chip per color — blocks of that color still on the board
@@ -1786,6 +1933,16 @@ function bumpSeq() {
 // The HUD meter reads this same function forward (`moves + blocksLeft()`), so the amber
 // "the 3-star pace is gone" warning now lands one move earlier by construction.
 function starsFor(m) { return m <= L.par ? 3 : m <= L.par + 1 ? 2 : 1; }
+// ---------- the proximity line (round 2 M1, Appendix B section 1.9) ----------
+// One line, on the win card and on the fail sheet, stating two numbers that are already on disk:
+// the player's own filed best on this level (ge_best) and the level's par. It replaces nothing
+// and it is not near-miss theatre -- there is no reading of the position in it, nothing is
+// rounded toward hope, and on a level never cleared it says so rather than inventing a figure.
+// The draft keeps no personal best (one board, one recorded attempt), so it has no line.
+function proxLine(b) {
+  if (!L || isDaily() || isTest()) return '';
+  return b ? `your best ${b} \u00b7 par ${L.par}` : `par ${L.par} \u00b7 no clear filed yet`;
+}
 function blocksLeft() { return pos.filter(p => p).length; }
 function updateHud() {
   hudMoves.textContent = movesLeft;
@@ -2051,8 +2208,38 @@ function beginDrag(bi, gx, gy, pid = -1) {
   pendingSnap = snapshot();
 }
 
+// ---------- control sensitivity (round 2 M1, backlog #24) ----------
+// How far the finger has to travel before the block steps into the next cell, and how far past
+// the board edge before a matching gate reads as an exit. `standard` is the shipped pair to the
+// digit, so the default build's physics — and every recorded solution — are untouched.
+//
+// The option only moves in ONE direction, and that is a fact about the maths rather than a
+// choice. A step is taken when the finger is `t` cells from where the block sits; after the step
+// the finger is `1 - t` cells away in the OTHER direction, so any t below 0.5 satisfies its own
+// threshold again and the block oscillates until the loop guard runs out — ending, for an even
+// number of iterations, exactly where it started. t > 0.5 is what makes the step converge, so
+// 0.51 is not merely the shipped value: it is the most responsive setting the rule admits, and
+// "more sensitive than the default" does not exist to be offered. What DOES help the hands this
+// option is for is the opposite end — asking for more travel, so a tremor or an unsteady finger
+// stops nudging blocks a cell at a time. Hence three settings that all round correctly:
+//   standard  0.51  the shipped feel, and the responsive floor
+//   steady    0.64  two thirds of a cell before anything moves
+//   firm      0.78  most of a cell — nothing moves by accident
+// Persisted. It is a CONTROL setting and never a difficulty setting: the same routes are legal at
+// every step, and the recorded solutions replay identically on all three (the bot pins that).
+const DRAG_STEPS = { standard: [0.51, 0.62], steady: [0.64, 0.75], firm: [0.78, 0.89] };
+let dragStepId = 'standard';
+try { const v = localStorage.getItem('ge_dragstep'); if (v && DRAG_STEPS[v]) dragStepId = v; } catch (e) {}
+function setDragStep(id) {
+  if (!DRAG_STEPS[id]) return false;
+  dragStepId = id;
+  try { localStorage.setItem('ge_dragstep', id); } catch (e) {}
+  window.dispatchEvent(new CustomEvent('ge:dragstep', { detail: { id } }));
+  return true;
+}
 function stepToward(bi, wantX, wantY) {
   // slide block one cell at a time toward fractional target; returns exit side or null
+  const [STEP_MIN, EXIT_MIN] = DRAG_STEPS[dragStepId] || DRAG_STEPS.normal;
   for (let guard = 0; guard < 24; guard++) {
     const dx = wantX - pos[bi][0], dy = wantY - pos[bi][1];
     const tryOrder = Math.abs(dx) >= Math.abs(dy)
@@ -2060,7 +2247,7 @@ function stepToward(bi, wantX, wantY) {
       : [[0, Math.sign(dy), Math.abs(dy)], [Math.sign(dx), 0, Math.abs(dx)]];
     let stepped = false;
     for (const [sx, sy, mag] of tryOrder) {
-      if (mag < 0.51 || (sx === 0 && sy === 0)) continue;
+      if (mag < STEP_MIN || (sx === 0 && sy === 0)) continue;
       const nx = pos[bi][0] + sx, ny = pos[bi][1] + sy;
       if (fits(bi, nx, ny)) {
         pos[bi] = [nx, ny]; pushVis(bi, nx, ny); drag.moved = true; stepped = true;
@@ -2073,7 +2260,7 @@ function stepToward(bi, wantX, wantY) {
       // approval chain says another number is up first. This is the ONE player-facing gate:
       // an out-of-turn block bumps flush against its gate and stops there. Nothing is spent,
       // nothing leaves, and the HUD chip flicks to name the number the drawing is waiting on.
-      if (mag > 0.62 && wouldLeaveBoard(bi, sx, sy)) {
+      if (mag > EXIT_MIN && wouldLeaveBoard(bi, sx, sy)) {
         const side = sx === 1 ? 'right' : sx === -1 ? 'left' : sy === 1 ? 'bottom' : 'top';
         if (exitGate(bi, side)) { if (seqOk(bi)) return side; bumpSeq(); }
       }
@@ -2157,13 +2344,31 @@ function beginFlight(i) {
   sound('exit', a.chain);
   haptic('exit');
 }
+// Game Accessibility Guidelines, Basic tier: nothing may flash more than three times a second.
+// The alignment beat is a single 0.34 s decay, so one exit is one flash and the only way to
+// stack them is a chain of very fast exits. The ONSETS are therefore rate-limited to three per
+// rolling second: a fourth exit inside that second still leaves, still bursts, still sounds --
+// it simply does not start a fourth rise. Suppressing the onset is the right fix rather than
+// lengthening the beat, because lengthening a decay that is already 0.34 s would make the cue
+// arrive after the block it is about. The reduced-motion variant (0.2 s) is unchanged.
+const FLASH_MAX_PER_S = 3;
+let flashOnsets = [];
+let flashStarted = 0, flashSkipped = 0; // monotonic counters, for the bot's flicker check
+function flashBudgetOk() {
+  const t = performance.now();
+  flashOnsets = flashOnsets.filter(x => t - x < 1000);
+  if (flashOnsets.length >= FLASH_MAX_PER_S) { flashSkipped++; return false; }
+  flashOnsets.push(t);
+  flashStarted++;
+  return true;
+}
 // the lane flash on the frame of alignment: "it lined up, THEN left"
 function alignFlash(i) {
   const a = exitAnim[i];
   if (!a || a.flashed) return;
   a.flashed = true;
   disp[i] = [a.from[0], a.from[1]];
-  if (a.gate) gateAlign.push({ g: a.gate, bi: i, from: a.from, t: 0 });
+  if (a.gate && flashBudgetOk()) gateAlign.push({ g: a.gate, bi: i, from: a.from, t: 0 });
 }
 function flushHeldExits() {
   for (let i = 0; i < exitAnim.length; i++) if (exitAnim[i] && exitAnim[i].wait) { visQ[i] = []; beginFlight(i); }
@@ -2252,10 +2457,14 @@ function maybeFail() {
         + RESCUE_MOVES + ' moves to your filed total — the report prints a plain \u201crescued\u201d instead of the CLEAN token. '
         + 'Retrying, or leaving the board, files it as NOT CLEARED.';
       document.getElementById('btnRescue').hidden = rescued;
+      // two facts already on disk, stated plainly under the reading of the position
+      const fp = document.getElementById('failProx'), fpt = proxLine(best[li]);
+      fp.textContent = fpt; fp.hidden = !fpt;
       // the board rises and shrinks so the sheet never covers the position it asks you to bet on
       document.body.classList.add('fail-up');
       toastEl.hidden = true; clearTimeout(toastTimer); // nothing sits over the board the sheet asks you to judge
       failModal.hidden = false;
+      armCard(failModal.querySelector('.card')); // the finger that lost the level does not answer the sheet
       fitBoardAboveSheet();
       sound('fail');
       haptic('fail');
@@ -2297,6 +2506,7 @@ function win() {
   if (winModal.hidden === false) return;
   over = true;
   hint = null;
+  cancelHintAd(); // a cleared board has no use for the hint it is still paying for (P1's soak)
   dailyRollCheck(); // a clear after local midnight is a practice clear: yesterday's day is closed
   updateHud();
   const daily = isDaily(), test = isTest();
@@ -2319,9 +2529,13 @@ function win() {
   winSub.textContent = recDraft && rescued
     ? `Solved in ${moves} moves · rescue +${RESCUE_MOVES} · filed as ${filedMoves} · par ${L.par}`
     : `Solved in ${moves} move${moves === 1 ? '' : 's'}`
-      + (stars === 3 ? ' — perfect!' : ` · par ${L.par}`)
-      + (prev && prev < moves ? ` · your best ${prev}` : '');
+      + (stars === 3 ? ' — perfect!' : ` · par ${L.par}`);
   if (!daily && !test && (!prev || moves < prev)) { best[li] = moves; try { localStorage.setItem('ge_best', JSON.stringify(best)); } catch (e) {} }
+  // ...and the proximity line under it: the best after this attempt against par. It used to be a
+  // tail on the sentence above ("· your best 9"), printed only when the run was worse than the
+  // best; it is now one line that is always there and always says the same two things.
+  const wp = document.getElementById('winProx'), wpt = proxLine(best[li]);
+  wp.textContent = wpt; wp.hidden = !wpt;
   // the day's record closes here, before the event goes out, so every listener
   // (and GE.dailyShareText) sees the resolved row rather than an open one
   if (daily) {
@@ -2345,8 +2559,11 @@ function win() {
   }
   if (stars === 3 && !reduced) winTimers.push(setTimeout(() => burst(winStars.children[2]), delays[2] + 260));
   btnReplay.hidden = stars === 3 || last;
-  btnNext.disabled = btnReplay.disabled = !reduced;
-  winTimers.push(setTimeout(() => { btnNext.disabled = btnReplay.disabled = false; }, delays[2] + 400 + 400));
+  // the buttons go live once the reward has landed -- and never sooner than the post-acceptance
+  // debounce, which under reduced motion used to be no wait at all
+  btnNext.disabled = btnReplay.disabled = true;
+  winTimers.push(setTimeout(() => { btnNext.disabled = btnReplay.disabled = false; },
+    Math.max(ARM_MS, reduced ? 0 : delays[2] + 400 + 400)));
   winModal.hidden = false;
   window.dispatchEvent(new CustomEvent('ge:win', { detail: { lvl: li, stars, moves, last, par: L.par, blocks: pos.length, undos: winUndos, hints: winHints, daily, test, date: daily ? dailyDate : null } }));
   sound('win');
@@ -2479,6 +2696,7 @@ const AD_KIND = {
 };
 function rewarded(kind, grant) {
   adClose();
+  adKind = kind;
   const k = AD_KIND[kind] || AD_KIND.rescue;
   document.getElementById('adTitle').textContent = k.title;
   document.getElementById('adSub').innerHTML = 'Watch to earn <b></b>';
@@ -2510,6 +2728,16 @@ function rewarded(kind, grant) {
   adTimer = setTimeout(() => adGrantNow(kind), AD_MS);
 }
 // the reward lands here and ONLY here
+// P1's seeded soak, round 2: clear a level while the rewarded slot from a HINT is still
+// counting down and the win card arrives UNDERNEATH a running ad -- a won board sitting behind
+// three more seconds of advertising for a move the player no longer needs, with Next unreachable
+// the whole time. A decided round has no use for a hint, so the slot is cancelled rather than
+// left running. Nothing is forfeited: the grant it would have paid is `showHint`, which refuses
+// on a finished board anyway. The rescue and life slots are untouched -- a rescue is what ENDS
+// the decided state, so it can never be running when the round is decided.
+function cancelHintAd() {
+  if (adCb && adKind === 'hint') { track('ad_cancel', { kind: 'hint', lvl: li + 1 }); adClose(); }
+}
 function adGrantNow(kind) {
   if (!adCb) return;
   const g = adCb; adCb = null;
@@ -2520,6 +2748,7 @@ function adGrantNow(kind) {
   document.querySelector('.adring').classList.add('done'); // the arc turns green behind the tick
   adGrantRow.hidden = false;
   btnAdSkip.hidden = false; // the way out appears only now — after the grant, never before
+  armCard(adModal.querySelector('.card')); // ...and it is not answered by the tap that was mid-air
   track('ad_done', { kind, lvl: li + 1 });
   sound('gate'); // a quiet play beat on a FREE grant (never on a purchase — see CLAUDE.md)
   g();
@@ -2530,7 +2759,7 @@ function adClose() {
   clearTimeout(adTimer); adTimer = 0;
   clearInterval(adTickTimer); adTickTimer = 0;
   clearTimeout(adTailTimer); adTailTimer = 0;
-  adCb = null; adModal.hidden = true;
+  adCb = null; adKind = null; adModal.hidden = true;
 }
 btnAdSkip.onclick = adClose;
 
@@ -3245,6 +3474,37 @@ function sound(kind, n = 0) {
   else if (kind === 'fail') { blip(220, 0.25, 'sawtooth', 0.12, 0, -80); blip(160, 0.3, 'sawtooth', 0.1, 0.12, -60); }
 }
 
+// ---------- post-acceptance input debounce (round 2 M1, ruling 11) ----------
+// A card that arrives under a finger already travelling -- the drag that just pushed the last
+// block out, a tap aimed at a board that is no longer there -- must not be answered by that
+// finger. Every result card holds its buttons for half a second after it appears.
+//
+// It is an INPUT DEBOUNCE, not a clock. Nothing counts down, nothing is shown, nothing is lost
+// by waiting, and the button is never drawn as disabled -- a half-second grey flicker would be a
+// worse surface than the misfire it prevents. The guard swallows TRUSTED pointer and click
+// events only, in the capture phase: a scripted `.click()` (the bots, the reviewer console) is
+// not a travelling finger and passes straight through, which is also what keeps the 109 named
+// checks measuring the game rather than measuring this. The M1 region of the bot proves the
+// shipped path with real pointer taps.
+const ARM_MS = 500;
+function armCard(host, ms) {
+  if (!host) return;
+  host.dataset.armed = String(performance.now() + (ms == null ? ARM_MS : ms));
+}
+const armedUntil = el => {
+  const b = el && el.closest ? el.closest('button') : null;
+  const host = b && b.closest('[data-armed]');
+  return host ? +host.dataset.armed : 0;
+};
+for (const type of ['pointerdown', 'pointerup', 'click']) {
+  document.addEventListener(type, e => {
+    if (!e.isTrusted) return;
+    if (performance.now() >= armedUntil(e.target)) return;
+    e.stopPropagation();
+    e.preventDefault();
+  }, true);
+}
+
 // ---------- test hooks (used by the automated playtest bot) ----------
 window.GE = {
   get level() { return li; },
@@ -3253,7 +3513,20 @@ window.GE = {
   // the end of LEVELS. Reading `level` there is what produced "Level 41/40" on a five-level save
   // (t50): the landing CTA, the sheet-index header and the current-tile highlight all asked the
   // engine which board was loaded when what they meant was which level the player is up to.
-  get resume() { return resumeLevel; },
+  get resume() {
+    // ...and since round 2's branching availability (menu.js, backlog #21) "the last level
+    // loaded" is no longer the answer to "where does Continue go?" either: a sheet advances at
+    // eight of its ten, so the pointer belongs to the campaign's own rule. menu.js installs it
+    // here rather than the engine importing progress it has no business reading. With no policy
+    // installed (a bot page, a test harness) this is exactly what it always was.
+    if (resumePolicy) {
+      try { const v = resumePolicy(resumeLevel); if (Number.isInteger(v)) return Math.max(0, Math.min(v, LEVELS.length - 1)); } catch (e) {}
+    }
+    return resumeLevel;
+  },
+  set resumePolicy(fn) { resumePolicy = typeof fn === 'function' ? fn : null; },
+  // the raw engine pointer: the last REAL campaign level loaded, whatever the policy says
+  get current() { return resumeLevel; },
   get pos() { return pos; },
   get L() { return L; },
   get moves() { return moves; },
@@ -3304,6 +3577,21 @@ window.GE = {
   rewarded, // the placeholder rewarded-ad flow — the free rescue/hint grants run this contract
   // paper skins: id + table for menu.js and the bots; setTheme repaints instantly (next frame)
   get theme() { return themeId; }, get themes() { return THEMES; }, setTheme,
+  // ---- accessibility (round 2 M1) ----
+  // ink presets: the four block/gate colours, with the glyph fixed. `palettes` is the table the
+  // pickers build themselves from; `inks` is what is on screen right now.
+  get palette() { return paletteId; }, get palettes() { return PALETTES; },
+  get inks() { return COLORS.map(c => ({ main: c.main, dark: c.dark, lite: c.lite, glyph: c.glyph })); },
+  setPalette,
+  // control sensitivity: how far the finger travels before a block steps a cell
+  get dragStep() { return dragStepId; }, get dragSteps() { return DRAG_STEPS; }, setDragStep,
+  // the post-acceptance input debounce, for the surfaces menu.js owns
+  armCard, get armMs() { return ARM_MS; },
+  get toughLevels() { return Object.keys(TOUGH).map(k => ({ lvl: +k + 1, hardest: !!TOUGH[k].hardest, note: toughNote(+k) })); },
+  toughAt: i => { const t = toughAt(i); return t ? { hardest: !!t.hardest, label: TOUGH_LABEL, note: toughNote(i) } : null; },
+  // the flicker ceiling: how many alignment-flash onsets have been started and how many were
+  // refused by the three-per-second budget (GAG Basic)
+  get flashStats() { return { started: flashStarted, skipped: flashSkipped, live: flashOnsets.length, maxPerSecond: FLASH_MAX_PER_S }; },
   burst, sound, // the certification reveal on the win card reuses the third-star burst and the generated audio
   // drawing helpers shared with menu.js (legend); ctx is swapped for the call
   draw(c, fn) { const o = ctx; ctx = c; try { fn({ rr, drawGlyph, drawBlockShape, COLORS }); } finally { ctx = o; } },
@@ -3426,18 +3714,75 @@ requestAnimationFrame(frame);
   const starsTotal = () => prog.s.reduce((a, b) => a + (b || 0), 0);
   const sheetStars = c => prog.s.slice(c * PER, (c + 1) * PER).reduce((a, b) => a + (b || 0), 0);
   const sheetMax = c => Math.min(PER, N - c * PER) * 3;
+  // ---------- branching availability (round 2, backlog #21 / rule-collision ruling 6) ----------
+  // A sheet advances when any EIGHT of its ten levels are cleared — not all ten, and not the
+  // tenth in particular. Inside an open sheet every tile is playable in any order, because the
+  // SHEET is the unit of progression and the tile is not: one board a player cannot see past is
+  // the single most common reason a puzzle install stops, and there are two boards in the shipped
+  // forty (L20, L25) that the estimator says a noisy player clears one run in ten.
+  //
+  // Eight of ten is E4 — team judgment. The report proposes branching and says so; no experiment
+  // has been run on the threshold, and nothing about 8 is derived. It is written here as one
+  // constant precisely so that changing it is one edit and one number in one report.
+  //
+  // Nothing is taken away by this. The Continue CTA and the highlighted tile still point at the
+  // lowest uncleared level, so the default path through the game is exactly the old sequential
+  // one; what changes is that skipping past a wall is now possible instead of impossible.
+  const SHEET_ADVANCE = 8; // E4
+  const sheetOf = i => Math.floor(i / PER);
+  const sheetCleared = c => prog.s.slice(c * PER, (c + 1) * PER).filter(Boolean).length;
+  const sheetSize = c => Math.min(PER, N - c * PER);
+  // how many sheets are open: sheet 1 always, and each next one once the sheet before it has its
+  // eight. Derived from the star array on every read — never stored, so it cannot drift.
+  function openSheets() {
+    let n = 1;
+    while (n * PER < N && sheetCleared(n - 1) >= Math.min(SHEET_ADVANCE, sheetSize(n - 1))) n++;
+    return n;
+  }
+  // the unlock pointer: the highest playable tile. It is the last open sheet's last tile — and
+  // never below what a save already had, because a player who reached level 30 under the old
+  // sequential rule must not open the app to find level 30 locked.
+  const unlockTo = () => Math.max(prog.u | 0, Math.min(N - 1, openSheets() * PER - 1));
+  const playable = i => i <= unlockTo();
+  // the CONTINUE pointer, installed on the engine (GE.resume): the lowest uncleared tile in the
+  // newest open sheet. Once a sheet has its eight the next one is open, so this lands on the new
+  // sheet's first level and the two stragglers stay behind you rather than in front of you.
+  function continueAt() {
+    const last = openSheets() - 1, from = last * PER, to = Math.min(N, from + PER);
+    for (let i = from; i < to; i++) if (!prog.s[i]) return i;
+    for (let i = 0; i < N; i++) if (!prog.s[i]) return i;   // the open sheet is full: the earliest gap
+    return N - 1;                                           // everything cleared: the last sheet
+  }
   const skins = () => prog.skins || [];
   const unlocked = id => id === DEFAULT_SKIN || skins().includes(id);
-  const sheetLabel = c => `Sheet ${c + 1} · certified at ${CERT_STARS} ★`;
+  // a locked reward names what is still owed on the sheet that pays it, not the threshold in the
+  // abstract: "6 ★ to Night vellum · Sheet 2" (ruling 9)
+  const sheetLabel = c => `${CERT_STARS - sheetStars(c)} ★ to ${rewardName(c)} · Sheet ${c + 1}`;
   const certLabel = id => sheetLabel(CERT_SKINS.indexOf(id));
   // what a sheet's certification pays: a paper for sheets 1-3, the seal for sheet 4
   const rewardName = c => (c === APPR_SHEET ? APPR_NAME : (GE.themes[CERT_SKINS[c]] || {}).name || 'certified');
+  // ---------- endowed progress, honest form only (round 2, ruling 8/9) ----------
+  // The evidence for endowed progress is about how a total is FRAMED, not about inventing one:
+  // "30 ★ · 12 banked · 12 to certify" is the same three facts as "★ 12/30", stated so that the
+  // number the player is asked to reach is small and the total it sits in is still printed. What
+  // is forbidden is a stamp nobody earned — there is not one anywhere in this file, and the
+  // survey's reveal day counts only because the reveal fires on a real clear.
+  //
+  // Ruling 9: a certification chip states a REMAINING number and never a ratio. So a sheet in
+  // progress reads "24 ★ · 12 banked · 12 to certify", and a locked paper reads "6 ★ to Night
+  // vellum" — never "12/30", which is the shape that makes the target feel far away.
+  // the emphasis is on the SMALL number the player is being asked to reach, with the total and
+  // what is already banked stated plainly beside it
+  const certChip = c => `${CERT_STARS} ★ · ${sheetStars(c)} banked · <b>${CERT_STARS - sheetStars(c)} to certify</b>`;
+  const certPlain = c => `${CERT_STARS} ★ · ${sheetStars(c)} banked · ${CERT_STARS - sheetStars(c)} to certify`;
+  const certRemain = c => `${CERT_STARS - sheetStars(c)} ★ to ${rewardName(c)}`;
   const apprOn = () => !!prog.appr;
   // a save that already clears a threshold (older build, seeded progress) owns that reward; the
   // stamp beat then plays the first time its header is seen (prog.seen)
   for (let c = 0; c < CERT_SKINS.length; c++) if (sheetStars(c) >= CERT_STARS && !unlocked(CERT_SKINS[c])) prog.skins = [...skins(), CERT_SKINS[c]];
   if (sheetStars(APPR_SHEET) >= CERT_STARS && !prog.appr) prog.appr = 1;
   GE.setTheme(unlocked(prog.skin) ? prog.skin : DEFAULT_SKIN);
+  GE.resumePolicy = continueAt; // the campaign owns "where does Continue go?" (branching, above)
 
   // ---------- paper skins ----------
   // the certification stamp: a dashed pending frame with a blank rule, or — once the sheet is
@@ -3487,7 +3832,7 @@ requestAnimationFrame(frame);
   // the picker is the payoff of certification, so it arrives with it (staged disclosure): on a
   // cold open there is nothing to say about three papers the player cannot have yet
   function refreshPapers() {
-    const on = disclosure().cert;
+    const on = disclosure().papers;
     $('menuPapers').hidden = $('pausePapers').hidden = !on;
     if (!on) return;
     buildPapers($('menuPapers'), 'btnPaper'); buildPapers($('pausePapers'), 'btnPausePaper');
@@ -3496,7 +3841,7 @@ requestAnimationFrame(frame);
   // pending (the ring is drawn, the check is not) and — like a locked swatch — a tap explains it
   // rather than doing nothing. There is nothing to SELECT: the stamp is on the card or it is not.
   function refreshAppr() {
-    const host = $('menuAppr'), on = disclosure().cert;
+    const host = $('menuAppr'), on = disclosure().papers; // the cosmetics shelf arrives as one thing
     host.hidden = !on;
     if (!on) return;
     const earned = apprOn(), sw = host.querySelector('.sw');
@@ -3508,7 +3853,7 @@ requestAnimationFrame(frame);
     b.setAttribute('aria-label', APPR_NAME + (earned ? ', stamped on every win card' : ', locked. ' + sheetLabel(APPR_SHEET)));
     b.onclick = () => caption(host, earned ? APPR_NAME + ' · on every win card' : sheetLabel(APPR_SHEET), !earned);
     sw.appendChild(b);
-    caption(host, earned ? APPR_NAME : `★ ${sheetStars(APPR_SHEET)}/${sheetMax(APPR_SHEET)} on Sheet ${APPR_SHEET + 1}`, !earned);
+    caption(host, earned ? APPR_NAME : certRemain(APPR_SHEET) + ` · Sheet ${APPR_SHEET + 1}`, !earned);
   }
   // the win card's stamp: drawn once it exists, on every win from then on (a cosmetic you never
   // see is not a reward). `fresh` is the one-shot landing animation on the win that earned it.
@@ -3519,6 +3864,85 @@ requestAnimationFrame(frame);
     if (!el.hidden && !el.firstChild) el.innerHTML = APPR_SVG(true);
   }
   window.addEventListener('ge:theme', () => { refreshPapers(); if (!screens.legend.hidden) drawSymbols(); });
+
+  // ---------- accessibility shelves: block inks + control sensitivity (round 2 M1) ----------
+  // NEVER staged. Every other shelf on the sheet index arrives on the win that makes it
+  // meaningful; these two are on both surfaces from the first frame of a fresh install, because
+  // a player who cannot tell two inks apart needs them before level 1, not after level 10.
+  //
+  // They live on the paper picker's own row so the sheet index and the pause card gain one more
+  // shelf rather than a new kind of surface, and they are the SAME two controls in both places —
+  // a setting you can only reach from a menu you have to leave the board for is a setting a
+  // player fights the board without.
+  const INK_TAG = { default: 'A', deuteranopia: 'D', protanopia: 'P', tritanopia: 'T', custom: '✎' };
+  const DRAG_LABEL = { standard: 'STANDARD', steady: 'STEADY', firm: 'FIRM' };
+  const DRAG_CAP = {
+    standard: 'Standard · a block steps at half a cell',
+    steady: 'Steady · two thirds of a cell before anything moves',
+    firm: 'Firm · most of a cell — nothing moves by accident',
+  };
+  function buildInks(host) {
+    if (!host) return;
+    const sw = host.querySelector('.sw'), pick = host.querySelector('.pick');
+    sw.innerHTML = '';
+    for (const id in GE.palettes) {
+      const p = GE.palettes[id], on = GE.palette === id;
+      const inks = id === 'custom' ? GE.palettes.custom.inks : p.inks;
+      const b = document.createElement('button');
+      b.className = 'ink' + (on ? ' on' : '');
+      b.id = host.id + 'Ink' + id[0].toUpperCase() + id.slice(1);
+      b.dataset.ink = id;
+      // the swatch is the four inks themselves, quartered — and carries the preset's initial, so
+      // the shelf is never four squares told apart by colour alone
+      b.innerHTML = inks.map(c => `<i style="background:${c}"></i>`).join('') + `<b>${INK_TAG[id] || '?'}</b>`;
+      b.setAttribute('aria-label', 'Block colours: ' + p.name + ' (' + p.sub + ')' + (on ? ', on' : ''));
+      b.onclick = () => {
+        GE.setPalette(id, id === 'custom' ? GE.palettes.custom.inks : undefined);
+        track('ink_select', { id, from: host.id === 'menuInks' ? 'menu' : 'pause' });
+      };
+      sw.appendChild(b);
+    }
+    // the four colour wells, shown only while the custom set is the one in use
+    pick.hidden = GE.palette !== 'custom';
+    pick.innerHTML = '';
+    if (!pick.hidden) {
+      GE.palettes.custom.inks.forEach((hex, i) => {
+        const inp = document.createElement('input');
+        inp.type = 'color'; inp.value = hex; inp.id = host.id + 'Pick' + i;
+        inp.setAttribute('aria-label', 'Custom ink ' + (i + 1) + ' (' + GE.inks[i].glyph + ')');
+        inp.oninput = () => {
+          const inks = GE.palettes.custom.inks.slice();
+          inks[i] = inp.value;
+          GE.setPalette('custom', inks);
+        };
+        pick.appendChild(inp);
+      });
+    }
+    const p = GE.palettes[GE.palette] || GE.palettes.default;
+    caption(host, p.name + ' · ' + p.sub);
+  }
+  function buildDrag(host) {
+    if (!host) return;
+    const row = host.querySelector('.step');
+    row.innerHTML = '';
+    for (const id in GE.dragSteps) {
+      const b = document.createElement('button');
+      b.className = GE.dragStep === id ? 'on' : '';
+      b.id = host.id + 'Step' + id[0].toUpperCase() + id.slice(1);
+      b.dataset.step = id;
+      b.textContent = DRAG_LABEL[id] || id;
+      b.setAttribute('aria-label', 'Drag step: ' + id + (GE.dragStep === id ? ', on' : ''));
+      b.onclick = () => { GE.setDragStep(id); track('dragstep_select', { id }); };
+      row.appendChild(b);
+    }
+    caption(host, DRAG_CAP[GE.dragStep] || GE.dragStep);
+  }
+  function refreshAccess() {
+    buildInks($('menuInks')); buildInks($('pauseInks'));
+    buildDrag($('menuDrag')); buildDrag($('pauseDrag'));
+  }
+  window.addEventListener('ge:palette', () => { refreshAccess(); if (!screens.legend.hidden) drawSymbols(); });
+  window.addEventListener('ge:dragstep', refreshAccess);
 
   // ---------- sound ----------
   try { GE.soundOn = localStorage.getItem('ge_sound') !== '0'; } catch (e) {}
@@ -3591,7 +4015,7 @@ requestAnimationFrame(frame);
   // the landing: title treatment, one static stamp line, one CTA, two quiet entries. Everything
   // else the title block used to carry now lives on the sheet index (refreshLog).
   function refreshMenu() {
-    $('playLabel').textContent = resumable() ? 'Resume level ' + (GE.resume + 1)
+    $('playLabel').textContent = resumable() ? 'Resume level ' + ((GE.current != null ? GE.current : GE.resume) + 1)
       : freshInstall() ? 'Play' : 'Continue — Level ' + (GE.resume + 1);
     const today = dayStr(GE.now());
     const live = streak.lastDate && streak.len > 0 && dayGap(streak.lastDate, today) <= 1 ? streak.len : 0;
@@ -3615,7 +4039,7 @@ requestAnimationFrame(frame);
     if (d.daily && draftReady()) { const i = GE.dailyInfo; if (i.done && i.cur && i.cur.state === 'won') parts.push("Today's draft is filed"); }
     if (d.survey) {
       const s = surveyWeek(), stamped = weekDates(GE.now()).filter(x => s.days.includes(x)).length;
-      parts.push(`<b>${stamped}</b> of 7 survey days`);
+      parts.push(`7 survey days · <b>${stamped}</b> stamped`);
     }
     st.hidden = !d.status || !parts.length;
     if (!st.hidden) st.innerHTML = parts.slice(0, 2).join(' · ');
@@ -3629,6 +4053,7 @@ requestAnimationFrame(frame);
     refreshHaptics();
     refreshPapers();
     refreshAppr();
+    refreshAccess();
     refreshDraft();
     refreshSurvey();
   }
@@ -3646,7 +4071,7 @@ requestAnimationFrame(frame);
         const h = document.createElement('div');
         h.className = 'chap';
         h.innerHTML = `<span>Sheet ${c + 1} · ${CHAPTERS[c] || ''}</span>`
-          + (cert ? `<span class="cert${done && !fresh ? ' on' : ''}" title="Certified at ${CERT_STARS} ★">${CERT_SVG(done && !fresh)} <b>★ ${got}/${sheetMax(c)}</b> · ${done ? reward : `${CERT_STARS - got} to certify`}</span>` : '');
+          + (cert ? `<span class="cert${done && !fresh ? ' on' : ''}" title="${certPlain(c)}">${CERT_SVG(done && !fresh)} ${done ? `<b>${reward}</b>` : certChip(c)}</span>` : '');
         g.appendChild(h);
         if (fresh) {
           prog.seen = [...(prog.seen || []), c]; save();
@@ -3654,13 +4079,17 @@ requestAnimationFrame(frame);
           setTimeout(() => { if (!ico.isConnected) return; ch.classList.add('on', 'stamping'); ico.classList.add('on'); GE.burst(ico); GE.sound('cert'); }, 400);
         }
       }
-      const locked = i > prog.u;
+      const locked = !playable(i);
+      // the tough-one stamp, on the same three tiles the HUD stamps and for the same reason
+      const tough = GE.toughAt ? GE.toughAt(i) : null;
       const b = document.createElement('button');
-      b.className = 'tile' + (locked ? ' locked' : '') + (prog.s[i] ? ' done' : '') + (i === GE.resume ? ' cur' : '');
-      b.setAttribute('aria-label', 'Level ' + (i + 1) + (locked ? ', locked' : ''));
+      b.className = 'tile' + (locked ? ' locked' : '') + (prog.s[i] ? ' done' : '') + (i === GE.resume ? ' cur' : '') + (tough ? ' tough' : '');
+      b.setAttribute('aria-label', 'Level ' + (i + 1) + (locked ? ', locked' : '') + (tough ? ', a tough one — ' + tough.note : ''));
+      if (tough) b.title = tough.label + ' — ' + tough.note;
       b.dataset.level = i + 1; // tiles are addressed by level, not by grid position (headers are children too)
       b.disabled = locked;
-      b.innerHTML = `<span>${String(i + 1).padStart(2, '0')}</span><span class="st">${prog.s[i] ? '★'.repeat(prog.s[i]) : ''}</span>`;
+      b.innerHTML = `<span>${String(i + 1).padStart(2, '0')}</span><span class="st">${prog.s[i] ? '★'.repeat(prog.s[i]) : ''}</span>`
+        + (tough ? '<span class="tg">' + tough.label + '</span>' : '');
       if (!locked) b.onclick = () => { if (GE.livesGate(i)) GE.load(i); };
       g.appendChild(b);
     }
@@ -3698,6 +4127,7 @@ requestAnimationFrame(frame);
     refreshMotion();
     refreshHaptics();
     refreshPapers();
+    refreshAccess();
     pauseModal.hidden = false;
   }
   function resume() { GE.paused = false; pauseModal.hidden = true; }
@@ -3797,16 +4227,30 @@ requestAnimationFrame(frame);
   // neither can be derived: prog.d0 (the date of the first clear — a level count cannot tell you the
   // player came back another day) and prog.rv (which reveals have already had their one quiet beat,
   // so a replay never re-announces anything).
+  //
+  // Round 2 (backlog #19) moved two of the rungs further out. The survey now arrives at SEVEN
+  // clears rather than five: a weekly sheet with a seven-day spine is a promise about next week,
+  // and a player five levels in has not yet decided there will be a next week. The paper picker
+  // is held to TEN — one finished sheet — because a shelf of three locked swatches is the one
+  // reward surface in the game that is mostly padlocks on the day it appears, and by ten clears
+  // the first certification is either earned or one good level away. Certification itself is
+  // untouched at two: the sheet header, the win card's reward row and the "Try it" button are
+  // the moment the paper is WON, which is a different thing from the shelf it later lives on.
+  const PAPER_NEED = 10;
   const REVEALS = [
-    { id: 'cert',   need: 2, k: 'Sheet certification', v: '24 ★ on a sheet earns its paper' },
-    { id: 'daily',  need: 3, k: 'Daily draft',         v: 'One board a day, the same for everyone' },
-    { id: 'survey', need: 5, k: 'Field survey',        v: 'A week to fill in · one contract taken' },
+    { id: 'cert',   need: 2,  k: 'Sheet certification', v: '24 ★ on a sheet earns its paper' },
+    { id: 'daily',  need: 3,  k: 'Daily draft',         v: 'One board a day, the same for everyone' },
+    { id: 'survey', need: 7,  k: 'Field survey',        v: 'A week to fill in · one contract taken' },
+    { id: 'papers', need: PAPER_NEED, k: 'Paper picker', v: 'Choose the paper the drawing is on' },
   ];
   const clearedCount = () => prog.s.reduce((n, v) => n + (v ? 1 : 0), 0);
   const seenReveal = id => (prog.rv || []).includes(id);
   function disclosure() {
     const n = clearedCount(), d = { cleared: n };
     for (const r of REVEALS) d[r.id] = n >= r.need;
+    // ...and a paper already earned always has its picker: a reward you own and cannot select is
+    // worse than no shelf at all (a sheet can certify at eight clears, two short of the rung)
+    d.papers = d.papers || skins().length > 0;
     // a return day is any day that is not the day of the first clear ('pre' marks a save that
     // already had progress when this shipped — a returning player by definition)
     d.status = !!prog.d0 && prog.d0 !== dayStr(GE.now());
@@ -3853,7 +4297,7 @@ requestAnimationFrame(frame);
     // (t4) — is the one screen that contradicted staged disclosure. It is gated on the same derived
     // rule everything else uses: the sheet that teaches it must be in reach.
     const chainAt = LEVELS.findIndex(l => l.blocks.some(b => b.seq));
-    g('liSeq', chainAt >= 0 && (d.cleared >= chainAt || prog.u >= chainAt));
+    g('liSeq', chainAt >= 0 && (d.cleared >= chainAt || unlockTo() >= chainAt));
     g('legendSurvey', d.survey); g('legendContracts', d.survey); g('legendStreak', d.survey);
     // the divider is a heading for a list that can be empty on a cold open
     g('legendMetaDiv', GE.livesEnabled || d.cert || d.daily || d.survey);
@@ -3907,6 +4351,32 @@ requestAnimationFrame(frame);
     const plain = offered.filter(id => !CONTRACTS[id].cond);
     return rank(plain.length ? plain : offered) || null;
   }
+  // ---------- "the day was broken" excuse flag (round 2, new bright line E3) ----------
+  // A day the BUILD took away from the player is not a day the player missed. If a release went
+  // out that could not be played — a crash on launch, a draft the decoder refused, a store
+  // rollout that stranded a version — the dates go in this list and the survey treats them as
+  // neither stamped nor missed: a dot on the spine, no ring, and the streak carries straight
+  // across them as if they were not there.
+  //
+  // It is an EXCUSE, never a credit. No day is stamped by it, no point is paid, no contract
+  // advances, and it can only ever remove a penalty the player did not earn — which is the whole
+  // reason it is safe to ship a list the operator writes. The list arrives with the BUILD
+  // (build-info.js sets window.GE_BROKEN_DAYS; the dailies header may carry the same array), so
+  // it is auditable in the artefact rather than editable on the device.
+  const BROKEN_DAYS = (() => {
+    const src = (typeof window !== 'undefined' && window.GE_BROKEN_DAYS)
+      || (typeof DAILIES !== 'undefined' && DAILIES && DAILIES.broken);
+    return new Set(Array.isArray(src) ? src.filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)) : []);
+  })();
+  const isBroken = d => BROKEN_DAYS.has(d);
+  // how many of the days strictly between two dates were broken (so a gap made only of broken
+  // days is a gap of zero missed days)
+  function brokenBetween(from, to) {
+    let n = 0;
+    const gap = dayGap(from, to);
+    for (let i = 1; i < gap; i++) if (isBroken(dayStr(new Date(from + 'T12:00').getTime() + i * 864e5))) n++;
+    return n;
+  }
   const OFFERED = 4, PICKS = 2, DELAY_MAX = 2, MILESTONES = [3, 7, 12, 20];
   const DAY_INITIALS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   const dayStr = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
@@ -3940,7 +4410,7 @@ requestAnimationFrame(frame);
   const saveStreak = () => { try { localStorage.setItem('ge_streak', JSON.stringify(streak)); } catch (e) {} };
 
   const blankSurvey = (week, keep) => ({ week, offered: rollContracts(week), chosen: [], prog: {}, filed: [],
-    days: [], delays: [], pts: 0, ms: [], seal: false, frags: (keep && keep.frags) || 0, last: (keep && keep.last) || null });
+    days: [], delays: [], pts: 0, ms: [], seal: false, sw: 0, frags: (keep && keep.frags) || 0, last: (keep && keep.last) || null });
   let survey = blankSurvey(isoWeek(GE.now()));
   const saveSurvey = () => { try { localStorage.setItem('ge_survey', JSON.stringify(survey)); return true; } catch (e) { return false; } };
   // one-shot migration off the v1 pair. ge_streak is NOT touched, so len / best / freezes / marks
@@ -3985,19 +4455,36 @@ requestAnimationFrame(frame);
     }
     return survey;
   }
-  // free to swap until a chosen contract has actually earned something; after that the week's pair
-  // is set (a filed contract counts as progress too)
-  const contractsLocked = () => surveyWeek().chosen.some(id => (survey.prog[id] || 0) > 0);
+  // ---------- one swap after first progress (round 2, backlog #20) ----------
+  // Swapping was free until a chosen contract earned its first mark, and then the pair was set
+  // for the week. That is one tap too strict: the mark that locks the pair is usually the FIRST
+  // clear of the week, so a contract taken blind on Monday was final by Monday evening, and the
+  // survey's own worked example (the pre-selected demonstration contract) was the thing most
+  // likely to be locked in. So progress now buys ONE swap rather than a lock. Exactly one: a
+  // choice you can revisit forever is not a choice, and the sheet says how many are left.
+  //
+  // The allowance is spent by TAKING a contract that was not already chosen — dropping one is
+  // free, so a mis-tap on DROP costs nothing and can be undone by taking it straight back. A
+  // FILED contract can never be dropped: it has already paid, and dropping it would erase a
+  // result. The week's four offers are untouched by any of this and stay deterministic.
+  const SWAPS_AFTER_PROGRESS = 1;
+  const hasProgress = () => surveyWeek().chosen.some(id => (survey.prog[id] || 0) > 0) || survey.filed.length > 0;
+  const swapsLeft = () => (hasProgress() ? Math.max(0, SWAPS_AFTER_PROGRESS - (survey.sw || 0)) : Infinity);
+  const contractsLocked = () => swapsLeft() <= 0;
   function chooseContract(id) {
     const s = surveyWeek();
     if (contractsLocked() || !s.offered.includes(id)) return false;
     const i = s.chosen.indexOf(id);
-    if (i >= 0) s.chosen.splice(i, 1);
-    else if (s.chosen.length < PICKS) s.chosen.push(id);
-    else return false;
+    if (i >= 0) {
+      if (s.filed.includes(id)) return false;   // a filed contract is a result, not a choice
+      s.chosen.splice(i, 1);
+    } else if (s.chosen.length < PICKS) {
+      if (hasProgress()) s.sw = (s.sw || 0) + 1; // the allowance is spent on the TAKE
+      s.chosen.push(id);
+    } else return false;
     delete s.prog[id];
     saveSurvey();
-    track('contract_select', { id, on: i < 0, chosen: s.chosen.length });
+    track('contract_select', { id, on: i < 0, chosen: s.chosen.length, swapsLeft: swapsLeft() === Infinity ? null : swapsLeft() });
     return true;
   }
   // The survey is revealed with ONE contract already taken — the easiest of the four this week
@@ -4020,7 +4507,9 @@ requestAnimationFrame(frame);
     let newBest = false;
     if (streak.lastDate !== today) {
       const gap = streak.lastDate ? dayGap(streak.lastDate, today) : 99;
-      if (gap === 1 && streak.len > 0) streak.len++;
+      // days the build broke are not days the player missed (BROKEN_DAYS, above)
+      const missed = streak.lastDate ? gap - 1 - brokenBetween(streak.lastDate, today) : 99;
+      if (gap >= 1 && missed <= 0 && streak.len > 0) streak.len++;
       else streak.len = 1;                                   // a lapsed streak simply starts again
       streak.lastDate = today;
       if (streak.len > streak.best) { newBest = streak.len >= 2; streak.best = streak.len; } // day one is not an announcement
@@ -4062,7 +4551,7 @@ requestAnimationFrame(frame);
     $('btnSurvey').hidden = !disclosure().survey; // staged: the week's sheet arrives after level 5
     const s = surveyWeek(), dates = weekDates(GE.now());
     const stamped = dates.filter(d => s.days.includes(d)).length;
-    $('fSurvey').innerHTML = `${stamped}/7 · ${s.pts} pt${s.pts === 1 ? '' : 's'}`
+    $('fSurvey').innerHTML = `7 days · ${stamped} stamped · ${s.pts} pt${s.pts === 1 ? '' : 's'}`
       + (s.ms.includes(20) ? '<span class="mark" title="20-point mark">⌖</span>' : '');
     // the badge counts what is still to choose — the survey now ARRIVES with one contract taken
     // (staged disclosure), so a flat "SELECT 2" would be asking for a decision already half made
@@ -4093,8 +4582,10 @@ requestAnimationFrame(frame);
     $('surveyNo').textContent = 'WEEK ' + s.week.split('-W')[1];
     const live = streak.lastDate && streak.len > 0 && dayGap(streak.lastDate, today) <= 1 ? streak.len : 0;
     // the streak fact lives here now: one header line, stated plainly, nothing sold against it
+    // ruling 8, honest form: the total is printed and the number still to reach is small.
+    // Nothing here is stamped that was not earned — `stamped` is counted off the day spine.
     $('surveySub').innerHTML = (live ? `<b>${live}-day streak</b>` : 'No streak running')
-      + ` · ${stamped} of 7 days · ${s.pts} point${s.pts === 1 ? '' : 's'}`
+      + ` · 7 days · <b>${stamped}</b> stamped · ${s.pts} point${s.pts === 1 ? '' : 's'}`
       + (streak.freezes ? `<small>${streak.freezes} weather delay${streak.freezes > 1 ? 's' : ''} held</small>` : '');
     // A day before the player owned the game is not a day they missed. The sheet starts counting
     // from the first clear (prog.d0), so Monday and Tuesday of a Wednesday install render as blank
@@ -4106,14 +4597,18 @@ requestAnimationFrame(frame);
       // today is not a missed day until it is over, so it reads "to come" until it is stamped
       const on = s.days.includes(d), delay = !on && s.delays.includes(d), ahead = d >= today;
       const pre = !on && !delay && !ahead && !!d0 && d < d0;
-      const mark = on ? '✓' : delay ? '~' : ahead || pre ? '·' : '○';
-      const what = on ? 'stamped' : delay ? 'weather delay' : pre ? 'before this sheet' : ahead ? 'to come' : 'no clear';
-      return `<div class="d${on ? ' on' : delay ? ' delay' : pre ? ' pre' : ''}${d === today ? ' today' : ''}" data-day="${d}" title="${d} — ${what}">`
+      // a day the build broke is neither stamped nor missed: the same neutral dot a day still to
+      // come gets, and the streak carried across it (BROKEN_DAYS)
+      const broke = !on && !delay && isBroken(d);
+      const mark = on ? '✓' : delay ? '~' : (ahead || pre || broke) ? '·' : '○';
+      const what = on ? 'stamped' : delay ? 'weather delay' : broke ? 'day was broken — excused' : pre ? 'before this sheet' : ahead ? 'to come' : 'no clear';
+      return `<div class="d${on ? ' on' : delay ? ' delay' : broke ? ' pre' : pre ? ' pre' : ''}${d === today ? ' today' : ''}" data-day="${d}" title="${d} — ${what}">`
         + `<span class="dn">${DAY_INITIALS[i]}</span><span class="dm">${mark}</span></div>`;
     }).join('');
     // the four glyphs, named on the sheet that uses them
     $('surveyKey').textContent = '✓ day stamped   ~ weather delay   ○ no clear   · to come'
-      + (dates.some((d) => d0 && d < d0 && !s.days.includes(d)) ? '   (dotted = before you started)' : '');
+      + (dates.some((d) => d0 && d < d0 && !s.days.includes(d)) ? '   (dotted = before you started)' : '')
+      + (dates.some(isBroken) ? '   (dotted = the day was broken — excused, not missed)' : '');
     // Weather delays, stated at zero and named as what they are. The mechanic was invisible until
     // the notice that one had been spent (t34) — a safety net nobody can see is only ever a surprise.
     const held = streak.freezes;
@@ -4121,6 +4616,7 @@ requestAnimationFrame(frame);
     $('surveyDelays').innerHTML = `<span class="k">Weather delays held</span>`
       + `<span class="v">${held} of ${DELAY_MAX} · ${held ? 'covers a missed day automatically' : 'file a contract to bank one'}</span>`;
     const locked = contractsLocked();
+    const left = swapsLeft();
     const rows = s.offered.filter(id => !locked || s.chosen.includes(id)).map(id => {
       const t = CONTRACTS[id], on = s.chosen.includes(id), filed = s.filed.includes(id);
       const p = Math.min(t.target, s.prog[id] || 0);
@@ -4132,10 +4628,15 @@ requestAnimationFrame(frame);
       // a taken contract shows its bar and count; an offered one shows only its label — the label
       // already names the number, so repeating it was noise on the row you have not taken yet
       const body = on ? `<span class="qbar"><i style="width:${Math.round((p / t.target) * 100)}%"></i></span><span class="qv">${p}/${t.target}</span>` : '';
-      return `<button class="q${on ? ' on' : ' alt'}${filed ? ' done' : ''}" data-contract="${id}"${locked ? ' disabled' : ''}`
+      const dead = locked || filed; // filed is a result, not a choice (see chooseContract)
+      return `<button class="q${on ? ' on' : ' alt'}${filed ? ' done' : ''}" data-contract="${id}"${dead ? ' disabled' : ''}`
         + ` aria-label="${t.label}${on ? ', chosen' : ''}${filed ? ', filed' : ''}"><span class="ql">${t.label}</span>${body}${chip}</button>`;
     }).join('');
-    const head = locked ? 'SET FOR THE WEEK' : s.chosen.length < PICKS ? `CHOOSE ${PICKS - s.chosen.length}` : 'SWAP FREE';
+    // what the header says is exactly what the next tap can do
+    const head = locked ? 'SET FOR THE WEEK'
+      : s.chosen.length < PICKS ? `CHOOSE ${PICKS - s.chosen.length}`
+      : left === Infinity ? 'SWAP FREE'
+      : `${left} SWAP LEFT`;
     $('surveyContracts').innerHTML = `<div class="qh"><span>Contracts</span><b>${head}</b></div>` + rows;
     $('surveyTrack').innerHTML = MILESTONES.map(n => {
       const got = s.ms.includes(n);
@@ -4158,7 +4659,7 @@ requestAnimationFrame(frame);
     if (!b || b.disabled) return;
     if (chooseContract(b.dataset.contract)) { renderSurvey(); refreshSurvey(); GE.sound('gate'); }
   });
-  $('btnSurvey').onclick = () => { renderSurvey(); $('surveyModal').hidden = false; };
+  $('btnSurvey').onclick = () => { renderSurvey(); $('surveyModal').hidden = false; GE.armCard($('surveyModal').querySelector('.card')); };
   $('btnSurveyClose').onclick = () => { $('surveyModal').hidden = true; };
 
   // ---------- Daily Draft: the sheet-index row and the FIELD REPORT result card ----------
@@ -4315,6 +4816,7 @@ requestAnimationFrame(frame);
     const fb = $('draftReportFb'); fb.hidden = true; fb.value = text;
     $('btnDraftShare').textContent = SHARE_LABEL; $('btnDraftShare').disabled = !text;
     draftModal.hidden = false;
+    GE.armCard(draftModal.querySelector('.card')); // round 2 M1: the tap that opened it does not answer it
     track('daily_report', { date: row.date, state: row.state });
     return true;
   }
@@ -4370,6 +4872,7 @@ requestAnimationFrame(frame);
       + ' moves to your filed total and forfeits the CLEAN token';
     $('recDay').textContent = BOUNDARY;
     recModal.hidden = false;
+    GE.armCard(recModal.querySelector('.card'));
     track('daily_confirm', { date: GE.dailyInfo.today });
   };
   $('btnRecStart').onclick = () => { recModal.hidden = true; startDraft('index'); };
@@ -4428,17 +4931,24 @@ requestAnimationFrame(frame);
     if (!streak.lastDate || streak.len < 1) return false;
     const gap = dayGap(streak.lastDate, today);
     if (gap <= 1) return false;
-    const missed = gap - 1;
+    const missed = gap - 1 - brokenBetween(streak.lastDate, today);
+    // every missing day was a broken one: nothing was missed, nothing is spent, nothing is said
+    if (missed <= 0) {
+      streak.lastDate = dayStr(GE.now() - 864e5); // today's first clear still extends the streak
+      saveStreak();
+      return false;
+    }
     if (streak.freezes >= missed) {
       streak.freezes -= missed;
       streak.lastDate = dayStr(GE.now() - 864e5); // yesterday: today's first clear extends the streak
       saveStreak();
       const s = surveyWeek();
-      for (let i = missed; i >= 1; i--) { const d = dayStr(GE.now() - i * 864e5); if (!s.delays.includes(d)) s.delays.push(d); }
+      for (let i = gap - 1; i >= 1; i--) { const d = dayStr(GE.now() - i * 864e5); if (!isBroken(d) && !s.delays.includes(d)) s.delays.push(d); }
       saveSurvey();
       track('weather_delay_used', { missed, left: streak.freezes });
       $('freezeSub').textContent = `Weather delay used — survey day covered · ${streak.freezes} left`;
       $('freezeModal').hidden = false;
+      GE.armCard($('freezeModal').querySelector('.card'));
       refreshSurvey();
       return 'freeze';
     }
@@ -4481,7 +4991,10 @@ requestAnimationFrame(frame);
     if (!prog.d0) prog.d0 = dayStr(GE.now());
     const before = starsTotal(), sheet = Math.floor(lvl / PER), sheetBefore = sheetStars(sheet);
     prog.s[lvl] = Math.max(prog.s[lvl] || 0, stars);
-    prog.u = Math.max(prog.u, Math.min(lvl + 1, N - 1));
+    // the unlock pointer is now DERIVED (branching, above): it is the last open sheet's last
+    // tile. It is still written down so that an older reader of ge_prog — the reviewer console's
+    // jump, the soak's frozen-progress invariant — sees the same number the grid draws.
+    prog.u = unlockTo();
     if (sheetBefore < CERT_STARS && sheetStars(sheet) >= CERT_STARS && sheet < CHAPTERS.length) {
       const id = CERT_SKINS[sheet];
       if (id && !unlocked(id)) prog.skins = [...skins(), id];
@@ -4721,6 +5234,16 @@ requestAnimationFrame(frame);
     get streak() { return streak; }, checkStreak, refreshSurvey, renderSurvey,
     get survey() { return surveyWeek(); }, weekDates: () => weekDates(GE.now()), isoWeek: () => isoWeek(GE.now()),
     contractsLocked, chooseContract, preselectContract, demoContract,
+    // ---- round 2 M1: branching availability, the swap allowance, the excuse flag ----
+    SHEET_ADVANCE, openSheets, unlockTo, continueAt, sheetCleared, playable,
+    SWAPS_AFTER_PROGRESS, swapsLeft: () => swapsLeft(), hasProgress,
+    brokenDays: () => [...BROKEN_DAYS], isBroken, PAPER_NEED,
+    certChip: c => certPlain(c), certRemain, refreshAccess,
+    // what the sheet index's certification chips and the survey header actually print
+    certChips: () => [...Array(CHAPTERS.length)].map((_, c) => ({ sheet: c + 1, done: sheetStars(c) >= CERT_STARS, text: sheetStars(c) >= CERT_STARS ? rewardName(c) : certPlain(c) })),
+    surveyHead: () => ({ sub: $('surveySub').innerText.replace(/\s+/g, ' ').trim(), key: $('surveyKey').textContent,
+      head: ($('surveyContracts').querySelector('.qh b') || {}).textContent || '',
+      spine: [...$('surveySpine').children].map(d => ({ day: d.dataset.day, mark: d.querySelector('.dm').textContent, title: d.title })) }),
     disclosure, REVEALS, takeReveal, refreshStatus, refreshDraft, openDraft, refreshLegendRows,
     draftRow: () => ({ hidden: $('btnDaily').hidden, k: $('fDailyK').textContent, v: $('fDaily').innerText.replace(/\s+/g, ' ').trim() }),
     status: () => ({ hidden: $('menuStatus').hidden, tag: $('menuStatus').tagName, text: $('menuStatus').innerText.replace(/\s+/g, ' ').trim() }),

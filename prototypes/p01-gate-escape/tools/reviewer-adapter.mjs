@@ -31,11 +31,18 @@ taps — the primary CTA (Play / Continue - Level N / Resume level N), Levels an
 Paper picker, Sound) lives on the Levels screen, the sheet index; in-game the HUD has hint (?, ghosts the next reference move — an exit route,
 or a dashed outline where a block should park; one per board position), undo (↶, one step, refunds the move), restart (↻) and pause (☰), shows the stars the
 current pace would earn, and an objective row of blocks left per color.
+AVAILABILITY IS BY SHEET, not by level (round 2): a sheet of ten opens once ANY EIGHT of the previous sheet's ten are cleared, and inside an
+open sheet every tile is playable in any order. Sheet 1 is open from the first frame, so all ten of its tiles are live on a brand-new save.
+The Continue CTA and the highlighted tile still point at the lowest UNCLEARED level of the newest open sheet, so the default path is the old
+sequential one; skipping a wall is now possible rather than impossible. Three tiles carry a TOUGH ONE stamp — L20, L24 and L25 — and the HUD
+repeats it while they are loaded; L20 and L25 add "the sheet's hardest". Those are the three boards a stochastic human-proxy estimator clears
+7%, 13% and 11% of the time; nothing about the boards changed, only the label.
 Stars have a cosmetic sink: each of the FOUR sheets of ten levels on the level select is CERTIFIED at 24 of its 30 stars. Sheets 1-3 reward a paper skin
 (Sepia draft / Night vellum / Whiteprint; Cyanotype is the default); SHEET 4 rewards the APPROVAL STAMP instead of a fourth paper — a mark stamped in the
 corner of every win card from then on, previewable on the "Stamp" shelf beside the paper picker while it is still pending (the ring is drawn, the approval
 check is not, so pending and earned differ in shape). Skins change only the drafting sheet (page, ink, grid, cards) — never block,
-gate or HUD state colours — and nothing is gated on certification. The sheet header carries a stamp glyph: a dashed pending frame with "N to certify",
+gate or HUD state colours — and nothing is gated on certification. The sheet header carries a stamp glyph: a dashed pending frame reading "24 ★ · 12 banked · 12 to certify" (the total stated, the number still
+to reach stated small, and never a ratio),
 or a solid stamped frame naming the reward once earned. The "Paper" picker on the sheet index and the pause card lists the skins; a locked swatch shows
 the pending stamp of the sheet it comes from. The win that crosses 24 adds a "Sheet certified — <reward>" row to the win card, with a "Try it" button for
 a paper and no button at all for the stamp (there is nothing to apply).
@@ -47,7 +54,9 @@ next up, the dashed on-deck ring marks it on the board, the "NEXT" chip names it
 card's rescue preview all obey the chain, so nothing the game proposes is ever an illegal exit.
 FIELD SURVEY — the only meta system (2026-09-02: the daily quests, the streak card and the weekly ladder were merged into it). The "Field survey"
 row on the sheet index reads "n/7 · N pts" (plus a SELECT 2 badge until the contracts are chosen) and opens the week's sheet, which holds:
- * a 7-DAY SPINE, Mon–Sun: any level clear stamps today (✓ stamped, ~ weather delay, ○ no clear, · still to come — four glyphs, not four colours);
+ * a 7-DAY SPINE, Mon–Sun: any level clear stamps today (✓ stamped, ~ weather delay, ○ no clear, · still to come — four glyphs, not four colours).
+   The header reads "7 days · N stamped". A date the BUILD broke (an unplayable release) is listed in BROKEN_DAYS and is excused: a dot on the
+   spine, neither stamped nor missed, and the streak carries across it. Nothing is ever stamped that was not earned by a real clear;
  * two CONTRACTS chosen from the FOUR the week offers, rolled deterministically from the ISO week so everyone sees the same four. They come from safe
    telemetry templates (clear N levels / earn N stars / clear N at par / without undo / without hints / clear N blocks — never ad views or spending),
    retargeted to a week. Swapping is FREE until a chosen contract earns its first progress; after that the pair is set for the week (the header reads
@@ -81,9 +90,11 @@ of the line would be a walkthrough. The card shows that exact text in a block ab
 navigator.share, then the clipboard, then hands the text over in a selectable box. The generator's WEEKDAY CURVE is published too (Mon/Tue easy,
 Wed/Sun medium, Thu/Fri hard, Sat the peak): the pre-board card names today's band and the legend prints the whole ramp. Nothing about the draft is
 ever sold, and a skipped day is simply a day that went by.
-STAGED DISCLOSURE (FTUE) — the sheet index opens BARE on a new save: level, stars, the forty tiles, sound. Each meta system arrives on the win
-that earns it — sheet certification (and the paper picker) after 2 levels cleared, the Daily Draft after 3, the Field Survey after 5 (revealed
-with the easiest of the week's four contracts ALREADY taken, as a worked example; swapping stays free until progress). Each reveal is announced
+STAGED DISCLOSURE (FTUE) — the sheet index opens BARE on a new save: level, stars, the forty tiles, sound, and the two accessibility shelves
+(Inks / Drag step), which are NEVER staged. Each meta system arrives on the win that earns it — sheet certification after 2 levels cleared, the
+Daily Draft after 3, the Field Survey after 7, the paper picker at 10 (one finished sheet, or earlier if a sheet certifies first). The survey is
+revealed with the easiest of the week's four contracts ALREADY taken, as a worked example; swapping is free until a chosen contract earns its
+first mark, and after that the week still allows exactly ONE swap ("1 SWAP LEFT" on the sheet). Each reveal is announced
 by ONE quiet stamped NEW row on the win card, once ever. The gate is derived from cleared levels; only the first-clear date and which reveals
 have played are stored. From the first RETURN day the landing gains a passive status line (a div, never a button — the landing is exactly three
 taps) of at most two finished facts, e.g. "Today's draft is filed · 3 of 7 survey days"; it may never carry a countdown, a CTA or a loss.
@@ -96,6 +107,12 @@ five hearts, HUD top-left and sheet index. Levels 1–5 NEVER cost a life.
 From L6 on, a failed attempt that ends in Retry costs one life; taking the rescue does NOT (it saves the attempt); Restart mid-level and winning cost
 nothing. Refill one life per 25 minutes (single anchor timestamp, GE.now-based); at zero lives, entering L6+ shows a calm card (refill timer + one
 rewarded +1 per appearance + Back to menu) — the menu and level browsing are never blocked, and L1–5 stay playable.
+ACCESSIBILITY (round 2): both the sheet index and the pause card carry an "Inks" shelf — Drafting inks (the default), Deuteranopia, Protanopia,
+Tritanopia and a Custom set with four colour wells — and a "Drag step" shelf (STANDARD / STEADY / FIRM: how far the finger travels before a block steps
+a cell; it only moves toward more travel, because a threshold under half a cell makes the block oscillate). The block GLYPH (circle / triangle / diamond / star) is fixed on every preset and its gate carries the same one, so the match never
+depends on telling two inks apart. Every result card (win, fail, ad, draft, survey, the recorded-attempt card) holds its buttons for half a second
+after it appears — an input debounce against a finger already travelling, never shown and never counted down. The win card and the fail sheet each
+carry one PROXIMITY line, "your best 9 · par 7", read off the stored personal best; a level never cleared says so instead.
 Motion toggle (pause card): forces the reduced-motion path (no shake, half particles, static ghost dashes) when off; the OS setting always wins.
 Coordinates: (x,y) cells, x to the right, y downward, origin top-left. A block's position is its
 top-left origin; its cells are listed absolute.`,
@@ -130,6 +147,8 @@ top-left origin; its cells are listed absolute.`,
     btnLivesHome: 'out-of-lives card: Back to menu (Escape does the same; browsing is never blocked)',
     // pseudo-buttons (not element ids): the level tiles and the survey's contract rows
     'level:N': 'levels: tap the tile for level N (1-40) — use the literal form "level:12"',
+    'ink:ID': 'sheet index / pause: pick the block-colour preset (ink:default, ink:deuteranopia, ink:protanopia, ink:tritanopia, ink:custom)',
+    'step:ID': 'sheet index / pause: control sensitivity (step:standard, step:steady, step:firm)',
     'contract:ID': 'survey sheet: take or drop the offered contract with that id (e.g. "contract:par8"; ids come from summarize().survey.contracts) — refused once the pair is locked',
   },
 
@@ -237,12 +256,25 @@ top-left origin; its cells are listed absolute.`,
         await page.click(`#levelGrid .tile[data-level="${n}"]`);
         return `tapped level tile ${n}`;
       }
+      // the accessibility shelves are rebuilt on every render, so they are addressed by value
+      // too. Whichever surface is up answers: the pause card while a board is paused, the sheet
+      // index otherwise — the same two controls live in both places.
+      if (id.startsWith('ink:') || id.startsWith('step:')) {
+        const kind = id.startsWith('ink:') ? 'ink' : 'step', val = id.slice(kind.length + 1);
+        const el = page.locator(`#pauseInks [data-${kind}="${val}"], #pauseDrag [data-${kind}="${val}"], #menuInks [data-${kind}="${val}"], #menuDrag [data-${kind}="${val}"]`);
+        const n = await el.count();
+        let hit = null;
+        for (let i = 0; i < n; i++) if (await el.nth(i).isVisible()) { hit = el.nth(i); break; }
+        if (!hit) return `error: ${kind} "${val}" is not on screen right now (open Levels or the pause card)`;
+        await hit.click();
+        return `tapped ${kind} ${val}`;
+      }
       // the survey's contract rows are data-bound buttons, not fixed ids
       if (id.startsWith('contract:')) {
         const cid = id.slice(9);
         const el = page.locator(`#surveyContracts button[data-contract="${cid}"]`);
         if (!(await el.count()) || !(await el.first().isVisible())) return `error: contract "${cid}" is not on the sheet right now (open the Field survey first; ids come from summarize().survey.contracts)`;
-        if (await el.first().isDisabled()) return `tapped contract ${cid} — the week's pair is SET (a chosen contract has earned progress), so it is disabled`;
+        if (await el.first().isDisabled()) return `tapped contract ${cid} — it is disabled: either it is already FILED, or the week's one post-progress swap has been used and the pair is set`;
         await el.first().click();
         return `tapped contract ${cid}`;
       }

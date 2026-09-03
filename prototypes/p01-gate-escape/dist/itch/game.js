@@ -2,13 +2,90 @@
 /* Gate Escape — drag colored blocks out through matching gates. */
 
 // ---------- palette (each color also gets a glyph for colorblind players) ----------
-// drafting inks on blueprint paper
-const COLORS = [
-  { main: '#ff8078', dark: '#c24d46', lite: '#ffb3ac', glyph: 'circle' },
-  { main: '#72d8ff', dark: '#3d9cc4', lite: '#b5ecff', glyph: 'triangle' },
-  { main: '#5fe89b', dark: '#2fae67', lite: '#a5f5c8', glyph: 'diamond' },
-  { main: '#ffd04d', dark: '#c99a1e', lite: '#ffe9a8', glyph: 'star' },
-];
+// drafting inks on blueprint paper.
+//
+// The GLYPH is the accessible channel and it never moves: circle / triangle / diamond / star are
+// the block's identity on every preset (CLAUDE.md: a shape cue wherever colour is the mechanic).
+// The ink is the flavour on top of it.
+//
+// Round 2 M1 (backlog #24): the four inks are a PRESET. `COLORS` is mutated in place rather than
+// reassigned, so every module that captured the array — menu.js's legend drawings, the HUD's
+// objective chips, the particle burst — follows a change without re-binding anything.
+//
+// The three dichromacy presets were not chosen by eye. Each candidate set was pushed through a
+// Vienot/Brettel LMS simulation of the deficiency it is named for and scored on the SMALLEST
+// CIE76 dE between any two of its four inks; the shipped sets are the ones that maximise that
+// number while holding the shipped default's own ink-halo and white-glyph contrast floors. The
+// default palette scores 17 / 22 / 3 under the three simulations (its red and green collapse for
+// a deuteranope; its cyan and green are three units apart for a tritanope, which is nothing).
+// The presets score 48 / 51 / 37. Those numbers are re-derived from the same simulation by the
+// bot's `colourblind presets` check, so a hand-edited hex cannot quietly undo the work.
+const INK_GLYPHS = ['circle', 'triangle', 'diamond', 'star'];
+// hsv round-trip, so one derivation makes every preset's outline and corner-dot inks: the
+// outline is the ink at 0.76 value / 1.18 saturation, the dot is the ink at 0.55 saturation.
+// Applied to the shipped default it reproduces the hand-picked literals to within a couple of
+// levels per channel — which is why the default keeps its literals and nothing else needs any.
+function rgbOfHex(h) { const m = String(h).replace('#', ''); return [0, 2, 4].map(i => parseInt(m.slice(i, i + 2), 16) || 0); }
+function hexOfRgb(r) { return '#' + r.map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join(''); }
+function rgb2hsv([r, g, b]) {
+  r /= 255; g /= 255; b /= 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  let h = 0;
+  if (d) { if (mx === r) h = ((g - b) / d) % 6; else if (mx === g) h = (b - r) / d + 2; else h = (r - g) / d + 4; h *= 60; if (h < 0) h += 360; }
+  return [h, mx ? d / mx : 0, mx];
+}
+function hsv2rgb([h, s, v]) {
+  const c = v * s, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = v - c;
+  let r, g, b;
+  if (h < 60) [r, g, b] = [c, x, 0]; else if (h < 120) [r, g, b] = [x, c, 0]; else if (h < 180) [r, g, b] = [0, c, x];
+  else if (h < 240) [r, g, b] = [0, x, c]; else if (h < 300) [r, g, b] = [x, 0, c]; else [r, g, b] = [c, 0, x];
+  return [r, g, b].map(u => (u + m) * 255);
+}
+const shadeInk = (hex, ds, dv) => { const [h, s, v] = rgb2hsv(rgbOfHex(hex)); return hexOfRgb(hsv2rgb([h, Math.min(1, s * ds), Math.min(1, v * dv)])); };
+const PALETTES = {
+  default: {
+    name: 'Drafting inks', sub: 'the shipped four',
+    inks: ['#ff8078', '#72d8ff', '#5fe89b', '#ffd04d'],
+    // kept as literals so the default build is pixel-identical to every build before this pass
+    dark: ['#c24d46', '#3d9cc4', '#2fae67', '#c99a1e'],
+    lite: ['#ffb3ac', '#b5ecff', '#a5f5c8', '#ffe9a8'],
+  },
+  deuteranopia: { name: 'Deuteranopia', sub: 'green-blind', inks: ['#ffaa80', '#1fb4ff', '#5aedd5', '#ffd500'] },
+  protanopia:   { name: 'Protanopia',   sub: 'red-blind',   inks: ['#ff8861', '#9ae6ed', '#9eed00', '#df80ff'] },
+  tritanopia:   { name: 'Tritanopia',   sub: 'blue-blind',  inks: ['#ff8080', '#1fecff', '#9aa8ed', '#ffd500'] },
+  // the fourth option is not a preset: it is the player's own four inks, picked one at a time.
+  // It starts from the default so the picker opens on something rather than on nothing.
+  custom:       { name: 'Custom inks',  sub: 'pick all four', inks: ['#ff8078', '#72d8ff', '#5fe89b', '#ffd04d'], own: 1 },
+};
+const COLORS = INK_GLYPHS.map(g => ({ main: '#000', dark: '#000', lite: '#000', glyph: g }));
+let paletteId = 'default';
+function applyPalette(id, own) {
+  const p = PALETTES[id] || PALETTES.default;
+  const inks = (id === 'custom' && Array.isArray(own) && own.length === 4 ? own : p.inks).map(h => (/^#[0-9a-f]{6}$/i.test(h) ? h : '#888888'));
+  if (id === 'custom') PALETTES.custom.inks = inks.slice();
+  for (let i = 0; i < 4; i++) {
+    COLORS[i].main = inks[i];
+    COLORS[i].dark = p.dark ? p.dark[i] : shadeInk(inks[i], 1.18, 0.76);
+    COLORS[i].lite = p.lite ? p.lite[i] : shadeInk(inks[i], 0.55, 1);
+    COLORS[i].glyph = INK_GLYPHS[i];
+  }
+  paletteId = PALETTES[id] ? id : 'default';
+}
+// persisted before anything is drawn, so a reload never flashes the default inks first
+try {
+  const st = JSON.parse(localStorage.getItem('ge_ink') || 'null');
+  if (st && PALETTES[st.id]) applyPalette(st.id, st.own); else applyPalette('default');
+} catch (e) { applyPalette('default'); }
+// the setter: repaints on the next frame (render reads COLORS every frame), rebuilds the HUD's
+// objective chips (their fill is an inline custom property) and tells menu.js to redraw the legend
+function setPalette(id, own) {
+  if (!PALETTES[id]) return false;
+  applyPalette(id, own);
+  try { localStorage.setItem('ge_ink', JSON.stringify({ id, own: id === 'custom' ? PALETTES.custom.inks : undefined })); } catch (e) {}
+  if (L) { gateFlash = COLORS.map(() => -1); buildGoal(); updateHud(); }
+  window.dispatchEvent(new CustomEvent('ge:palette', { detail: { id, inks: COLORS.map(c => c.main) } }));
+  return true;
+}
 
 // ---------- native shell (Capacitor) ----------
 // In the iOS app the Capacitor bridge exposes plugins; in a plain browser NATIVE is null and
@@ -317,6 +394,7 @@ function showLivesCard() {
   track('lives_empty', li + 1);
   document.getElementById('livesModal').hidden = false;
   updateLivesUI();
+  armCard(document.querySelector('#livesModal .card'));
 }
 // entry gate: entering L6+ needs a life in the bank (entry itself costs nothing); L1–5 always open
 function livesGate(target) {
@@ -379,12 +457,27 @@ let settleT = [];      // per-block seconds since a released drag settled (overs
 let attemptUndos = 0, attemptHints = 0; // per-attempt counters, ride on ge:win (daily quests)
 let winTimers = [];
 let toastTimer = 0;
-let adTimer = 0, adTickTimer = 0, adTailTimer = 0, adCb = null;
+let adTimer = 0, adTickTimer = 0, adTailTimer = 0, adCb = null, adKind = null;
 
 // the first level whose par exceeds its block count: "a block has to move twice"
 const FIRST_TWICE = LEVELS.findIndex(l => l.par > l.blocks.length);
 // the first level with a stone: "stones never move"
 const FIRST_STONE = LEVELS.findIndex(l => l.stones.length > 0);
+// ---------- "tough one" labels (round 2 M1, backlog #22; T1's estimator picked the levels) ----------
+// A drafting note on the three boards a noisy player genuinely stalls on, printed BEFORE the
+// player concludes it is them. The levels are not a guess: T1's stochastic estimator ran seven
+// human-proxy agents 200 times each on every level, and these are the three whose pass rate
+// falls off a cliff -- L20 at 7%, L24 at 13%, L25 at 11%, against 62% at L19 and 96% at L21.
+// `hardest` is printed only where the level is the STRICT minimum of its own sheet of ten (L20
+// in sheet 2, L25 in sheet 3); L24 is a tough board next to a tougher one and says only that.
+// The bot re-derives both facts from tools/difficulty.json, so a retune cannot leave the label
+// lying, and it is a LABEL only -- no board, no par and no move limit changed with it. L25 in
+// particular has zero headroom (best-5% == the limit) and was explicitly not tightened.
+const TOUGH = { 19: { hardest: 1 }, 23: {}, 24: { hardest: 1 } };
+const toughAt = i => (i >= 0 && i < LEVELS.length ? TOUGH[i] || null : null);
+const TOUGH_LABEL = 'TOUGH ONE';
+const toughNote = i => { const t = toughAt(i); return t ? (t.hardest ? 'the sheet\u2019s hardest' : 'among this sheet\u2019s hardest') : ''; };
+
 // per-level personal best (moves) — the win card never calls par "best"
 let best = {};
 try { best = JSON.parse(localStorage.getItem('ge_best') || '{}') || {}; } catch (e) {}
@@ -411,6 +504,7 @@ let dailyRow = -1, dailyWrapped = false; // which table row, and whether the dat
 let dailyPractice = false; // this play is after the day's record closed — it counts for nothing
 let dailyPending = null;   // a fail waiting on the rescue decision (see closePendingDaily)
 let resumeLevel = li;      // the last REAL level loaded: the daily must not disturb it
+let resumePolicy = null;   // menu.js installs the campaign's Continue rule (see GE.resume)
 
 // One more virtual index, immediately past the draft: a board handed in by the
 // automated checks (`GE.loadTest`). It exists so a rule can be verified on a
@@ -702,6 +796,7 @@ function loadLevel(i) {
   adClose();
   paintDailyChip();
   hudPar.textContent = 'par ' + L.par;
+  paintTough();
   winModal.hidden = true; failModal.hidden = true;
   document.body.classList.remove('fail-up'); cv.style.transform = '';
   hudBox.classList.remove('boost');
@@ -719,6 +814,17 @@ function loadLevel(i) {
   if (li === 2) tip('corner', 'One drag can turn corners. The whole route is one move.');
   if (li === FIRST_STONE) tip('stone', 'Stones never move. Route around them.');
   if (li === FIRST_TWICE) tip('twice', 'Everything is corked. Sometimes a block has to move twice.');
+}
+
+// the tough-one stamp on the HUD: the campaign levels only (a draft is a draft, and a test board
+// is not play), and it says the same two things the tile in the sheet index says.
+function paintTough() {
+  const el = document.getElementById('hudTough');
+  if (!el) return;
+  const t = !isDaily() && !isTest() ? toughAt(li) : null;
+  showEl(el, !!t);
+  if (t) el.innerHTML = TOUGH_LABEL + ' <small></small>';
+  if (t) el.lastChild.textContent = toughNote(li);
 }
 
 // objective row: one chip per color — blocks of that color still on the board
@@ -759,6 +865,16 @@ function bumpSeq() {
 // The HUD meter reads this same function forward (`moves + blocksLeft()`), so the amber
 // "the 3-star pace is gone" warning now lands one move earlier by construction.
 function starsFor(m) { return m <= L.par ? 3 : m <= L.par + 1 ? 2 : 1; }
+// ---------- the proximity line (round 2 M1, Appendix B section 1.9) ----------
+// One line, on the win card and on the fail sheet, stating two numbers that are already on disk:
+// the player's own filed best on this level (ge_best) and the level's par. It replaces nothing
+// and it is not near-miss theatre -- there is no reading of the position in it, nothing is
+// rounded toward hope, and on a level never cleared it says so rather than inventing a figure.
+// The draft keeps no personal best (one board, one recorded attempt), so it has no line.
+function proxLine(b) {
+  if (!L || isDaily() || isTest()) return '';
+  return b ? `your best ${b} \u00b7 par ${L.par}` : `par ${L.par} \u00b7 no clear filed yet`;
+}
 function blocksLeft() { return pos.filter(p => p).length; }
 function updateHud() {
   hudMoves.textContent = movesLeft;
@@ -1024,8 +1140,38 @@ function beginDrag(bi, gx, gy, pid = -1) {
   pendingSnap = snapshot();
 }
 
+// ---------- control sensitivity (round 2 M1, backlog #24) ----------
+// How far the finger has to travel before the block steps into the next cell, and how far past
+// the board edge before a matching gate reads as an exit. `standard` is the shipped pair to the
+// digit, so the default build's physics — and every recorded solution — are untouched.
+//
+// The option only moves in ONE direction, and that is a fact about the maths rather than a
+// choice. A step is taken when the finger is `t` cells from where the block sits; after the step
+// the finger is `1 - t` cells away in the OTHER direction, so any t below 0.5 satisfies its own
+// threshold again and the block oscillates until the loop guard runs out — ending, for an even
+// number of iterations, exactly where it started. t > 0.5 is what makes the step converge, so
+// 0.51 is not merely the shipped value: it is the most responsive setting the rule admits, and
+// "more sensitive than the default" does not exist to be offered. What DOES help the hands this
+// option is for is the opposite end — asking for more travel, so a tremor or an unsteady finger
+// stops nudging blocks a cell at a time. Hence three settings that all round correctly:
+//   standard  0.51  the shipped feel, and the responsive floor
+//   steady    0.64  two thirds of a cell before anything moves
+//   firm      0.78  most of a cell — nothing moves by accident
+// Persisted. It is a CONTROL setting and never a difficulty setting: the same routes are legal at
+// every step, and the recorded solutions replay identically on all three (the bot pins that).
+const DRAG_STEPS = { standard: [0.51, 0.62], steady: [0.64, 0.75], firm: [0.78, 0.89] };
+let dragStepId = 'standard';
+try { const v = localStorage.getItem('ge_dragstep'); if (v && DRAG_STEPS[v]) dragStepId = v; } catch (e) {}
+function setDragStep(id) {
+  if (!DRAG_STEPS[id]) return false;
+  dragStepId = id;
+  try { localStorage.setItem('ge_dragstep', id); } catch (e) {}
+  window.dispatchEvent(new CustomEvent('ge:dragstep', { detail: { id } }));
+  return true;
+}
 function stepToward(bi, wantX, wantY) {
   // slide block one cell at a time toward fractional target; returns exit side or null
+  const [STEP_MIN, EXIT_MIN] = DRAG_STEPS[dragStepId] || DRAG_STEPS.normal;
   for (let guard = 0; guard < 24; guard++) {
     const dx = wantX - pos[bi][0], dy = wantY - pos[bi][1];
     const tryOrder = Math.abs(dx) >= Math.abs(dy)
@@ -1033,7 +1179,7 @@ function stepToward(bi, wantX, wantY) {
       : [[0, Math.sign(dy), Math.abs(dy)], [Math.sign(dx), 0, Math.abs(dx)]];
     let stepped = false;
     for (const [sx, sy, mag] of tryOrder) {
-      if (mag < 0.51 || (sx === 0 && sy === 0)) continue;
+      if (mag < STEP_MIN || (sx === 0 && sy === 0)) continue;
       const nx = pos[bi][0] + sx, ny = pos[bi][1] + sy;
       if (fits(bi, nx, ny)) {
         pos[bi] = [nx, ny]; pushVis(bi, nx, ny); drag.moved = true; stepped = true;
@@ -1046,7 +1192,7 @@ function stepToward(bi, wantX, wantY) {
       // approval chain says another number is up first. This is the ONE player-facing gate:
       // an out-of-turn block bumps flush against its gate and stops there. Nothing is spent,
       // nothing leaves, and the HUD chip flicks to name the number the drawing is waiting on.
-      if (mag > 0.62 && wouldLeaveBoard(bi, sx, sy)) {
+      if (mag > EXIT_MIN && wouldLeaveBoard(bi, sx, sy)) {
         const side = sx === 1 ? 'right' : sx === -1 ? 'left' : sy === 1 ? 'bottom' : 'top';
         if (exitGate(bi, side)) { if (seqOk(bi)) return side; bumpSeq(); }
       }
@@ -1130,13 +1276,31 @@ function beginFlight(i) {
   sound('exit', a.chain);
   haptic('exit');
 }
+// Game Accessibility Guidelines, Basic tier: nothing may flash more than three times a second.
+// The alignment beat is a single 0.34 s decay, so one exit is one flash and the only way to
+// stack them is a chain of very fast exits. The ONSETS are therefore rate-limited to three per
+// rolling second: a fourth exit inside that second still leaves, still bursts, still sounds --
+// it simply does not start a fourth rise. Suppressing the onset is the right fix rather than
+// lengthening the beat, because lengthening a decay that is already 0.34 s would make the cue
+// arrive after the block it is about. The reduced-motion variant (0.2 s) is unchanged.
+const FLASH_MAX_PER_S = 3;
+let flashOnsets = [];
+let flashStarted = 0, flashSkipped = 0; // monotonic counters, for the bot's flicker check
+function flashBudgetOk() {
+  const t = performance.now();
+  flashOnsets = flashOnsets.filter(x => t - x < 1000);
+  if (flashOnsets.length >= FLASH_MAX_PER_S) { flashSkipped++; return false; }
+  flashOnsets.push(t);
+  flashStarted++;
+  return true;
+}
 // the lane flash on the frame of alignment: "it lined up, THEN left"
 function alignFlash(i) {
   const a = exitAnim[i];
   if (!a || a.flashed) return;
   a.flashed = true;
   disp[i] = [a.from[0], a.from[1]];
-  if (a.gate) gateAlign.push({ g: a.gate, bi: i, from: a.from, t: 0 });
+  if (a.gate && flashBudgetOk()) gateAlign.push({ g: a.gate, bi: i, from: a.from, t: 0 });
 }
 function flushHeldExits() {
   for (let i = 0; i < exitAnim.length; i++) if (exitAnim[i] && exitAnim[i].wait) { visQ[i] = []; beginFlight(i); }
@@ -1225,10 +1389,14 @@ function maybeFail() {
         + RESCUE_MOVES + ' moves to your filed total — the report prints a plain \u201crescued\u201d instead of the CLEAN token. '
         + 'Retrying, or leaving the board, files it as NOT CLEARED.';
       document.getElementById('btnRescue').hidden = rescued;
+      // two facts already on disk, stated plainly under the reading of the position
+      const fp = document.getElementById('failProx'), fpt = proxLine(best[li]);
+      fp.textContent = fpt; fp.hidden = !fpt;
       // the board rises and shrinks so the sheet never covers the position it asks you to bet on
       document.body.classList.add('fail-up');
       toastEl.hidden = true; clearTimeout(toastTimer); // nothing sits over the board the sheet asks you to judge
       failModal.hidden = false;
+      armCard(failModal.querySelector('.card')); // the finger that lost the level does not answer the sheet
       fitBoardAboveSheet();
       sound('fail');
       haptic('fail');
@@ -1270,6 +1438,7 @@ function win() {
   if (winModal.hidden === false) return;
   over = true;
   hint = null;
+  cancelHintAd(); // a cleared board has no use for the hint it is still paying for (P1's soak)
   dailyRollCheck(); // a clear after local midnight is a practice clear: yesterday's day is closed
   updateHud();
   const daily = isDaily(), test = isTest();
@@ -1292,9 +1461,13 @@ function win() {
   winSub.textContent = recDraft && rescued
     ? `Solved in ${moves} moves · rescue +${RESCUE_MOVES} · filed as ${filedMoves} · par ${L.par}`
     : `Solved in ${moves} move${moves === 1 ? '' : 's'}`
-      + (stars === 3 ? ' — perfect!' : ` · par ${L.par}`)
-      + (prev && prev < moves ? ` · your best ${prev}` : '');
+      + (stars === 3 ? ' — perfect!' : ` · par ${L.par}`);
   if (!daily && !test && (!prev || moves < prev)) { best[li] = moves; try { localStorage.setItem('ge_best', JSON.stringify(best)); } catch (e) {} }
+  // ...and the proximity line under it: the best after this attempt against par. It used to be a
+  // tail on the sentence above ("· your best 9"), printed only when the run was worse than the
+  // best; it is now one line that is always there and always says the same two things.
+  const wp = document.getElementById('winProx'), wpt = proxLine(best[li]);
+  wp.textContent = wpt; wp.hidden = !wpt;
   // the day's record closes here, before the event goes out, so every listener
   // (and GE.dailyShareText) sees the resolved row rather than an open one
   if (daily) {
@@ -1318,8 +1491,11 @@ function win() {
   }
   if (stars === 3 && !reduced) winTimers.push(setTimeout(() => burst(winStars.children[2]), delays[2] + 260));
   btnReplay.hidden = stars === 3 || last;
-  btnNext.disabled = btnReplay.disabled = !reduced;
-  winTimers.push(setTimeout(() => { btnNext.disabled = btnReplay.disabled = false; }, delays[2] + 400 + 400));
+  // the buttons go live once the reward has landed -- and never sooner than the post-acceptance
+  // debounce, which under reduced motion used to be no wait at all
+  btnNext.disabled = btnReplay.disabled = true;
+  winTimers.push(setTimeout(() => { btnNext.disabled = btnReplay.disabled = false; },
+    Math.max(ARM_MS, reduced ? 0 : delays[2] + 400 + 400)));
   winModal.hidden = false;
   window.dispatchEvent(new CustomEvent('ge:win', { detail: { lvl: li, stars, moves, last, par: L.par, blocks: pos.length, undos: winUndos, hints: winHints, daily, test, date: daily ? dailyDate : null } }));
   sound('win');
@@ -1452,6 +1628,7 @@ const AD_KIND = {
 };
 function rewarded(kind, grant) {
   adClose();
+  adKind = kind;
   const k = AD_KIND[kind] || AD_KIND.rescue;
   document.getElementById('adTitle').textContent = k.title;
   document.getElementById('adSub').innerHTML = 'Watch to earn <b></b>';
@@ -1483,6 +1660,16 @@ function rewarded(kind, grant) {
   adTimer = setTimeout(() => adGrantNow(kind), AD_MS);
 }
 // the reward lands here and ONLY here
+// P1's seeded soak, round 2: clear a level while the rewarded slot from a HINT is still
+// counting down and the win card arrives UNDERNEATH a running ad -- a won board sitting behind
+// three more seconds of advertising for a move the player no longer needs, with Next unreachable
+// the whole time. A decided round has no use for a hint, so the slot is cancelled rather than
+// left running. Nothing is forfeited: the grant it would have paid is `showHint`, which refuses
+// on a finished board anyway. The rescue and life slots are untouched -- a rescue is what ENDS
+// the decided state, so it can never be running when the round is decided.
+function cancelHintAd() {
+  if (adCb && adKind === 'hint') { track('ad_cancel', { kind: 'hint', lvl: li + 1 }); adClose(); }
+}
 function adGrantNow(kind) {
   if (!adCb) return;
   const g = adCb; adCb = null;
@@ -1493,6 +1680,7 @@ function adGrantNow(kind) {
   document.querySelector('.adring').classList.add('done'); // the arc turns green behind the tick
   adGrantRow.hidden = false;
   btnAdSkip.hidden = false; // the way out appears only now — after the grant, never before
+  armCard(adModal.querySelector('.card')); // ...and it is not answered by the tap that was mid-air
   track('ad_done', { kind, lvl: li + 1 });
   sound('gate'); // a quiet play beat on a FREE grant (never on a purchase — see CLAUDE.md)
   g();
@@ -1503,7 +1691,7 @@ function adClose() {
   clearTimeout(adTimer); adTimer = 0;
   clearInterval(adTickTimer); adTickTimer = 0;
   clearTimeout(adTailTimer); adTailTimer = 0;
-  adCb = null; adModal.hidden = true;
+  adCb = null; adKind = null; adModal.hidden = true;
 }
 btnAdSkip.onclick = adClose;
 
@@ -2218,6 +2406,37 @@ function sound(kind, n = 0) {
   else if (kind === 'fail') { blip(220, 0.25, 'sawtooth', 0.12, 0, -80); blip(160, 0.3, 'sawtooth', 0.1, 0.12, -60); }
 }
 
+// ---------- post-acceptance input debounce (round 2 M1, ruling 11) ----------
+// A card that arrives under a finger already travelling -- the drag that just pushed the last
+// block out, a tap aimed at a board that is no longer there -- must not be answered by that
+// finger. Every result card holds its buttons for half a second after it appears.
+//
+// It is an INPUT DEBOUNCE, not a clock. Nothing counts down, nothing is shown, nothing is lost
+// by waiting, and the button is never drawn as disabled -- a half-second grey flicker would be a
+// worse surface than the misfire it prevents. The guard swallows TRUSTED pointer and click
+// events only, in the capture phase: a scripted `.click()` (the bots, the reviewer console) is
+// not a travelling finger and passes straight through, which is also what keeps the 109 named
+// checks measuring the game rather than measuring this. The M1 region of the bot proves the
+// shipped path with real pointer taps.
+const ARM_MS = 500;
+function armCard(host, ms) {
+  if (!host) return;
+  host.dataset.armed = String(performance.now() + (ms == null ? ARM_MS : ms));
+}
+const armedUntil = el => {
+  const b = el && el.closest ? el.closest('button') : null;
+  const host = b && b.closest('[data-armed]');
+  return host ? +host.dataset.armed : 0;
+};
+for (const type of ['pointerdown', 'pointerup', 'click']) {
+  document.addEventListener(type, e => {
+    if (!e.isTrusted) return;
+    if (performance.now() >= armedUntil(e.target)) return;
+    e.stopPropagation();
+    e.preventDefault();
+  }, true);
+}
+
 // ---------- test hooks (used by the automated playtest bot) ----------
 window.GE = {
   get level() { return li; },
@@ -2226,7 +2445,20 @@ window.GE = {
   // the end of LEVELS. Reading `level` there is what produced "Level 41/40" on a five-level save
   // (t50): the landing CTA, the sheet-index header and the current-tile highlight all asked the
   // engine which board was loaded when what they meant was which level the player is up to.
-  get resume() { return resumeLevel; },
+  get resume() {
+    // ...and since round 2's branching availability (menu.js, backlog #21) "the last level
+    // loaded" is no longer the answer to "where does Continue go?" either: a sheet advances at
+    // eight of its ten, so the pointer belongs to the campaign's own rule. menu.js installs it
+    // here rather than the engine importing progress it has no business reading. With no policy
+    // installed (a bot page, a test harness) this is exactly what it always was.
+    if (resumePolicy) {
+      try { const v = resumePolicy(resumeLevel); if (Number.isInteger(v)) return Math.max(0, Math.min(v, LEVELS.length - 1)); } catch (e) {}
+    }
+    return resumeLevel;
+  },
+  set resumePolicy(fn) { resumePolicy = typeof fn === 'function' ? fn : null; },
+  // the raw engine pointer: the last REAL campaign level loaded, whatever the policy says
+  get current() { return resumeLevel; },
   get pos() { return pos; },
   get L() { return L; },
   get moves() { return moves; },
@@ -2277,6 +2509,21 @@ window.GE = {
   rewarded, // the placeholder rewarded-ad flow — the free rescue/hint grants run this contract
   // paper skins: id + table for menu.js and the bots; setTheme repaints instantly (next frame)
   get theme() { return themeId; }, get themes() { return THEMES; }, setTheme,
+  // ---- accessibility (round 2 M1) ----
+  // ink presets: the four block/gate colours, with the glyph fixed. `palettes` is the table the
+  // pickers build themselves from; `inks` is what is on screen right now.
+  get palette() { return paletteId; }, get palettes() { return PALETTES; },
+  get inks() { return COLORS.map(c => ({ main: c.main, dark: c.dark, lite: c.lite, glyph: c.glyph })); },
+  setPalette,
+  // control sensitivity: how far the finger travels before a block steps a cell
+  get dragStep() { return dragStepId; }, get dragSteps() { return DRAG_STEPS; }, setDragStep,
+  // the post-acceptance input debounce, for the surfaces menu.js owns
+  armCard, get armMs() { return ARM_MS; },
+  get toughLevels() { return Object.keys(TOUGH).map(k => ({ lvl: +k + 1, hardest: !!TOUGH[k].hardest, note: toughNote(+k) })); },
+  toughAt: i => { const t = toughAt(i); return t ? { hardest: !!t.hardest, label: TOUGH_LABEL, note: toughNote(i) } : null; },
+  // the flicker ceiling: how many alignment-flash onsets have been started and how many were
+  // refused by the three-per-second budget (GAG Basic)
+  get flashStats() { return { started: flashStarted, skipped: flashSkipped, live: flashOnsets.length, maxPerSecond: FLASH_MAX_PER_S }; },
   burst, sound, // the certification reveal on the win card reuses the third-star burst and the generated audio
   // drawing helpers shared with menu.js (legend); ctx is swapped for the call
   draw(c, fn) { const o = ctx; ctx = c; try { fn({ rr, drawGlyph, drawBlockShape, COLORS }); } finally { ctx = o; } },

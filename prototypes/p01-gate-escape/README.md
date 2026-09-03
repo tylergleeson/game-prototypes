@@ -106,8 +106,12 @@ Built to the hybrid-casual grammar:
   one. It is previewable on the **Stamp** shelf beside the paper picker while pending —
   the ring is drawn and the approval check is not, so the two states differ in SHAPE.
   Nothing is gated on certification. The chapter header carries a stamp glyph — a dashed pending frame with
-  `★ 18/30 · 6 to certify`, or a solid stamped frame naming the paper once earned (the
+  `24 ★ · 18 banked · 6 to certify`, or a solid stamped frame naming the paper once earned (the
   star is drawn only once certified, so the two states differ in SHAPE, not just colour).
+  That phrasing is the **endowed-progress** form adopted in research round 2 (ruling 8/9):
+  the total is always printed, the number still to reach is stated small, and no certification
+  surface ever prints a ratio. A locked swatch reads `6 ★ to Night vellum · Sheet 2`. Nothing
+  is ever pre-stamped — every banked star was earned by a clear.
   The win that crosses the threshold adds a `Sheet certified — <paper>` row with **Try it**
   to the win card (the stamp lands, sparks, chime). A **Paper** picker on the
   title block and the pause card lists the skins (locked ones show the pending
@@ -148,13 +152,29 @@ Built to the hybrid-casual grammar:
     you send is what you see — and sharing falls through `navigator.share` → clipboard → a
     selectable textarea. Tracked: `daily_started` / `daily_practice` / `daily_won` / `daily_lost` /
     `daily_enter` / `daily_report` / `daily_share` / `daily_shared`.
-- **Staged disclosure** (the FTUE ladder, 2026-09-02): a new save opens **bare** — the sheet index
-  shows level, stars, the forty tiles and Sound, and nothing else; no certification stamps, no
-  paper picker, no draft row, no survey row, no status line. Each system arrives on the win that
-  earns it: **certification (and the paper picker) after 2 cleared, the Daily Draft after 3, the
-  Field Survey after 5** — the last with the *easiest* of the week's four contracts already taken,
-  a worked example rather than two decisions about a system nobody has seen yet (swapping stays
-  free until progress). Each arrival is one quiet stamped `NEW` row on the win card, using the row
+- **Availability is by SHEET** (research round 2, backlog #21): a sheet of ten opens once **any
+  eight** of the previous sheet's ten are cleared (`SHEET_ADVANCE` in `menu.js`, tagged **E4** —
+  team judgment, not a measured threshold), and inside an open sheet **every tile is playable in
+  any order**. Sheet 1 is open from the first frame. The Continue CTA and the highlighted tile
+  still point at the lowest *uncleared* level of the newest open sheet, so the default path is the
+  old sequential one — what changed is that a wall can now be walked around instead of ending the
+  install. `GE.resume` is that pointer (menu.js installs the rule via `GE.resumePolicy`);
+  `GE.current` is the raw engine pointer, the last real level loaded. A save made under the old
+  sequential rule never loses access it already had.
+- **"Tough one" labels** (research round 2, backlog #22): L20, L24 and L25 carry a small drafting
+  stamp on the tile and in the HUD, and L20 and L25 add *the sheet's hardest*. Those are the three
+  boards T1's stochastic estimator clears 7%, 13% and 11% of the time; the label is the only thing
+  that changed — no board, par or move limit moved, and L25 (zero headroom) was explicitly not
+  tightened. The bot re-derives the set and the superlative from `tools/difficulty.json`.
+- **Staged disclosure** (the FTUE ladder, 2026-09-02; rungs revised in round 2): a new save opens
+  **bare** — the sheet index shows level, stars, the forty tiles, Sound and the two accessibility
+  shelves, and nothing else; no certification stamps, no paper picker, no draft row, no survey row,
+  no status line. Each system arrives on the win that
+  earns it: **certification after 2 cleared, the Daily Draft after 3, the
+  Field Survey after 7, the paper picker after 10** (one finished sheet — or immediately on a save
+  that already owns a paper). The survey arrives with the *easiest* of the week's four contracts already taken,
+  a worked example rather than two decisions about a system nobody has seen yet (swapping is free
+  until progress, and progress then leaves exactly **one swap** — the sheet reads `1 SWAP LEFT`). Each arrival is one quiet stamped `NEW` row on the win card, using the row
   the survey beats already own, and it plays **once ever**. From the first **return** day the
   landing gains `#menuStatus` — a passive `div`, never a button, so the landing stays exactly three
   interactive elements — with at most two *finished* facts (`Today's draft is filed · 3 of 7 survey
@@ -232,6 +252,30 @@ Built to the hybrid-casual grammar:
   a **Motion** toggle on the pause card (`ge_motion`) forces the same path. Colorblind-safe:
   every color has a glyph; verification stills (grayscale + deuteranopia) in
   `marketing/accessibility/` via `tools/capture-accessibility.mjs` (repo root).
+- **Accessibility shelves** (research round 2, backlog #24), on the sheet index *and* the pause
+  card, and **never staged** — they are there before level 1:
+  - **Inks** — the four block/gate colours as a preset: `default`, `deuteranopia`, `protanopia`,
+    `tritanopia`, plus a **custom** set with four colour wells (`ge_ink`). The glyph never moves.
+    Each preset was chosen by simulating the deficiency it is named for (Viénot/Brettel LMS) and
+    maximising the smallest CIE76 ΔE between its four inks: the default palette scores 17 / 22 / 3
+    under the three simulations, the presets score 48 / 51 / 37, and every preset holds the shipped
+    default's own halo / white-glyph / outline contrast floors. The bot re-derives all of it.
+  - **Drag step** — control sensitivity (`ge_dragstep`): how far the finger travels before a block
+    steps a cell — `standard` (0.51, the shipped pair to the digit), `steady` (0.64), `firm`
+    (0.78). It only moves in one direction, and that is arithmetic rather than a choice: a
+    threshold below 0.5 satisfies itself again in the opposite direction after the step, so the
+    block oscillates — 0.51 is the most responsive setting the rule admits, and the useful axis is
+    asking for *more* travel so an unsteady finger stops nudging blocks. The rules never move at
+    any setting and the recorded solutions replay identically on all three.
+  - a **0.5 s post-acceptance input debounce** on every result card (win, fail, ad, draft, survey,
+    recorded-attempt, weather delay). It swallows trusted pointer input only, is never drawn as a
+    disabled button, and counts nothing down — an input guard, not a clock (round-2 ruling 11).
+  - the alignment flash is capped at **three onsets per rolling second** (Game Accessibility
+    Guidelines, Basic tier); a faster chain of exits lights the lane once rather than strobing it.
+- **The "day was broken" excuse flag**: `BROKEN_DAYS` (from `window.GE_BROKEN_DAYS`, shipped with
+  the build) lists dates the build itself took away from players. The survey treats them as
+  *neither stamped nor missed* — a dot on the spine, no ring — and the streak carries across them.
+  It can only ever remove a penalty: no stamp, no point, no contract progress.
 
 ## Toolchain (the moat)
 

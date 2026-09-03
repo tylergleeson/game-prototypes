@@ -37,18 +37,75 @@
   const starsTotal = () => prog.s.reduce((a, b) => a + (b || 0), 0);
   const sheetStars = c => prog.s.slice(c * PER, (c + 1) * PER).reduce((a, b) => a + (b || 0), 0);
   const sheetMax = c => Math.min(PER, N - c * PER) * 3;
+  // ---------- branching availability (round 2, backlog #21 / rule-collision ruling 6) ----------
+  // A sheet advances when any EIGHT of its ten levels are cleared — not all ten, and not the
+  // tenth in particular. Inside an open sheet every tile is playable in any order, because the
+  // SHEET is the unit of progression and the tile is not: one board a player cannot see past is
+  // the single most common reason a puzzle install stops, and there are two boards in the shipped
+  // forty (L20, L25) that the estimator says a noisy player clears one run in ten.
+  //
+  // Eight of ten is E4 — team judgment. The report proposes branching and says so; no experiment
+  // has been run on the threshold, and nothing about 8 is derived. It is written here as one
+  // constant precisely so that changing it is one edit and one number in one report.
+  //
+  // Nothing is taken away by this. The Continue CTA and the highlighted tile still point at the
+  // lowest uncleared level, so the default path through the game is exactly the old sequential
+  // one; what changes is that skipping past a wall is now possible instead of impossible.
+  const SHEET_ADVANCE = 8; // E4
+  const sheetOf = i => Math.floor(i / PER);
+  const sheetCleared = c => prog.s.slice(c * PER, (c + 1) * PER).filter(Boolean).length;
+  const sheetSize = c => Math.min(PER, N - c * PER);
+  // how many sheets are open: sheet 1 always, and each next one once the sheet before it has its
+  // eight. Derived from the star array on every read — never stored, so it cannot drift.
+  function openSheets() {
+    let n = 1;
+    while (n * PER < N && sheetCleared(n - 1) >= Math.min(SHEET_ADVANCE, sheetSize(n - 1))) n++;
+    return n;
+  }
+  // the unlock pointer: the highest playable tile. It is the last open sheet's last tile — and
+  // never below what a save already had, because a player who reached level 30 under the old
+  // sequential rule must not open the app to find level 30 locked.
+  const unlockTo = () => Math.max(prog.u | 0, Math.min(N - 1, openSheets() * PER - 1));
+  const playable = i => i <= unlockTo();
+  // the CONTINUE pointer, installed on the engine (GE.resume): the lowest uncleared tile in the
+  // newest open sheet. Once a sheet has its eight the next one is open, so this lands on the new
+  // sheet's first level and the two stragglers stay behind you rather than in front of you.
+  function continueAt() {
+    const last = openSheets() - 1, from = last * PER, to = Math.min(N, from + PER);
+    for (let i = from; i < to; i++) if (!prog.s[i]) return i;
+    for (let i = 0; i < N; i++) if (!prog.s[i]) return i;   // the open sheet is full: the earliest gap
+    return N - 1;                                           // everything cleared: the last sheet
+  }
   const skins = () => prog.skins || [];
   const unlocked = id => id === DEFAULT_SKIN || skins().includes(id);
-  const sheetLabel = c => `Sheet ${c + 1} · certified at ${CERT_STARS} ★`;
+  // a locked reward names what is still owed on the sheet that pays it, not the threshold in the
+  // abstract: "6 ★ to Night vellum · Sheet 2" (ruling 9)
+  const sheetLabel = c => `${CERT_STARS - sheetStars(c)} ★ to ${rewardName(c)} · Sheet ${c + 1}`;
   const certLabel = id => sheetLabel(CERT_SKINS.indexOf(id));
   // what a sheet's certification pays: a paper for sheets 1-3, the seal for sheet 4
   const rewardName = c => (c === APPR_SHEET ? APPR_NAME : (GE.themes[CERT_SKINS[c]] || {}).name || 'certified');
+  // ---------- endowed progress, honest form only (round 2, ruling 8/9) ----------
+  // The evidence for endowed progress is about how a total is FRAMED, not about inventing one:
+  // "30 ★ · 12 banked · 12 to certify" is the same three facts as "★ 12/30", stated so that the
+  // number the player is asked to reach is small and the total it sits in is still printed. What
+  // is forbidden is a stamp nobody earned — there is not one anywhere in this file, and the
+  // survey's reveal day counts only because the reveal fires on a real clear.
+  //
+  // Ruling 9: a certification chip states a REMAINING number and never a ratio. So a sheet in
+  // progress reads "24 ★ · 12 banked · 12 to certify", and a locked paper reads "6 ★ to Night
+  // vellum" — never "12/30", which is the shape that makes the target feel far away.
+  // the emphasis is on the SMALL number the player is being asked to reach, with the total and
+  // what is already banked stated plainly beside it
+  const certChip = c => `${CERT_STARS} ★ · ${sheetStars(c)} banked · <b>${CERT_STARS - sheetStars(c)} to certify</b>`;
+  const certPlain = c => `${CERT_STARS} ★ · ${sheetStars(c)} banked · ${CERT_STARS - sheetStars(c)} to certify`;
+  const certRemain = c => `${CERT_STARS - sheetStars(c)} ★ to ${rewardName(c)}`;
   const apprOn = () => !!prog.appr;
   // a save that already clears a threshold (older build, seeded progress) owns that reward; the
   // stamp beat then plays the first time its header is seen (prog.seen)
   for (let c = 0; c < CERT_SKINS.length; c++) if (sheetStars(c) >= CERT_STARS && !unlocked(CERT_SKINS[c])) prog.skins = [...skins(), CERT_SKINS[c]];
   if (sheetStars(APPR_SHEET) >= CERT_STARS && !prog.appr) prog.appr = 1;
   GE.setTheme(unlocked(prog.skin) ? prog.skin : DEFAULT_SKIN);
+  GE.resumePolicy = continueAt; // the campaign owns "where does Continue go?" (branching, above)
 
   // ---------- paper skins ----------
   // the certification stamp: a dashed pending frame with a blank rule, or — once the sheet is
@@ -98,7 +155,7 @@
   // the picker is the payoff of certification, so it arrives with it (staged disclosure): on a
   // cold open there is nothing to say about three papers the player cannot have yet
   function refreshPapers() {
-    const on = disclosure().cert;
+    const on = disclosure().papers;
     $('menuPapers').hidden = $('pausePapers').hidden = !on;
     if (!on) return;
     buildPapers($('menuPapers'), 'btnPaper'); buildPapers($('pausePapers'), 'btnPausePaper');
@@ -107,7 +164,7 @@
   // pending (the ring is drawn, the check is not) and — like a locked swatch — a tap explains it
   // rather than doing nothing. There is nothing to SELECT: the stamp is on the card or it is not.
   function refreshAppr() {
-    const host = $('menuAppr'), on = disclosure().cert;
+    const host = $('menuAppr'), on = disclosure().papers; // the cosmetics shelf arrives as one thing
     host.hidden = !on;
     if (!on) return;
     const earned = apprOn(), sw = host.querySelector('.sw');
@@ -119,7 +176,7 @@
     b.setAttribute('aria-label', APPR_NAME + (earned ? ', stamped on every win card' : ', locked. ' + sheetLabel(APPR_SHEET)));
     b.onclick = () => caption(host, earned ? APPR_NAME + ' · on every win card' : sheetLabel(APPR_SHEET), !earned);
     sw.appendChild(b);
-    caption(host, earned ? APPR_NAME : `★ ${sheetStars(APPR_SHEET)}/${sheetMax(APPR_SHEET)} on Sheet ${APPR_SHEET + 1}`, !earned);
+    caption(host, earned ? APPR_NAME : certRemain(APPR_SHEET) + ` · Sheet ${APPR_SHEET + 1}`, !earned);
   }
   // the win card's stamp: drawn once it exists, on every win from then on (a cosmetic you never
   // see is not a reward). `fresh` is the one-shot landing animation on the win that earned it.
@@ -130,6 +187,85 @@
     if (!el.hidden && !el.firstChild) el.innerHTML = APPR_SVG(true);
   }
   window.addEventListener('ge:theme', () => { refreshPapers(); if (!screens.legend.hidden) drawSymbols(); });
+
+  // ---------- accessibility shelves: block inks + control sensitivity (round 2 M1) ----------
+  // NEVER staged. Every other shelf on the sheet index arrives on the win that makes it
+  // meaningful; these two are on both surfaces from the first frame of a fresh install, because
+  // a player who cannot tell two inks apart needs them before level 1, not after level 10.
+  //
+  // They live on the paper picker's own row so the sheet index and the pause card gain one more
+  // shelf rather than a new kind of surface, and they are the SAME two controls in both places —
+  // a setting you can only reach from a menu you have to leave the board for is a setting a
+  // player fights the board without.
+  const INK_TAG = { default: 'A', deuteranopia: 'D', protanopia: 'P', tritanopia: 'T', custom: '✎' };
+  const DRAG_LABEL = { standard: 'STANDARD', steady: 'STEADY', firm: 'FIRM' };
+  const DRAG_CAP = {
+    standard: 'Standard · a block steps at half a cell',
+    steady: 'Steady · two thirds of a cell before anything moves',
+    firm: 'Firm · most of a cell — nothing moves by accident',
+  };
+  function buildInks(host) {
+    if (!host) return;
+    const sw = host.querySelector('.sw'), pick = host.querySelector('.pick');
+    sw.innerHTML = '';
+    for (const id in GE.palettes) {
+      const p = GE.palettes[id], on = GE.palette === id;
+      const inks = id === 'custom' ? GE.palettes.custom.inks : p.inks;
+      const b = document.createElement('button');
+      b.className = 'ink' + (on ? ' on' : '');
+      b.id = host.id + 'Ink' + id[0].toUpperCase() + id.slice(1);
+      b.dataset.ink = id;
+      // the swatch is the four inks themselves, quartered — and carries the preset's initial, so
+      // the shelf is never four squares told apart by colour alone
+      b.innerHTML = inks.map(c => `<i style="background:${c}"></i>`).join('') + `<b>${INK_TAG[id] || '?'}</b>`;
+      b.setAttribute('aria-label', 'Block colours: ' + p.name + ' (' + p.sub + ')' + (on ? ', on' : ''));
+      b.onclick = () => {
+        GE.setPalette(id, id === 'custom' ? GE.palettes.custom.inks : undefined);
+        track('ink_select', { id, from: host.id === 'menuInks' ? 'menu' : 'pause' });
+      };
+      sw.appendChild(b);
+    }
+    // the four colour wells, shown only while the custom set is the one in use
+    pick.hidden = GE.palette !== 'custom';
+    pick.innerHTML = '';
+    if (!pick.hidden) {
+      GE.palettes.custom.inks.forEach((hex, i) => {
+        const inp = document.createElement('input');
+        inp.type = 'color'; inp.value = hex; inp.id = host.id + 'Pick' + i;
+        inp.setAttribute('aria-label', 'Custom ink ' + (i + 1) + ' (' + GE.inks[i].glyph + ')');
+        inp.oninput = () => {
+          const inks = GE.palettes.custom.inks.slice();
+          inks[i] = inp.value;
+          GE.setPalette('custom', inks);
+        };
+        pick.appendChild(inp);
+      });
+    }
+    const p = GE.palettes[GE.palette] || GE.palettes.default;
+    caption(host, p.name + ' · ' + p.sub);
+  }
+  function buildDrag(host) {
+    if (!host) return;
+    const row = host.querySelector('.step');
+    row.innerHTML = '';
+    for (const id in GE.dragSteps) {
+      const b = document.createElement('button');
+      b.className = GE.dragStep === id ? 'on' : '';
+      b.id = host.id + 'Step' + id[0].toUpperCase() + id.slice(1);
+      b.dataset.step = id;
+      b.textContent = DRAG_LABEL[id] || id;
+      b.setAttribute('aria-label', 'Drag step: ' + id + (GE.dragStep === id ? ', on' : ''));
+      b.onclick = () => { GE.setDragStep(id); track('dragstep_select', { id }); };
+      row.appendChild(b);
+    }
+    caption(host, DRAG_CAP[GE.dragStep] || GE.dragStep);
+  }
+  function refreshAccess() {
+    buildInks($('menuInks')); buildInks($('pauseInks'));
+    buildDrag($('menuDrag')); buildDrag($('pauseDrag'));
+  }
+  window.addEventListener('ge:palette', () => { refreshAccess(); if (!screens.legend.hidden) drawSymbols(); });
+  window.addEventListener('ge:dragstep', refreshAccess);
 
   // ---------- sound ----------
   try { GE.soundOn = localStorage.getItem('ge_sound') !== '0'; } catch (e) {}
@@ -202,7 +338,7 @@
   // the landing: title treatment, one static stamp line, one CTA, two quiet entries. Everything
   // else the title block used to carry now lives on the sheet index (refreshLog).
   function refreshMenu() {
-    $('playLabel').textContent = resumable() ? 'Resume level ' + (GE.resume + 1)
+    $('playLabel').textContent = resumable() ? 'Resume level ' + ((GE.current != null ? GE.current : GE.resume) + 1)
       : freshInstall() ? 'Play' : 'Continue — Level ' + (GE.resume + 1);
     const today = dayStr(GE.now());
     const live = streak.lastDate && streak.len > 0 && dayGap(streak.lastDate, today) <= 1 ? streak.len : 0;
@@ -226,7 +362,7 @@
     if (d.daily && draftReady()) { const i = GE.dailyInfo; if (i.done && i.cur && i.cur.state === 'won') parts.push("Today's draft is filed"); }
     if (d.survey) {
       const s = surveyWeek(), stamped = weekDates(GE.now()).filter(x => s.days.includes(x)).length;
-      parts.push(`<b>${stamped}</b> of 7 survey days`);
+      parts.push(`7 survey days · <b>${stamped}</b> stamped`);
     }
     st.hidden = !d.status || !parts.length;
     if (!st.hidden) st.innerHTML = parts.slice(0, 2).join(' · ');
@@ -240,6 +376,7 @@
     refreshHaptics();
     refreshPapers();
     refreshAppr();
+    refreshAccess();
     refreshDraft();
     refreshSurvey();
   }
@@ -257,7 +394,7 @@
         const h = document.createElement('div');
         h.className = 'chap';
         h.innerHTML = `<span>Sheet ${c + 1} · ${CHAPTERS[c] || ''}</span>`
-          + (cert ? `<span class="cert${done && !fresh ? ' on' : ''}" title="Certified at ${CERT_STARS} ★">${CERT_SVG(done && !fresh)} <b>★ ${got}/${sheetMax(c)}</b> · ${done ? reward : `${CERT_STARS - got} to certify`}</span>` : '');
+          + (cert ? `<span class="cert${done && !fresh ? ' on' : ''}" title="${certPlain(c)}">${CERT_SVG(done && !fresh)} ${done ? `<b>${reward}</b>` : certChip(c)}</span>` : '');
         g.appendChild(h);
         if (fresh) {
           prog.seen = [...(prog.seen || []), c]; save();
@@ -265,13 +402,17 @@
           setTimeout(() => { if (!ico.isConnected) return; ch.classList.add('on', 'stamping'); ico.classList.add('on'); GE.burst(ico); GE.sound('cert'); }, 400);
         }
       }
-      const locked = i > prog.u;
+      const locked = !playable(i);
+      // the tough-one stamp, on the same three tiles the HUD stamps and for the same reason
+      const tough = GE.toughAt ? GE.toughAt(i) : null;
       const b = document.createElement('button');
-      b.className = 'tile' + (locked ? ' locked' : '') + (prog.s[i] ? ' done' : '') + (i === GE.resume ? ' cur' : '');
-      b.setAttribute('aria-label', 'Level ' + (i + 1) + (locked ? ', locked' : ''));
+      b.className = 'tile' + (locked ? ' locked' : '') + (prog.s[i] ? ' done' : '') + (i === GE.resume ? ' cur' : '') + (tough ? ' tough' : '');
+      b.setAttribute('aria-label', 'Level ' + (i + 1) + (locked ? ', locked' : '') + (tough ? ', a tough one — ' + tough.note : ''));
+      if (tough) b.title = tough.label + ' — ' + tough.note;
       b.dataset.level = i + 1; // tiles are addressed by level, not by grid position (headers are children too)
       b.disabled = locked;
-      b.innerHTML = `<span>${String(i + 1).padStart(2, '0')}</span><span class="st">${prog.s[i] ? '★'.repeat(prog.s[i]) : ''}</span>`;
+      b.innerHTML = `<span>${String(i + 1).padStart(2, '0')}</span><span class="st">${prog.s[i] ? '★'.repeat(prog.s[i]) : ''}</span>`
+        + (tough ? '<span class="tg">' + tough.label + '</span>' : '');
       if (!locked) b.onclick = () => { if (GE.livesGate(i)) GE.load(i); };
       g.appendChild(b);
     }
@@ -309,6 +450,7 @@
     refreshMotion();
     refreshHaptics();
     refreshPapers();
+    refreshAccess();
     pauseModal.hidden = false;
   }
   function resume() { GE.paused = false; pauseModal.hidden = true; }
@@ -408,16 +550,30 @@
   // neither can be derived: prog.d0 (the date of the first clear — a level count cannot tell you the
   // player came back another day) and prog.rv (which reveals have already had their one quiet beat,
   // so a replay never re-announces anything).
+  //
+  // Round 2 (backlog #19) moved two of the rungs further out. The survey now arrives at SEVEN
+  // clears rather than five: a weekly sheet with a seven-day spine is a promise about next week,
+  // and a player five levels in has not yet decided there will be a next week. The paper picker
+  // is held to TEN — one finished sheet — because a shelf of three locked swatches is the one
+  // reward surface in the game that is mostly padlocks on the day it appears, and by ten clears
+  // the first certification is either earned or one good level away. Certification itself is
+  // untouched at two: the sheet header, the win card's reward row and the "Try it" button are
+  // the moment the paper is WON, which is a different thing from the shelf it later lives on.
+  const PAPER_NEED = 10;
   const REVEALS = [
-    { id: 'cert',   need: 2, k: 'Sheet certification', v: '24 ★ on a sheet earns its paper' },
-    { id: 'daily',  need: 3, k: 'Daily draft',         v: 'One board a day, the same for everyone' },
-    { id: 'survey', need: 5, k: 'Field survey',        v: 'A week to fill in · one contract taken' },
+    { id: 'cert',   need: 2,  k: 'Sheet certification', v: '24 ★ on a sheet earns its paper' },
+    { id: 'daily',  need: 3,  k: 'Daily draft',         v: 'One board a day, the same for everyone' },
+    { id: 'survey', need: 7,  k: 'Field survey',        v: 'A week to fill in · one contract taken' },
+    { id: 'papers', need: PAPER_NEED, k: 'Paper picker', v: 'Choose the paper the drawing is on' },
   ];
   const clearedCount = () => prog.s.reduce((n, v) => n + (v ? 1 : 0), 0);
   const seenReveal = id => (prog.rv || []).includes(id);
   function disclosure() {
     const n = clearedCount(), d = { cleared: n };
     for (const r of REVEALS) d[r.id] = n >= r.need;
+    // ...and a paper already earned always has its picker: a reward you own and cannot select is
+    // worse than no shelf at all (a sheet can certify at eight clears, two short of the rung)
+    d.papers = d.papers || skins().length > 0;
     // a return day is any day that is not the day of the first clear ('pre' marks a save that
     // already had progress when this shipped — a returning player by definition)
     d.status = !!prog.d0 && prog.d0 !== dayStr(GE.now());
@@ -464,7 +620,7 @@
     // (t4) — is the one screen that contradicted staged disclosure. It is gated on the same derived
     // rule everything else uses: the sheet that teaches it must be in reach.
     const chainAt = LEVELS.findIndex(l => l.blocks.some(b => b.seq));
-    g('liSeq', chainAt >= 0 && (d.cleared >= chainAt || prog.u >= chainAt));
+    g('liSeq', chainAt >= 0 && (d.cleared >= chainAt || unlockTo() >= chainAt));
     g('legendSurvey', d.survey); g('legendContracts', d.survey); g('legendStreak', d.survey);
     // the divider is a heading for a list that can be empty on a cold open
     g('legendMetaDiv', GE.livesEnabled || d.cert || d.daily || d.survey);
@@ -518,6 +674,32 @@
     const plain = offered.filter(id => !CONTRACTS[id].cond);
     return rank(plain.length ? plain : offered) || null;
   }
+  // ---------- "the day was broken" excuse flag (round 2, new bright line E3) ----------
+  // A day the BUILD took away from the player is not a day the player missed. If a release went
+  // out that could not be played — a crash on launch, a draft the decoder refused, a store
+  // rollout that stranded a version — the dates go in this list and the survey treats them as
+  // neither stamped nor missed: a dot on the spine, no ring, and the streak carries straight
+  // across them as if they were not there.
+  //
+  // It is an EXCUSE, never a credit. No day is stamped by it, no point is paid, no contract
+  // advances, and it can only ever remove a penalty the player did not earn — which is the whole
+  // reason it is safe to ship a list the operator writes. The list arrives with the BUILD
+  // (build-info.js sets window.GE_BROKEN_DAYS; the dailies header may carry the same array), so
+  // it is auditable in the artefact rather than editable on the device.
+  const BROKEN_DAYS = (() => {
+    const src = (typeof window !== 'undefined' && window.GE_BROKEN_DAYS)
+      || (typeof DAILIES !== 'undefined' && DAILIES && DAILIES.broken);
+    return new Set(Array.isArray(src) ? src.filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)) : []);
+  })();
+  const isBroken = d => BROKEN_DAYS.has(d);
+  // how many of the days strictly between two dates were broken (so a gap made only of broken
+  // days is a gap of zero missed days)
+  function brokenBetween(from, to) {
+    let n = 0;
+    const gap = dayGap(from, to);
+    for (let i = 1; i < gap; i++) if (isBroken(dayStr(new Date(from + 'T12:00').getTime() + i * 864e5))) n++;
+    return n;
+  }
   const OFFERED = 4, PICKS = 2, DELAY_MAX = 2, MILESTONES = [3, 7, 12, 20];
   const DAY_INITIALS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   const dayStr = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
@@ -551,7 +733,7 @@
   const saveStreak = () => { try { localStorage.setItem('ge_streak', JSON.stringify(streak)); } catch (e) {} };
 
   const blankSurvey = (week, keep) => ({ week, offered: rollContracts(week), chosen: [], prog: {}, filed: [],
-    days: [], delays: [], pts: 0, ms: [], seal: false, frags: (keep && keep.frags) || 0, last: (keep && keep.last) || null });
+    days: [], delays: [], pts: 0, ms: [], seal: false, sw: 0, frags: (keep && keep.frags) || 0, last: (keep && keep.last) || null });
   let survey = blankSurvey(isoWeek(GE.now()));
   const saveSurvey = () => { try { localStorage.setItem('ge_survey', JSON.stringify(survey)); return true; } catch (e) { return false; } };
   // one-shot migration off the v1 pair. ge_streak is NOT touched, so len / best / freezes / marks
@@ -596,19 +778,36 @@
     }
     return survey;
   }
-  // free to swap until a chosen contract has actually earned something; after that the week's pair
-  // is set (a filed contract counts as progress too)
-  const contractsLocked = () => surveyWeek().chosen.some(id => (survey.prog[id] || 0) > 0);
+  // ---------- one swap after first progress (round 2, backlog #20) ----------
+  // Swapping was free until a chosen contract earned its first mark, and then the pair was set
+  // for the week. That is one tap too strict: the mark that locks the pair is usually the FIRST
+  // clear of the week, so a contract taken blind on Monday was final by Monday evening, and the
+  // survey's own worked example (the pre-selected demonstration contract) was the thing most
+  // likely to be locked in. So progress now buys ONE swap rather than a lock. Exactly one: a
+  // choice you can revisit forever is not a choice, and the sheet says how many are left.
+  //
+  // The allowance is spent by TAKING a contract that was not already chosen — dropping one is
+  // free, so a mis-tap on DROP costs nothing and can be undone by taking it straight back. A
+  // FILED contract can never be dropped: it has already paid, and dropping it would erase a
+  // result. The week's four offers are untouched by any of this and stay deterministic.
+  const SWAPS_AFTER_PROGRESS = 1;
+  const hasProgress = () => surveyWeek().chosen.some(id => (survey.prog[id] || 0) > 0) || survey.filed.length > 0;
+  const swapsLeft = () => (hasProgress() ? Math.max(0, SWAPS_AFTER_PROGRESS - (survey.sw || 0)) : Infinity);
+  const contractsLocked = () => swapsLeft() <= 0;
   function chooseContract(id) {
     const s = surveyWeek();
     if (contractsLocked() || !s.offered.includes(id)) return false;
     const i = s.chosen.indexOf(id);
-    if (i >= 0) s.chosen.splice(i, 1);
-    else if (s.chosen.length < PICKS) s.chosen.push(id);
-    else return false;
+    if (i >= 0) {
+      if (s.filed.includes(id)) return false;   // a filed contract is a result, not a choice
+      s.chosen.splice(i, 1);
+    } else if (s.chosen.length < PICKS) {
+      if (hasProgress()) s.sw = (s.sw || 0) + 1; // the allowance is spent on the TAKE
+      s.chosen.push(id);
+    } else return false;
     delete s.prog[id];
     saveSurvey();
-    track('contract_select', { id, on: i < 0, chosen: s.chosen.length });
+    track('contract_select', { id, on: i < 0, chosen: s.chosen.length, swapsLeft: swapsLeft() === Infinity ? null : swapsLeft() });
     return true;
   }
   // The survey is revealed with ONE contract already taken — the easiest of the four this week
@@ -631,7 +830,9 @@
     let newBest = false;
     if (streak.lastDate !== today) {
       const gap = streak.lastDate ? dayGap(streak.lastDate, today) : 99;
-      if (gap === 1 && streak.len > 0) streak.len++;
+      // days the build broke are not days the player missed (BROKEN_DAYS, above)
+      const missed = streak.lastDate ? gap - 1 - brokenBetween(streak.lastDate, today) : 99;
+      if (gap >= 1 && missed <= 0 && streak.len > 0) streak.len++;
       else streak.len = 1;                                   // a lapsed streak simply starts again
       streak.lastDate = today;
       if (streak.len > streak.best) { newBest = streak.len >= 2; streak.best = streak.len; } // day one is not an announcement
@@ -673,7 +874,7 @@
     $('btnSurvey').hidden = !disclosure().survey; // staged: the week's sheet arrives after level 5
     const s = surveyWeek(), dates = weekDates(GE.now());
     const stamped = dates.filter(d => s.days.includes(d)).length;
-    $('fSurvey').innerHTML = `${stamped}/7 · ${s.pts} pt${s.pts === 1 ? '' : 's'}`
+    $('fSurvey').innerHTML = `7 days · ${stamped} stamped · ${s.pts} pt${s.pts === 1 ? '' : 's'}`
       + (s.ms.includes(20) ? '<span class="mark" title="20-point mark">⌖</span>' : '');
     // the badge counts what is still to choose — the survey now ARRIVES with one contract taken
     // (staged disclosure), so a flat "SELECT 2" would be asking for a decision already half made
@@ -704,8 +905,10 @@
     $('surveyNo').textContent = 'WEEK ' + s.week.split('-W')[1];
     const live = streak.lastDate && streak.len > 0 && dayGap(streak.lastDate, today) <= 1 ? streak.len : 0;
     // the streak fact lives here now: one header line, stated plainly, nothing sold against it
+    // ruling 8, honest form: the total is printed and the number still to reach is small.
+    // Nothing here is stamped that was not earned — `stamped` is counted off the day spine.
     $('surveySub').innerHTML = (live ? `<b>${live}-day streak</b>` : 'No streak running')
-      + ` · ${stamped} of 7 days · ${s.pts} point${s.pts === 1 ? '' : 's'}`
+      + ` · 7 days · <b>${stamped}</b> stamped · ${s.pts} point${s.pts === 1 ? '' : 's'}`
       + (streak.freezes ? `<small>${streak.freezes} weather delay${streak.freezes > 1 ? 's' : ''} held</small>` : '');
     // A day before the player owned the game is not a day they missed. The sheet starts counting
     // from the first clear (prog.d0), so Monday and Tuesday of a Wednesday install render as blank
@@ -717,14 +920,18 @@
       // today is not a missed day until it is over, so it reads "to come" until it is stamped
       const on = s.days.includes(d), delay = !on && s.delays.includes(d), ahead = d >= today;
       const pre = !on && !delay && !ahead && !!d0 && d < d0;
-      const mark = on ? '✓' : delay ? '~' : ahead || pre ? '·' : '○';
-      const what = on ? 'stamped' : delay ? 'weather delay' : pre ? 'before this sheet' : ahead ? 'to come' : 'no clear';
-      return `<div class="d${on ? ' on' : delay ? ' delay' : pre ? ' pre' : ''}${d === today ? ' today' : ''}" data-day="${d}" title="${d} — ${what}">`
+      // a day the build broke is neither stamped nor missed: the same neutral dot a day still to
+      // come gets, and the streak carried across it (BROKEN_DAYS)
+      const broke = !on && !delay && isBroken(d);
+      const mark = on ? '✓' : delay ? '~' : (ahead || pre || broke) ? '·' : '○';
+      const what = on ? 'stamped' : delay ? 'weather delay' : broke ? 'day was broken — excused' : pre ? 'before this sheet' : ahead ? 'to come' : 'no clear';
+      return `<div class="d${on ? ' on' : delay ? ' delay' : broke ? ' pre' : pre ? ' pre' : ''}${d === today ? ' today' : ''}" data-day="${d}" title="${d} — ${what}">`
         + `<span class="dn">${DAY_INITIALS[i]}</span><span class="dm">${mark}</span></div>`;
     }).join('');
     // the four glyphs, named on the sheet that uses them
     $('surveyKey').textContent = '✓ day stamped   ~ weather delay   ○ no clear   · to come'
-      + (dates.some((d) => d0 && d < d0 && !s.days.includes(d)) ? '   (dotted = before you started)' : '');
+      + (dates.some((d) => d0 && d < d0 && !s.days.includes(d)) ? '   (dotted = before you started)' : '')
+      + (dates.some(isBroken) ? '   (dotted = the day was broken — excused, not missed)' : '');
     // Weather delays, stated at zero and named as what they are. The mechanic was invisible until
     // the notice that one had been spent (t34) — a safety net nobody can see is only ever a surprise.
     const held = streak.freezes;
@@ -732,6 +939,7 @@
     $('surveyDelays').innerHTML = `<span class="k">Weather delays held</span>`
       + `<span class="v">${held} of ${DELAY_MAX} · ${held ? 'covers a missed day automatically' : 'file a contract to bank one'}</span>`;
     const locked = contractsLocked();
+    const left = swapsLeft();
     const rows = s.offered.filter(id => !locked || s.chosen.includes(id)).map(id => {
       const t = CONTRACTS[id], on = s.chosen.includes(id), filed = s.filed.includes(id);
       const p = Math.min(t.target, s.prog[id] || 0);
@@ -743,10 +951,15 @@
       // a taken contract shows its bar and count; an offered one shows only its label — the label
       // already names the number, so repeating it was noise on the row you have not taken yet
       const body = on ? `<span class="qbar"><i style="width:${Math.round((p / t.target) * 100)}%"></i></span><span class="qv">${p}/${t.target}</span>` : '';
-      return `<button class="q${on ? ' on' : ' alt'}${filed ? ' done' : ''}" data-contract="${id}"${locked ? ' disabled' : ''}`
+      const dead = locked || filed; // filed is a result, not a choice (see chooseContract)
+      return `<button class="q${on ? ' on' : ' alt'}${filed ? ' done' : ''}" data-contract="${id}"${dead ? ' disabled' : ''}`
         + ` aria-label="${t.label}${on ? ', chosen' : ''}${filed ? ', filed' : ''}"><span class="ql">${t.label}</span>${body}${chip}</button>`;
     }).join('');
-    const head = locked ? 'SET FOR THE WEEK' : s.chosen.length < PICKS ? `CHOOSE ${PICKS - s.chosen.length}` : 'SWAP FREE';
+    // what the header says is exactly what the next tap can do
+    const head = locked ? 'SET FOR THE WEEK'
+      : s.chosen.length < PICKS ? `CHOOSE ${PICKS - s.chosen.length}`
+      : left === Infinity ? 'SWAP FREE'
+      : `${left} SWAP LEFT`;
     $('surveyContracts').innerHTML = `<div class="qh"><span>Contracts</span><b>${head}</b></div>` + rows;
     $('surveyTrack').innerHTML = MILESTONES.map(n => {
       const got = s.ms.includes(n);
@@ -769,7 +982,7 @@
     if (!b || b.disabled) return;
     if (chooseContract(b.dataset.contract)) { renderSurvey(); refreshSurvey(); GE.sound('gate'); }
   });
-  $('btnSurvey').onclick = () => { renderSurvey(); $('surveyModal').hidden = false; };
+  $('btnSurvey').onclick = () => { renderSurvey(); $('surveyModal').hidden = false; GE.armCard($('surveyModal').querySelector('.card')); };
   $('btnSurveyClose').onclick = () => { $('surveyModal').hidden = true; };
 
   // ---------- Daily Draft: the sheet-index row and the FIELD REPORT result card ----------
@@ -926,6 +1139,7 @@
     const fb = $('draftReportFb'); fb.hidden = true; fb.value = text;
     $('btnDraftShare').textContent = SHARE_LABEL; $('btnDraftShare').disabled = !text;
     draftModal.hidden = false;
+    GE.armCard(draftModal.querySelector('.card')); // round 2 M1: the tap that opened it does not answer it
     track('daily_report', { date: row.date, state: row.state });
     return true;
   }
@@ -981,6 +1195,7 @@
       + ' moves to your filed total and forfeits the CLEAN token';
     $('recDay').textContent = BOUNDARY;
     recModal.hidden = false;
+    GE.armCard(recModal.querySelector('.card'));
     track('daily_confirm', { date: GE.dailyInfo.today });
   };
   $('btnRecStart').onclick = () => { recModal.hidden = true; startDraft('index'); };
@@ -1039,17 +1254,24 @@
     if (!streak.lastDate || streak.len < 1) return false;
     const gap = dayGap(streak.lastDate, today);
     if (gap <= 1) return false;
-    const missed = gap - 1;
+    const missed = gap - 1 - brokenBetween(streak.lastDate, today);
+    // every missing day was a broken one: nothing was missed, nothing is spent, nothing is said
+    if (missed <= 0) {
+      streak.lastDate = dayStr(GE.now() - 864e5); // today's first clear still extends the streak
+      saveStreak();
+      return false;
+    }
     if (streak.freezes >= missed) {
       streak.freezes -= missed;
       streak.lastDate = dayStr(GE.now() - 864e5); // yesterday: today's first clear extends the streak
       saveStreak();
       const s = surveyWeek();
-      for (let i = missed; i >= 1; i--) { const d = dayStr(GE.now() - i * 864e5); if (!s.delays.includes(d)) s.delays.push(d); }
+      for (let i = gap - 1; i >= 1; i--) { const d = dayStr(GE.now() - i * 864e5); if (!isBroken(d) && !s.delays.includes(d)) s.delays.push(d); }
       saveSurvey();
       track('weather_delay_used', { missed, left: streak.freezes });
       $('freezeSub').textContent = `Weather delay used — survey day covered · ${streak.freezes} left`;
       $('freezeModal').hidden = false;
+      GE.armCard($('freezeModal').querySelector('.card'));
       refreshSurvey();
       return 'freeze';
     }
@@ -1092,7 +1314,10 @@
     if (!prog.d0) prog.d0 = dayStr(GE.now());
     const before = starsTotal(), sheet = Math.floor(lvl / PER), sheetBefore = sheetStars(sheet);
     prog.s[lvl] = Math.max(prog.s[lvl] || 0, stars);
-    prog.u = Math.max(prog.u, Math.min(lvl + 1, N - 1));
+    // the unlock pointer is now DERIVED (branching, above): it is the last open sheet's last
+    // tile. It is still written down so that an older reader of ge_prog — the reviewer console's
+    // jump, the soak's frozen-progress invariant — sees the same number the grid draws.
+    prog.u = unlockTo();
     if (sheetBefore < CERT_STARS && sheetStars(sheet) >= CERT_STARS && sheet < CHAPTERS.length) {
       const id = CERT_SKINS[sheet];
       if (id && !unlocked(id)) prog.skins = [...skins(), id];
@@ -1332,6 +1557,16 @@
     get streak() { return streak; }, checkStreak, refreshSurvey, renderSurvey,
     get survey() { return surveyWeek(); }, weekDates: () => weekDates(GE.now()), isoWeek: () => isoWeek(GE.now()),
     contractsLocked, chooseContract, preselectContract, demoContract,
+    // ---- round 2 M1: branching availability, the swap allowance, the excuse flag ----
+    SHEET_ADVANCE, openSheets, unlockTo, continueAt, sheetCleared, playable,
+    SWAPS_AFTER_PROGRESS, swapsLeft: () => swapsLeft(), hasProgress,
+    brokenDays: () => [...BROKEN_DAYS], isBroken, PAPER_NEED,
+    certChip: c => certPlain(c), certRemain, refreshAccess,
+    // what the sheet index's certification chips and the survey header actually print
+    certChips: () => [...Array(CHAPTERS.length)].map((_, c) => ({ sheet: c + 1, done: sheetStars(c) >= CERT_STARS, text: sheetStars(c) >= CERT_STARS ? rewardName(c) : certPlain(c) })),
+    surveyHead: () => ({ sub: $('surveySub').innerText.replace(/\s+/g, ' ').trim(), key: $('surveyKey').textContent,
+      head: ($('surveyContracts').querySelector('.qh b') || {}).textContent || '',
+      spine: [...$('surveySpine').children].map(d => ({ day: d.dataset.day, mark: d.querySelector('.dm').textContent, title: d.title })) }),
     disclosure, REVEALS, takeReveal, refreshStatus, refreshDraft, openDraft, refreshLegendRows,
     draftRow: () => ({ hidden: $('btnDaily').hidden, k: $('fDailyK').textContent, v: $('fDaily').innerText.replace(/\s+/g, ' ').trim() }),
     status: () => ({ hidden: $('menuStatus').hidden, tag: $('menuStatus').tagName, text: $('menuStatus').innerText.replace(/\s+/g, ' ').trim() }),

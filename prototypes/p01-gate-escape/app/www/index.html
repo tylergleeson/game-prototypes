@@ -48,6 +48,12 @@
   /* the draft's one-recorded-attempt rule, stated on the board for as long as it is true */
   #hud .lvl .rec { display:inline-block; margin-top:3px; font:700 9px/1 var(--mono); letter-spacing:.16em;
                    color:var(--amber-ink); border:1px solid var(--amber-ink); padding:3px 5px 2px; }
+  /* the tough-one stamp (round 2 M1): a drafting note on the three boards the estimator says a
+     noisy player genuinely stalls on. Plain ink on the paper, the same weight as RECORDED --
+     it is a fact about the board, not a warning and not an apology. */
+  #hud .lvl .tough { display:inline-block; margin-top:3px; font:800 9px/1 var(--mono); letter-spacing:.16em;
+                     color:var(--ink); border:1px dashed var(--line2); padding:3px 5px 2px; }
+  #hud .lvl .tough small { display:block; margin-top:2px; font:600 8px/1 var(--mono); letter-spacing:.1em; color:var(--dim); text-transform:none; }
   /* moves = the score: counter on top, the stars this pace still earns underneath */
   #hud .moves { position:relative; text-align:center; font-weight:800; font-size:18px; line-height:1.05; transition:color .25s; }
   #hud .moves .meter { display:block; font:600 11px/1 var(--mono); letter-spacing:.06em; color:var(--dim); margin-top:3px; white-space:nowrap; }
@@ -138,6 +144,10 @@
   @keyframes starin { from { transform:scale(.6); opacity:0; } }
   .spark { position:absolute; width:7px; height:7px; border-radius:50%; pointer-events:none; } /* burst host: any position:relative parent (star row, certification row, sheet header) */
   /* win-card meta: running star total + what comes next, ruled off like a title-block field row */
+  /* the proximity line: the player's own filed best against par, on the win card and the fail
+     sheet. Monospaced because it is two numbers, dim because it is a footnote to the result. */
+  .card p.prox { font:700 12px/1.3 var(--mono); letter-spacing:.06em; color:var(--dim); margin:-6px 0 12px; }
+  .modal.sheet .card p.prox { margin:-2px 0 10px; }
   .card .meta { display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--line2); margin:0 0 14px; }
   .card .meta > * { padding:7px 6px 8px; border-right:1px solid var(--line2); }
   .card .meta > :last-child { border-right:0; }
@@ -260,6 +270,23 @@
   .papers .cap.lock { color:var(--dim); font-weight:600; }
   .card .papers { margin:8px 0 0; padding:8px 10px; }
   .card .papers .cap { font-size:12px; }
+  /* ---- accessibility shelf (round 2 M1): ink presets, the four-ink custom picker and the
+     control-sensitivity step. Built on the paper picker's own row so the sheet index and the
+     pause card gain one more shelf rather than a new kind of surface. ---- */
+  .papers .ink { position:relative; width:30px; height:30px; border-radius:3px; cursor:pointer; padding:0; border:1.5px solid var(--line2);
+                 background:var(--fill); display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; overflow:hidden; }
+  .papers .ink i { display:block; }
+  .papers .ink.on { outline:2px solid var(--amber-ink); outline-offset:2px; }
+  /* the preset is named in the caption, but a shelf of four coloured squares needs the shape cue
+     the board itself uses -- so each swatch carries the palette's initial in ink */
+  .papers .ink b { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+                   font:800 11px/1 var(--mono); color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.75); }
+  .papers .pick { display:flex; gap:5px; align-items:center; }
+  .papers .pick input[type=color] { width:26px; height:26px; padding:0; border:1.5px solid var(--line2); border-radius:3px; background:none; cursor:pointer; }
+  .papers .step { display:flex; gap:5px; }
+  .papers .step button { font:700 11px/1 var(--mono); letter-spacing:.08em; padding:7px 8px; border:1.5px dashed var(--line2);
+                         background:none; color:var(--ink); border-radius:4px; cursor:pointer; }
+  .papers .step button.on { border-style:solid; border-color:var(--amber-ink); color:var(--amber-ink); }
   /* THE APPROVAL STAMP — Sheet 4's certification reward (pass 6), the sign-off sheet's own mark. It is a cosmetic and only a
      cosmetic: a stamp in the corner of the win card, nothing gated behind it, no new paper and so
      no new theme tokens. Pending and earned differ in SHAPE, never in colour alone — an empty
@@ -373,6 +400,13 @@
     background:repeating-linear-gradient(45deg,transparent 0 4px,var(--lock-hatch) 4px 5px);
   }
   .tile:not(.locked):active { transform:scale(.94); }
+  /* the tough-one tile (round 2 M1): a drafting note stamped across the bottom of the three
+     boards the estimator says a noisy player stalls on. A dashed rule and plain ink — it is a
+     fact about the board, and turning it amber would make it read as a reward or a warning. */
+  .tile.tough { border-style:dashed; }
+  .tile .tg { position:absolute; left:0; right:0; bottom:2px; font:800 7px/1 var(--mono); letter-spacing:.03em; color:var(--ink); opacity:.72; }
+  .tile { position:relative; }
+  .tile.locked .tg { display:none; }
   .foot { display:flex; justify-content:space-between; align-items:center; margin-top:14px; color:var(--dim); font-size:12px; }
   .foot button { background:none; border:0; color:var(--dim); text-decoration:underline; font:600 12px system-ui; cursor:pointer; }
   .foot button.arm { color:var(--red-ink); }
@@ -541,7 +575,7 @@
 </head>
 <body>
   <div id="hud">
-    <div class="lvl"><div id="hudLevel">Level 1</div><span class="rec" id="hudRec" hidden>RECORDED</span><div class="hearts" id="hudLives" hidden aria-label="Lives"></div></div>
+    <div class="lvl"><div id="hudLevel">Level 1</div><span class="rec" id="hudRec" hidden>RECORDED</span><span class="tough" id="hudTough" hidden>TOUGH ONE</span><div class="hearts" id="hudLives" hidden aria-label="Lives"></div></div>
     <div class="moves" id="hudMovesBox"><span id="hudMoves">0</span> <span id="hudUnit">moves</span><span class="meter" aria-label="Stars at this pace"><span id="hudMeter"><span>★</span><span>★</span><span>★</span></span><em id="hudPar">par 1</em></span></div>
     <div class="right">
       <button id="btnHint" aria-label="Hint: show the next move (rewarded ad)" disabled><span class="ad">AD</span>?</button>
@@ -564,6 +598,7 @@
       <div class="stars" id="winStars" aria-live="polite"></div>
       <h2 id="winTitle">Level clear!</h2>
       <p id="winSub"></p>
+      <p class="prox" id="winProx" hidden></p>
       <div class="meta" id="winMeta">
         <div><span class="k">Stars</span><span class="v" id="winTotal">0 / 120</span></div>
         <div><span class="k">Next</span><span class="v" id="winNext">Level 2</span></div>
@@ -594,6 +629,7 @@
       <h2 id="failTitle">Out of moves</h2>
       <p id="failSub"></p>
       <p class="hint" id="failHint"></p>
+      <p class="prox" id="failProx" hidden></p>
       <p class="teach" id="failTeach" hidden></p>
       <!-- the recorded draft only: what the two buttons cost, said before either is pressed -->
       <p class="teach rec" id="failDaily" hidden></p>
@@ -639,6 +675,8 @@
       <button class="ghost" id="btnPauseMotion">Motion: on</button>
       <button class="ghost" id="btnPauseHaptics" hidden>Haptics: on</button>
       <div class="papers" id="pausePapers" aria-label="Paper"><span class="k">Paper</span><div class="sw"></div><span class="cap"></span></div>
+      <div class="papers" id="pauseInks" aria-label="Block colours"><span class="k">Inks</span><div class="sw"></div><div class="pick" hidden></div><span class="cap"></span></div>
+      <div class="papers" id="pauseDrag" aria-label="Control sensitivity"><span class="k">Drag step</span><div class="step"></div><span class="cap"></span></div>
       <button class="ghost" id="btnPauseHome">Main menu</button>
     </div>
   </div>
@@ -804,6 +842,8 @@
       <div class="grid" id="levelGrid"></div>
       <div class="papers" id="menuPapers" aria-label="Paper"><span class="k">Paper</span><div class="sw"></div><span class="cap"></span></div>
       <div class="papers" id="menuAppr" aria-label="Approval stamp" hidden><span class="k">Stamp</span><div class="sw"></div><span class="cap"></span></div>
+      <div class="papers" id="menuInks" aria-label="Block colours"><span class="k">Inks</span><div class="sw"></div><div class="pick" hidden></div><span class="cap"></span></div>
+      <div class="papers" id="menuDrag" aria-label="Control sensitivity"><span class="k">Drag step</span><div class="step"></div><span class="cap"></span></div>
       <div class="row srow">
         <button class="ghostbtn tog" id="btnSound" aria-label="Toggle sound">Sound <b id="fSound">on</b></button>
         <button class="ghostbtn tog" id="btnHaptics" aria-label="Toggle haptics" hidden>Haptics <b id="fHaptics">on</b></button>
@@ -824,13 +864,14 @@
         <div class="li"><canvas id="symMoves" width="128" height="88"></canvas><div><b>Moves</b><span>One drag = one move. ★★★ at par · ★★ one over. Undo (↶) gives a move back; ? shows the next move.</span></div></div>
         <!-- pass 5: the approval chain. Hidden until a chained sheet exists (pass 6). -->
         <div class="li" id="liSeq" hidden><canvas id="symSeq" width="128" height="88"></canvas><div><b>Approval chain</b><span>Numbered blocks leave in order. The solid stamp is next up; the outlined ones wait.</span></div></div>
+        <div class="mi" id="legendAccess"><span class="g">Reading the board</span><span>Every block carries a shape as well as a colour — circle, triangle, diamond, star — and its gate carries the same one, so the match never depends on telling two inks apart. Under <b>Inks</b> on the sheet index or the pause card there are three colourblind presets and a custom set you pick yourself; under <b>Drag step</b> you choose how far a finger travels before a block steps a cell. Nothing there changes a board, a par or a move limit.</span></div>
         <div class="div" id="legendMetaDiv">AROUND THE GAME</div>
         <div class="mi" id="legendLives"><span class="g">♥ Lives</span><span>Retrying a failed level costs one (from level 6). They refill over time; a rescue saves the attempt instead.</span></div>
         <div class="mi" id="legendDaily"><span class="g">Daily draft</span><span>One board a day, numbered from the table’s first day and the same board for every player, with its own par. A new draft appears at midnight on this device’s own clock. An attempt is resolved by the day it finishes on: if midnight passes while the board is still open, that day is filed NOT CLEARED and the new day’s draft is ready. The week has a published shape: <b id="legendCurve">Mon and Tue easy, Wed and Sun medium, Thu and Fri hard, Sat the peak</b>. Your first attempt is the one that is recorded; after it closes, the day is practice.</span></div>
         <div class="mi" id="legendReport"><span class="g">Field report</span><span>The share text: the day and its number, whether you cleared it, and your moves against par — shown as stars and as a bar of the same number. Never how the board was solved. It ends in one token or none. CLEAN is the only award and means you used no undo, no hint and no rescue. A rescue prints instead as a plain “rescued” and adds 3 moves to the total you file, so a rescued run can never read as a clean one.</span></div>
         <div class="mi" id="legendSurvey"><span class="g">Field survey</span><span>One sheet a week: a stamp for every day you clear a level, two contracts you pick from the four the week offers, and point marks at 3, 7, 12 and 20 (1 point per clear, +1 at par).</span></div>
         <div class="mi" id="legendContracts"><span class="g">Contracts</span><span>Swap freely until one of them earns a mark, then the pair is set for the week. File one and you bank a weather delay (hold up to 2); file both and the sheet gets its seal.</span></div>
-        <div class="mi" id="legendStreak"><span class="g">Streak</span><span>One clear a day keeps it going. A banked weather delay covers a missed day; otherwise it simply starts again. There are no accounts: your streak and your draft records are kept on this device only, so reinstalling the app starts them over.</span></div>
+        <div class="mi" id="legendStreak"><span class="g">Streak</span><span>One clear a day keeps it going. A banked weather delay covers a missed day; otherwise it simply starts again. If a day is marked <b>broken</b> — a day this build could not be played through no fault of yours — it is excused: it is neither stamped nor missed, it shows as a dot on the spine, and the streak carries straight across it. There are no accounts: your streak and your draft records are kept on this device only, so reinstalling the app starts them over.</span></div>
         <div class="mi" id="legendCert"><span class="g">Certification</span><span>24 ★ on a sheet certifies it: a new paper for the drawing.</span></div>
       </div>
     </div>
