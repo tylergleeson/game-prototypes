@@ -84,6 +84,38 @@ compliance, not optimisation, and is never revisable, whatever the numbers say.
   before committing **[E2 — Riot's build-verification data: automation catches
   about half of all critical/blocker bugs, and bugs it catches are fixed
   roughly 8× faster]**.
+- The daily and streak unit is **one level cleared** — never "cleared at par",
+  never a star threshold, never a time **[E2 — Duolingo's decoupling test:
+  extending the streak on one lesson rather than a hard XP goal produced +3.3%
+  D14, +1% DAU and +19% new-learner streak rate. It is the highest-value
+  retention finding in the research base, this game already complies, and the
+  finding is that decoupling the habit unit from the difficulty goal is what
+  paid — so re-coupling them undoes it.]**
+- A field-survey stamp may never require a par clear **[E2 — same Duolingo
+  result. The survey is the weekly form of the same habit unit; a par
+  requirement re-couples habit to difficulty and turns a hard day into a
+  broken week.]**
+- No countdown on the field survey or the cover status line **[E3 — LinkedIn
+  and NYT games practice: the day boundary is published in words and the
+  progress surface simply states where you are. A clock on a progress surface
+  converts a ritual into a deadline, which is the thing this game is not.]**
+- The lives flag stays dormant **permanently** **[E3 — research report §3:
+  lives only function with refill timers and an IAP or ad refill path, both of
+  which this game has ruled out. Keep the code and the bot's `?lives=1`
+  sub-run; never ship it on.]**
+- No forced ad formats — no interstitials, no banners — and an ad is **never**
+  the only path to a win **[E3 — research report §11.2: a rewarded-only,
+  banner-free, interstitial-free build drops about 93% of a typical puzzle
+  title's impression volume for a far smaller revenue loss, and the category's
+  most-quoted operators (Puzzmo, NYT Games) sell exactly this posture. A
+  rescue is an offer at the moment of loss; it is never the gate in front of a
+  solution.]**
+- No clock as pressure — **accessibility input debounces are allowed** **[E4 —
+  team judgment, and a correction to the old blanket "no timers anywhere"
+  phrasing, which read as forbidding the 0.5 s post-acceptance delay and
+  similar misfire guards. The line is about pressure on the player: no
+  countdowns, no timed levels, no expiring offers. A delay that protects the
+  player from their own mis-tap is the opposite of a timer.]**
 - Review rounds default to THREE independent critic raters, and severity is
   never one rater's word: raters supply frequency × impact × persistence and
   the console computes it **[E3 — NN/g heuristic evaluation, 3–5 independent

@@ -216,6 +216,12 @@ direction: a rule tagged **E3 (legal)** is compliance, not optimisation, and is 
 | Fail/rescue surface at the moment of loss | E3 | hybrid-casual publisher practice |
 | Solid fill + outline; shape cue where colour matters | E3 | Game Accessibility Guidelines, Basic tier |
 | Re-run the playtest bot after any change | E2 | Riot BVS: ~50% of critical/blocker bugs, fixed ~8× faster |
+| Daily/streak unit is one level cleared, never at par | E2 | Duolingo decoupling test: +3.3% D14, +1% DAU, +19% new-learner streak rate |
+| A survey stamp never requires a par clear | E2 | same Duolingo result, applied to the weekly form of the habit unit |
+| No countdown on the survey or the cover status line | E3 | LinkedIn / NYT games practice: publish the boundary in words, not a clock |
+| The lives flag stays dormant permanently | E3 | report §3 — lives need refill timers and an IAP/ad path, both ruled out |
+| No forced ad formats; an ad is never the only path to a win | E3 | report §11.2 — rewarded-only drops ~93% of impression volume for far less revenue |
+| No clock as pressure; accessibility input debounces allowed | E4 | team judgment — supersedes the old blanket "no timers anywhere" phrasing |
 | Three raters; computed severity | E3 | NN/g heuristic evaluation and severity rating |
 | SKIP log on every declined note | E3 | MoSCoW "won't have this time" |
 | Seeded soak for unanticipated interleavings | E3 | Android UI/Application Exerciser Monkey |
@@ -225,6 +231,17 @@ par rather than human difficulty, that the measurement which would settle it —
 attempts-to-first-clear on L1–21 from real players — has never been taken, and that the rule should
 be expected to change. That is the bidirectional research→rules loop the report asked for, made
 concrete on the one rule most likely to be wrong. The same convention is mirrored in the blueprint.
+
+Six of the nineteen rules arrived as a lead addendum after the first pass and are written the same
+way. Two carry the strongest evidence in the file: the daily/streak unit and the survey stamp are
+both **E2**, resting on Duolingo's published decoupling result, and both are therefore rules this
+project may **not** argue with on local data. The lives entry is worth reading in full — the flag
+and its `?lives=1` bot sub-run stay in the code, but "dormant permanently" is now the rule rather
+than the current default. And the timer rule is a genuine correction: the old informal "no timers
+anywhere" phrasing read as forbidding the 0.5 s post-acceptance delay and other misfire guards, so
+it is now "no clock as pressure", with accessibility input debounces explicitly allowed. That
+distinction also matters to the soak, whose settle windows exist precisely because the game
+deliberately delays arming a card.
 
 ---
 
