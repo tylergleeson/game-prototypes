@@ -91,3 +91,6 @@ rebuild → wireless install to the user's iPhone (new REV stamp).
     never a countdown on the survey [E3]; lives stay dormant [E3]; no forced ad formats
     and an ad is never the only path to a win [E3]; the streak unit stays "one clear"
     [E2 — Duolingo decoupling]; "day was broken" local excuse flag exists (M1) [E3].
+
+## T1 result feeding M1
+- Tough-one labels go on **L20, L24, L25** (human-proxy pass rates 7 / 13 / 11 %) — not the generic 23–25; L25 has zero headroom (best-5% == limit) — M1 must not tighten it further.
