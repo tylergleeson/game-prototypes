@@ -3,6 +3,7 @@
 // used for the Claude artifact publish and any single-file upload target.
 // Output has no doctype/html/head/body wrapper (artifact host supplies one).
 import fs from 'fs';
+const GE_STAMP = (d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + ' · ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'))(new Date());
 const root = new URL('..', import.meta.url).pathname;
 const html = fs.readFileSync(root + 'index.html', 'utf8');
 const levels = fs.readFileSync(root + 'levels.js', 'utf8');
@@ -17,6 +18,7 @@ const body = html.match(/<body>([\s\S]*?)<script/)[1];
 const out = `<title>Gate Escape</title>
 ${style}
 ${body}<script>
+window.GE_BUILD = '${GE_STAMP}';
 window.BEACON_URL = window.BEACON_URL || ''; // '' = beacon disabled (zero network) — artifact builds stay offline
 ${levels}
 ${dailies}

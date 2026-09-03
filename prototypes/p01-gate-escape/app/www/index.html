@@ -525,6 +525,7 @@
   body.reduce-motion #hudSeq.bump { animation:none; }
   @media (prefers-reduced-motion: reduce) { #hudSeq.bump { animation:none; } }
   [hidden] { display:none !important; }
+.build{margin-top:6px;font-family:var(--mono,monospace);font-size:10px;letter-spacing:.14em;opacity:.55}
 </style>
 </head>
 <body>
@@ -737,6 +738,7 @@
            a button — the landing is exactly three taps and that is not negotiable. At most two
            clauses, no countdown, no CTA, and never a statement of something lost. -->
       <div class="status" id="menuStatus" hidden></div>
+      <div class="build" id="menuBuild" hidden></div>
       <button class="gatebtn" id="btnPlay">
         <svg class="blk" viewBox="0 0 22 22" aria-hidden="true"><defs><pattern id="h" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#ff8078"/><rect width="1.4" height="4" fill="#c24d46" opacity=".55"/></pattern></defs><rect x="1.5" y="1.5" width="19" height="19" fill="url(#h)" stroke="#c24d46" stroke-width="2"/><circle cx="11" cy="11" r="3" fill="#fff" opacity=".9"/></svg>
         <span id="playLabel">Play</span>
@@ -808,7 +810,8 @@
     </div>
   </div>
 
-  <script src="levels.js"></script>
+  <script src="build-info.js"></script>
+<script src="levels.js"></script>
   <script src="dailies.js"></script>
   <script src="game.js"></script>
   <script src="menu.js"></script>

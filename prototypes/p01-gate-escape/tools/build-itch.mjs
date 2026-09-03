@@ -3,6 +3,7 @@
 // game files, nothing else. BEACON_URL ships exactly as configured in index.html.
 //   node tools/build-itch.mjs  →  dist/itch/gate-escape-itch.zip
 import fs from 'fs';
+const GE_STAMP = (d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + ' · ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'))(new Date());
 import { execSync } from 'child_process';
 
 const root = new URL('..', import.meta.url).pathname;
@@ -12,6 +13,7 @@ fs.mkdirSync(out, { recursive: true });
 
 const FILES = ['index.html', 'game.js', 'levels.js', 'dailies.js', 'menu.js', 'beacon.js'];
 for (const f of FILES) fs.copyFileSync(root + f, out + f);
+fs.writeFileSync(out + 'build-info.js', `window.GE_BUILD = '${GE_STAMP}';\n`);
 execSync(`zip -X -q gate-escape-itch.zip ${FILES.join(' ')}`, { cwd: out });
 
 console.error('dist/itch/gate-escape-itch.zip contents:');

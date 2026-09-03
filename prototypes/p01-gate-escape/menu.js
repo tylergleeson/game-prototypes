@@ -211,6 +211,10 @@
       : `Level <b>${GE.resume + 1}</b> / ${N} · ★ <b>${starsTotal()}</b>`
         + (live ? ` · <i>${live}-day streak</i>` : '');
     refreshStatus();
+    // Build revision stamp: written by the build scripts (build-info.js); absent in a raw dev
+    // checkout, so the line simply stays hidden there. Passive text — never interactive.
+    const bb = $('menuBuild'), bv = typeof window !== 'undefined' && window.GE_BUILD;
+    bb.hidden = !bv; if (bv) bb.textContent = 'REV ' + bv;
   }
   // The status line is the LAST thing the landing gained and the most easily abused: it is a passive
   // div (never a button), it appears only from the first return day, it states at most two facts, and
