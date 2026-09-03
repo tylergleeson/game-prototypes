@@ -39,3 +39,30 @@ rebuild → wireless install to the user's iPhone (new REV stamp).
 ## Additions from the appendix digests (lead, 2026-09-03)
 - M1: deterministic proximity line on the fail sheet and win card ("your best 9 · par 7") — Appendix B §1.9 replacement for near-miss theatre; a "choose your next sheet" autonomy affordance is DEFERRED (unlock semantics already change in #21).
 - Collateral (round-end): positioning line "Every star is a proof, not a purchase" into App Store/itch copy (Appendix A §6.4); do NOT copy the Duolingo streak wager (a bet — Appendix B §7.3).
+
+## Specs pinned from Appendix C/D/E digests (for waves 2–3)
+- **Rulings (G1)**: day boundary = device-local midnight; an attempt finished after the
+  boundary belongs to the new day (an open recorded attempt closes NOT CLEARED at the
+  boundary); disclose that streak/records are device-local and lost on reinstall; the
+  rescue marker stays a plain-ink fact, never a badge.
+- **A1 telemetry contract**: NO persistent analytics id (retire ge_iid); per-session
+  in-memory UUID + `cohort_day` property (install day) + `session_num` so active-cohort
+  curves can be computed server-side without a user id. Global props on every event:
+  schema_v, session_id, session_num, event_seq, client_ts, build (REV), platform,
+  os_version, device_class, locale, is_supporter, consent_analytics. Level-funnel props on
+  every funnel step: level_id, level_index, attempt_no, lifetime_attempts_on_level,
+  result enum, moves_used/par/delta, duration_ms, ttfi_ms, undo/hint/restart counts,
+  entry_source, first_clear, session_level_ordinal. New events: rescue_offer_shown,
+  ad_request/ad_no_fill/ad_error/ad_reward_granted, app_foreground/app_background,
+  notification_permission/open (dormant), error_event, streak_lapse. Batching: gzipped JSON
+  array every ~20 s, <1 MB, retry only on offline/413, wipe on 200/400/401. Consent gate:
+  an in-product `consent_analytics` choice; denied = zero transmission; beacon stays
+  disabled until an endpoint exists. Store-label truth: "Usage Data / Product
+  Interaction — Analytics — Not Linked to You" when enabled. EU/UK consent status is
+  UNRESOLVED per Appendix E — do not enable in EU/UK without a prompt or legal opinion.
+- **KPI gates (Appendix E, derived)**: D1 <22 % kill / ≥33 % scale; D7 <4 % / ≥10 %;
+  L1→L2 drop >17 % kill; mean attempts/level 2.0–3.5 healthy; D14/D30 are NOT gates at
+  40 levels.
+- **Accessibility pass (M1)**: check the alignment flash and burst against GAG's
+  flicker guidance (a fast at-a-glance beat must not read as flicker; reduced-motion
+  variant already exists).
