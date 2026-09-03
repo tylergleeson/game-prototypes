@@ -66,3 +66,28 @@ rebuild → wireless install to the user's iPhone (new REV stamp).
 - **Accessibility pass (M1)**: check the alignment flash and burst against GAG's
   flicker guidance (a fast at-a-glance beat must not read as flicker; reduced-motion
   variant already exists).
+
+## Rule-collision rulings (lead, from the main digest §4)
+1. Rescue in a recorded draft: priced INTO the record's move total (drags + 3), stars on
+   the record computed from that total, RESCUED printed plain — G1. Campaign unchanged.
+2. Hint: take the "mark the record" branch (hint forfeits CLEAN); never charge moves.
+3. Remote config: DEFERRED; the zero-network bot assertion stands this round.
+4. Crash/ANR SDK: DEFERRED (third-party SDK; user decision) — log only.
+5. Sawtooth guard vs retune: T1 rewrites the guard to assert BOTH metrics; a retune is
+   legitimate only if the stochastic estimate disagrees.
+6. Branching 8-of-10: adopted (M1) — unlock pointer becomes "sheet advances when 8 of its
+   10 are cleared"; sequential tiles stay playable in any order within a sheet; checks
+   rewritten. Threshold 8 is judgment (report says so) — note it as E4.
+7. Local reminder + widget + comparator: DEFERRED to pre-launch; "no notifications"
+   stays true this round.
+8. Endowed progress: HONEST form only — small remaining numbers with the total stated
+   ("30 ★ · 12 banked · 12 to certify"; "7 days · 1 stamped"); the survey's reveal day
+   counts as stamped only because the reveal fires on a real clear; NO fake stamps ever.
+9. Cert chip reads a remaining number ("6 ★ to Night vellum"), never a ratio (M1).
+10. CLEAN token: adopted; share checks updated (G1).
+11. 0.5 s post-acceptance delay: an accessibility input debounce, not a play clock —
+    allowed; CLAUDE.md wording becomes "no clock as pressure".
+12. New bright lines (P1 adds, tagged): never require a par clear for a stamp [E2];
+    never a countdown on the survey [E3]; lives stay dormant [E3]; no forced ad formats
+    and an ad is never the only path to a win [E3]; the streak unit stays "one clear"
+    [E2 — Duolingo decoupling]; "day was broken" local excuse flag exists (M1) [E3].
