@@ -123,7 +123,9 @@ Built to the hybrid-casual grammar:
   SAME board for every player, decoded from a precomputed table of a year of boards (365 rows,
   ~19 KB, ~54 B/day, append-only and pinned by `tools/dailies.lock`). Nothing is generated in the
   page — a generator in the page is a solver in the page, and par has to be a fact the player
-  cannot dial. It rides on a **virtual level index** (`DAILY_INDEX === LEVELS.length`), so it is
+  cannot dial. Every row carries an integrity digest bound to its own calendar date, checked in
+  the page before the board is served: a client whose table has diverged is told so
+  (`DAILIES.integrity`) rather than being handed a different puzzle from everyone else's. It rides on a **virtual level index** (`DAILY_INDEX === LEVELS.length`), so it is
   outside the campaign by construction: no star on a sheet, no unlock, no certification, no
   personal best, no life spent, and the resume pointer never moves. Weekday curve rises to a
   Saturday peak; the limit is par+3 every day.
@@ -245,7 +247,29 @@ Built to the hybrid-casual grammar:
   sequence (`tools/solutions.json`).
 - `tools/generate-dailies.mjs` — emits a year of date-seeded Daily Draft boards as compact
   row strings (`dailies.js`) plus `tools/daily-solutions.json`; the table is **append-only**,
-  enforced by the SHA-256 prefix hash in `tools/dailies.lock` which the bot re-checks.
+  enforced by the SHA-256 prefix hash in `tools/dailies.lock` which the bot re-checks. It also
+  writes `tools/dailies.manifest.json` (date → row index, archetype, par, limit, SHA-256 and
+  the compact runtime digest) and ships that digest column INTO `dailies.js` as `DAILIES.h`:
+  before serving a board the decoder re-encodes it, digests it against its own calendar date
+  and **refuses to serve a mismatch**, setting `DAILIES.integrity` (`.ok`, `.reason`,
+  `.message` = "Draft unavailable — please update") instead of quietly handing over a
+  divergent board. It publishes the weekday rhythm too — `DAILIES.curve` (archetype key per
+  UTC weekday), `DAILIES.curveSpec` and `DAILIES.curveFor(date)` — so the menu states the
+  ramp rather than the player inferring it.
+- `tools/dailies-correct.mjs` — the bad-day correction path, built before it is needed.
+  `--date D` re-verifies one day against the table, the manifest and the runtime digest;
+  `--date D --reseed --reason "…"` replaces that board by recording a re-seed salt in
+  `tools/dailies-overrides.json` (so the corrected row stays as reproducible as every other
+  one), re-locks, and appends an audit line to `tools/dailies-corrections.log`. Future days
+  are free to correct, today needs `--force-today`, a past day is refused outright.
+- `tools/estimate-difficulty.mjs` — the STOCHASTIC difficulty estimator (research round 2).
+  Seven noisy agents on gen-core — three ε-greedy over the solver's optimal move, three over a
+  one-ply lookahead, one uniform-random — 200 runs each per level, reporting pass rate within
+  the shipped limit, the best-5% / median / p90 move counts, mean wasted drags and a
+  human-difficulty estimate (`best-5% − par`). Writes `tools/difficulty-report.md` and
+  `tools/difficulty.json`; the bot asserts the L16–30 sawtooth on BOTH rulers, so a future
+  retune is checked against a human proxy and not only against optimal par.
+  `--dailies N` samples N daily rows to prove `par+3` is reachable by a non-optimal route.
 - `tools/build-single.mjs` / `tools/build-itch.mjs` / `tools/build-app.mjs` — the three
   bundles (one-file HTML for artifacts/portals, the itch zip, and `app/www/` = the PWA and
   Capacitor webDir). The playtest bot's `bundles fresh` check is a byte-exact comparison, so

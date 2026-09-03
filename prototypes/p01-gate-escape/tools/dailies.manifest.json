@@ -1,0 +1,3294 @@
+{
+ "v": 1,
+ "start": "2026-09-01",
+ "days": 365,
+ "canon": "<date>|<row>",
+ "digest": "fnv1a32 (runtime, DAILIES.h) + sha256 (audit)",
+ "entries": {
+  "2026-09-01": {
+   "i": 0,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "c3bcb096",
+   "sha256": "9fe9b91ce8d18672cc1786f544182ae4ffaab85fcae8f153b8100ae9088c103e"
+  },
+  "2026-09-02": {
+   "i": 1,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 6,
+   "moves": 9,
+   "fnv": "871e02a7",
+   "sha256": "6eaff500259c12182be83c93a8453c99e9de6a5e04a057cfb96c1aa80ecb8a0b"
+  },
+  "2026-09-03": {
+   "i": 2,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "dec28546",
+   "sha256": "121e588081c32e15352aa7b1074d57da81588e492b9123c3e1dd6549f9d58f90"
+  },
+  "2026-09-04": {
+   "i": 3,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "ef02b8a7",
+   "sha256": "64dec7b2d96dff4990c1176a68f9cc8e9a33d81cba474ad8a0297fef20250b1f"
+  },
+  "2026-09-05": {
+   "i": 4,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "b1d6112a",
+   "sha256": "c9379197302bb649f0e1c2358c6f61ff2dae326c4f222bc9de339e5be38d255c"
+  },
+  "2026-09-06": {
+   "i": 5,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "5b11c7a6",
+   "sha256": "199af32810eee5e55b734e75978d9ec7d34a41f93f06a47b486db790159cea53"
+  },
+  "2026-09-07": {
+   "i": 6,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "025935be",
+   "sha256": "c22b7465c47162b3570604c37d8347c2f4ffc46486b96ce905d3ae5ba1d40556"
+  },
+  "2026-09-08": {
+   "i": 7,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "6ac549e7",
+   "sha256": "68cf4936e6276ebc8b8d8280a05602638a93dbce81a7210e8f96e264deb95d0b"
+  },
+  "2026-09-09": {
+   "i": 8,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "d4cfe615",
+   "sha256": "30a98fce257058f8ae42c05708163aca9a80a77954ae03d967217f0e12a36ed4"
+  },
+  "2026-09-10": {
+   "i": 9,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "91fb5902",
+   "sha256": "091935d0ca1fed2d50f1825cc51e7abc1311a1291af0c219139eb86d523ece0b"
+  },
+  "2026-09-11": {
+   "i": 10,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "4dec744a",
+   "sha256": "621afbe2a0ccf06c0d5f162f85372bcade356749341ee536a6bc901f2834b8ec"
+  },
+  "2026-09-12": {
+   "i": 11,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "c89dafc1",
+   "sha256": "209746f84ba5c73d523ed6d2f0d9ff3695bc91addb5f4d10c846903abcac918f"
+  },
+  "2026-09-13": {
+   "i": 12,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "dd45c985",
+   "sha256": "a3930a604e1d91fa72eb7fe48c4fdabc27eec44d128ef2afde07481cc86be169"
+  },
+  "2026-09-14": {
+   "i": 13,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "3acd2891",
+   "sha256": "513c3eba737e2709dfee736c08b07a88245f1a5733fc7388d388849e966595d5"
+  },
+  "2026-09-15": {
+   "i": 14,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "2a1dc595",
+   "sha256": "ae49c1443239d1040bfc2051925057bc6eb2232a67a2775978b9e2794e4cbde4"
+  },
+  "2026-09-16": {
+   "i": 15,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "29c4c149",
+   "sha256": "be781f99579c58537acf7ee1c736e7da0d32c7eed25c16b223a46322d2edfb47"
+  },
+  "2026-09-17": {
+   "i": 16,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "8e2d30ca",
+   "sha256": "62c9f724334f6af86f6e2f07b43e744bf5dd1f36ef55465d486f79bc325668c6"
+  },
+  "2026-09-18": {
+   "i": 17,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "8523c489",
+   "sha256": "3f62fc067b072cd698f8b5200c85775edb911847c0f095a7459e6b3f7ada4669"
+  },
+  "2026-09-19": {
+   "i": 18,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "c0b2cbc6",
+   "sha256": "d6180e043f69f5be5bd956ae4828320d9b4c6503b45d259fd5a5cc7446a10f1a"
+  },
+  "2026-09-20": {
+   "i": 19,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "98fdbc64",
+   "sha256": "73bcb1fa32167f69fad50e63d19b4692b6bff751ab200bfc143876243485b230"
+  },
+  "2026-09-21": {
+   "i": 20,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "60900be0",
+   "sha256": "1167fdf82f33425f128a1083fed6da6aa0912c4a8ffe319b62ab15efb46ec367"
+  },
+  "2026-09-22": {
+   "i": 21,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "8ee0a320",
+   "sha256": "138062fbb16247dbe9a7ee6b79352b96a8fdff838fa445219f48e30943efdcfd"
+  },
+  "2026-09-23": {
+   "i": 22,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "3343216e",
+   "sha256": "2c63d8db4f2e9b24c7bba5ced0f3f67fa0cc51357b339d8396726ef2f1ee093b"
+  },
+  "2026-09-24": {
+   "i": 23,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "c6b3537f",
+   "sha256": "126c9715d0591392624117122468ef6fc441dbfb7ec11c20c0e403ea63240a38"
+  },
+  "2026-09-25": {
+   "i": 24,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "5bf1964a",
+   "sha256": "754ab0eeb414a1e9ee18d5a99d77f5c5be431b612b7042ac455120af20e4fce2"
+  },
+  "2026-09-26": {
+   "i": 25,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "7cc8df71",
+   "sha256": "bf42e26c71439ffee36740a62e600be6179c82cce02813403e7559e5d2c9531e"
+  },
+  "2026-09-27": {
+   "i": 26,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "307327d2",
+   "sha256": "36302be850506a487e75f997b09caec9810b39cd0beec7407b9421ba5d9dbc4b"
+  },
+  "2026-09-28": {
+   "i": 27,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "de9f4a9f",
+   "sha256": "3b45fa296b05b7baf2c5d2a799aef31fb1265f2adbdffa9844b9b8e19d257c47"
+  },
+  "2026-09-29": {
+   "i": 28,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "55b1732f",
+   "sha256": "dbb68cbb5ec9d7d29059a77f4a17b15b657396ea7b92940a5f55ef5c142aad65"
+  },
+  "2026-09-30": {
+   "i": 29,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "8b9e4498",
+   "sha256": "f4fa3905e5ff9db6956466dc50e2a8a8b80101060de134619d610cecb48e2612"
+  },
+  "2026-10-01": {
+   "i": 30,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "64ffcfef",
+   "sha256": "ea5847a32cd8a0980bcddfaf345f98c8d0c915ca239f594948eff8fc2579a88a"
+  },
+  "2026-10-02": {
+   "i": 31,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "ed613260",
+   "sha256": "8c35a89d6210570c8a94cb3029267ed3dc37fae3c35ab9d121efa423f1a0fa5c"
+  },
+  "2026-10-03": {
+   "i": 32,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 9,
+   "moves": 12,
+   "fnv": "ecb71cba",
+   "sha256": "9834f9184894769e3771e37a8da3f57a1acfb09711b86acd6d6fecfc74a353c7"
+  },
+  "2026-10-04": {
+   "i": 33,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "12cf9dd5",
+   "sha256": "ccbafa3813f0e31507cb8bedecbc7f4c76c67ab6cd4a769a7d67c7e86e7ca1df"
+  },
+  "2026-10-05": {
+   "i": 34,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "159ac53e",
+   "sha256": "926d16d65c4921861d9477e2fe7e022e9f22fe3a4c193b7c9b6e2a388a629859"
+  },
+  "2026-10-06": {
+   "i": 35,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "67b5a91f",
+   "sha256": "4ba25244a86d1d513e223299738e593338c1729522e9b6648ebf6d6f1be744d1"
+  },
+  "2026-10-07": {
+   "i": 36,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "cb1d2af9",
+   "sha256": "eac3c56558049d7dbe17d4fd4f0035013cbfa47a0e039f54c8203bc68ee04ca6"
+  },
+  "2026-10-08": {
+   "i": 37,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "584216a5",
+   "sha256": "223ba3bc809ecb95a17eb6463c4e1241e8b5e328017078bee90e2a6c1b159dfa"
+  },
+  "2026-10-09": {
+   "i": 38,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "09f7544b",
+   "sha256": "3c769831391cb0ab22e9fcbc5d06da1bbe7911738239919a56dac177318dc74d"
+  },
+  "2026-10-10": {
+   "i": 39,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "0e0e579e",
+   "sha256": "7836700f03a87128a1b4258be11726693f54ca779c85b693fdb7070fed82ed17"
+  },
+  "2026-10-11": {
+   "i": 40,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "dd36a8a1",
+   "sha256": "4ce300b2e353336437653df77200f49392b67f8c4ca7b60d52b869a9e79b9e68"
+  },
+  "2026-10-12": {
+   "i": 41,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "a44f0693",
+   "sha256": "ab2678a4931de52549f9ea38017db45ebebcd59593dc66a1cadfd0986bd2ae32"
+  },
+  "2026-10-13": {
+   "i": 42,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "cacb4a93",
+   "sha256": "430594459ee07dbc7e51b65e9fd2ba1fcce42e250ecefec700b084b7f963dd09"
+  },
+  "2026-10-14": {
+   "i": 43,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "7cf18235",
+   "sha256": "085b9286ece6df131c356d42b0c24f421f43c9c67dacc59c659bf78d3296c2e4"
+  },
+  "2026-10-15": {
+   "i": 44,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "9c65e5be",
+   "sha256": "aaba2f22de6c9c3ac73ef2e1ceb1b41fc100a8c51f3f454b4be3455bb3dbe7b2"
+  },
+  "2026-10-16": {
+   "i": 45,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "3acd2910",
+   "sha256": "626b74f766bd73a4eb96f3fb58bc8d25e049895a32ebc3831e7524d55fe1faa3"
+  },
+  "2026-10-17": {
+   "i": 46,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "ffafef45",
+   "sha256": "9c00d01bb84b0ca2703e047e2a4d850209076129e4dea63503eb67e763e2160e"
+  },
+  "2026-10-18": {
+   "i": 47,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "0245a945",
+   "sha256": "bb797470e377a5deb6d980d4bb7cce1b4ef49450e3cdfc9feb68a56021d63447"
+  },
+  "2026-10-19": {
+   "i": 48,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "3f8d3483",
+   "sha256": "b46af4cc0b908695ac5920129839da60059de43f5a316c1e16e7e3d1bd4bb08e"
+  },
+  "2026-10-20": {
+   "i": 49,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "fc367784",
+   "sha256": "693022e93c8c356db9f3a9549733b98a85a6ab086749f2b1928c69948b365912"
+  },
+  "2026-10-21": {
+   "i": 50,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "1be3f1f7",
+   "sha256": "7e833111789a2f1605e61fa486315520cecb6f2bafb7f888f22d20fda40f19d6"
+  },
+  "2026-10-22": {
+   "i": 51,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "a55f051a",
+   "sha256": "8496967061494731bcebffa46045f2acc7d5556a731f6153cf90fc5f91d5a038"
+  },
+  "2026-10-23": {
+   "i": 52,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "9faab1c8",
+   "sha256": "fe2adfe839bd16959a66c641a14c31d880bb0148148b84f559d807701c6d5301"
+  },
+  "2026-10-24": {
+   "i": 53,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "9cd6da2a",
+   "sha256": "9b1fda2263c0f7ab1f44024daba2905e3f2980ad512a1de4809bdf2c0e7cf257"
+  },
+  "2026-10-25": {
+   "i": 54,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "d4bcb4ab",
+   "sha256": "eb2be2fd0303f141e1ca0d7f304a1f8528a851f1d72a9c476345603c59b137ca"
+  },
+  "2026-10-26": {
+   "i": 55,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "b0b12281",
+   "sha256": "c2a44dbe5660481dadccd397dc653f8c8c60c14f33f08ef5c5f432f4c1b2a428"
+  },
+  "2026-10-27": {
+   "i": 56,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "09135a4e",
+   "sha256": "8ee9d16846d3896985fe4a22aa3e398cbe75752ef8823ff93e4e46e65a1c2c53"
+  },
+  "2026-10-28": {
+   "i": 57,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "423c99b9",
+   "sha256": "1b8cd0b523695bc79efdcf5ed992461d894636140cd03c503ae632f854ced7c0"
+  },
+  "2026-10-29": {
+   "i": 58,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "b3ee8c7d",
+   "sha256": "3cf95c598ea20decfa58ae1838ba5bf9c2d8695ebfc9239225a0fe4c2dceead7"
+  },
+  "2026-10-30": {
+   "i": 59,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "82da4e26",
+   "sha256": "8a6d38b8a3cce2d7e6f3e74c709bec61aab0cc8a39451c30b20b487ce92c0568"
+  },
+  "2026-10-31": {
+   "i": 60,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "d59cf10b",
+   "sha256": "c6dd2b0ec07bbdb5d3082a3cecf9f1e7fcf80e6f5fdb5e5929d72869c8e28991"
+  },
+  "2026-11-01": {
+   "i": 61,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "abbd09ef",
+   "sha256": "f4c4b844316ca2a6549d8417068546f4bdceed4ae88f2330a4b68a9a0bb70621"
+  },
+  "2026-11-02": {
+   "i": 62,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "da10bf5e",
+   "sha256": "e7ddbac960193a51ba7ae746c70a16e92317d2a77612943da1e0e6c44a4fc7cd"
+  },
+  "2026-11-03": {
+   "i": 63,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "89ed8aea",
+   "sha256": "20c8a09807e2a90d093ad9cb815e414ad4fbd0540e7579be4e4c88cce36e0062"
+  },
+  "2026-11-04": {
+   "i": 64,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "167ec192",
+   "sha256": "f41c1bcb9275a41a4bed05c0722609aa45d01367f0d081a946c3d9c66c322ff5"
+  },
+  "2026-11-05": {
+   "i": 65,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "97e5cf78",
+   "sha256": "f0ee26b0c09242fefc92b4e04dbccde3a56a4877f007a1cad2b1352c0d8e7460"
+  },
+  "2026-11-06": {
+   "i": 66,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "c26079c2",
+   "sha256": "603c25979a56089fedd0cdd2dc64c1f3e9f7fc3538b9d1c2ef4809a8c19783dd"
+  },
+  "2026-11-07": {
+   "i": 67,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "f23688a9",
+   "sha256": "aeb3ecd465d020d52a677865513b7c3307000f2a75a6b0e901088ec5e9899fa4"
+  },
+  "2026-11-08": {
+   "i": 68,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "b216aeb7",
+   "sha256": "7e5a3f657cebde8fd7aab7013b820acbf5f844c0c7412e3bd30f6007f5fc3803"
+  },
+  "2026-11-09": {
+   "i": 69,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "74d6e1ff",
+   "sha256": "9e6732b1aa07aa3485f88f1f30d4d7375f02676be53b373346f6e43c5ad87e3b"
+  },
+  "2026-11-10": {
+   "i": 70,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "0e22e402",
+   "sha256": "c71fd6a67f3ce6d095d955258b8380b4ab832fe48c9bfacb4ae865af9f37c138"
+  },
+  "2026-11-11": {
+   "i": 71,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "86fb5c5a",
+   "sha256": "0495d8522759c3453f54413e8443d1d33f14f78b9570ee8b8cc5ad3d4b317484"
+  },
+  "2026-11-12": {
+   "i": 72,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "1c2233bb",
+   "sha256": "9df49074f81b16f6b87f546e88ee6c187b0cd4202d474074746fd0c01ee02aaf"
+  },
+  "2026-11-13": {
+   "i": 73,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "03979647",
+   "sha256": "ea44175096aa094c073b49cef56ea60d1f77d2a23476c34710f307cef0bdbb5a"
+  },
+  "2026-11-14": {
+   "i": 74,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "ef734fbd",
+   "sha256": "1f4fb98aca133bc506027157e31ec949b1c11a236499dd6804757bb4439a88ce"
+  },
+  "2026-11-15": {
+   "i": 75,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "059c37bd",
+   "sha256": "131eaf3be7f313c826f0aea158d0cb5f53ff81db04dd5a9d5024df8a2f25eab6"
+  },
+  "2026-11-16": {
+   "i": 76,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "296ce884",
+   "sha256": "a57347525be7008dd46006b9fff5da3fc5513f393db9b8e63ad4eff21e99266c"
+  },
+  "2026-11-17": {
+   "i": 77,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "f18e182c",
+   "sha256": "f9e2656b94eef02532ffa99cbc719fb1455645781eb7c4e190d3aef4b316de63"
+  },
+  "2026-11-18": {
+   "i": 78,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "54c711d5",
+   "sha256": "6481f94ac7a4e51a8c9249a37a397ceb059361ede8558c9b0234437c2b92c325"
+  },
+  "2026-11-19": {
+   "i": 79,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "ef47e7fc",
+   "sha256": "c13c7450d59765bdc3dce4ed21ba21529cf8fccbdc592264010065a6206aacb6"
+  },
+  "2026-11-20": {
+   "i": 80,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "cea0f8df",
+   "sha256": "f123a514de674b346efad9b1470367307c16f60d732ea307b8a9f00f4215e2af"
+  },
+  "2026-11-21": {
+   "i": 81,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "1ed7553c",
+   "sha256": "e21dabe0705a49e4d60e27fdde498db468947ffa9447746ca05f314aafdae5f3"
+  },
+  "2026-11-22": {
+   "i": 82,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 6,
+   "moves": 9,
+   "fnv": "1f4c44ee",
+   "sha256": "1eb07aa180582d72801413a4c5434dc62c2b8c9f23789ad2962f0b412643ee83"
+  },
+  "2026-11-23": {
+   "i": 83,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "8f9c0d10",
+   "sha256": "5080ae386dfdad8fc955a874ee3ade156d8a4101c7f8971ab35d3b7b38ddffad"
+  },
+  "2026-11-24": {
+   "i": 84,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "4aa4daeb",
+   "sha256": "27da8140999bffd204818df845829179860901750a4019e33dbf7c9edddd0f39"
+  },
+  "2026-11-25": {
+   "i": 85,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "734bd09e",
+   "sha256": "7bfa6d37a9ceb2f773b5759c4277a61d0bfeb218344cba2ba7f4f03e42fc451e"
+  },
+  "2026-11-26": {
+   "i": 86,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "53e581a1",
+   "sha256": "d15d9609071f707cee66e4cc1b2aee7be82166b7d841e3e2dcb94e3510248ad0"
+  },
+  "2026-11-27": {
+   "i": 87,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "a7a9b132",
+   "sha256": "1eed65d5eeed2db2d1af1c94e3e612526ce3137ed71d67cb2e4d0599bda13795"
+  },
+  "2026-11-28": {
+   "i": 88,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 9,
+   "moves": 12,
+   "fnv": "84947d96",
+   "sha256": "fe598d5642d9905e01a38ebb69e69535f21767ca2a0ad14102896c89f9815f6d"
+  },
+  "2026-11-29": {
+   "i": 89,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "974bbe9f",
+   "sha256": "67f68772f91247c3c69fc0ee07c1fd1e6963ee34a1587b552c4dd4732b503f4b"
+  },
+  "2026-11-30": {
+   "i": 90,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "89990bc4",
+   "sha256": "7feb0c46997709ece6f50e6390a7e6084eefabe36d16892809d43541979de281"
+  },
+  "2026-12-01": {
+   "i": 91,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "32bceb8f",
+   "sha256": "bce3c1e9be7d4806cc707d77900740693c3b9910b3afc837eccbe1641cf4ba57"
+  },
+  "2026-12-02": {
+   "i": 92,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 6,
+   "moves": 9,
+   "fnv": "1c7f1678",
+   "sha256": "35c5d0950c0d8a78c291fc0f7df96b18dfaca7ba3d7816cce71b605285928d1b"
+  },
+  "2026-12-03": {
+   "i": 93,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "2e36f6d4",
+   "sha256": "3709f7f32ad6da7c717f6d08543f8e2f7095254edf0d0efb523a6bc9b5733732"
+  },
+  "2026-12-04": {
+   "i": 94,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "d79dabd9",
+   "sha256": "b20c7233884282019617e741569a31d06415d8b85985a7de2f1671486b8616a7"
+  },
+  "2026-12-05": {
+   "i": 95,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "9d2c2041",
+   "sha256": "6473a3f3f7edc9ac14f47487201bdb7c27b52e784ce7c7e165a0b0399e16bf9b"
+  },
+  "2026-12-06": {
+   "i": 96,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "8586c2e1",
+   "sha256": "fce248cadf18d408eedc6ff5f6bf2ae04ca67d2142db090339c60a02e982aac5"
+  },
+  "2026-12-07": {
+   "i": 97,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "dd702421",
+   "sha256": "0c3b38146beb4e91dc16e87b140c80cbe17ef86eae50c1dabd572438aad78ec0"
+  },
+  "2026-12-08": {
+   "i": 98,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "bd340e11",
+   "sha256": "e0fb0dab2ae82fd786942e54b946bac220ecc1816756eed263890f71f3a3bfe9"
+  },
+  "2026-12-09": {
+   "i": 99,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 6,
+   "moves": 9,
+   "fnv": "ba3de7a6",
+   "sha256": "3ebfb3f0b5d22e9d2c2644c02f4b3860fd2d09fddcf48df993f557c5f2b7073d"
+  },
+  "2026-12-10": {
+   "i": 100,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "a467892b",
+   "sha256": "431631bb02094062a0c1250b9360dc294a5b1594a6be87a003f4c8cc89a97991"
+  },
+  "2026-12-11": {
+   "i": 101,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "4d41f774",
+   "sha256": "4415e4ac22613c8c1f9d4581e73ffba7aaa2a35b6b24b803f51a67e0585375a6"
+  },
+  "2026-12-12": {
+   "i": 102,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "f74483f5",
+   "sha256": "1d0ae164308b5415b859be77263c2a68d5c1acaedc5f365c133092b698fb00a1"
+  },
+  "2026-12-13": {
+   "i": 103,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "6935c005",
+   "sha256": "fb46de2fd1b03d4bd76b1a7f58a6abab5d3844182e3a24b44067b8e615456b92"
+  },
+  "2026-12-14": {
+   "i": 104,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "88e3be31",
+   "sha256": "ce640d7de63e890c56d892fccc38b5eb2ebe0ba244ac9652f1b7771e453498e6"
+  },
+  "2026-12-15": {
+   "i": 105,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "e234a234",
+   "sha256": "3476c13d25c6b6bddc6a8c3bd1b23d5d25b28723c426cfd41348d6059cba0aa5"
+  },
+  "2026-12-16": {
+   "i": 106,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "65740108",
+   "sha256": "3246112fd3af2f2bc60a6cb7f9efad068f6375f9d1206a6d2277ca157611aef7"
+  },
+  "2026-12-17": {
+   "i": 107,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "511fe1d0",
+   "sha256": "1fe7642fc0668be5f87b072601804be867bf11d823b987176d4b193a30c330c8"
+  },
+  "2026-12-18": {
+   "i": 108,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "6d02cb19",
+   "sha256": "6bcd42d053bc14c899ea090ae46b17b6177c54529948a1863dca11935eb1b49f"
+  },
+  "2026-12-19": {
+   "i": 109,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "cb923d84",
+   "sha256": "4e4a9d4037a22aa77072b058e1d1269fb6d189b9c7052e555164a8e0c3001359"
+  },
+  "2026-12-20": {
+   "i": 110,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "582b7767",
+   "sha256": "607e69dd709c670b87579a06be0ee1431a4cda8171f31ae33c0c7c4287062387"
+  },
+  "2026-12-21": {
+   "i": 111,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "9d8f972e",
+   "sha256": "9db5dd852d2df73d1a1ce49a1e54eed98ae104c20cc32f43c1a284d43db7bb54"
+  },
+  "2026-12-22": {
+   "i": 112,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "17d475dd",
+   "sha256": "80acf0c3c16acd8a9b80c54b5ba40f74e2d2f3c1c5e4e6d414d0dc4cbcb17e16"
+  },
+  "2026-12-23": {
+   "i": 113,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "b567b9c4",
+   "sha256": "69b28a285b14b5b61641e61cc0ebe7b21e5ffe3fdfb108208d64f7754ae3f94b"
+  },
+  "2026-12-24": {
+   "i": 114,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "ea12a182",
+   "sha256": "955513a0afed6d522a21a7908a020debf4a4500372698030e86634785b4019af"
+  },
+  "2026-12-25": {
+   "i": 115,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "84d7f319",
+   "sha256": "20ce65a2f7f7efcf3bb8c378a272195624055ff76009b0945f1d165945b65162"
+  },
+  "2026-12-26": {
+   "i": 116,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "e572e8b1",
+   "sha256": "79f0f6cdddab42cecbba71b4eed4003b0bd40eb55ac448365585222e54e3a732"
+  },
+  "2026-12-27": {
+   "i": 117,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "399d6187",
+   "sha256": "7b600d936ad5b3adb7276d8317b1c4b93461c363eeed3893b7063a0b5927a68b"
+  },
+  "2026-12-28": {
+   "i": 118,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "fc2a02cc",
+   "sha256": "aef07a2600eb2ca367ec3b3cfa605f6f86f97317818f5e7db770a3f01d93222d"
+  },
+  "2026-12-29": {
+   "i": 119,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "77eb997c",
+   "sha256": "ab3c127d879cbf5b8b9b9936a396fa93d1313039f504d70bc192e05183054c86"
+  },
+  "2026-12-30": {
+   "i": 120,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "c841749d",
+   "sha256": "39e093f0b8b8dbeb7bf4fdb8d0c25a797ee44810ac23d0bf87619c784bd124ff"
+  },
+  "2026-12-31": {
+   "i": 121,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "60e0155f",
+   "sha256": "5e1681840b4406d9cdc9a335fc5777fe6edf5227ca5730cf126aba8c74ea959b"
+  },
+  "2027-01-01": {
+   "i": 122,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 8,
+   "moves": 11,
+   "fnv": "fbe89ccc",
+   "sha256": "ff425c093758c4fadb05ca1f185f0d3d90f3fd9946f8e818daeeb42b3320f514"
+  },
+  "2027-01-02": {
+   "i": 123,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 9,
+   "moves": 12,
+   "fnv": "d1cf7fbc",
+   "sha256": "f2a236489d88b1e90a56b3f7783e554db771f5c161b61d1bcbf12464c85b0cba"
+  },
+  "2027-01-03": {
+   "i": 124,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "93d23ce2",
+   "sha256": "530cbe0bcf23f7c0ca7be252792d23c21772aec234eb195b22761167731bbb16"
+  },
+  "2027-01-04": {
+   "i": 125,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "93914a6e",
+   "sha256": "4c4d04b2be996e7460fde0d1322fd71171fe9b352beeedc9e685349d85ef0fa9"
+  },
+  "2027-01-05": {
+   "i": 126,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "a5ea9ef2",
+   "sha256": "d9b4009dffeb22b814183fbaac4cfde1ae39278db583e1d04f3e931cf1f2ea7f"
+  },
+  "2027-01-06": {
+   "i": 127,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "af4cb7f6",
+   "sha256": "ff8bb9696617b8fc95954f6de0e8c2914f637440349f1372841b69b98122c548"
+  },
+  "2027-01-07": {
+   "i": 128,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "539f1be7",
+   "sha256": "1e9a8fe2ae7bf15ad9506dac6e7de857c20f1e936c7f2ac9e8a66dfb47de7dbf"
+  },
+  "2027-01-08": {
+   "i": 129,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "d8eeb762",
+   "sha256": "e85b91d777e14f1c3a203184d5abe2c98a8b0918fe92aa63716db4aff4f70cb7"
+  },
+  "2027-01-09": {
+   "i": 130,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "7a3f2bcc",
+   "sha256": "8db0cbbfef7092d73cba9360beed2188d883b4651d863c710470aca797e767db"
+  },
+  "2027-01-10": {
+   "i": 131,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "d19123fb",
+   "sha256": "b8147e4a9b5ae9c22472c82a56b6c5b97b6c9791812f032ae3734a79bbb37c2a"
+  },
+  "2027-01-11": {
+   "i": 132,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "540330a4",
+   "sha256": "709ee171f222cad8b954f8b53f63da39e629401eb898ea9c889088dec16df622"
+  },
+  "2027-01-12": {
+   "i": 133,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "4532fa93",
+   "sha256": "aa29a548355e6669b0641ef7d5dc5a06c342df8baa1bea7d228d76ca3f6fec71"
+  },
+  "2027-01-13": {
+   "i": 134,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "ae776d04",
+   "sha256": "5319af736a21154aafe2e48372b61e86e716f7b39c6b5aa9241ff33d41c6beba"
+  },
+  "2027-01-14": {
+   "i": 135,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "0a418f86",
+   "sha256": "5140e651510327bbcbe608e2fe704349de1acb8d32bb8934fefec08a60f3f7c4"
+  },
+  "2027-01-15": {
+   "i": 136,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "d955de7b",
+   "sha256": "ba1d7ad686b9a012e41bdb7eaed9e2df6a489f329647b9622db42c91d4872cac"
+  },
+  "2027-01-16": {
+   "i": 137,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "afae8514",
+   "sha256": "1e49a230c8ca2c8953cc143f64015aadcf5ec15f6baeb3920113a20eee25ae77"
+  },
+  "2027-01-17": {
+   "i": 138,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "29f7ceb9",
+   "sha256": "50513cbdafc3ccb570887586d33afca51854388c9737bb68ce5b12d1ad2a97a9"
+  },
+  "2027-01-18": {
+   "i": 139,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "e0a1cebd",
+   "sha256": "2b78cb22b76da5f5389996429b47d718d774074510c0af8e88fed0783151132a"
+  },
+  "2027-01-19": {
+   "i": 140,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "6d5a0d5b",
+   "sha256": "31ddbf32a3c3e0a5fda6a12f7e4c3a121625fa4266bacf302b8aba75a741e733"
+  },
+  "2027-01-20": {
+   "i": 141,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "6d2639f5",
+   "sha256": "78df9fd709f4eacb95bab53f8ec55e868fa7b76aa5f9110b59c52a85f4e6fd85"
+  },
+  "2027-01-21": {
+   "i": 142,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "0c6d65aa",
+   "sha256": "4f0fa787986ba68458ed5be41f8dfdd5a663885e7032149da40aaa09e0314001"
+  },
+  "2027-01-22": {
+   "i": 143,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "c03a4d48",
+   "sha256": "9bb0b71fba9bf3af74596d54ec7997f2ebc1a21448cae58fcd2cdd93c4a5ed5f"
+  },
+  "2027-01-23": {
+   "i": 144,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "9f0ca49c",
+   "sha256": "1b7799b8675959698ed9d6209bef0cbc90546315f838cc99cb5cf12ee8517bdf"
+  },
+  "2027-01-24": {
+   "i": 145,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "3578f581",
+   "sha256": "9e59cb7b1b2ae4f915c2401ad3e86d959ff3e5240a12ad652db861a6f4047025"
+  },
+  "2027-01-25": {
+   "i": 146,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "515739d3",
+   "sha256": "b8f153180ea850c1c678609e1682f36bfc9ec412ebc07a5565d5b99a830d3869"
+  },
+  "2027-01-26": {
+   "i": 147,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "b9f87f98",
+   "sha256": "575824bf7eee3442f93ba7f6959b60e1162565449c8ce0af13c41914be135491"
+  },
+  "2027-01-27": {
+   "i": 148,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "51998f56",
+   "sha256": "2fd2ade737c5494bf8d2aaf0cfaf3cb27f63b82f7535d0407214e7dd5b375e96"
+  },
+  "2027-01-28": {
+   "i": 149,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "1b168aea",
+   "sha256": "ab3045d1f0315c047ba63976687c715e3892d3646ab45030e6fea2f7325f2705"
+  },
+  "2027-01-29": {
+   "i": 150,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "b78ca035",
+   "sha256": "3dbcd539b59232846442e160eb9ab71eec160993d8e42f1828c0712bbfa8199e"
+  },
+  "2027-01-30": {
+   "i": 151,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "a5458283",
+   "sha256": "c54bd0da52fcd05da9869cdda56abe2d214fbe8e778ec001fd22a8e402206eaa"
+  },
+  "2027-01-31": {
+   "i": 152,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "dd6b21a0",
+   "sha256": "b8b72c64f0a6a91eef4d111c4d382121130efbb779ed96211b24d25e0a07f5fc"
+  },
+  "2027-02-01": {
+   "i": 153,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "7d2f28fb",
+   "sha256": "d9474ce2fd8378a74bf4f0f96d2e76ccd97ffa356a81bb1301d41fa5f98358c5"
+  },
+  "2027-02-02": {
+   "i": 154,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "9a919f80",
+   "sha256": "c826ce66b41021da30a98f42bdec2db8fd5bb559667c2f50836a4cc785bd77f4"
+  },
+  "2027-02-03": {
+   "i": 155,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "a1924e1c",
+   "sha256": "939a519b8972ae16aeb7179a55b6c553dd7d4e57e718a120d500e78c6e68ca1b"
+  },
+  "2027-02-04": {
+   "i": 156,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "1dc4b787",
+   "sha256": "d9ce78c2876f0eeb4d54d381502e9a6d3944e0af9fd6c444c9f5f3af240389e5"
+  },
+  "2027-02-05": {
+   "i": 157,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "839768c2",
+   "sha256": "37d25fa590c26ae0dc8c51e9e677d904a0a6c0e1dca989b5b8f28b3e757ebbe6"
+  },
+  "2027-02-06": {
+   "i": 158,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "bb6510eb",
+   "sha256": "af1a122454dce55d49157d583d65d682649f1e6c78f85670e911e98d1f9d21e1"
+  },
+  "2027-02-07": {
+   "i": 159,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "a125cbcf",
+   "sha256": "d31308bdb45829a80fb1eacc27f1ac793fea275a1a7ead029b0aa6f6ff56a25a"
+  },
+  "2027-02-08": {
+   "i": 160,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "e959eec7",
+   "sha256": "6c2848a836b601c1abf3c8044b2753f61af828e6732dea0e525e06b25b022f60"
+  },
+  "2027-02-09": {
+   "i": 161,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "0f058586",
+   "sha256": "f9b2ae29e94f0e5769139d12b3ac903e4a1121fa7167f3be8ee7cc2c6b07eb5b"
+  },
+  "2027-02-10": {
+   "i": 162,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "0786644e",
+   "sha256": "86e75aae51c6e7430727c77cff722a96fbedb3b42d5527db4b79eeb9528c158d"
+  },
+  "2027-02-11": {
+   "i": 163,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "34e11c2d",
+   "sha256": "e8bab1fd8eb1b9c04abb9bf02fd7f6c569be086325274b8726919d69c177d0b2"
+  },
+  "2027-02-12": {
+   "i": 164,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "ebb58501",
+   "sha256": "6d24212bfc1981a6355d4f0f5a10fc7cfcf8e0cdd8b0fdb70fd19e74658ba861"
+  },
+  "2027-02-13": {
+   "i": 165,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "16039c6f",
+   "sha256": "fd9c22afdfd628a23e065bae61a790388984d0d1d3201309abc7afff8b6c5d2c"
+  },
+  "2027-02-14": {
+   "i": 166,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "98f7088b",
+   "sha256": "799e4771972c0d12b5046ad8ffd0c4ba4b3fe30627e061ed08aee940cdbb3b8a"
+  },
+  "2027-02-15": {
+   "i": 167,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "694ca99c",
+   "sha256": "50a19e2163eeab019049881795502021dc0c62d7cb194ac545bbaab7bd4c5308"
+  },
+  "2027-02-16": {
+   "i": 168,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "baa2b80e",
+   "sha256": "29b94c48e65e97dd0c5445f16437c3acaa51e7cc67dd667a0a38e9c552b4e202"
+  },
+  "2027-02-17": {
+   "i": 169,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "69946563",
+   "sha256": "0668c5ef4e46b11b3017a199ba343fb8a49c3ce0ae7c18b8a6e9dfb8fdc42955"
+  },
+  "2027-02-18": {
+   "i": 170,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "bc64b9d9",
+   "sha256": "e846e869bbb534ef66d752f19ba258ed0de47f238664490fd028b95f08d121ed"
+  },
+  "2027-02-19": {
+   "i": 171,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "90fa26ff",
+   "sha256": "cc6a47f468611e771ed9836de4c44ef435b6073e49fce3cd26af2a6a57c706cb"
+  },
+  "2027-02-20": {
+   "i": 172,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "d9f4278e",
+   "sha256": "2caf462e46a9e28b8fc37b40fe56ae0b3716a54c4316d0b11404b1c50a9fb55a"
+  },
+  "2027-02-21": {
+   "i": 173,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "43ade123",
+   "sha256": "33de4d96c7c3fe3b7611b88697aae92704f34b022849d65546a6171a20162f40"
+  },
+  "2027-02-22": {
+   "i": 174,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "a2002014",
+   "sha256": "ea2123b4d54e8d0272822460d58bb97e9bda4c96bb364431f60d66092f51705d"
+  },
+  "2027-02-23": {
+   "i": 175,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "f0e17b1b",
+   "sha256": "80cd609cd35fe38b3724404f17e191b03b5d6ae6d5153581b042d1ab6f535218"
+  },
+  "2027-02-24": {
+   "i": 176,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "1994d578",
+   "sha256": "1641905380ac75c34af2f6a07d4dc41239e437db1262628cf5c8283a7ba5afc8"
+  },
+  "2027-02-25": {
+   "i": 177,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 8,
+   "moves": 11,
+   "fnv": "2c740ca8",
+   "sha256": "4ca53577f0670fbbb656c6f65ae92e2cfd85878bf1081512ca3ee124cd750830"
+  },
+  "2027-02-26": {
+   "i": 178,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "59a5be99",
+   "sha256": "1fe18e9a85f8792ed1b634724d264ad68c551e2fc7eb04f9d6ed3a928a3d753c"
+  },
+  "2027-02-27": {
+   "i": 179,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "4ce50eeb",
+   "sha256": "259d32cddeda2f606418c663937e3436750ea15bece09eb22ab4d51f377a0453"
+  },
+  "2027-02-28": {
+   "i": 180,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 6,
+   "moves": 9,
+   "fnv": "34b5df28",
+   "sha256": "5134e60a934f691de67fe07d320eae8c758eb2eb2eff210f94147f8b8eabe371"
+  },
+  "2027-03-01": {
+   "i": 181,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "efbfa241",
+   "sha256": "3841a333ca99bb48704932899e4df85a6ea6cfa2b0a47bd083884eda4e816b51"
+  },
+  "2027-03-02": {
+   "i": 182,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "17a2bab7",
+   "sha256": "3407336d96c357a77b1854f7795195c353ec81d5b304d082e2552fae8d788619"
+  },
+  "2027-03-03": {
+   "i": 183,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "35bede05",
+   "sha256": "1038f17043eebe0855fbdd8ccc2029447fffc51154d174d8bc5a913e5a00b793"
+  },
+  "2027-03-04": {
+   "i": 184,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "e69373ae",
+   "sha256": "82dc48f8aa3798d9e0ab2a214337f0e7c3c9a7f005d9910eefb64624cfe69986"
+  },
+  "2027-03-05": {
+   "i": 185,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "42ad81e5",
+   "sha256": "b96209e0552bf65cb8ba108d4bd442d86eca3c8fd172e05ac9e30904ff7622a9"
+  },
+  "2027-03-06": {
+   "i": 186,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "8dcd4b50",
+   "sha256": "8cf7b1fdea4b99e98a7d57c5ae5fb2fbc17a2fbebb08f8c19a28a2307d3dc1c0"
+  },
+  "2027-03-07": {
+   "i": 187,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "4551bb0a",
+   "sha256": "a0b9f19956b4626ae148c5147d33c8bb452138e2b51ce4384827e5d6bd28f056"
+  },
+  "2027-03-08": {
+   "i": 188,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "5b572d6c",
+   "sha256": "17bc48c781cd1db4dcbbc827de5688c46fd7fd0b1ee6fb8ede1b13223bc41576"
+  },
+  "2027-03-09": {
+   "i": 189,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "ccb93a08",
+   "sha256": "69aff47b5ece58cccba6d7d08704a5468dff6f756391ba31b8e50943eee0c881"
+  },
+  "2027-03-10": {
+   "i": 190,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "0b462e85",
+   "sha256": "f45315879b8cf0df74dab0d524a996988a3cdf7f139d2dac4138f34abb1da935"
+  },
+  "2027-03-11": {
+   "i": 191,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "d6d2a1f0",
+   "sha256": "28419970b1e6193d67c74a69593c81d7dbc2dcfe3c50ea6391de3f8f3e6407a4"
+  },
+  "2027-03-12": {
+   "i": 192,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "0618d685",
+   "sha256": "bef68b8de668ed780469112986e0b67789bf379c30f79c4984fb9976a219357c"
+  },
+  "2027-03-13": {
+   "i": 193,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "dcb1412a",
+   "sha256": "d284f2565f113494618f1eb071b68446ee4e7b09f2c432d3f3769b39a598cdaa"
+  },
+  "2027-03-14": {
+   "i": 194,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 6,
+   "moves": 9,
+   "fnv": "d428aaf1",
+   "sha256": "50265600dc2f1f8fd5a28675eeb28f8110d3ecd1cb84442d8b5f5a5f28effc93"
+  },
+  "2027-03-15": {
+   "i": 195,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "85e05104",
+   "sha256": "323eca4eff102e21c4c7144b5e82380819c291c52bb0b7058214434c7e8f2004"
+  },
+  "2027-03-16": {
+   "i": 196,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "f5d1bf20",
+   "sha256": "72f311621327d0f1b669ed6bf7320b82279608a3deba9724b5d41f979d326b8d"
+  },
+  "2027-03-17": {
+   "i": 197,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "60321e7e",
+   "sha256": "091a001b04af54635b457781f9ca8238954ed4275cce1e37fb3602b612424ef9"
+  },
+  "2027-03-18": {
+   "i": 198,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "c2775911",
+   "sha256": "64d366b7fb885e327cdb2b763d01f8f7cf18c38bd56b248f41e6ec36a1cfb27d"
+  },
+  "2027-03-19": {
+   "i": 199,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 8,
+   "moves": 11,
+   "fnv": "8ffafdb3",
+   "sha256": "42a9665d11424101f5fc6dd8b7d8f5d5c0cdcab4b3329387318f7e3cc410022d"
+  },
+  "2027-03-20": {
+   "i": 200,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "d6c1d2eb",
+   "sha256": "745ecd091027529b8749c20ba5f50360b5bcc55cb3abe753958403446fe13d60"
+  },
+  "2027-03-21": {
+   "i": 201,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "5cb639a8",
+   "sha256": "c2f5a987bcbf8b17f0ac0512f9d7b89207a1197eefdea436a7d83cee2d3be9ce"
+  },
+  "2027-03-22": {
+   "i": 202,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "943f8f74",
+   "sha256": "97158ba36ceb55283b8f4a87967c7d69fdb3ea7efbf3a703b4a670bd6c97c474"
+  },
+  "2027-03-23": {
+   "i": 203,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "6b0add55",
+   "sha256": "f70362704c12523e49a4333501ae01d817b28e8184e29ac4faad34921bed6ee4"
+  },
+  "2027-03-24": {
+   "i": 204,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 6,
+   "moves": 9,
+   "fnv": "2c6a1f48",
+   "sha256": "3fdff83fcca706a02483a1349cb99952e7457eeea874097264a88b34d8d1e4e8"
+  },
+  "2027-03-25": {
+   "i": 205,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "de1db524",
+   "sha256": "9a3e9fe66a34311818d61899c262f45ef3e21a59362e408f17347cc2df280f00"
+  },
+  "2027-03-26": {
+   "i": 206,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 8,
+   "moves": 11,
+   "fnv": "28dcd256",
+   "sha256": "6fcaf6876dc069d2c7f9405cc2b6e8e99e028373b2f43f85fdff893e938eeef0"
+  },
+  "2027-03-27": {
+   "i": 207,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "c2b59f05",
+   "sha256": "c58d3bb079dbd19c76c0519878980d0e8577c8ccbf4a708e0b9f91eae9e99f01"
+  },
+  "2027-03-28": {
+   "i": 208,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "8487e252",
+   "sha256": "414c10649afb34d1fb862a4a2e0a0cb5aa4d04620224006f390d2a9072dd2543"
+  },
+  "2027-03-29": {
+   "i": 209,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "33064b5c",
+   "sha256": "a823782c0917dce9cf91cd40e10025064391e7de11fdd66bcfc1187b679593fd"
+  },
+  "2027-03-30": {
+   "i": 210,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "89707547",
+   "sha256": "adb6b1f297f14c1858eb76dafeae6bac469c6f5cad42cde25c1b41d52dd3819c"
+  },
+  "2027-03-31": {
+   "i": 211,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "7bd63878",
+   "sha256": "5ee00d054895c6d69884dec3ab73fd9014d94e37eaa7a310a494f7fab2966f39"
+  },
+  "2027-04-01": {
+   "i": 212,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "a444b7bf",
+   "sha256": "4cc7cfc8da634d872a26fd4afc5f1a7e045a21e8db6003cdf5d0e57835e5ee75"
+  },
+  "2027-04-02": {
+   "i": 213,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "49fafdd3",
+   "sha256": "55bba767f7cfd2dfcb806605a53c79917e3558799724c157dac82c9683396ecb"
+  },
+  "2027-04-03": {
+   "i": 214,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "65b858b6",
+   "sha256": "a1f6e4f4185d5f2edb8d6de29eccdf3e3572ca6c493d143de6b5a146c814c1cc"
+  },
+  "2027-04-04": {
+   "i": 215,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "142931f8",
+   "sha256": "e62172e6c25e104294ef405b6b2ea46c21923d6d2950ffdf4ad800b4b7614eba"
+  },
+  "2027-04-05": {
+   "i": 216,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "6ac2a6d6",
+   "sha256": "cd3c5320262dff493252ce8ceb0e7fd62254d020cb0cda5dcf4e84cbbc36430e"
+  },
+  "2027-04-06": {
+   "i": 217,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "880c702f",
+   "sha256": "f9f455baefda81ef3089e93f8a8005311dd2f34e5cfe55724c9903a987c58a00"
+  },
+  "2027-04-07": {
+   "i": 218,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "11d353b9",
+   "sha256": "e0b8dc1a12830c717ba9b80b22c5e766d3539f4b0bf5a5a9bb38c702f7bae173"
+  },
+  "2027-04-08": {
+   "i": 219,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "b505dd31",
+   "sha256": "f4208d6d53a22f3b632d500ec7b6f65e59192cd85e50b83cee47a6b1223e9d77"
+  },
+  "2027-04-09": {
+   "i": 220,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 8,
+   "moves": 11,
+   "fnv": "533d37dc",
+   "sha256": "5789245fe085ae5140ce6953d5588285ea894916449e3918359149c2939b6e03"
+  },
+  "2027-04-10": {
+   "i": 221,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "d5df89cd",
+   "sha256": "a183e7d365fcb8ee22be3e2fd067a705d1db120470c54f39685da725a065f403"
+  },
+  "2027-04-11": {
+   "i": 222,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "e9e92dbf",
+   "sha256": "50b794668064f1c61852b8261d0c1a1499cdca5ca0f3757a2a97139d889d5666"
+  },
+  "2027-04-12": {
+   "i": 223,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "e6f69421",
+   "sha256": "542831e9f8715127c244d6983ce027334b561c85e64a50ee135660f10b7cccb0"
+  },
+  "2027-04-13": {
+   "i": 224,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "989958d0",
+   "sha256": "ec3f44ed25585aa4e637281608faee9c6da4263df69d531c0b915285f3284430"
+  },
+  "2027-04-14": {
+   "i": 225,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "7d49bab9",
+   "sha256": "88160246247f8f6cf999c9464dc62a5e8cb6ea6b3463cfecb5d9fdc24196fda6"
+  },
+  "2027-04-15": {
+   "i": 226,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "d1a59177",
+   "sha256": "5a90502ac87753c086186ec298e4b7638ddf36e3b9362473e9cd5589ece6b62a"
+  },
+  "2027-04-16": {
+   "i": 227,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "acd9ec11",
+   "sha256": "e2c9620410f67c36c201a444466f34f9a53ab6c8aa96a193f3bdd12998a11282"
+  },
+  "2027-04-17": {
+   "i": 228,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "7c1ec1a0",
+   "sha256": "65cd9ac4f2a71606227539a792345852cea5e2675f04c2809ca1b38c98b89471"
+  },
+  "2027-04-18": {
+   "i": 229,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "fe59cf84",
+   "sha256": "74a714f4bf965ba70a153f88d1e417eb0185990204c7f22f88bab62aaefad1ff"
+  },
+  "2027-04-19": {
+   "i": 230,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "3064afe1",
+   "sha256": "bcb212032e0d16ca18e1c121ab7a79029e3d3fd6f36561b7366be26ba74987af"
+  },
+  "2027-04-20": {
+   "i": 231,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "5d4a0d40",
+   "sha256": "7f48c8dee7f6fca9d616dd3740820d10cb8365e45846a27b7da95016a51b2a2a"
+  },
+  "2027-04-21": {
+   "i": 232,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "7281d3b5",
+   "sha256": "f39209e4f3f376b90b02ef04a21f07d795f15cb0bacc3114c74abbeff27f6f3c"
+  },
+  "2027-04-22": {
+   "i": 233,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "b2968639",
+   "sha256": "4c9ddb4fecb14cd1827591fe12899ce2fb6d62b4115d0691fb360da08fcd20ac"
+  },
+  "2027-04-23": {
+   "i": 234,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "78a80881",
+   "sha256": "24e6e039b7dcdb30ab6fcec89c5d2b88c9e9ec4a80242c06845d02649348a8c1"
+  },
+  "2027-04-24": {
+   "i": 235,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "2d4acfde",
+   "sha256": "98fb9e2e7b3ddf68fec67c0765ab9f910cca5073f4c00a8f89397f6298b5fed8"
+  },
+  "2027-04-25": {
+   "i": 236,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "8274972b",
+   "sha256": "80ed0e47eda462a7644062576c4c7aa00d02ae790124ec0c96cab93d67f57361"
+  },
+  "2027-04-26": {
+   "i": 237,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "e4cff389",
+   "sha256": "3ef59e0bcfc36d20a485e9d55662f6855601717baaaabccc586e4afccf53c81c"
+  },
+  "2027-04-27": {
+   "i": 238,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "29a9f715",
+   "sha256": "8460c5a14bc1eec865551267fa4adb60204e481bcf5d26cbd9aa2ff6705ee832"
+  },
+  "2027-04-28": {
+   "i": 239,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "9381f7a5",
+   "sha256": "1ce4da7fd0bbe102efc42dd1c6abefa97d68f283bbd876e6e42a17ef3ec22c8d"
+  },
+  "2027-04-29": {
+   "i": 240,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "ef494912",
+   "sha256": "da9af9260be0f81fa7ab7044deacf16fde46962cc84750cfa58b460c63dd4666"
+  },
+  "2027-04-30": {
+   "i": 241,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "4c546b5e",
+   "sha256": "b271d5eaee8a50a91a2a74afbdd9403f80e3d05286609161dd17b4bceff4d7da"
+  },
+  "2027-05-01": {
+   "i": 242,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "e967806d",
+   "sha256": "7c8e5791481d244c2ba176066f04161c9ca3a0cac2f14bce5c643a51820e5bce"
+  },
+  "2027-05-02": {
+   "i": 243,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "f25ca4c4",
+   "sha256": "23e72f333e460864b52d60d0016de7af023d9eec5f373ffb9504ef9d765c343d"
+  },
+  "2027-05-03": {
+   "i": 244,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "34211871",
+   "sha256": "a7a59f901f8fc5c340d40d19e27541cbfba2fc91536c740186b28d18a8ce3d6f"
+  },
+  "2027-05-04": {
+   "i": 245,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "e0162810",
+   "sha256": "769bf257321b4a25bee63637a9cf685bbb0a62629ce6a7f0d9a45e2531f070ba"
+  },
+  "2027-05-05": {
+   "i": 246,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "ba21c210",
+   "sha256": "a4473ae11543e41e8f57e21b66d4f32c25588c9f89e869cdf44b37103b43ea1c"
+  },
+  "2027-05-06": {
+   "i": 247,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "380d1a3b",
+   "sha256": "0356ed8497f89d25960a34b00fc0b617901a13f12711b576cbd002436b20966b"
+  },
+  "2027-05-07": {
+   "i": 248,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "0e794c5c",
+   "sha256": "104d5359347990b70c621ed1225bdeb71ea9c683ae81c0857a2c049b2ba39cb5"
+  },
+  "2027-05-08": {
+   "i": 249,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "9b3c46aa",
+   "sha256": "8d5de00014318ff2a81f493235f81ad39bf8981283ef4d9894bcc015fcd4d79b"
+  },
+  "2027-05-09": {
+   "i": 250,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "5816fc63",
+   "sha256": "6ad1074a34f3ca4e06cd68357ef485342c505f549a7b6698f950717f32195515"
+  },
+  "2027-05-10": {
+   "i": 251,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "d0e4e953",
+   "sha256": "e1cb3bd06e1458a68fe9081a8e3e9b66ca79780f000ecc11d4d71fbb51006bf0"
+  },
+  "2027-05-11": {
+   "i": 252,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "62ecbfe5",
+   "sha256": "001a518dc89068f0dfcc2e5ea48c811a89a87c52d8d6133098efc0bd3c5cb211"
+  },
+  "2027-05-12": {
+   "i": 253,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 6,
+   "moves": 9,
+   "fnv": "d0cf0cd9",
+   "sha256": "fe377e5c3e5ca6aff11fc883a6d16dfa32c571bc301d0b03376e7ee867c990a1"
+  },
+  "2027-05-13": {
+   "i": 254,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "fe9b78b0",
+   "sha256": "4f6fee7b1feff179bdb6ebbdd12d62a3f37ad0d2f3215606fede844a35634a7e"
+  },
+  "2027-05-14": {
+   "i": 255,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "1a0c196e",
+   "sha256": "df2229e8228cd26feca362e80dbdd054917befc25f3cbc3007e80a4d0011dd1c"
+  },
+  "2027-05-15": {
+   "i": 256,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "45d99754",
+   "sha256": "cec805f8cc2a457dad51dfa845b35d5d843080f24ebdccb122a104714423d8ea"
+  },
+  "2027-05-16": {
+   "i": 257,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "17831b7e",
+   "sha256": "91c2159c3fbcc66dc64526fa79b61b763aa355db2c7065d356a71ee9ace8573f"
+  },
+  "2027-05-17": {
+   "i": 258,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "9b351198",
+   "sha256": "dfe3d9e0f05d657e9c0baadf14f06cc58697ae0f0a2fbc0c0130d25e9e3aabf6"
+  },
+  "2027-05-18": {
+   "i": 259,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "55c939e5",
+   "sha256": "1f07d3f7c1b8f7d134092928c9ca0b32ad4f07f146436a01b8ff29d02d56a625"
+  },
+  "2027-05-19": {
+   "i": 260,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 6,
+   "moves": 9,
+   "fnv": "5bbe60c1",
+   "sha256": "9aa08369cfeda15afd00786164bcf3eceb05138fa43fb61ce497ab4e65b1877e"
+  },
+  "2027-05-20": {
+   "i": 261,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "a3eaac78",
+   "sha256": "287c2755568e288e42caa6b9bd81c2258348b24b676806d21e448ed0921367a0"
+  },
+  "2027-05-21": {
+   "i": 262,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "0c28b140",
+   "sha256": "cfc57b67c528e51234d7a0048207c5ca09628ac51bd97803d94b2b90d649aa32"
+  },
+  "2027-05-22": {
+   "i": 263,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "eb6fa4a3",
+   "sha256": "520b705beef39fc89abc5bfc2b76fdcbf9e3ecd77dccb437006f2ff497aecad6"
+  },
+  "2027-05-23": {
+   "i": 264,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "b73c02a4",
+   "sha256": "67f533a2702a2bf03c2ec2f63d6afc8d41ec4fc474217c515d5534784fcee45a"
+  },
+  "2027-05-24": {
+   "i": 265,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "45f192e0",
+   "sha256": "f566b462078db5afb24e0dff00448f9a9810d625bb36f07ca791430ecfe73824"
+  },
+  "2027-05-25": {
+   "i": 266,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "b13103ef",
+   "sha256": "8bd0ece3f719b511ed05c93bc54bb8187415fb6de2d41c37699d856274285ae2"
+  },
+  "2027-05-26": {
+   "i": 267,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "9266a736",
+   "sha256": "5c2bca6c598d974560ffdbfa978a371f8bc1659f6fc68ede967506473adf8a08"
+  },
+  "2027-05-27": {
+   "i": 268,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "b1dba794",
+   "sha256": "47c7d4861d23448629d91bf8cefc20cc42921cafa870198dbb98df66ec7e9be6"
+  },
+  "2027-05-28": {
+   "i": 269,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 8,
+   "moves": 11,
+   "fnv": "dba86166",
+   "sha256": "a5478a97ffbbf7925523063a7b7db93888c371dcfa4e070a434f0e59813890c3"
+  },
+  "2027-05-29": {
+   "i": 270,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "f46afe0f",
+   "sha256": "9646b72458266556af7ac73b7731ab019d9833a520d9ff4759d6d308d48b679d"
+  },
+  "2027-05-30": {
+   "i": 271,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 6,
+   "moves": 9,
+   "fnv": "f50e9ccf",
+   "sha256": "3edb44b9dd5c2a815afea6a475daf221e6063e8730609d05e283ebf30a077796"
+  },
+  "2027-05-31": {
+   "i": 272,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "45719fa5",
+   "sha256": "5c6ba5fcc288594bcbe1962914b6a099baf4f68e171d924b927b7c052fa0bd39"
+  },
+  "2027-06-01": {
+   "i": 273,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "1917ad25",
+   "sha256": "0e7d9d618d26a05f3cc78e7c2c69b481b2ceb62a9570d6f4a88b4f2d1b3e7831"
+  },
+  "2027-06-02": {
+   "i": 274,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "9cb0b195",
+   "sha256": "efee86e63c78e69a40d132d1592cefacc6bf7798290ebd035106694c58a071c5"
+  },
+  "2027-06-03": {
+   "i": 275,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "ba765351",
+   "sha256": "5e056d9ef3c226cb9b05b490266eac04bbb82fe4983c979c9590bc4d9a9b3096"
+  },
+  "2027-06-04": {
+   "i": 276,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "53aff604",
+   "sha256": "5839b71c08730021529725f1d245b14e0ee251a7b5d97043f86b1251abcae552"
+  },
+  "2027-06-05": {
+   "i": 277,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "770c98c4",
+   "sha256": "f2049615b4119d8357abf83bedc023c7faf2c14b09c70824c07bd62ac4543051"
+  },
+  "2027-06-06": {
+   "i": 278,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "07a27273",
+   "sha256": "dc9766a64c8ab1388f7c7dec170fbc30524009dfa95d9536346d2d131d1ecb49"
+  },
+  "2027-06-07": {
+   "i": 279,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "09a043a7",
+   "sha256": "387c5c28a1a28ec97475b83ee60ac1d95e4715940a5bc52e0a4ea266c6efa1b7"
+  },
+  "2027-06-08": {
+   "i": 280,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "a2d5fbd4",
+   "sha256": "4bc3a831d65c0a615c6c5db3326254371c60e4567b0842c38f313d8905fec3a1"
+  },
+  "2027-06-09": {
+   "i": 281,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "d73cfb57",
+   "sha256": "bb1099a3ebefa9f33a46676792b77b06a246bd20a358810d173e19cd01c6a378"
+  },
+  "2027-06-10": {
+   "i": 282,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "662f74f9",
+   "sha256": "437f01c169593d42f67333b68f856d8672b98a6c8e1525328d4b1734dcab1aab"
+  },
+  "2027-06-11": {
+   "i": 283,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "be82efb6",
+   "sha256": "e5d0710d9d96236fe6d7bf5c2c6a3aa8daeaf06a08c4b13cb42e27be93b8c54f"
+  },
+  "2027-06-12": {
+   "i": 284,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "65ca7648",
+   "sha256": "e9d76a00c59e2e91924bc60f6aa2cf2c0dbcdfc61cb9a50d1988d2bf10b71903"
+  },
+  "2027-06-13": {
+   "i": 285,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "9c3beceb",
+   "sha256": "3ec41cdbc8cd82c1b8f2a7de0da46c905fa61792d4f1155e2d6ceadbb5d0ade8"
+  },
+  "2027-06-14": {
+   "i": 286,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "717d67e7",
+   "sha256": "431c2ecb74b78862390fe9ee5d87b11325c4d5e9f019d5270f0c02ac9df9bc96"
+  },
+  "2027-06-15": {
+   "i": 287,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "a30ed6d8",
+   "sha256": "b0bb654ea23f5646628117d0c2ff78c83e0c0425ba8dd6b8a319aec936ca1652"
+  },
+  "2027-06-16": {
+   "i": 288,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "ce64fc4a",
+   "sha256": "ed53f2589c5b32abaf28d6a8dc1d46f9744034a6dc8a2c8c17d6a15a1e923fea"
+  },
+  "2027-06-17": {
+   "i": 289,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "2d898fc8",
+   "sha256": "17767d256cd0b035c97ffedb0674b20a47142a4fe442eb76229d3da74ffb393f"
+  },
+  "2027-06-18": {
+   "i": 290,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "e71c8a74",
+   "sha256": "ec5662ed1c0609795c9d1e0c1750ea2a7371b2a5a8987998f6df772422bf607b"
+  },
+  "2027-06-19": {
+   "i": 291,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "661cacf3",
+   "sha256": "41535ad837c8c05e97bd0dd7de34d1e655dbfc6e071b505674d50c3a9a4790d2"
+  },
+  "2027-06-20": {
+   "i": 292,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "0e1eacca",
+   "sha256": "1582849360752a619c44df46fa375f239e1b756da7fa36d23c6177aea14fefc4"
+  },
+  "2027-06-21": {
+   "i": 293,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "acbb7d6d",
+   "sha256": "10c8295aa69f1d14269fa1128d6f4a9bc28cc0229f24367dc1fb07bc541a97d7"
+  },
+  "2027-06-22": {
+   "i": 294,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "6cf06bc1",
+   "sha256": "5fc67d7ba5f6c22602366b091f5c41c1faf192649bd67c0526203689ecfeaef7"
+  },
+  "2027-06-23": {
+   "i": 295,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "b18df0c5",
+   "sha256": "2b0cc18d85ffa3f0c7153e572082c004f0bccdea5b9948d187d6ad22774fff99"
+  },
+  "2027-06-24": {
+   "i": 296,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "3726cbbc",
+   "sha256": "c1f0e83f06a6a30775ef6965191508f8540a13163167c3cc9d4ffad44c93a55c"
+  },
+  "2027-06-25": {
+   "i": 297,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "71ea76c7",
+   "sha256": "bd694fe6f9e996236e9cc6bb0663db4b6b1fbb37dcff6d1651e3dc9f8621bd48"
+  },
+  "2027-06-26": {
+   "i": 298,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "d41d8a73",
+   "sha256": "7c444d36e3c2731c2be99c378a9150168e7dfddd7bb04a1f3d64ce9cc9cb3583"
+  },
+  "2027-06-27": {
+   "i": 299,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "aaa06590",
+   "sha256": "0387217ce1a646b25f2134a66fd743df1e97e86977f7e65aea6c31922711b763"
+  },
+  "2027-06-28": {
+   "i": 300,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "d9c5ad93",
+   "sha256": "34ee6000706b110abb1f12d49bb27030546b25bf48ac4ed9a7421a4ea92bcbff"
+  },
+  "2027-06-29": {
+   "i": 301,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "956b38af",
+   "sha256": "299cb5a01a376c17b5c7f7916b56fb34f49607c1825cd466d672cb34c0a58555"
+  },
+  "2027-06-30": {
+   "i": 302,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "b33b6032",
+   "sha256": "be65d0cfafa5447e6c88035e1800a96e9ef6f0ec15485087f269c965313bf586"
+  },
+  "2027-07-01": {
+   "i": 303,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "7a082df6",
+   "sha256": "3692baaa0b5aed207d9657bc4411571ad8c99ce35d6ef3e4ed582aa4a13b4ed1"
+  },
+  "2027-07-02": {
+   "i": 304,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 8,
+   "moves": 11,
+   "fnv": "bf4917c5",
+   "sha256": "fd18eb192ec74c095bbecd9ea5b37e4887b7aebf30f85686de32fc355cbe3a97"
+  },
+  "2027-07-03": {
+   "i": 305,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "da1c8ef7",
+   "sha256": "e9a7e15fc345d9bb317ec67f96432243bbd9945b4744b358d9b8522289c33627"
+  },
+  "2027-07-04": {
+   "i": 306,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "2a10a1dc",
+   "sha256": "7e7689a81d9d5f46f55a92ed38af3fcfb93ae7301734c96b26287857bc4dc3f1"
+  },
+  "2027-07-05": {
+   "i": 307,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "7f8c3bca",
+   "sha256": "3c80af3656d97c51c29182526ac847fa64e6f5c144ee10e0b5e1a81117a8186a"
+  },
+  "2027-07-06": {
+   "i": 308,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "29007709",
+   "sha256": "0f8bc962c57c907e62ebcf278daea63359f67c4d5f14f4f49dd600211451c436"
+  },
+  "2027-07-07": {
+   "i": 309,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "afa83dae",
+   "sha256": "3176d7371ea1999f4b574cef3674eb77577bc8a0cb8dd2c22b120d210b2d173e"
+  },
+  "2027-07-08": {
+   "i": 310,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "5f192e04",
+   "sha256": "c759831d35cc35157a483e7018bb3800010dcadd5421b813d84dfb9dd4c3ed78"
+  },
+  "2027-07-09": {
+   "i": 311,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "29bcebb0",
+   "sha256": "5f30b697205f92a30138e9493283f615abb78a9c2c898d2c41be1c7ab9c033b9"
+  },
+  "2027-07-10": {
+   "i": 312,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "2a365ae8",
+   "sha256": "4c9436e15ece59b8fbd7df05d06c0099a374a140828a6e5dbe378faf4818c11b"
+  },
+  "2027-07-11": {
+   "i": 313,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "64000b4a",
+   "sha256": "5267270573a4f8d3517910fde245bd42e1b6ba4aca4bc5d0c65b7f32b0bdb97b"
+  },
+  "2027-07-12": {
+   "i": 314,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "a502d398",
+   "sha256": "1ee36dbbf7d488d41b5342cc0c9a8788c104c20d9d6e3d7ee02ef60478b67241"
+  },
+  "2027-07-13": {
+   "i": 315,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "1b7181d5",
+   "sha256": "1477e3e559adae5d1c96cbf74d8912dc4d9726d80f663162c720befc16ab462e"
+  },
+  "2027-07-14": {
+   "i": 316,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "996ee1ae",
+   "sha256": "78c61969a57944dd6202d5d1ac8b079b83d9aa7a9993dd69c6e243adcfac80d9"
+  },
+  "2027-07-15": {
+   "i": 317,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 8,
+   "moves": 11,
+   "fnv": "f341b67b",
+   "sha256": "4c8d67826ec7cb00a9416d91a564a2a83289607054585dbd3659cfa858302e35"
+  },
+  "2027-07-16": {
+   "i": 318,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "961f9b62",
+   "sha256": "0f7d465191460c37656d098c068621b699c68ff37fcd3e5940df219c0fc9a8e4"
+  },
+  "2027-07-17": {
+   "i": 319,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 10,
+   "moves": 13,
+   "fnv": "55df36fa",
+   "sha256": "fbf194b68007c7c34b12fa4867ea23eb72619b99ff9c6bff3c3286c0e7756981"
+  },
+  "2027-07-18": {
+   "i": 320,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "ee21ee6b",
+   "sha256": "4053e6abe79f2f5c03408afadcacc72e70cc13c88daf515889a2ced1175b39b1"
+  },
+  "2027-07-19": {
+   "i": 321,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "5a663469",
+   "sha256": "93ba7f9a068216fad645a483372c48f21d370a2fc0deeaacf75ef2234476bbb0"
+  },
+  "2027-07-20": {
+   "i": 322,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "418e9ec7",
+   "sha256": "32f21fab116410ff0fd22e9f403cfd59db965788aa976962c1f410b8251b7fca"
+  },
+  "2027-07-21": {
+   "i": 323,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "401444d9",
+   "sha256": "014524086f0516215a927c2361fc118a805cbf5f4b3ee54968ed1fd08a085613"
+  },
+  "2027-07-22": {
+   "i": 324,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "1bf09f89",
+   "sha256": "eef07862d080e74c1214724747f72cfac9428517ae573ba861d7e5e8f5e1c756"
+  },
+  "2027-07-23": {
+   "i": 325,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "dacd1ddc",
+   "sha256": "72bec40ecbafab48ba6a7100b8401d9b1568a59ebb8da537e4eeac3118cc75d7"
+  },
+  "2027-07-24": {
+   "i": 326,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "fbda05d9",
+   "sha256": "0ec9c6e7619a56b20904ea0a3eb0eddada59daadc075af142e17d4fbac9e1c62"
+  },
+  "2027-07-25": {
+   "i": 327,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "27604df6",
+   "sha256": "a172ce4d6b427a5fcfe33a4d0bc2433febebcfb93bb6bf4a7f0b740b3df01e4a"
+  },
+  "2027-07-26": {
+   "i": 328,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "b92cf231",
+   "sha256": "fbb8286bee55d887c7fc00f7b90b19e8a27ca69c04014eb59e56bb8b3c568ac7"
+  },
+  "2027-07-27": {
+   "i": 329,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "9e54affa",
+   "sha256": "ff264d1b84108a5e42ad70c817db98361426fdfcbfd8afdf92bc8f04e94f2aa8"
+  },
+  "2027-07-28": {
+   "i": 330,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "20fdc8fd",
+   "sha256": "6d767b59cad6c1b4fb4036d5c3fc2e9ab982952b8b895e22dd27c4a5189e9b48"
+  },
+  "2027-07-29": {
+   "i": 331,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "39b1582c",
+   "sha256": "05ad22130adf329966bff329d89fb02919df42b1d7235aface871ea97b160f6a"
+  },
+  "2027-07-30": {
+   "i": 332,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "2b77f109",
+   "sha256": "f92325ab3951b2c39fa3ea8c4d0cb2acf0a5f3bc36616fe3c036ffd946f04aa3"
+  },
+  "2027-07-31": {
+   "i": 333,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 9,
+   "moves": 12,
+   "fnv": "f49750ca",
+   "sha256": "5fafd5406ff724800a8a1efe50eb8fb292c7b4e98f07f6cc7b4fc209c8260f03"
+  },
+  "2027-08-01": {
+   "i": 334,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "e211059d",
+   "sha256": "f83300cab9db459e0a86e383459c45e5fb583bf9fa748382a141dd175f0c974c"
+  },
+  "2027-08-02": {
+   "i": 335,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "5f7c5925",
+   "sha256": "4391b95f4867aec32028a0ee7b57a6442b437dac5332f74051a58a51652c6abc"
+  },
+  "2027-08-03": {
+   "i": 336,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "c5b194ab",
+   "sha256": "856232c06a7a8e70887cd2fe33ede3060e5368f2b5dc9e62601db3cdfe0d2877"
+  },
+  "2027-08-04": {
+   "i": 337,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 6,
+   "moves": 9,
+   "fnv": "a836c37c",
+   "sha256": "1ef21cf9632c64f01868f003cfe751ae1344cf30a527336c706584b75961648a"
+  },
+  "2027-08-05": {
+   "i": 338,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "6ea68856",
+   "sha256": "2eca80e5fbe615cb39a82fce0f4b8193e8b5fca713cf09235e74d18dbcf9b54b"
+  },
+  "2027-08-06": {
+   "i": 339,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "6dffafc4",
+   "sha256": "bb921733a04ba5ee07607371530739ccafa8fedb7074936b3cd8b774f9b57ce1"
+  },
+  "2027-08-07": {
+   "i": 340,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "65f16720",
+   "sha256": "a29a0ace7ae2ee8b1a76bfe9bc6f661fdbfea32468522cbd7f1351b0ddb25bfa"
+  },
+  "2027-08-08": {
+   "i": 341,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 6,
+   "moves": 9,
+   "fnv": "12ccf32f",
+   "sha256": "7b8aae46ffb9231688f01720ac86896773dc63de2e8270cb8455375575d28d91"
+  },
+  "2027-08-09": {
+   "i": 342,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "0ad64d5f",
+   "sha256": "292a6006c1cbf96984d7110a57dcbf6e33ea53a3e328f5963b8be34dcb5bc9d3"
+  },
+  "2027-08-10": {
+   "i": 343,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "48064002",
+   "sha256": "41ef17ada4daa99f7908b02ad1e090fed5e5b443271430a17445ce939bb2a9d8"
+  },
+  "2027-08-11": {
+   "i": 344,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "74037492",
+   "sha256": "90fe8df7968f3f636e8e039baefa1ef955aef1c23620cd6af6a6a183cb9997e1"
+  },
+  "2027-08-12": {
+   "i": 345,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "09e47d6e",
+   "sha256": "bb1180ce5c56124e7a1dcc4a95a6407b900c4a2ddb02b09d81bc0bc271d609fa"
+  },
+  "2027-08-13": {
+   "i": 346,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "79469d83",
+   "sha256": "48c37ff1c5779f77d83737be1efa33d99d8853786cd2d36584bb66f183c705f2"
+  },
+  "2027-08-14": {
+   "i": 347,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 8,
+   "moves": 11,
+   "fnv": "9c691e28",
+   "sha256": "e59eb2c7fb048ec8fc7e48a5aabe0035fa5c4cbe7957bc6b88ccddad0bcf8873"
+  },
+  "2027-08-15": {
+   "i": 348,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "36a2f526",
+   "sha256": "a929a830fb35d1ebe005eea6379990e5423c6f30c1a350a03cf295fe4c86aefd"
+  },
+  "2027-08-16": {
+   "i": 349,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "e32c95ec",
+   "sha256": "ecc84820a8f3da8c07388c114d822b35ff5a743fb18f6da49fbda27a69014def"
+  },
+  "2027-08-17": {
+   "i": 350,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "da2253d2",
+   "sha256": "02660be662fb8beab7acc529d7180f1962aa957a3129336bb157a86790326d57"
+  },
+  "2027-08-18": {
+   "i": 351,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "d02207fb",
+   "sha256": "f5957af14bafc84922986b30c0210dfed1a99731c56127ef4b71c5afc832d84e"
+  },
+  "2027-08-19": {
+   "i": 352,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "9d512052",
+   "sha256": "2768b2a0b06c87467247e92894a9786e1aceb82320dfafdbfeda8926ba48e676"
+  },
+  "2027-08-20": {
+   "i": 353,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "27ec9823",
+   "sha256": "fa1f00d4b7eab50a8ea6220ef78ae95d0ff44f1c5b532b33d9cdcb2216371591"
+  },
+  "2027-08-21": {
+   "i": 354,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 9,
+   "moves": 12,
+   "fnv": "d3dc56d1",
+   "sha256": "d39b3fecb4ba675ab1aec07d763bdc12d9bf4a186ad9a34a89e5c38e979a83c0"
+  },
+  "2027-08-22": {
+   "i": 355,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "23f0ee87",
+   "sha256": "f5ce8ce63c6be7e449cebcae71e8a74a75c18922df6d76ff7b565e91a193836a"
+  },
+  "2027-08-23": {
+   "i": 356,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "9226bfc8",
+   "sha256": "1fb367a24fa34e6f3a45250d8c5470f719b686f0f252471046373926edd89d0a"
+  },
+  "2027-08-24": {
+   "i": 357,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "cfe248d9",
+   "sha256": "0528556094f602fc4b877efeafe286cbecfcc10a76c7511b0da05de5832044cb"
+  },
+  "2027-08-25": {
+   "i": 358,
+   "weekday": "Wed",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "545f3cbe",
+   "sha256": "6abccf519a332a0d2a6911a9970b26deec5972bef66c88fc3d14961359567eee"
+  },
+  "2027-08-26": {
+   "i": 359,
+   "weekday": "Thu",
+   "arch": "hard",
+   "par": 8,
+   "moves": 11,
+   "fnv": "95828eec",
+   "sha256": "9f3ce0fb1ef59249c790dda0d3535b66e131c2e2307eea44e369720b400d314d"
+  },
+  "2027-08-27": {
+   "i": 360,
+   "weekday": "Fri",
+   "arch": "hard",
+   "par": 7,
+   "moves": 10,
+   "fnv": "9308a3bc",
+   "sha256": "64545de74a1d085a8e51fe35f38130b1b0e87767c37f3666d409f62c9bf87d46"
+  },
+  "2027-08-28": {
+   "i": 361,
+   "weekday": "Sat",
+   "arch": "peak",
+   "par": 9,
+   "moves": 12,
+   "fnv": "9b8758ed",
+   "sha256": "ceba0c63e8efdb2e103554bd751fcebd8319c69a6252b487b13811e5176ceb54"
+  },
+  "2027-08-29": {
+   "i": 362,
+   "weekday": "Sun",
+   "arch": "mid",
+   "par": 5,
+   "moves": 8,
+   "fnv": "8bad0167",
+   "sha256": "ae38f3c837ffa382b8411f166f7c4e2a435db82c7f21d9cccaf59551f011eb0b"
+  },
+  "2027-08-30": {
+   "i": 363,
+   "weekday": "Mon",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "e68c5353",
+   "sha256": "6981b0d4fa94b878e143f368013e081d5a5140f204b8da73ae737c7d06d98d38"
+  },
+  "2027-08-31": {
+   "i": 364,
+   "weekday": "Tue",
+   "arch": "easy",
+   "par": 4,
+   "moves": 7,
+   "fnv": "33fd5661",
+   "sha256": "e757118ae4cb3e35bad21a50cd7a2431c7ee77d8240b8fd67441bff64c0c1be8"
+  }
+ }
+}

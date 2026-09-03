@@ -2,3 +2,4 @@ node_modules/
 .DS_Store
 reviews/*/shots/
 prototypes/*/app/ios/App/build-device/
+prototypes/*/tools/soak-fail-*.json
