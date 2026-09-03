@@ -4,14 +4,19 @@
 
    One solver-verified board per calendar day, seeded by the date itself, so the
    draft is identical for every player and its par is the truth the same A* that
-   graded the 30 shipped levels proved. Rows are APPEND-ONLY: tools/dailies.lock
+   graded the 40 shipped levels proved. Rows are APPEND-ONLY: tools/dailies.lock
    pins a SHA-256 over every row up to and including today, and the generator
    refuses to run if regeneration would move any of them.
 
    Row encoding: 'WHPM-<shape color x y>*-<color side start len>*-<x y>*',
-   every field one base36 digit. Difficulty follows the weekday
-   (Mon/Tue easy, Wed/Sun mid, Thu/Fri hard, Sat the peak); the move limit is
-   always par + 3. */
+   every field one base36 digit. Difficulty follows the weekday (published as
+   DAILIES.curve); the move limit is always par + 3.
+
+   DAILIES.h is the integrity column: 8 hex digits per row, FNV-1a/32 over
+   '<that row's date>|<the row re-encoded from its decoded board>'. The decoder
+   recomputes it before serving and REFUSES the draft on a mismatch — see
+   DAILIES.levelFor and DAILIES.integrity. tools/dailies.manifest.json is the
+   same table with the full SHA-256 per day. */
 
 const DAILIES = {
   v: 1,
@@ -79,6 +84,23 @@ const DAILIES = {
   '799c-6022910282414334735472143037-0233102221523263-4621', '6858-40313100323622154102-024310232303-27', '6847-3030312111330023-02031324-', '6847-4051312000554103-00141104-', '6858-60032152322241343001-024310332103-50', '688b-702301077200312711067025-011210232343-1303',
   '687a-703401542242110022211002-020211132312-5616', '799c-3035515042158356600383428026-0303122221133152-5431', '6858-70111114624211470206-020213622022-03', '6847-0024410101160145-00311344-', '6847-0002413411063101-02021104-',
   ],
+  // integrity column — see the header. One 8-hex digest per row, in row order.
+  h: [
+    'c3bcb096871e02a7dec28546ef02b8a7b1d6112a5b11c7a6025935be6ac549e7d4cfe61591fb59024dec744ac89dafc1dd45c9853acd28912a1dc59529c4c1498e2d30ca8523c489c0b2cbc698fdbc6460900be08ee0a3203343216ec6b3537f5bf1964a7cc8df71307327d2de9f4a9f55b1732f8b9e449864ffcfefed613260ecb71cba12cf9dd5159ac53e67b5a91fcb1d2af9584216a509f7544b0e0e579e' +
+    'dd36a8a1a44f0693cacb4a937cf182359c65e5be3acd2910ffafef450245a9453f8d3483fc3677841be3f1f7a55f051a9faab1c89cd6da2ad4bcb4abb0b1228109135a4e423c99b9b3ee8c7d82da4e26d59cf10babbd09efda10bf5e89ed8aea167ec19297e5cf78c26079c2f23688a9b216aeb774d6e1ff0e22e40286fb5c5a1c2233bb03979647ef734fbd059c37bd296ce884f18e182c54c711d5ef47e7fc' +
+    'cea0f8df1ed7553c1f4c44ee8f9c0d104aa4daeb734bd09e53e581a1a7a9b13284947d96974bbe9f89990bc432bceb8f1c7f16782e36f6d4d79dabd99d2c20418586c2e1dd702421bd340e11ba3de7a6a467892b4d41f774f74483f56935c00588e3be31e234a23465740108511fe1d06d02cb19cb923d84582b77679d8f972e17d475ddb567b9c4ea12a18284d7f319e572e8b1399d6187fc2a02cc77eb997c' +
+    'c841749d60e0155ffbe89cccd1cf7fbc93d23ce293914a6ea5ea9ef2af4cb7f6539f1be7d8eeb7627a3f2bccd19123fb540330a44532fa93ae776d040a418f86d955de7bafae851429f7ceb9e0a1cebd6d5a0d5b6d2639f50c6d65aac03a4d489f0ca49c3578f581515739d3b9f87f9851998f561b168aeab78ca035a5458283dd6b21a07d2f28fb9a919f80a1924e1c1dc4b787839768c2bb6510eba125cbcf' +
+    'e959eec70f0585860786644e34e11c2debb5850116039c6f98f7088b694ca99cbaa2b80e69946563bc64b9d990fa26ffd9f4278e43ade123a2002014f0e17b1b1994d5782c740ca859a5be994ce50eeb34b5df28efbfa24117a2bab735bede05e69373ae42ad81e58dcd4b504551bb0a5b572d6cccb93a080b462e85d6d2a1f00618d685dcb1412ad428aaf185e05104f5d1bf2060321e7ec27759118ffafdb3' +
+    'd6c1d2eb5cb639a8943f8f746b0add552c6a1f48de1db52428dcd256c2b59f058487e25233064b5c897075477bd63878a444b7bf49fafdd365b858b6142931f86ac2a6d6880c702f11d353b9b505dd31533d37dcd5df89cde9e92dbfe6f69421989958d07d49bab9d1a59177acd9ec117c1ec1a0fe59cf843064afe15d4a0d407281d3b5b296863978a808812d4acfde8274972be4cff38929a9f7159381f7a5' +
+    'ef4949124c546b5ee967806df25ca4c434211871e0162810ba21c210380d1a3b0e794c5c9b3c46aa5816fc63d0e4e95362ecbfe5d0cf0cd9fe9b78b01a0c196e45d9975417831b7e9b35119855c939e55bbe60c1a3eaac780c28b140eb6fa4a3b73c02a445f192e0b13103ef9266a736b1dba794dba86166f46afe0ff50e9ccf45719fa51917ad259cb0b195ba76535153aff604770c98c407a2727309a043a7' +
+    'a2d5fbd4d73cfb57662f74f9be82efb665ca76489c3beceb717d67e7a30ed6d8ce64fc4a2d898fc8e71c8a74661cacf30e1eaccaacbb7d6d6cf06bc1b18df0c53726cbbc71ea76c7d41d8a73aaa06590d9c5ad93956b38afb33b60327a082df6bf4917c5da1c8ef72a10a1dc7f8c3bca29007709afa83dae5f192e0429bcebb02a365ae864000b4aa502d3981b7181d5996ee1aef341b67b961f9b6255df36fa' +
+    'ee21ee6b5a663469418e9ec7401444d91bf09f89dacd1ddcfbda05d927604df6b92cf2319e54affa20fdc8fd39b1582c2b77f109f49750cae211059d5f7c5925c5b194aba836c37c6ea688566dffafc465f1672012ccf32f0ad64d5f480640027403749209e47d6e79469d839c691e2836a2f526e32c95ecda2253d2d02207fb9d51205227ec9823d3dc56d123f0ee879226bfc8cfe248d9545f3cbe95828eec' +
+    '9308a3bc9b8758ed8bad0167e68c535333fd5661'
+  ].join(''),
+  // the published weekday rhythm: archetype key per UTC weekday (0 = Sunday)
+  curve: ["mid","easy","easy","mid","hard","hard","peak"],
+  // ...and what each archetype is, straight off the generator's own spec table
+  curveSpec: {"easy":{"key":"easy","label":"Routine","w":6,"h":8,"colors":2,"blocks":4,"stones":0,"summary":"4 blocks · 2 colours · no stones · 6×8"},"mid":{"key":"mid","label":"Standard","w":6,"h":8,"colors":3,"blocks":5,"stones":1,"summary":"5 blocks · 3 colours · 1 stone · 6×8"},"hard":{"key":"hard","label":"Complex","w":6,"h":8,"colors":3,"blocks":6,"stones":2,"summary":"6 blocks · 3 colours · 2 stones · 6×8"},"peak":{"key":"peak","label":"Peak","w":7,"h":9,"colors":4,"blocks":7,"stones":2,"summary":"7 blocks · 4 colours · 2 stones · 7×9"}},
 };
 
 // ---------- decoder (the only daily code that ships) ----------
@@ -104,4 +126,72 @@ DAILIES.decode = function (row) {
   for (i = 0; i < p[3].length; i += 2) L.stones.push([n(p[3][i]), n(p[3][i + 1])]);
   return L;
 };
-DAILIES.levelFor = function (d) { var r = DAILIES.rowFor(d); return { i: r.i, wrapped: r.wrapped, level: DAILIES.decode(r.row) }; };
+
+// ---------- integrity (report §5.3) ----------
+// The lock file protects the table in the repository. THIS protects the copy in
+// the player's hands: the row that is about to be served is decoded, re-encoded,
+// bound to its own calendar date and digested, and the result must match the
+// digest column shipped alongside it. A mismatch means this client's table is
+// not the published one — a corrupted row, a shifted index, a stale cache, a
+// decoder that has drifted — and the honest response is to say so, not to hand
+// over a board whose score would be meaningless. So the draft is REFUSED and
+// `DAILIES.integrity` carries the reason and a message the UI can show.
+DAILIES.integrity = { ok: true, checked: 0, date: null, row: null, i: -1, want: null, got: null, reason: null, message: null };
+// re-encode a decoded board: the inverse of `decode`, and the half of the digest
+// that makes this a round trip rather than a checksum over a string
+DAILIES.enc = function (L) {
+  var c = function (n) { return n.toString(36); }, i, j, k, s, blocks = '', gates = '', stones = '';
+  for (i = 0; i < L.blocks.length; i++) {
+    s = JSON.stringify(L.blocks[i].cells); k = -1;
+    for (j = 0; j < DAILIES.O.length; j++) if (JSON.stringify(DAILIES.S[DAILIES.O[j]]) === s) { k = j; break; }
+    if (k < 0) return null;
+    blocks += c(k) + c(L.blocks[i].color) + c(L.blocks[i].x) + c(L.blocks[i].y);
+  }
+  for (i = 0; i < L.gates.length; i++) gates += c(L.gates[i].color) + c(DAILIES.D.indexOf(L.gates[i].side)) + c(L.gates[i].start) + c(L.gates[i].len);
+  for (i = 0; i < L.stones.length; i++) stones += c(L.stones[i][0]) + c(L.stones[i][1]);
+  return [c(L.w) + c(L.h) + c(L.par) + c(L.moves), blocks, gates, stones].join('-');
+};
+// FNV-1a/32, 8 hex digits. Not a cryptographic claim — the manifest holds the
+// SHA-256 and the repo holds the lock; this is the cheap, synchronous,
+// no-dependency check that can run in the page before every single serve.
+DAILIES.fnv = function (s) {
+  var h = 0x811c9dc5, i;
+  for (i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return ('0000000' + (h >>> 0).toString(16)).slice(-8);
+};
+DAILIES.digest = function (i, L) { var e = DAILIES.enc(L); return e === null ? null : DAILIES.fnv(DAILIES.dateAt(i) + '|' + e); };
+DAILIES.verify = function (i, L) {
+  if (!DAILIES.h || DAILIES.h.length !== DAILIES.rows.length * 8) return { ok: false, reason: 'digest-table-missing', want: null, got: null };
+  var want = DAILIES.h.substr(i * 8, 8), got = L ? DAILIES.digest(i, L) : null;
+  if (got === null) return { ok: false, reason: L ? 'unknown-shape' : 'decode-failed', want: want, got: null };
+  return { ok: got === want, reason: got === want ? null : 'digest-mismatch', want: want, got: got };
+};
+DAILIES.levelFor = function (d) {
+  var r = DAILIES.rowFor(d), L = null;
+  try { L = DAILIES.decode(r.row); } catch (e) { L = null; }
+  var v = DAILIES.verify(r.i, L);
+  DAILIES.integrity = {
+    ok: v.ok, checked: (DAILIES.integrity.checked || 0) + 1,
+    date: d, row: DAILIES.dateAt(r.i), i: r.i, want: v.want, got: v.got, reason: v.reason,
+    message: v.ok ? null : 'Draft unavailable — please update',
+  };
+  if (!v.ok) {
+    if (typeof console !== 'undefined' && console.error) {
+      console.error('Gate Escape: DAILY DRAFT INTEGRITY FAILURE — ' + v.reason
+        + ' for ' + d + ' (row ' + r.i + ', published as ' + DAILIES.dateAt(r.i) + '); expected digest '
+        + v.want + ', computed ' + v.got + '. Refusing to serve a board that is not the published one.');
+    }
+    return { i: r.i, wrapped: r.wrapped, level: null, integrity: DAILIES.integrity };
+  }
+  return { i: r.i, wrapped: r.wrapped, level: L, integrity: DAILIES.integrity };
+};
+// the weekday rhythm, stated rather than inferred. A calendar date is a date, not
+// a moment, so the weekday is read in UTC — the same way the generator assigned
+// it, which is what makes every player's Saturday the Saturday archetype.
+DAILIES.curveFor = function (d) {
+  var wd = new Date(DAILIES.parse(d)).getUTCDay(), key = DAILIES.curve[wd];
+  var spec = DAILIES.curveSpec[key] || {};
+  return { weekday: wd, day: ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][wd], key: key,
+    label: spec.label || key, summary: spec.summary || '',
+    w: spec.w, h: spec.h, colors: spec.colors, blocks: spec.blocks, stones: spec.stones };
+};

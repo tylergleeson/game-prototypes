@@ -419,6 +419,10 @@
   .surveyrow .v { flex:1; text-align:right; font-weight:800; font-size:14px; font-variant-numeric:tabular-nums; }
   .surveyrow .v .mark { color:var(--amber-ink); margin-left:4px; }
   .surveyrow .badge { flex:none; font:800 9px/1 var(--mono); letter-spacing:.1em; color:var(--amber-ink); border:1.5px solid var(--amber-ink); border-radius:3px; padding:3px 4px; }
+  /* a draft the decoder REFUSED to serve (per-row digest mismatch): the row states the refusal
+     and stops looking like a door — dashed edge, no chevron, no pointer */
+  .surveyrow.unavailable { border-style:dashed; color:var(--dim); cursor:default; }
+  .surveyrow.unavailable .chev { visibility:hidden; }
   .surveyrow .chev { color:var(--dim); font-size:16px; line-height:1; }
   .surveyrow:active { transform:translateY(2px); }
   /* the week's sheet is taller than a result card: give it room and let it scroll on short phones */
@@ -490,9 +494,16 @@
               background:var(--fill); color:var(--ink); font:600 11.5px/1.5 var(--mono); resize:none; user-select:text; -webkit-user-select:text; }
   #draftModal { z-index:25; } /* the result card opens over the sheet index, like the survey sheet */
   #recModal { z-index:25; }   /* ...and so does the recorded-attempt card that precedes the board */
-  /* a rescue is a FACT on the report, never a prize: this stamp is stated in ink, not in the green
-     the win-card beats use — nothing celebratory belongs on a day that was not cleared */
-  #draftRescue .stamp { color:var(--dim); border-color:var(--line2); }
+  /* A rescue is a FACT, never a prize. CLEAN is the only award the draft hands out and the only
+     one that keeps the stamp treatment (green ink, border, the stamped rotation); the rescue
+     marker drops all three and reads as plain dim text, lowercase, so the two can never be
+     mistaken for a matched pair of badges. */
+  #draftRescue .stamp, #recRescue .stamp { color:var(--dim); border:0; border-radius:0; padding:5px 2px;
+     transform:none; animation:none; text-transform:none; letter-spacing:.06em; font-weight:700; }
+  /* the day-boundary and weekday-curve lines on the two draft cards: the same calm teach
+     treatment the fail sheet uses, which is scoped to .modal.sheet and so is repeated here */
+  #draftModal .card p.teach, #recModal .card p.teach { text-align:left; color:var(--dim); font-size:12.5px;
+     font-weight:600; line-height:1.45; border-top:1px dashed var(--line2); padding-top:8px; margin:2px 0 10px; }
   .card.draft { width:min(92vw,360px); }
   .card.draft .stars { font-size:27px; height:36px; line-height:36px; margin-bottom:6px; letter-spacing:5px; }
   .card.draft p { margin-bottom:12px; }
@@ -682,10 +693,17 @@
         <div><span class="k" id="draftRouteK">Route</span><span class="v" id="draftRoute">100%</span></div>
       </div>
       <div class="daily-row" id="draftRescue" hidden>
-        <span class="stamp">RESCUED</span>
-        <div><span class="k">Rescue taken</span><span class="v">+3 moves on this attempt</span></div>
+        <span class="stamp">rescued</span>
+        <div><span class="k">Rescue taken</span><span class="v" id="draftRescueV">+3 moves counted in this record</span></div>
+      </div>
+      <!-- the purity token, when the attempt earned one: no undo, no hint, no rescue -->
+      <div class="daily-row" id="draftClean" hidden>
+        <span class="stamp">CLEAN</span>
+        <div><span class="k">No undo, no hint, no rescue</span><span class="v">Printed on the field report</span></div>
       </div>
       <pre class="report" id="draftReport"></pre>
+      <!-- the published day boundary and the published weekday curve, in plain words -->
+      <p class="teach" id="draftDay"></p>
       <textarea class="reportfb" id="draftReportFb" readonly hidden aria-label="Field report text"></textarea>
       <button class="primary" id="btnDraftShare">Share field report</button>
       <button class="ghost" id="btnDraftPractice">Play again &#183; not recorded</button>
@@ -703,8 +721,15 @@
       <h2>Today’s draft</h2>
       <p id="recSub">Same board for everyone today.</p>
       <div class="daily-row"><span class="stamp">RECORDED</span>
-        <div><span class="k">Your first attempt is the one recorded</span><span class="v" id="recV">A rescue keeps it open · retrying or leaving files the result</span></div>
+        <div><span class="k">Your first attempt is the one recorded</span><span class="v" id="recV">Retrying or leaving the board files the result</span></div>
       </div>
+      <!-- the rescue's price inside a recorded attempt, stated BEFORE the board loads rather
+           than discovered on the report afterwards. Campaign rescues are unchanged: there the
+           rescue costs nothing but the ad. -->
+      <div class="daily-row" id="recRescue"><span class="stamp">rescue</span>
+        <div><span class="k">A rescue keeps the attempt open</span><span class="v" id="recRescueV">It adds 3 moves to your filed total and forfeits the CLEAN token</span></div>
+      </div>
+      <p class="teach" id="recDay"></p>
       <button class="primary" id="btnRecStart">Start today’s draft</button>
       <button class="ghost" id="btnRecBack">Back</button>
     </div>
@@ -787,17 +812,18 @@
         <div class="li" id="liSeq" hidden><canvas id="symSeq" width="128" height="88"></canvas><div><b>Approval chain</b><span>Numbered blocks leave in order. The solid stamp is next up; the outlined ones wait.</span></div></div>
         <div class="div" id="legendMetaDiv">AROUND THE GAME</div>
         <div class="mi" id="legendLives"><span class="g">♥ Lives</span><span>Retrying a failed level costs one (from level 6). They refill over time; a rescue saves the attempt instead.</span></div>
-        <div class="mi" id="legendDaily"><span class="g">Daily draft</span><span>One board a day, the same board for every player, with its own par. The first attempt is the one that is recorded; after that the day is practice. The field report you can share says how the day went, never how it was solved.</span></div>
+        <div class="mi" id="legendDaily"><span class="g">Daily draft</span><span>One board a day, numbered from the table’s first day and the same board for every player, with its own par. A new draft appears at midnight on this device’s own clock. An attempt is resolved by the day it finishes on: if midnight passes while the board is still open, that day is filed NOT CLEARED and the new day’s draft is ready. The week has a published shape: <b id="legendCurve">Mon and Tue easy, Wed and Sun medium, Thu and Fri hard, Sat the peak</b>. Your first attempt is the one that is recorded; after it closes, the day is practice.</span></div>
+        <div class="mi" id="legendReport"><span class="g">Field report</span><span>The share text: the day and its number, whether you cleared it, and your moves against par — shown as stars and as a bar of the same number. Never how the board was solved. It ends in one token or none. CLEAN is the only award and means you used no undo, no hint and no rescue. A rescue prints instead as a plain “rescued” and adds 3 moves to the total you file, so a rescued run can never read as a clean one.</span></div>
         <div class="mi" id="legendSurvey"><span class="g">Field survey</span><span>One sheet a week: a stamp for every day you clear a level, two contracts you pick from the four the week offers, and point marks at 3, 7, 12 and 20 (1 point per clear, +1 at par).</span></div>
         <div class="mi" id="legendContracts"><span class="g">Contracts</span><span>Swap freely until one of them earns a mark, then the pair is set for the week. File one and you bank a weather delay (hold up to 2); file both and the sheet gets its seal.</span></div>
-        <div class="mi" id="legendStreak"><span class="g">Streak</span><span>One clear a day keeps it going. A banked weather delay covers a missed day; otherwise it simply starts again.</span></div>
+        <div class="mi" id="legendStreak"><span class="g">Streak</span><span>One clear a day keeps it going. A banked weather delay covers a missed day; otherwise it simply starts again. There are no accounts: your streak and your draft records are kept on this device only, so reinstalling the app starts them over.</span></div>
         <div class="mi" id="legendCert"><span class="g">Certification</span><span>24 ★ on a sheet certifies it: a new paper for the drawing.</span></div>
       </div>
     </div>
   </div>
 
   <script>
-window.GE_BUILD = '2026-09-02 · 23:43';
+window.GE_BUILD = '2026-09-03 · 11:59';
 window.BEACON_URL = window.BEACON_URL || ''; // '' = beacon disabled (zero network) — artifact builds stay offline
 const LEVELS = [{"w":4,"h":5,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":1,"y":2}],"gates":[{"color":0,"side":"right","start":2,"len":3}],"par":1,"moves":5},{"w":4,"h":5,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[1,0]],"x":2,"y":3},{"color":1,"cells":[[0,0]],"x":2,"y":1}],"gates":[{"color":0,"side":"right","start":1,"len":3},{"color":1,"side":"top","start":2,"len":2}],"par":2,"moves":6},{"w":5,"h":6,"stones":[],"blocks":[{"color":0,"cells":[[0,0]],"x":4,"y":0},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":1},{"color":0,"cells":[[0,0],[0,1]],"x":4,"y":2}],"gates":[{"color":0,"side":"bottom","start":0,"len":3}],"par":3,"moves":7},{"w":5,"h":7,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[1,0]],"x":1,"y":2},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":3},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":4},{"color":0,"cells":[[0,0]],"x":3,"y":0}],"gates":[{"color":0,"side":"left","start":2,"len":4},{"color":1,"side":"bottom","start":0,"len":4}],"par":4,"moves":8},{"w":5,"h":7,"stones":[[4,3]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":1,"y":1},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":6},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":0,"y":0},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":1}],"gates":[{"color":0,"side":"left","start":3,"len":3},{"color":1,"side":"bottom","start":1,"len":4}],"par":4,"moves":7},{"w":6,"h":8,"stones":[[5,4]],"blocks":[{"color":0,"cells":[[0,0],[1,0]],"x":3,"y":1},{"color":1,"cells":[[0,0],[0,1]],"x":0,"y":0},{"color":1,"cells":[[0,0],[0,1]],"x":0,"y":5},{"color":1,"cells":[[0,0],[0,1]],"x":5,"y":2},{"color":1,"cells":[[0,0]],"x":1,"y":3}],"gates":[{"color":0,"side":"top","start":0,"len":2},{"color":1,"side":"top","start":3,"len":2}],"par":6,"moves":9},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0]],"x":0,"y":1},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":2},{"color":0,"cells":[[0,0]],"x":4,"y":3},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":5},{"color":1,"cells":[[0,0]],"x":5,"y":4}],"gates":[{"color":0,"side":"right","start":0,"len":4},{"color":1,"side":"bottom","start":1,"len":4}],"par":5,"moves":8},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":5,"y":4},{"color":2,"cells":[[0,0],[1,0]],"x":2,"y":1},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":1,"y":4},{"color":1,"cells":[[0,0],[0,1]],"x":1,"y":2},{"color":1,"cells":[[0,0],[1,0]],"x":2,"y":6}],"gates":[{"color":0,"side":"right","start":2,"len":4},{"color":1,"side":"bottom","start":2,"len":4},{"color":2,"side":"top","start":3,"len":3}],"par":6,"moves":9},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":2},{"color":1,"cells":[[0,0],[0,1]],"x":2,"y":6},{"color":2,"cells":[[0,0],[0,1]],"x":0,"y":6},{"color":2,"cells":[[0,0],[0,1]],"x":1,"y":1},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":5},{"color":2,"cells":[[0,0],[0,1]],"x":1,"y":3}],"gates":[{"color":0,"side":"left","start":3,"len":4},{"color":1,"side":"left","start":0,"len":3},{"color":2,"side":"right","start":0,"len":4}],"par":6,"moves":9},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":3},{"color":2,"cells":[[0,0],[0,1]],"x":2,"y":3},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":7},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":5,"y":1},{"color":1,"cells":[[0,0],[1,0]],"x":1,"y":7}],"gates":[{"color":0,"side":"right","start":2,"len":4},{"color":1,"side":"bottom","start":2,"len":4},{"color":2,"side":"left","start":2,"len":2}],"par":7,"moves":10},{"w":6,"h":8,"stones":[[0,7],[4,6]],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":2,"y":3},{"color":1,"cells":[[0,0],[1,0]],"x":1,"y":5},{"color":2,"cells":[[0,0]],"x":1,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":3,"y":0},{"color":1,"cells":[[0,0]],"x":3,"y":4},{"color":0,"cells":[[0,0],[0,1]],"x":4,"y":2}],"gates":[{"color":0,"side":"top","start":2,"len":3},{"color":1,"side":"right","start":2,"len":3},{"color":2,"side":"left","start":3,"len":2}],"par":6,"moves":8},{"w":6,"h":8,"stones":[[2,6],[0,7]],"blocks":[{"color":0,"cells":[[0,0]],"x":5,"y":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":3,"y":4},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":3},{"color":0,"cells":[[0,0],[0,1]],"x":3,"y":6},{"color":2,"cells":[[0,0],[1,0]],"x":1,"y":2}],"gates":[{"color":0,"side":"top","start":2,"len":3},{"color":1,"side":"left","start":3,"len":3},{"color":2,"side":"right","start":2,"len":2}],"par":7,"moves":9},{"w":6,"h":8,"stones":[[0,5],[1,6]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":0,"y":2},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":3},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":4},{"color":1,"cells":[[0,0],[1,0]],"x":4,"y":6},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":3,"y":6}],"gates":[{"color":0,"side":"left","start":1,"len":3},{"color":1,"side":"top","start":3,"len":3},{"color":2,"side":"bottom","start":1,"len":4}],"par":7,"moves":9},{"w":6,"h":8,"stones":[[5,7]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[1,1]],"x":4,"y":2},{"color":1,"cells":[[0,0],[0,1]],"x":0,"y":3},{"color":2,"cells":[[0,0],[0,1]],"x":2,"y":5},{"color":1,"cells":[[0,0],[0,1]],"x":4,"y":6},{"color":1,"cells":[[0,0],[0,1]],"x":3,"y":6}],"gates":[{"color":0,"side":"top","start":2,"len":3},{"color":1,"side":"bottom","start":0,"len":3},{"color":2,"side":"right","start":0,"len":3}],"par":5,"moves":7},{"w":6,"h":8,"stones":[[4,0]],"blocks":[{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":4},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":2,"y":6},{"color":2,"cells":[[0,0],[1,0]],"x":3,"y":3},{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":4},{"color":1,"cells":[[0,0],[1,0]],"x":0,"y":2},{"color":2,"cells":[[0,0],[0,1]],"x":5,"y":1}],"gates":[{"color":0,"side":"left","start":0,"len":3},{"color":1,"side":"left","start":5,"len":3},{"color":2,"side":"bottom","start":3,"len":2}],"par":7,"moves":9},{"w":6,"h":8,"stones":[[1,2]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":0},{"color":1,"cells":[[0,0],[0,1]],"x":5,"y":4},{"color":2,"cells":[[0,0]],"x":2,"y":7},{"color":2,"cells":[[0,0],[1,0]],"x":2,"y":3},{"color":2,"cells":[[0,0],[0,1]],"x":5,"y":2},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":0}],"gates":[{"color":0,"side":"right","start":0,"len":4},{"color":1,"side":"left","start":5,"len":2},{"color":2,"side":"left","start":1,"len":2}],"par":7,"moves":9},{"w":7,"h":9,"stones":[[5,6],[0,8]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":5},{"color":1,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":2},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":4,"y":2},{"color":3,"cells":[[0,0],[0,1]],"x":3,"y":6},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":0},{"color":3,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":4},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":4,"y":5}],"gates":[{"color":0,"side":"right","start":2,"len":3},{"color":1,"side":"top","start":0,"len":3},{"color":2,"side":"bottom","start":1,"len":3},{"color":3,"side":"left","start":1,"len":4}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[1,1],[5,1]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":4},{"color":1,"cells":[[0,0],[0,1]],"x":4,"y":0},{"color":2,"cells":[[0,0],[0,1],[1,1]],"x":3,"y":5},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":4},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":1,"y":6},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":3,"y":2},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":3}],"gates":[{"color":0,"side":"right","start":4,"len":3},{"color":1,"side":"top","start":4,"len":2},{"color":2,"side":"bottom","start":0,"len":2},{"color":3,"side":"bottom","start":2,"len":3}],"par":9,"moves":11},{"w":6,"h":8,"stones":[[1,1],[5,1]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":4},{"color":1,"cells":[[0,0],[0,1]],"x":4,"y":0},{"color":2,"cells":[[0,0],[0,1],[1,1]],"x":3,"y":5},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":4},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":1,"y":6},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":3,"y":2},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":3}],"gates":[{"color":0,"side":"right","start":4,"len":3},{"color":1,"side":"top","start":4,"len":2},{"color":2,"side":"bottom","start":0,"len":2},{"color":3,"side":"bottom","start":2,"len":3}],"par":9,"moves":11},{"w":6,"h":7,"stones":[[0,4],[4,4]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":2},{"color":1,"cells":[[1,0],[1,1],[0,1]],"x":1,"y":1},{"color":2,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":2},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":2,"y":4},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":0},{"color":0,"cells":[[0,0],[1,0],[1,1]],"x":4,"y":5},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":0,"y":5}],"gates":[{"color":0,"side":"top","start":1,"len":2},{"color":1,"side":"right","start":5,"len":2},{"color":2,"side":"left","start":5,"len":2},{"color":3,"side":"top","start":3,"len":2}],"par":10,"moves":12},{"w":6,"h":8,"stones":[[4,6]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":6},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":5},{"color":2,"cells":[[0,0],[1,0]],"x":0,"y":3},{"color":2,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":0},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":1,"y":3},{"color":2,"cells":[[0,0],[0,1]],"x":1,"y":5}],"gates":[{"color":0,"side":"bottom","start":0,"len":3},{"color":1,"side":"left","start":3,"len":4},{"color":2,"side":"top","start":3,"len":2}],"par":6,"moves":8},{"w":6,"h":8,"stones":[[4,2],[5,4]],"blocks":[{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":3,"y":3},{"color":1,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":2,"y":6},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":0},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":3},{"color":2,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":0},{"color":0,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":5}],"gates":[{"color":0,"side":"bottom","start":1,"len":2},{"color":1,"side":"top","start":3,"len":3},{"color":2,"side":"left","start":0,"len":4}],"par":7,"moves":9},{"w":7,"h":9,"stones":[[4,8],[1,5]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[1,1]],"x":2,"y":3},{"color":1,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":1},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":0,"y":2},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":2,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":0,"y":0},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":6},{"color":2,"cells":[[0,0],[1,0]],"x":4,"y":7}],"gates":[{"color":0,"side":"left","start":7,"len":2},{"color":1,"side":"left","start":2,"len":2},{"color":2,"side":"right","start":7,"len":2},{"color":3,"side":"top","start":2,"len":3}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[1,0],[3,2]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":0},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":1},{"color":2,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":2,"y":3},{"color":3,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":6},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":0,"y":2},{"color":0,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":6},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":5,"y":0}],"gates":[{"color":0,"side":"left","start":2,"len":3},{"color":1,"side":"bottom","start":3,"len":3},{"color":2,"side":"top","start":0,"len":4},{"color":3,"side":"right","start":0,"len":2}],"par":9,"moves":11},{"w":6,"h":8,"stones":[[5,2],[3,4]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":2,"y":6},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":5},{"color":2,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":3},{"color":3,"cells":[[0,0],[0,1],[1,1]],"x":3,"y":1},{"color":3,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":6},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":4,"y":3},{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":1,"y":1}],"gates":[{"color":0,"side":"left","start":3,"len":2},{"color":1,"side":"top","start":0,"len":3},{"color":2,"side":"left","start":5,"len":2},{"color":3,"side":"left","start":0,"len":2}],"par":9,"moves":11},{"w":7,"h":9,"stones":[[4,0],[2,4]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":4},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":5,"y":7},{"color":2,"cells":[[0,0],[0,1]],"x":4,"y":1},{"color":3,"cells":[[0,0],[0,1],[1,1]],"x":0,"y":1},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":2,"y":2},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":4},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":3}],"gates":[{"color":0,"side":"top","start":1,"len":2},{"color":1,"side":"right","start":4,"len":4},{"color":2,"side":"left","start":3,"len":3},{"color":3,"side":"right","start":0,"len":2}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[3,1],[0,7]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":6},{"color":1,"cells":[[0,0],[1,0]],"x":3,"y":3},{"color":2,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":4},{"color":3,"cells":[[0,0],[1,0]],"x":4,"y":0},{"color":2,"cells":[[0,0],[0,1]],"x":2,"y":6},{"color":1,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":1},{"color":0,"cells":[[0,0],[1,0],[1,1]],"x":1,"y":3}],"gates":[{"color":0,"side":"top","start":1,"len":2},{"color":1,"side":"top","start":3,"len":3},{"color":2,"side":"right","start":1,"len":2},{"color":3,"side":"bottom","start":1,"len":3}],"par":9,"moves":11},{"w":6,"h":8,"stones":[[3,7],[1,1]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1]],"x":4,"y":6},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":0},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":3},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":3,"y":1},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":6},{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":1,"y":3},{"color":3,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":0}],"gates":[{"color":0,"side":"right","start":2,"len":2},{"color":1,"side":"right","start":4,"len":4},{"color":2,"side":"left","start":2,"len":3},{"color":3,"side":"bottom","start":1,"len":4}],"par":9,"moves":11},{"w":7,"h":9,"stones":[[0,1],[2,5],[4,5]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":3},{"color":1,"cells":[[0,0],[1,0]],"x":2,"y":7},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":4},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":7},{"color":3,"cells":[[0,0],[1,0],[1,1]],"x":3,"y":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":1},{"color":3,"cells":[[0,0],[1,0],[0,1]],"x":5,"y":3}],"gates":[{"color":0,"side":"left","start":5,"len":4},{"color":1,"side":"right","start":1,"len":3},{"color":2,"side":"top","start":4,"len":3},{"color":3,"side":"top","start":1,"len":3}],"par":8,"moves":10},{"w":6,"h":8,"stones":[[3,3],[0,3]],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":0,"y":4},{"color":1,"cells":[[0,0],[0,1]],"x":1,"y":4},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":1,"y":1},{"color":3,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":2,"y":6},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":4,"y":5},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":1},{"color":0,"cells":[[0,0],[0,1]],"x":5,"y":2}],"gates":[{"color":0,"side":"left","start":1,"len":2},{"color":1,"side":"right","start":1,"len":3},{"color":2,"side":"left","start":5,"len":3},{"color":3,"side":"top","start":3,"len":2}],"par":9,"moves":11},{"w":5,"h":7,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":1,"y":3},{"color":1,"cells":[[0,0]],"x":4,"y":1,"seq":2},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":3,"seq":1},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":1}],"gates":[{"color":0,"side":"left","start":3,"len":4},{"color":1,"side":"right","start":2,"len":4}],"par":4,"moves":8},{"w":6,"h":8,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,1]],"x":4,"y":3,"seq":1},{"color":1,"cells":[[0,0],[1,0]],"x":0,"y":4},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":2},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":3,"y":1},{"color":2,"cells":[[0,0],[1,0]],"x":1,"y":1,"seq":2}],"gates":[{"color":0,"side":"left","start":2,"len":2},{"color":1,"side":"top","start":0,"len":3},{"color":2,"side":"bottom","start":1,"len":4}],"par":6,"moves":10},{"w":6,"h":8,"stones":[[4,5]],"blocks":[{"color":0,"cells":[[0,0],[1,0]],"x":2,"y":5,"seq":1},{"color":1,"cells":[[0,0]],"x":2,"y":7,"seq":2},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":4},{"color":1,"cells":[[0,0],[0,1]],"x":1,"y":1},{"color":1,"cells":[[0,0],[1,0],[2,0]],"x":0,"y":3},{"color":2,"cells":[[0,0],[0,1]],"x":3,"y":6,"seq":3}],"gates":[{"color":0,"side":"bottom","start":3,"len":3},{"color":1,"side":"top","start":1,"len":4},{"color":2,"side":"left","start":3,"len":4}],"par":7,"moves":10},{"w":6,"h":8,"stones":[[2,7]],"blocks":[{"color":0,"cells":[[0,0]],"x":4,"y":0},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":3,"seq":3},{"color":2,"cells":[[0,0],[0,1]],"x":0,"y":0},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":3,"seq":1},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":4,"seq":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":1,"y":2}],"gates":[{"color":0,"side":"bottom","start":0,"len":3},{"color":1,"side":"left","start":3,"len":3},{"color":2,"side":"right","start":1,"len":3}],"par":7,"moves":10},{"w":6,"h":8,"stones":[[2,5],[2,4]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[1,1]],"x":4,"y":2,"seq":2},{"color":1,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":0,"y":5,"seq":3},{"color":2,"cells":[[0,0],[0,1],[0,2]],"x":2,"y":0},{"color":3,"cells":[[0,0],[1,0],[1,1]],"x":3,"y":0,"seq":1},{"color":1,"cells":[[0,0],[1,0]],"x":0,"y":2},{"color":2,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":4,"y":4}],"gates":[{"color":0,"side":"right","start":4,"len":3},{"color":1,"side":"bottom","start":0,"len":2},{"color":2,"side":"left","start":4,"len":3},{"color":3,"side":"left","start":2,"len":2}],"par":8,"moves":10},{"w":7,"h":9,"stones":[[1,2]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[2,0]],"x":0,"y":1,"seq":4},{"color":1,"cells":[[0,0],[1,0],[0,1]],"x":4,"y":5,"seq":3},{"color":2,"cells":[[0,0],[0,1]],"x":2,"y":4,"seq":2},{"color":3,"cells":[[0,0],[1,0]],"x":4,"y":1,"seq":1},{"color":2,"cells":[[0,0],[1,0],[2,0]],"x":4,"y":2},{"color":2,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":5,"y":7},{"color":2,"cells":[[0,0],[1,0]],"x":1,"y":3}],"gates":[{"color":0,"side":"right","start":0,"len":4},{"color":1,"side":"left","start":3,"len":2},{"color":2,"side":"bottom","start":1,"len":3},{"color":3,"side":"right","start":6,"len":2}],"par":8,"moves":10},{"w":7,"h":9,"stones":[[2,7],[6,0]],"blocks":[{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":4,"y":4},{"color":1,"cells":[[0,0],[0,1]],"x":5,"y":3,"seq":1},{"color":2,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":1,"y":1,"seq":2},{"color":3,"cells":[[1,0],[1,1],[0,1]],"x":5,"y":1},{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":3,"y":7},{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":0,"y":3,"seq":3},{"color":1,"cells":[[0,0],[1,0]],"x":5,"y":7}],"gates":[{"color":0,"side":"bottom","start":0,"len":3},{"color":1,"side":"top","start":0,"len":2},{"color":2,"side":"right","start":6,"len":2},{"color":3,"side":"left","start":2,"len":2}],"par":9,"moves":11},{"w":7,"h":9,"stones":[[6,5],[2,2]],"blocks":[{"color":0,"cells":[[1,0],[1,1],[0,1]],"x":0,"y":1},{"color":1,"cells":[[0,0],[1,0]],"x":5,"y":2},{"color":2,"cells":[[1,0],[1,1],[0,1]],"x":3,"y":0},{"color":3,"cells":[[0,0],[1,0],[1,1]],"x":2,"y":5,"seq":2},{"color":1,"cells":[[0,0],[0,1],[0,2]],"x":0,"y":5,"seq":4},{"color":2,"cells":[[0,0],[1,0],[0,1]],"x":1,"y":6,"seq":3},{"color":0,"cells":[[0,0],[1,0],[0,1],[1,1]],"x":2,"y":3,"seq":1}],"gates":[{"color":0,"side":"left","start":4,"len":2},{"color":1,"side":"top","start":4,"len":3},{"color":2,"side":"bottom","start":3,"len":2},{"color":3,"side":"bottom","start":0,"len":3}],"par":9,"moves":11},{"w":6,"h":8,"stones":[[0,2],[0,3]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[1,1]],"x":4,"y":3},{"color":1,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":1},{"color":2,"cells":[[0,0],[0,1]],"x":2,"y":3,"seq":4},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":1,"y":0},{"color":1,"cells":[[0,0],[1,0],[1,1]],"x":0,"y":4,"seq":1},{"color":3,"cells":[[0,0],[1,0],[2,0]],"x":2,"y":5,"seq":3},{"color":0,"cells":[[0,0],[0,1]],"x":0,"y":5,"seq":2}],"gates":[{"color":0,"side":"top","start":0,"len":2},{"color":1,"side":"top","start":2,"len":3},{"color":2,"side":"left","start":0,"len":2},{"color":3,"side":"right","start":4,"len":4}],"par":10,"moves":12},{"w":6,"h":8,"stones":[[5,4],[4,3]],"blocks":[{"color":0,"cells":[[0,0],[1,0],[0,1]],"x":1,"y":4},{"color":1,"cells":[[0,0],[0,1],[1,1]],"x":3,"y":4,"seq":1},{"color":2,"cells":[[0,0],[1,0]],"x":1,"y":0,"seq":3},{"color":3,"cells":[[0,0],[1,0]],"x":0,"y":6,"seq":4},{"color":1,"cells":[[0,0],[0,1],[1,1]],"x":3,"y":6},{"color":0,"cells":[[0,0],[0,1],[1,1]],"x":1,"y":1,"seq":2},{"color":0,"cells":[[0,0],[0,1],[0,2]],"x":3,"y":0}],"gates":[{"color":0,"side":"left","start":1,"len":3},{"color":1,"side":"top","start":1,"len":3},{"color":2,"side":"right","start":2,"len":2},{"color":3,"side":"bottom","start":4,"len":2}],"par":10,"moves":12}];
 
@@ -807,14 +833,19 @@ const LEVELS = [{"w":4,"h":5,"stones":[],"blocks":[{"color":0,"cells":[[0,0],[0,
 
    One solver-verified board per calendar day, seeded by the date itself, so the
    draft is identical for every player and its par is the truth the same A* that
-   graded the 30 shipped levels proved. Rows are APPEND-ONLY: tools/dailies.lock
+   graded the 40 shipped levels proved. Rows are APPEND-ONLY: tools/dailies.lock
    pins a SHA-256 over every row up to and including today, and the generator
    refuses to run if regeneration would move any of them.
 
    Row encoding: 'WHPM-<shape color x y>*-<color side start len>*-<x y>*',
-   every field one base36 digit. Difficulty follows the weekday
-   (Mon/Tue easy, Wed/Sun mid, Thu/Fri hard, Sat the peak); the move limit is
-   always par + 3. */
+   every field one base36 digit. Difficulty follows the weekday (published as
+   DAILIES.curve); the move limit is always par + 3.
+
+   DAILIES.h is the integrity column: 8 hex digits per row, FNV-1a/32 over
+   '<that row's date>|<the row re-encoded from its decoded board>'. The decoder
+   recomputes it before serving and REFUSES the draft on a mismatch — see
+   DAILIES.levelFor and DAILIES.integrity. tools/dailies.manifest.json is the
+   same table with the full SHA-256 per day. */
 
 const DAILIES = {
   v: 1,
@@ -882,6 +913,23 @@ const DAILIES = {
   '799c-6022910282414334735472143037-0233102221523263-4621', '6858-40313100323622154102-024310232303-27', '6847-3030312111330023-02031324-', '6847-4051312000554103-00141104-', '6858-60032152322241343001-024310332103-50', '688b-702301077200312711067025-011210232343-1303',
   '687a-703401542242110022211002-020211132312-5616', '799c-3035515042158356600383428026-0303122221133152-5431', '6858-70111114624211470206-020213622022-03', '6847-0024410101160145-00311344-', '6847-0002413411063101-02021104-',
   ],
+  // integrity column — see the header. One 8-hex digest per row, in row order.
+  h: [
+    'c3bcb096871e02a7dec28546ef02b8a7b1d6112a5b11c7a6025935be6ac549e7d4cfe61591fb59024dec744ac89dafc1dd45c9853acd28912a1dc59529c4c1498e2d30ca8523c489c0b2cbc698fdbc6460900be08ee0a3203343216ec6b3537f5bf1964a7cc8df71307327d2de9f4a9f55b1732f8b9e449864ffcfefed613260ecb71cba12cf9dd5159ac53e67b5a91fcb1d2af9584216a509f7544b0e0e579e' +
+    'dd36a8a1a44f0693cacb4a937cf182359c65e5be3acd2910ffafef450245a9453f8d3483fc3677841be3f1f7a55f051a9faab1c89cd6da2ad4bcb4abb0b1228109135a4e423c99b9b3ee8c7d82da4e26d59cf10babbd09efda10bf5e89ed8aea167ec19297e5cf78c26079c2f23688a9b216aeb774d6e1ff0e22e40286fb5c5a1c2233bb03979647ef734fbd059c37bd296ce884f18e182c54c711d5ef47e7fc' +
+    'cea0f8df1ed7553c1f4c44ee8f9c0d104aa4daeb734bd09e53e581a1a7a9b13284947d96974bbe9f89990bc432bceb8f1c7f16782e36f6d4d79dabd99d2c20418586c2e1dd702421bd340e11ba3de7a6a467892b4d41f774f74483f56935c00588e3be31e234a23465740108511fe1d06d02cb19cb923d84582b77679d8f972e17d475ddb567b9c4ea12a18284d7f319e572e8b1399d6187fc2a02cc77eb997c' +
+    'c841749d60e0155ffbe89cccd1cf7fbc93d23ce293914a6ea5ea9ef2af4cb7f6539f1be7d8eeb7627a3f2bccd19123fb540330a44532fa93ae776d040a418f86d955de7bafae851429f7ceb9e0a1cebd6d5a0d5b6d2639f50c6d65aac03a4d489f0ca49c3578f581515739d3b9f87f9851998f561b168aeab78ca035a5458283dd6b21a07d2f28fb9a919f80a1924e1c1dc4b787839768c2bb6510eba125cbcf' +
+    'e959eec70f0585860786644e34e11c2debb5850116039c6f98f7088b694ca99cbaa2b80e69946563bc64b9d990fa26ffd9f4278e43ade123a2002014f0e17b1b1994d5782c740ca859a5be994ce50eeb34b5df28efbfa24117a2bab735bede05e69373ae42ad81e58dcd4b504551bb0a5b572d6cccb93a080b462e85d6d2a1f00618d685dcb1412ad428aaf185e05104f5d1bf2060321e7ec27759118ffafdb3' +
+    'd6c1d2eb5cb639a8943f8f746b0add552c6a1f48de1db52428dcd256c2b59f058487e25233064b5c897075477bd63878a444b7bf49fafdd365b858b6142931f86ac2a6d6880c702f11d353b9b505dd31533d37dcd5df89cde9e92dbfe6f69421989958d07d49bab9d1a59177acd9ec117c1ec1a0fe59cf843064afe15d4a0d407281d3b5b296863978a808812d4acfde8274972be4cff38929a9f7159381f7a5' +
+    'ef4949124c546b5ee967806df25ca4c434211871e0162810ba21c210380d1a3b0e794c5c9b3c46aa5816fc63d0e4e95362ecbfe5d0cf0cd9fe9b78b01a0c196e45d9975417831b7e9b35119855c939e55bbe60c1a3eaac780c28b140eb6fa4a3b73c02a445f192e0b13103ef9266a736b1dba794dba86166f46afe0ff50e9ccf45719fa51917ad259cb0b195ba76535153aff604770c98c407a2727309a043a7' +
+    'a2d5fbd4d73cfb57662f74f9be82efb665ca76489c3beceb717d67e7a30ed6d8ce64fc4a2d898fc8e71c8a74661cacf30e1eaccaacbb7d6d6cf06bc1b18df0c53726cbbc71ea76c7d41d8a73aaa06590d9c5ad93956b38afb33b60327a082df6bf4917c5da1c8ef72a10a1dc7f8c3bca29007709afa83dae5f192e0429bcebb02a365ae864000b4aa502d3981b7181d5996ee1aef341b67b961f9b6255df36fa' +
+    'ee21ee6b5a663469418e9ec7401444d91bf09f89dacd1ddcfbda05d927604df6b92cf2319e54affa20fdc8fd39b1582c2b77f109f49750cae211059d5f7c5925c5b194aba836c37c6ea688566dffafc465f1672012ccf32f0ad64d5f480640027403749209e47d6e79469d839c691e2836a2f526e32c95ecda2253d2d02207fb9d51205227ec9823d3dc56d123f0ee879226bfc8cfe248d9545f3cbe95828eec' +
+    '9308a3bc9b8758ed8bad0167e68c535333fd5661'
+  ].join(''),
+  // the published weekday rhythm: archetype key per UTC weekday (0 = Sunday)
+  curve: ["mid","easy","easy","mid","hard","hard","peak"],
+  // ...and what each archetype is, straight off the generator's own spec table
+  curveSpec: {"easy":{"key":"easy","label":"Routine","w":6,"h":8,"colors":2,"blocks":4,"stones":0,"summary":"4 blocks · 2 colours · no stones · 6×8"},"mid":{"key":"mid","label":"Standard","w":6,"h":8,"colors":3,"blocks":5,"stones":1,"summary":"5 blocks · 3 colours · 1 stone · 6×8"},"hard":{"key":"hard","label":"Complex","w":6,"h":8,"colors":3,"blocks":6,"stones":2,"summary":"6 blocks · 3 colours · 2 stones · 6×8"},"peak":{"key":"peak","label":"Peak","w":7,"h":9,"colors":4,"blocks":7,"stones":2,"summary":"7 blocks · 4 colours · 2 stones · 7×9"}},
 };
 
 // ---------- decoder (the only daily code that ships) ----------
@@ -907,7 +955,75 @@ DAILIES.decode = function (row) {
   for (i = 0; i < p[3].length; i += 2) L.stones.push([n(p[3][i]), n(p[3][i + 1])]);
   return L;
 };
-DAILIES.levelFor = function (d) { var r = DAILIES.rowFor(d); return { i: r.i, wrapped: r.wrapped, level: DAILIES.decode(r.row) }; };
+
+// ---------- integrity (report §5.3) ----------
+// The lock file protects the table in the repository. THIS protects the copy in
+// the player's hands: the row that is about to be served is decoded, re-encoded,
+// bound to its own calendar date and digested, and the result must match the
+// digest column shipped alongside it. A mismatch means this client's table is
+// not the published one — a corrupted row, a shifted index, a stale cache, a
+// decoder that has drifted — and the honest response is to say so, not to hand
+// over a board whose score would be meaningless. So the draft is REFUSED and
+// `DAILIES.integrity` carries the reason and a message the UI can show.
+DAILIES.integrity = { ok: true, checked: 0, date: null, row: null, i: -1, want: null, got: null, reason: null, message: null };
+// re-encode a decoded board: the inverse of `decode`, and the half of the digest
+// that makes this a round trip rather than a checksum over a string
+DAILIES.enc = function (L) {
+  var c = function (n) { return n.toString(36); }, i, j, k, s, blocks = '', gates = '', stones = '';
+  for (i = 0; i < L.blocks.length; i++) {
+    s = JSON.stringify(L.blocks[i].cells); k = -1;
+    for (j = 0; j < DAILIES.O.length; j++) if (JSON.stringify(DAILIES.S[DAILIES.O[j]]) === s) { k = j; break; }
+    if (k < 0) return null;
+    blocks += c(k) + c(L.blocks[i].color) + c(L.blocks[i].x) + c(L.blocks[i].y);
+  }
+  for (i = 0; i < L.gates.length; i++) gates += c(L.gates[i].color) + c(DAILIES.D.indexOf(L.gates[i].side)) + c(L.gates[i].start) + c(L.gates[i].len);
+  for (i = 0; i < L.stones.length; i++) stones += c(L.stones[i][0]) + c(L.stones[i][1]);
+  return [c(L.w) + c(L.h) + c(L.par) + c(L.moves), blocks, gates, stones].join('-');
+};
+// FNV-1a/32, 8 hex digits. Not a cryptographic claim — the manifest holds the
+// SHA-256 and the repo holds the lock; this is the cheap, synchronous,
+// no-dependency check that can run in the page before every single serve.
+DAILIES.fnv = function (s) {
+  var h = 0x811c9dc5, i;
+  for (i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return ('0000000' + (h >>> 0).toString(16)).slice(-8);
+};
+DAILIES.digest = function (i, L) { var e = DAILIES.enc(L); return e === null ? null : DAILIES.fnv(DAILIES.dateAt(i) + '|' + e); };
+DAILIES.verify = function (i, L) {
+  if (!DAILIES.h || DAILIES.h.length !== DAILIES.rows.length * 8) return { ok: false, reason: 'digest-table-missing', want: null, got: null };
+  var want = DAILIES.h.substr(i * 8, 8), got = L ? DAILIES.digest(i, L) : null;
+  if (got === null) return { ok: false, reason: L ? 'unknown-shape' : 'decode-failed', want: want, got: null };
+  return { ok: got === want, reason: got === want ? null : 'digest-mismatch', want: want, got: got };
+};
+DAILIES.levelFor = function (d) {
+  var r = DAILIES.rowFor(d), L = null;
+  try { L = DAILIES.decode(r.row); } catch (e) { L = null; }
+  var v = DAILIES.verify(r.i, L);
+  DAILIES.integrity = {
+    ok: v.ok, checked: (DAILIES.integrity.checked || 0) + 1,
+    date: d, row: DAILIES.dateAt(r.i), i: r.i, want: v.want, got: v.got, reason: v.reason,
+    message: v.ok ? null : 'Draft unavailable — please update',
+  };
+  if (!v.ok) {
+    if (typeof console !== 'undefined' && console.error) {
+      console.error('Gate Escape: DAILY DRAFT INTEGRITY FAILURE — ' + v.reason
+        + ' for ' + d + ' (row ' + r.i + ', published as ' + DAILIES.dateAt(r.i) + '); expected digest '
+        + v.want + ', computed ' + v.got + '. Refusing to serve a board that is not the published one.');
+    }
+    return { i: r.i, wrapped: r.wrapped, level: null, integrity: DAILIES.integrity };
+  }
+  return { i: r.i, wrapped: r.wrapped, level: L, integrity: DAILIES.integrity };
+};
+// the weekday rhythm, stated rather than inferred. A calendar date is a date, not
+// a moment, so the weekday is read in UTC — the same way the generator assigned
+// it, which is what makes every player's Saturday the Saturday archetype.
+DAILIES.curveFor = function (d) {
+  var wd = new Date(DAILIES.parse(d)).getUTCDay(), key = DAILIES.curve[wd];
+  var spec = DAILIES.curveSpec[key] || {};
+  return { weekday: wd, day: ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][wd], key: key,
+    label: spec.label || key, summary: spec.summary || '',
+    w: spec.w, h: spec.h, colors: spec.colors, blocks: spec.blocks, stones: spec.stones };
+};
 
 'use strict';
 /* Gate Escape — drag colored blocks out through matching gates. */
@@ -1335,11 +1451,40 @@ const isDaily = () => li === DAILY_INDEX;
 const isTest = () => li === TEST_INDEX;
 const dailyReady = () => typeof DAILIES !== 'undefined' && !!(DAILIES && DAILIES.levelFor);
 const levelAt = i => (i === DAILY_INDEX ? dailyLevel : i === TEST_INDEX ? testLevel : LEVELS[i]);
-// the same day boundary the streak logic uses: local midnight, read through the
-// overridable clock so a bot can walk days without touching the system clock
+// ---------- the day boundary ----------
+// DEVICE-LOCAL MIDNIGHT, and nothing else. `dayStr` formats the clock with the
+// device's OWN calendar fields (getFullYear/getMonth/getDate), so the draft rolls
+// when the phone's own midnight passes — not at a server hour, not at UTC. The
+// streak logic reads the same function, so the two can never drift apart, and it
+// all runs through the overridable `GE.now()` so a bot can walk the calendar
+// without touching the system clock. This is the rule the product states in plain
+// words on the draft cards and in the legend (report §5.1, Appendix C tier-1 #5).
 const dayStr = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 const todayStr = () => dayStr(GE.now());
 const dayLabel = d => { const p = d.split('-'); return +p[2] + ' ' + MON[+p[1] - 1]; };
+// The day NUMBER: days since the table's first day, 1-based, printed on the FIELD
+// REPORT. Two documented Wordle incidents were silent divergence between cached
+// clients and canon, and the published countermeasure is that a screenshot alone
+// must be enough to diagnose it (report §5.3). A date BEFORE the table starts
+// cannot happen in product; if a clock is wound back it names the verified row the
+// date actually wrapped onto, so the number always identifies a real board.
+function dailyDayNo(d) {
+  if (!dailyReady() || !d) return 0;
+  const n = DAILIES.index(d) + 1;
+  return n >= 1 ? n : DAILIES.rowFor(d).i + 1;
+}
+
+// ---------- the rescue's price inside a recorded draft ----------
+// The rescue grants +3 moves. In the campaign that is all it is. Inside the ONE
+// recorded attempt of the day it is also charged: the filed total is the drags the
+// player made PLUS 3, the report always prints RESCUED, and the CLEAN token is
+// forfeited. That pricing is what keeps the report comparable — an unrescued clear
+// can never exceed par+3 (that is the whole move budget), and a rescued one can
+// never come in under par+7, so the two can never be confused for one another.
+// Precedent: Apple's Emoji Game clue "will count toward the player's total number
+// of moves"; Apple's Reveal voids the record outright. Campaign play is untouched.
+const RESCUE_MOVES = 3;
+const pricedMoves = (mv, resc) => mv + (resc ? RESCUE_MOVES : 0);
 
 // ---------- the day's record ----------
 // `cur` is the ONE recorded attempt for today. It opens when the draft is first
@@ -1380,7 +1525,12 @@ function closeDaily(state, extra) {
   if (dailyPractice || !dailyDate || dailyDate !== todayStr()) return false;
   const r = dailyRec();
   if (!r.cur || r.cur.date !== dailyDate || r.cur.state) return false; // already closed: never rewritten
-  r.cur = Object.assign({ date: dailyDate, state }, extra);
+  // ONE place prices the rescue, so the win card, the result card and the shared
+  // report can never disagree about what was filed. `drags` keeps the honest count
+  // of what the player actually did next to the total they are charged.
+  const e = Object.assign({ day: dailyDayNo(dailyDate) }, extra);
+  if (e.rescued) { e.drags = extra.moves; e.moves = pricedMoves(extra.moves, true); }
+  r.cur = Object.assign({ date: dailyDate, state }, e);
   saveDailyRec(r);
   dailyPractice = true; // from here on this board is practice
   track('daily_' + state, dailyDate);
@@ -1396,6 +1546,41 @@ function closePendingDaily() {
   if (!dailyPending) return;
   const d = dailyPending;
   closeDaily('lost', d);
+}
+
+// ---------- crossing local midnight mid-attempt ----------
+// The rule, stated in product: A RECORDED ATTEMPT IS RESOLVED BY THE DAY IT FINISHES
+// ON. The boundary is device-local midnight, and it is a resolution like any other:
+// if the board is still open when the date changes, THAT DAY'S RECORD IS FILED NOT
+// CLEARED right here, at the boundary, and the new day's draft is offered. A day
+// cannot be left open behind the player, and an attempt cannot be carried across a
+// boundary into a day whose board is a different board.
+//
+// The record is written with the position as it actually stood — the moves made, the
+// blocks out, the assists used, and the rescue priced if one was taken — so the row a
+// boundary files is the same shape as the row a Retry files, and the report renders it
+// with no special case. `syncDailyMode` then archives it, exactly as it archives a day
+// resolved any other way, and the board on screen becomes practice.
+//
+// Called from the move commit, from the two places a result is decided, and on return
+// to the foreground — so a player who crosses the boundary sees the HUD change under
+// them rather than discovering it on the win card.
+function dailyRollCheck() {
+  if (!isDaily() || dailyPractice || !dailyDate) return false;
+  if (dailyDate === todayStr()) return false;  // the common case: a string compare, no storage touched
+  // An attempt belongs to the day it STARTED. A clock tick is not a decision, so the
+  // boundary never files a result: an open record for the old day is simply dropped —
+  // nothing is archived, nothing counts, and the board in hand becomes practice.
+  const r = dailyRec();
+  if (r.cur && r.cur.date === dailyDate && !r.cur.state) { r.cur = null; saveDailyRec(r); }
+  dailyPending = null;             // the fail sheet's question is answered by the boundary
+  syncDailyMode();                 // archives the row it just resolved; recomputes dailyPractice
+  paintDailyChip();
+  updateHud();
+  window.dispatchEvent(new CustomEvent('ge:daily', { detail: dailyInfo() }));
+  toast('Midnight passed — today\u2019s draft is ready. This board is now practice.', 4600);
+  track('daily_rolled', dailyDate);
+  return true;
 }
 
 function loadDaily(dateStr) {
@@ -1414,7 +1599,9 @@ function dailyInfo() {
   const today = todayStr();
   return {
     today,
+    todayDay: dailyDayNo(today),     // today's DAY NUMBER (1 = the table's first day)
     date: dailyDate,                 // the armed draft's date (null before the first load)
+    day: dailyDayNo(dailyDate),      // ...and its day number
     index: dailyRow,                 // its row in the table
     wrapped: dailyWrapped,           // true = the date ran past the table and wrapped onto a verified row
     active: isDaily(),               // the draft is the board on screen right now
@@ -1429,15 +1616,43 @@ function dailyInfo() {
 }
 
 // ---------- FIELD REPORT ----------
-// The share text, and only the share text: five short lines that say how the day
-// went and nothing whatever about HOW. A per-move grid is the obvious thing to
-// build and the one thing that cannot ship — every player is on the SAME board,
-// so a picture of the route is a walkthrough. So the report carries the shape of
-// the attempt (a bar of par-filled and over-par cells), the stars, the moves
-// against par, route efficiency, and what help was used. Two different boards
-// with the same numbers produce the same text; that is the proof it leaks nothing.
-// Codepoints are pinned to ASCII plus the five marks in ALLOWED.
-// the five non-ASCII marks the report is allowed to use: ★ ☆ ■ □ · (playtest pins this)
+// The share text, and only the share text: it says how the day went and nothing
+// whatever about HOW. A per-move grid is the obvious thing to build and the one
+// thing that cannot ship — every player is on the SAME board, so a picture of the
+// route is a walkthrough. Two different boards played to the same numbers produce
+// the same text but for the identity line; that is the proof it leaks nothing.
+// Codepoints are pinned to ASCII plus five marks: ★ ☆ ■ □ · (playtest pins this).
+//
+// 2026-09-03 redesign (research round 2, report §5.2). The old report printed five
+// information rows — a bar, stars, moves/par, a route percentage, and two assist
+// counters — and the published evidence is that a share string has to be rankable
+// at a glance on ONE axis or it stops being read at all: Wordle by rows, Waffle by
+// stars, LinkedIn by time plus "Flawless"; Connections' grid is the documented
+// failure ("lack[s] the at-a-glance comprehensibility of the Wordle grids"). So:
+//   * the primary axis is MOVES AGAINST PAR. The stars and the bar are two renderings
+//     of that same number, not two more axes.
+//   * the route percentage is gone — it is arithmetic on the primary axis, and a
+//     second axis destroys glanceable comparability. It stays on the in-app card.
+//   * the undo and hint COUNTERS are gone, replaced by one CLEAN token, printed only
+//     when the attempt used no undo, no hint and no rescue (LinkedIn's "Flawless" is
+//     "displayed if you didn't use any backtracks or hints"). A rescued run prints
+//     RESCUED in its place, always, and carries the +3 in its filed total.
+//   * the DAY NUMBER is added — the anti-desync device from §5.3: a client that has
+//     diverged from canon has to be diagnosable from a screenshot.
+// Strictly less is said about the attempt than before: the route %, the undo count
+// and the hint count are dropped and nothing about the attempt is added. The day
+// number is a public calendar fact about the BOARD (the same for every player), not
+// a fact about the run.
+//
+// The pinned shape:
+//   GATE ESCAPE · DRAFT 3 SEP · #003        <- identity: the day, and the day number
+//   CLEARED · ★★☆ · 8/7 moves               <- verdict + the one axis
+//   ■■■■■■■□                                <- the same axis as a bar (cleared only)
+//   CLEAN                                    <- or RESCUED, or nothing at all
+// A loss states how far it got and carries no bar: on a NOT CLEARED report, stripped
+// of every other cue in a group chat, six filled cells of nine read as a progress bar
+// two-thirds of the way to a clear (t50), and a loss's move count is never anything
+// but the whole budget, so printing it would be noise.
 const REPORT_BAR_MAX = 20;
 function parBar(mv, par) {
   const n = Math.min(mv, REPORT_BAR_MAX);
@@ -1455,18 +1670,33 @@ function dailyShareText(dateStr) {
   const p = row.date.split('-');
   const stars = '★'.repeat(row.stars || 0) + '☆'.repeat(3 - (row.stars || 0));
   const won = row.state === 'won';
-  // The bar is a PAR MARKER (filled = moves up to par, hollow = the ones over) and it only reads
-  // that way next to a cleared board. On a NOT CLEARED report — stripped of every other cue in a
-  // group chat — six filled cells of nine read as a progress bar two-thirds of the way to a clear,
-  // which is the one glyph in the report that would then be a lie (t50). A loss states its numbers
-  // in words on the line below and carries no bar at all.
-  const head = 'GATE ESCAPE · FIELD REPORT\n'
-    + (+p[2]) + ' ' + MON[+p[1] - 1] + ' ' + p[0] + ' · ' + (won ? 'CLEARED' : 'NOT CLEARED') + '\n'
-    + (won ? parBar(row.moves, row.par) + '\n' : '');
+  // rows filed before the day number existed still get one, derived from their date
+  const day = row.day || dailyDayNo(row.date);
+  const head = 'GATE ESCAPE · DRAFT ' + (+p[2]) + ' ' + MON[+p[1] - 1].toUpperCase()
+    + ' · #' + String(day).padStart(3, '0') + '\n';
   const line = won
-    ? stars + ' · ' + row.moves + '/' + row.par + ' moves · route ' + Math.round(row.par / Math.max(1, row.moves) * 100) + '%'
-    : stars + ' · ' + row.cleared + ' of ' + row.blocks + ' out · ' + row.moves + '/' + row.par + ' moves';
-  return head + line + '\nundo ' + (row.undos || 0) + ' · hint ' + (row.hints || 0) + (row.rescued ? ' · rescued' : '');
+    ? 'CLEARED · ' + stars + ' · ' + row.moves + '/' + row.par + ' moves\n' + parBar(row.moves, row.par)
+    : 'NOT CLEARED · ' + row.cleared + ' of ' + row.blocks + ' out';
+  // ONE token, or none. CLEAN is the only AWARD in the string and it is the only word
+  // set in capitals: no undo, no hint, no rescue. The rescue marker is deliberately its
+  // plain-ink opposite — lowercase `rescued`, a fact printed unconditionally (clear or
+  // loss), never a badge that could be read as an achievement of its own. A rescue
+  // always forfeits CLEAN, so exactly one of the two can ever appear.
+  const token = row.rescued ? 'rescued'
+    : (!(row.undos || 0) && !(row.hints || 0)) ? 'CLEAN' : '';
+  return head + line + (token ? '\n' + token : '');
+}
+
+// The HUD's board label and its RECORDED chip: the one-recorded-attempt rule, stated
+// on the board itself for as long as it is true. Split out of loadLevel because the
+// day can roll UNDER a board that is already loaded (dailyRollCheck), and when it
+// does the chip has to flip from RECORDED to PRACTICE without reloading anything.
+function paintDailyChip() {
+  hudLevel.textContent = isDaily()
+    ? (dailyPractice ? 'PRACTICE \u00b7 NOT RECORDED' : 'DAILY DRAFT \u00b7 ' + dayLabel(dailyDate))
+    : isTest() ? 'TEST BOARD' : 'Level ' + (li + 1);
+  hudLevel.classList.toggle('daily', isDaily());
+  if (hudRec) { hudRec.hidden = !(isDaily() && !dailyPractice); hudRec.textContent = 'RECORDED'; }
 }
 
 function loadLevel(i) {
@@ -1497,14 +1727,7 @@ function loadLevel(i) {
   for (const t of winTimers) clearTimeout(t);
   winTimers = [];
   adClose();
-  hudLevel.textContent = isDaily()
-    ? (dailyPractice ? 'PRACTICE \u00b7 NOT RECORDED' : 'DAILY DRAFT \u00b7 ' + dayLabel(dailyDate))
-    : isTest() ? 'TEST BOARD' : 'Level ' + (li + 1);
-  hudLevel.classList.toggle('daily', isDaily());
-  // the one-recorded-attempt rule, stated on the board itself for as long as it is true. The label
-  // beside it already says PRACTICE · NOT RECORDED once the day has closed, so the chip is the
-  // positive half of that pair and nothing else needs to change to swap it.
-  if (hudRec) { hudRec.hidden = !(isDaily() && !dailyPractice); hudRec.textContent = 'RECORDED'; }
+  paintDailyChip();
   hudPar.textContent = 'par ' + L.par;
   winModal.hidden = true; failModal.hidden = true;
   document.body.classList.remove('fail-up'); cv.style.transform = '';
@@ -1951,6 +2174,7 @@ function countMove() {
   undoSnap = pendingSnap; pendingSnap = null;
   hint = null; // the board changed: the hint has been acted on (or ignored)
   updateHud();
+  dailyRollCheck(); // a move made after local midnight is a move on a practice board
   if (drag) drag.counted = true;
   // the first time a player crosses par with work still to do: undo hands the move back
   if (moves > L.par && blocksLeft() > 0) tip('undo', 'Undo is free — it gives the move back too.');
@@ -1981,6 +2205,7 @@ function maybeFail() {
   if (movesLeft <= 0 && pos.some(p => p)) {
     over = true;
     hint = null;
+    dailyRollCheck(); // ...and a loss after local midnight is a practice loss, filed against nothing
     // the draft's result is not written yet — the rescue is still on offer
     if (isDaily() && !dailyPractice) {
       dailyPending = { moves, par: L.par, stars: 0, undos: attemptUndos, hints: attemptHints,
@@ -2016,11 +2241,16 @@ function maybeFail() {
       // cost before they are pressed, and the line above them states the rule for every other exit.
       const recorded = isDaily() && !!dailyPending;
       btnRescueEl.innerHTML = recorded
-        ? '<span class="ad">AD</span> +3 moves <small>· keep today\u2019s record open</small>'
+        ? '<span class="ad">AD</span> +3 moves <small>· and +3 on today\u2019s record</small>'
         : '<span class="ad">AD</span> +3 moves <small>· watch to continue</small>';
       btnRetryEl.textContent = recorded ? 'End today\u2019s attempt — record NOT CLEARED' : 'Retry level';
       failDaily.hidden = !recorded;
-      if (recorded) failDaily.textContent = 'This is today\u2019s recorded attempt. The rescue keeps it open — retrying, or leaving the board, files it as NOT CLEARED.';
+      // The price is stated in plain words BEFORE the choice, not discovered on the report
+      // afterwards (report finding 6): the rescue keeps the attempt alive and costs 3 moves
+      // on the filed total, and it forfeits the CLEAN token whichever way the attempt ends.
+      if (recorded) failDaily.textContent = 'This is today\u2019s recorded attempt. The rescue keeps it open and adds '
+        + RESCUE_MOVES + ' moves to your filed total — the report prints a plain \u201crescued\u201d instead of the CLEAN token. '
+        + 'Retrying, or leaving the board, files it as NOT CLEARED.';
       document.getElementById('btnRescue').hidden = rescued;
       // the board rises and shrinks so the sheet never covers the position it asks you to bet on
       document.body.classList.add('fail-up');
@@ -2067,9 +2297,17 @@ function win() {
   if (winModal.hidden === false) return;
   over = true;
   hint = null;
+  dailyRollCheck(); // a clear after local midnight is a practice clear: yesterday's day is closed
   updateHud();
-  const stars = starsFor(moves);
   const daily = isDaily(), test = isTest();
+  // A rescue taken inside the RECORDED attempt is priced: the filed total is the drags
+  // plus 3, and the stars are read off that same number so the win card, the result card
+  // and the shared report can never state three different things about one attempt.
+  // (In practice a rescued clear is a 1-star clear either way — the rescue is only ever
+  // offered once the budget is spent — but the display is derived, never asserted.)
+  const recDraft = daily && !dailyPractice;
+  const filedMoves = pricedMoves(moves, recDraft && rescued);
+  const stars = starsFor(filedMoves);
   // the draft has nothing after it: its "next" is the way out, never LEVELS[31]
   const last = daily || test || li === LEVELS.length - 1;
   const winUndos = attemptUndos, winHints = attemptHints;
@@ -2078,9 +2316,11 @@ function win() {
   // par is the target, never "best"; the player's own best is a separate fact once one exists
   // the draft keeps no personal best: one board, one recorded attempt, no ladder to climb
   const prev = daily || test ? 0 : best[li];
-  winSub.textContent = `Solved in ${moves} move${moves === 1 ? '' : 's'}`
-    + (stars === 3 ? ' — perfect!' : ` · par ${L.par}`)
-    + (prev && prev < moves ? ` · your best ${prev}` : '');
+  winSub.textContent = recDraft && rescued
+    ? `Solved in ${moves} moves · rescue +${RESCUE_MOVES} · filed as ${filedMoves} · par ${L.par}`
+    : `Solved in ${moves} move${moves === 1 ? '' : 's'}`
+      + (stars === 3 ? ' — perfect!' : ` · par ${L.par}`)
+      + (prev && prev < moves ? ` · your best ${prev}` : '');
   if (!daily && !test && (!prev || moves < prev)) { best[li] = moves; try { localStorage.setItem('ge_best', JSON.stringify(best)); } catch (e) {} }
   // the day's record closes here, before the event goes out, so every listener
   // (and GE.dailyShareText) sees the resolved row rather than an open one
@@ -2214,7 +2454,12 @@ cv.addEventListener('pointerup', e => { if (ownPointer(e)) endDrag(true); });
 cv.addEventListener('pointercancel', e => { if (ownPointer(e)) cancelDrag(); });
 // the finger can vanish without an up (app switch, system sheet): never leave a block welded to it
 window.addEventListener('blur', cancelDrag);
-document.addEventListener('visibilitychange', () => { if (document.hidden) cancelDrag(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) cancelDrag();
+  // back in the foreground: the phone's clock may have crossed local midnight while the
+  // app was away, and the board on screen may no longer belong to today
+  else dailyRollCheck();
+});
 
 // ---------- rewarded-ad stub ----------
 // Both paid surfaces (rescue, hint) run through here. In the prototype the "ad" is a
@@ -2323,12 +2568,12 @@ document.getElementById('btnRetry').onclick = () => {
   track('retry', li + 1); loadLevel(li);
 };
 function grantRescue() {
-  rescued = true; over = false; movesLeft += 3;
+  rescued = true; over = false; movesLeft += RESCUE_MOVES;
   failModal.hidden = true; failRoute = null;
   dailyPending = null; // the attempt continues, so the day is still undecided
   document.body.classList.remove('fail-up'); cv.style.transform = '';
   // the losing move stays undoable; undo must hand back the move without taking the rescue away
-  if (undoSnap) undoSnap.movesLeft += 3;
+  if (undoSnap) undoSnap.movesLeft += RESCUE_MOVES;
   updateHud(); sound('win'); track('rescue_used', li + 1);
   // the +3 lands on the counter: green flash + a floating "+3"
   hudBox.classList.remove('boost'); void hudBox.offsetWidth; hudBox.classList.add('boost');
@@ -3097,6 +3342,8 @@ window.GE = {
   get dailyInfo() { return dailyInfo(); },    // cur/practice/history state + today's row
   get dailyIndex() { return DAILY_INDEX; },   // the virtual level index it lives at
   dailyShareText,                             // (dateStr?) -> the FIELD REPORT string, or null
+  get rescueMoves() { return RESCUE_MOVES; },  // what the rescue grants — and what it costs a recorded draft
+  dailyRollCheck,                             // force the local-midnight check (the UI and the bots use it)
   undo,
   route: findRoute,   // (bi, {ignoreSeq}?) -> the drag out, or null; respects the chain by default
   solve: solveFrom,   // reference next move from any position (bots / reviewer console)
@@ -3928,6 +4175,59 @@ requestAnimationFrame(frame);
   const MONS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const dateLabel = d => { const q = String(d).split('-'); return +q[2] + ' ' + MONS[+q[1] - 1]; };
   const draftReady = () => !!(GE.loadDaily && GE.dailyInfo && typeof DAILIES !== 'undefined' && DAILIES);
+
+  // ---------- the published weekday curve ----------
+  // Connections' single most-repeated complaint is that there is "no way to tell whether a
+  // puzzle will be easy or hard until they are playing it", while the crossword's Monday→
+  // Saturday ramp sets expectations for free. The drafts already HAVE a curve — the generator
+  // picks one of four archetypes by weekday — so publishing it costs nothing and removes a
+  // whole class of "today was unfair" reactions (report §5.1, Appendix C tier-2 #13).
+  // `DAILIES.curve` is the generator's own table when the manifest ships it; until then this
+  // mirrors WEEK in tools/generate-dailies.mjs verbatim. Index = UTC weekday, 0 = Sunday, and
+  // the weekday is read in UTC because that is how the generator assigned it — a calendar date
+  // is a date, not a moment, so every player's Saturday board is the Saturday archetype.
+  const CURVE_FALLBACK = ['mid', 'easy', 'easy', 'mid', 'hard', 'hard', 'peak'];
+  const BAND = { easy: 'an easy day', mid: 'a medium day', hard: 'a hard day', peak: 'the week\u2019s peak' };
+  const DAYS_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const BAND_SHORT = { easy: 'easy', mid: 'medium', hard: 'hard', peak: 'the peak' };
+  const curveTable = () => {
+    const c = typeof DAILIES !== 'undefined' && DAILIES && DAILIES.curve;
+    return (Array.isArray(c) && c.length === 7 && c.every(k => BAND[k])) ? c : CURVE_FALLBACK;
+  };
+  const weekdayOf = d => { const q = String(d).split('-'); return new Date(Date.UTC(+q[0], +q[1] - 1, +q[2])).getUTCDay(); };
+  // "Thursday is a hard day." — today's published band, named
+  const bandLine = d => { const w = weekdayOf(d); return DAYS_LONG[w] + ' is ' + BAND[curveTable()[w]] + '.'; };
+  // ...and what that band actually means, from the manifest's own archetype spec, so the
+  // expectation the player forms before committing their one attempt is the generator's
+  // number rather than an adjective ("4 blocks · 2 colours · no stones · 6×8").
+  const bandDetail = d => {
+    const f = typeof DAILIES !== 'undefined' && DAILIES && DAILIES.curveFor;
+    if (!f) return '';
+    try { const c = DAILIES.curveFor(d); return c && c.summary ? c.label + ' board: ' + c.summary + '.' : ''; }
+    catch (e) { return ''; }
+  };
+  // ...and the whole week in one line, DERIVED from the table rather than typed out beside it,
+  // so retuning the curve in the generator can never leave the published copy lying.
+  function curveLine() {
+    const c = curveTable(), rank = { easy: 0, mid: 1, hard: 2, peak: 3 }, groups = [];
+    for (const w of [1, 2, 3, 4, 5, 6, 0]) {           // Mon..Sun, the way a week reads
+      const g = groups.find(x => x.b === c[w]);
+      if (g) g.d.push(DAYS_SHORT[w]); else groups.push({ b: c[w], d: [DAYS_SHORT[w]] });
+    }
+    groups.sort((a, b) => rank[a.b] - rank[b.b]);      // easiest first: the ramp, in order
+    return groups.map(g => g.d.join(' and ') + ' ' + BAND_SHORT[g.b]).join(', ');
+  }
+  { const el = $('legendCurve'); if (el) el.textContent = curveLine(); }
+  // The day boundary, in the plain words the evidence says every major operator publishes,
+  // plus the rule for an attempt that is still open when it passes. Both facts are engine
+  // truth: game.js derives the day from the DEVICE's own calendar fields through GE.now(),
+  // and dailyRollCheck turns the board on screen into practice the moment the day rolls.
+  const BOUNDARY = 'A new draft appears at midnight, by this device\u2019s clock. An attempt is resolved by the day it '
+    + 'finishes on: if midnight passes while the board is still open, that day is filed NOT CLEARED and the new day\u2019s draft is ready.';
+  // ...and the short form for the RESULT card, where the attempt is already over and the only
+  // live question is when the next board arrives
+  const BOUNDARY_SHORT = 'The next draft appears at midnight, by this device\u2019s clock; a board still open when it passes is filed NOT CLEARED.';
   const SHARE_LABEL = 'Share field report';
   const draftModal = $('draftModal');
   let recordedNow = null;  // the row the engine just closed (ge:daily fires before ge:win)
@@ -3950,6 +4250,21 @@ requestAnimationFrame(frame);
     if (!on) return;
     const i = GE.dailyInfo, cur = i.done ? i.cur : null;
     $('fDailyK').textContent = 'Daily draft · ' + dateLabel(i.today);
+    // The decoder verifies each row against a shipped per-row digest bound to that row's own
+    // calendar date and REFUSES a mismatch (t1's manifest). The failure has to be LOUD: without
+    // this the row would read READY and the tap would silently do nothing, which is precisely the
+    // silent client/canon divergence the two Wordle incidents are about. So the row states the
+    // refusal in the engine's own words and stops being a door.
+    const bad = typeof DAILIES !== 'undefined' && DAILIES && DAILIES.integrity && DAILIES.integrity.ok === false
+      ? DAILIES.integrity : null;
+    if (bad) {
+      $('fDaily').innerHTML = 'UNAVAILABLE<small>' + String(bad.message || 'Draft unavailable — please update')
+        .replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c]) + '</small>';
+      $('btnDaily').setAttribute('aria-label', 'Daily draft unavailable — ' + (bad.message || 'please update'));
+      $('btnDaily').classList.add('unavailable');
+      return;
+    }
+    $('btnDaily').classList.remove('unavailable');
     // Three facts right-aligned on one row wrapped into three ragged lines and read as an error
     // state (t52). One line for the result — no star rack on a day that scored none, since an empty
     // rack is not information — and one forward-looking line about what a tap gives you NOW. While
@@ -3968,15 +4283,28 @@ requestAnimationFrame(frame);
     const i = GE.dailyInfo, row = i.done ? i.cur : null;
     if (!row) return false;
     const won = row.state === 'won';
+    const day = row.day || (row.date === i.today ? i.todayDay : 0);
     fillStars($('draftStars'), row.stars || 0);
+    $('draftNo').textContent = 'DAILY DRAFT' + (day ? ' · #' + String(day).padStart(3, '0') : '');
     $('draftTitle').textContent = won ? 'Draft filed' : 'Draft not cleared';
     $('draftSub').textContent = dateLabel(row.date) + ' · ' + (won ? 'cleared' : row.cleared + ' of ' + row.blocks + ' blocks out')
       + ' · undo ' + (row.undos || 0) + ' · hint ' + (row.hints || 0);
     $('draftMoves').textContent = row.moves + ' / ' + row.par;
     $('draftRouteK').textContent = won ? 'Route' : 'Blocks out';
+    // route % lives HERE and only here: it is arithmetic on moves/par, and a second axis is
+    // what makes a share string unrankable at a glance — so the report dropped it and the
+    // in-app card kept it (report §5.2).
     $('draftRoute').textContent = won ? Math.round(row.par / Math.max(1, row.moves) * 100) + '%'
       : row.cleared + ' / ' + row.blocks;
+    // A rescued record states BOTH numbers: what the player dragged, and what was filed.
+    // Nothing is hidden, and the total is never left to be explained by the report alone.
     $('draftRescue').hidden = !row.rescued;
+    $('draftRescueV').textContent = row.drags != null
+      ? row.drags + ' drags + ' + (row.moves - row.drags) + ' counted for the rescue'
+      : '+3 moves counted in this record';
+    // ...and the token the attempt earned, if it earned one. Same rule as the report.
+    $('draftClean').hidden = !!row.rescued || !!(row.undos || 0) || !!(row.hints || 0);
+    $('draftDay').textContent = bandLine(row.date) + ' ' + curveLine() + '. ' + BOUNDARY_SHORT;
     // On a NOT CLEARED report the primary action is another go, not a broadcast: nobody sends
     // "0 of 5 out" to a group chat, and a filled CTA asking them to reads as a mode that wants
     // virality more than it wants the player (t50). Share stays available, quietly.
@@ -4027,8 +4355,20 @@ requestAnimationFrame(frame);
   function startDraft(from) { if (GE.loadDaily()) track('daily_enter', { from }); } // ge:load puts the screens down
   $('btnDaily').onclick = () => {
     if (!draftReady()) return;
+    // a refused row is not a door. The row itself already carries the engine's message, so the
+    // tap simply does not travel — it never opens a board that the decoder refused to serve.
+    if (typeof DAILIES !== 'undefined' && DAILIES && DAILIES.integrity && DAILIES.integrity.ok === false) {
+      track('daily_unavailable', DAILIES.integrity.reason || 'unknown');
+      return;
+    }
     if (GE.dailyInfo.done) { openDraft(); return; }
-    $('recNo').textContent = 'DAILY DRAFT · ' + dateLabel(GE.dailyInfo.today).toUpperCase();
+    const i = GE.dailyInfo;
+    $('recNo').textContent = 'DAILY DRAFT · #' + String(i.todayDay || 0).padStart(3, '0')
+      + ' · ' + dateLabel(i.today).toUpperCase();
+    $('recSub').textContent = ('Same board for everyone today. ' + bandLine(i.today) + ' ' + bandDetail(i.today)).trim();
+    $('recRescueV').textContent = 'It adds ' + (GE.rescueMoves || 3)
+      + ' moves to your filed total and forfeits the CLEAN token';
+    $('recDay').textContent = BOUNDARY;
     recModal.hidden = false;
     track('daily_confirm', { date: GE.dailyInfo.today });
   };

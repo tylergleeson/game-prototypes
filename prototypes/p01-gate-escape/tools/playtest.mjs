@@ -688,11 +688,39 @@ const burnLevel = () => page.evaluate(() => {
   if (scheduleOk) console.log(`limits schedule ok: par+4 on L1-4, par+3 on L5-10 (the rest of Sheet 1 - stone and first deadlock debut there), par+2 on L11-30; the approval chain debuts at L${chainAt} and gets the same teaching slack the opening did (L31-32 par+4, L33-34 par+3) before the sheet closes at par+2 from L35`);
   else { failures++; console.error('limits schedule FAIL:', JSON.stringify({ bands, sl })); }
 
-  // SAWTOOTH (pass 7). The difficulty of a board is par - blockCount: the number of drags the
-  // best line "wastes" on repositioning. Before pass 7 this band was FLAT (1 everywhere bar two
-  // 2s), so L20 played like L19 and like L26 and the spike existed only in a comment. The shape
-  // the research round asked for is pinned here, because a curve nobody asserts drifts back to
-  // flat the next time a spec is retuned.
+  // SAWTOOTH (pass 7; re-pinned on TWO RULERS in research round 2, pass T1). The difficulty of a
+  // board used to be one number here: par - blockCount, the drags the OPTIMAL line "wastes" on
+  // repositioning. Before pass 7 this band was FLAT (1 everywhere bar two 2s), so L20 played like
+  // L19 and like L26 and the spike existed only in a comment. Pass 7 shaped it and pinned it, and
+  // that pin is why the shape has not drifted back.
+  //
+  // Research round 2 (report §8.2) then said the ruler itself might be wrong. The published
+  // predictor of human completion rate is the move count of roughly the best 5% of AGENT runs
+  // (arXiv:2306.14626), not the optimum; probability-of-completion alone is too thin, and the
+  // DISTRIBUTION of in-level actions describes difficulty far better (CoG 2021); King's production
+  // bot deliberately plays like a human rather than optimally. A sawtooth asserted from optimal par
+  // may simply not be a sawtooth for a person. Lead ruling for this pass: assert BOTH profiles here,
+  // and treat a retune of L16-30 as legitimate only if the stochastic estimate DISAGREES with the
+  // intended shape (L20 the strict local max, L21-22 the relief). It agrees, so no level moved.
+  //
+  // So this one guard now carries both. `tools/estimate-difficulty.mjs` runs seven noisy agents
+  // 200 times each on all forty levels and writes `tools/difficulty.json`; the two profiles, as
+  // measured (seed 1, 600 pooled human-proxy runs per level):
+  //
+  //   L              16 17 18 19 20 21 22 23 24 25 26 27 28 29 30
+  //   par-excess      1  1  2  2  3  0  1  1  2  2  1  2  2  1  2
+  //   best5 - par     0  0  0  0  1  0  0  0  0  2  0  0  0  0  1
+  //   human pass %   88 88 63 62  7 96 85 74 13 11 91 61 49 76 34
+  //
+  // AGREEMENT: L20 is the strict extremum of the band on both, L21/L22 are relief on both, L25 is a
+  // second crest below the exam on both, and the two are rank-correlated at Spearman -0.92.
+  // DISAGREEMENT, asserted honestly rather than averaged away: on best-5% it is L25 (+2), not L20
+  // (+1), that costs a strong player the most drags over par. The two boards fail a player in
+  // opposite ways — L20 is a wall (only 296 of 600 human-proxy runs clear it at all, but the ones
+  // that do have a drag spare) and L25 always yields (590 of 600) while its best line stays hard to
+  // find and its top-5% run lands EXACTLY on the shipped limit. A second master seed (7) puts L25 at
+  // +1 rather than +2, so the SIZE of that gap is sampling noise on a statistic whose resolution is
+  // one whole drag; its SIGN is stable, and only the sign is pinned below.
   const exc = r.map(l => l.par - l.n);
   const band16 = exc.slice(15, 30);              // L16..L30
   const at = i => exc[i - 1];
@@ -702,9 +730,55 @@ const burnLevel = () => page.evaluate(() => {
   for (let L = 17; L <= 29; L++) if (at(L) < at(L - 1) && at(L) < at(L + 1)) minima.push(L);
   const secondRise = at(25) > at(23) && at(25) < at(20);   // a real second crest, and lower than the exam
   const notFlat = Math.max(...band16) - Math.min(...band16) >= 3;
-  if (peakL20 && relief && minima.length >= 2 && secondRise && notFlat)
-    console.log(`sawtooth ok: L16-30 excess ${band16.join('')} - L20 is the strict local max and the band's only ${at(20)} (its neighbours are ${at(19)} and ${at(21)}); L21/L22 (${at(21)}/${at(22)}) dip below L19 (${at(19)}); ${minima.length} local minima at L${minima.join(',L')}; second crest at L25 (${at(25)}) above L23 (${at(23)}) and still under the exam`);
-  else { failures++; console.error('sawtooth FAIL:', JSON.stringify({ band16, peakL20, relief, minima, secondRise, notFlat })); }
+  const parRuler = peakL20 && relief && minima.length >= 2 && secondRise && notFlat;
+
+  // ---- the second ruler ----
+  // THE ESTIMATE IS A BUILD ARTEFACT, so the first thing checked is that it describes THIS build:
+  // every level's par, limit and block count must match what the page just reported. A stale
+  // difficulty report asserting a sawtooth that no longer exists is worse than no report at all.
+  const est = JSON.parse(fs.readFileSync(root + 'tools/difficulty.json', 'utf8'));
+  const stale = est.levels.length !== r.length ? `level count ${est.levels.length} != ${r.length}`
+    : (est.levels.map((e, i) => (e.key !== 'L' + (i + 1) || e.par !== r[i].par || e.limit !== r[i].limit
+      || e.n !== r[i].n ? 'L' + (i + 1) : null)).filter(Boolean)[0] || null);
+  const sBand = est.levels.slice(15, 30);
+  const sAt = L => sBand[L - 16];
+  const pass = sBand.map(l => l.human.pass * 100);   // cleared INSIDE the shipped limit — what a player experiences
+  const hd = sBand.map(l => l.hd);                   // best-5% minus par — the arXiv:2306.14626 predictor
+  const others = k => pass.filter((_, i) => i !== k);
+  const sPeakL20 = pass[4] < Math.min(...others(4));                 // the exam, on the human ruler
+  const sRelief = pass[5] > pass[3] && pass[6] > pass[3];            // L21/L22 above L19
+  const sSecondRise = pass[9] < pass[7] && pass[9] > pass[4];        // L25 below L23, above the exam
+  const sNotFlat = Math.max(...pass) - Math.min(...pass) >= 30;
+  // ...and on best-5%: the two crests the design names cost a strong player drags over par, and the
+  // relief beats do not. >= 1 and not >= 2 on the spread, for the seed-stability reason above.
+  const sCrests = sAt(20).hd >= 1 && sAt(25).hd >= 1 && sAt(21).hd === 0 && sAt(22).hd === 0;
+  const sHdNotFlat = Math.max(...hd) - Math.min(...hd) >= 1;
+  // THE MOVE LIMIT IS NEVER BELOW THE STRONG-PLAYER LINE. `headroom` is limit - best5. Negative
+  // would mean a shipped limit sitting under what the best 5% of human-proxy runs need, which is a
+  // board no honest curve should contain. L25 is the tightest in the game, at exactly 0.
+  const minHead = Math.min(...est.levels.map(l => l.headroom));
+  const tightest = est.levels.filter(l => l.headroom === minHead).map(l => l.key).join(', ');
+  // and the two rulers have to still point the same way, or one of them is lying
+  const spearman = (a, b) => {
+    const n = a.length;
+    const rank = v => { const idx = v.map((x, i) => [x, i]).sort((p, q) => p[0] - q[0]); const rk = Array(n);
+      for (let i = 0; i < n;) { let j = i; while (j + 1 < n && idx[j + 1][0] === idx[i][0]) j++;
+        const avg = (i + j) / 2 + 1; for (let k = i; k <= j; k++) rk[idx[k][1]] = avg; i = j + 1; } return rk; };
+    const ra = rank(a), rb = rank(b), m = x => x.reduce((p, q) => p + q, 0) / n;
+    const ma = m(ra), mb = m(rb);
+    let num = 0, da = 0, db = 0;
+    for (let i = 0; i < n; i++) { num += (ra[i] - ma) * (rb[i] - mb); da += (ra[i] - ma) ** 2; db += (rb[i] - mb) ** 2; }
+    return num / Math.sqrt(da * db);
+  };
+  const rho = spearman(band16, pass);
+  const humanRuler = !stale && est.runs >= 200 && sPeakL20 && sRelief && sSecondRise && sNotFlat
+    && sCrests && sHdNotFlat && minHead >= 0 && rho <= -0.6;
+
+  if (parRuler && humanRuler)
+    console.log(`sawtooth ok (both rulers): PAR-EXCESS L16-30 ${band16.join('')} - L20 is the strict local max and the band's only ${at(20)} (neighbours ${at(19)} and ${at(21)}); L21/L22 (${at(21)}/${at(22)}) dip below L19 (${at(19)}); ${minima.length} local minima at L${minima.join(',L')}; second crest at L25 (${at(25)}) above L23 (${at(23)}) and still under the exam. `
+      + `STOCHASTIC (${est.runs} runs x ${est.agents.length} agents per level, best-5% and pass rate) agrees: pass ${pass.map(v => v.toFixed(0)).join(' ')} - L20 is the band's strict hardest for a noisy player too (${pass[4].toFixed(0)}% clear inside the limit against ${pass[3].toFixed(0)}% at L19 and ${pass[5].toFixed(0)}% at L21), L21/L22 are real relief, L25 is a second crest under the exam (${pass[9].toFixed(0)}%), and both crests cost a top-5% run drags over par (+${sAt(20).hd}/+${sAt(25).hd}) where L21/L22 cost none. `
+      + `The rulers point the same way (Spearman ${rho.toFixed(2)}), and no level's limit sits below its best-5% line - tightest is ${tightest} at ${minHead} spare`);
+  else { failures++; console.error('sawtooth FAIL:', JSON.stringify({ parRuler: { band16, peakL20, relief, minima, secondRise, notFlat }, humanRuler: { stale, runs: est.runs, sPeakL20, sRelief, sSecondRise, sNotFlat, sCrests, sHdNotFlat, minHead, tightest, rho: +rho.toFixed(2), pass: pass.map(v => +v.toFixed(1)), hd } })); }
   // the one-time tips land on the levels that debut the mechanic
   await page.evaluate(() => { localStorage.removeItem('ge_tips'); window.GE.load(4); });
   const t5 = await page.evaluate(() => ({ hidden: document.getElementById('toast').hidden, text: document.getElementById('toast').textContent }));
@@ -2163,16 +2237,23 @@ const pixelOf = async (sel, fx, fy) => {
 
   // 9. the FIELD REPORT: pinned format, a hard codepoint allowlist, and the spoiler
   //    assertion — two DIFFERENT boards played to the same numbers must produce the
-  //    same report but for the date. If any board detail leaked in, they would differ.
+  //    same report but for the identity line. If any board detail leaked in, they
+  //    would differ. Reshaped for the 2026-09-03 round (report §5.2): ONE primary
+  //    axis (moves/par, rendered again as stars and as the bar), a DAY NUMBER on the
+  //    identity line, and one CLEAN / RESCUED token where two assist counters used to
+  //    be. The route percentage is gone from the string entirely and lives on the
+  //    in-app card, which pass 4 check 4 pins.
   {
     const ALLOWED = /^[\x20-\x7e\n★☆■□·]*$/;
     // The bar is a par MARKER, and it only reads as one beside a cleared board: on a NOT CLEARED
     // report, stripped of every other cue in a group chat, six filled cells of nine read as a
     // progress bar two-thirds of the way to a clear (t50). So a cleared report carries the bar and
     // a lost one carries none — pinned here in both directions.
-    const PINNED_WON = /^GATE ESCAPE · FIELD REPORT\n\d{1,2} [A-Z][a-z]{2} \d{4} · CLEARED\n[■]{0,20}[□]{0,20}(?: \+\d+)?\n[★☆]{3} · \d+\/\d+ moves · route \d{1,3}%\nundo \d+ · hint \d+(?: · rescued)?$/;
-    const PINNED_LOST = /^GATE ESCAPE · FIELD REPORT\n\d{1,2} [A-Z][a-z]{2} \d{4} · NOT CLEARED\n[★☆]{3} · \d+ of \d+ out · \d+\/\d+ moves\nundo \d+ · hint \d+(?: · rescued)?$/;
-    const PINNED = t => (/· CLEARED\n/.test(t) ? PINNED_WON : PINNED_LOST).test(t);
+    const ID = 'GATE ESCAPE · DRAFT \\d{1,2} [A-Z]{3} · #\\d{3,}';
+    const TOKEN = '(?:\\n(?:CLEAN|rescued))?';
+    const PINNED_WON = new RegExp('^' + ID + '\\nCLEARED · [★☆]{3} · \\d+/\\d+ moves\\n[■]{0,20}[□]{0,20}(?: \\+\\d+)?' + TOKEN + '$');
+    const PINNED_LOST = new RegExp('^' + ID + '\\nNOT CLEARED · \\d+ of \\d+ out' + TOKEN + '$');
+    const PINNED = t => (/\nCLEARED · /.test(t) ? PINNED_WON : PINNED_LOST).test(t);
     const { ctx, pg, errs } = await openDaily(DT.dateAt(200));
     const texts = await pg.evaluate(() => {
       const mk = (date, over) => Object.assign({ date, state: 'won', moves: 8, par: 6, stars: 2, undos: 1, hints: 0, rescued: false, cleared: 6, blocks: 6 }, over);
@@ -2181,26 +2262,48 @@ const pixelOf = async (sel, fx, fy) => {
         mk('2027-04-17'),                                                     // a different Saturday, a year later
         mk('2026-10-06', { state: 'lost', stars: 0, moves: 9, cleared: 4, hints: 1, undos: 0 }),
         mk('2026-10-07', { rescued: true, moves: 30, stars: 1 }),             // over the 20-cell bar cap
+        mk('2026-10-08', { undos: 0, hints: 0 }),                             // nothing used: CLEAN
+        mk('2026-10-09', { undos: 0, hints: 1 }),                             // a hint: no token at all
+        mk('2026-10-10', { undos: 2, hints: 0 }),                             // an undo: no token at all
+        mk('2026-10-11', { state: 'lost', stars: 0, moves: 9, cleared: 4, undos: 0, hints: 0 }), // a clean loss
       ] }));
       const t = d => window.GE.dailyShareText(d);
-      return { a: t('2026-09-05'), b: t('2027-04-17'), lost: t('2026-10-06'), long: t('2026-10-07'), none: t('2026-01-01') };
+      return { a: t('2026-09-05'), b: t('2027-04-17'), lost: t('2026-10-06'), long: t('2026-10-07'),
+        clean: t('2026-10-08'), hinted: t('2026-10-09'), undone: t('2026-10-10'), lostClean: t('2026-10-11'),
+        none: t('2026-01-01') };
     });
     await ctx.close();
-    const all = [texts.a, texts.b, texts.lost, texts.long];
+    const all = [texts.a, texts.b, texts.lost, texts.long, texts.clean, texts.hinted, texts.undone, texts.lostClean];
     const pinned = all.every(t => PINNED(t));
     const allowed = all.every(t => ALLOWED.test(t));
-    // spoiler assertion: identical numbers on two different boards → identical report
-    const stripDate = t => t.split('\n').filter((_, i) => i !== 1).join('\n');
-    const spoilerFree = stripDate(texts.a) === stripDate(texts.b)
-      && all.every(t => t.split('\n').length === (/· CLEARED\n/.test(t) ? 5 : 4) && t.length <= 160 && !/[,()\[\]{}]/.test(t) && !/\d+\s*[,.]\s*\d+/.test(t));
-    const capOk = /\n■{6}□{14} \+10\n/.test(texts.long) && / · rescued$/.test(texts.long);
-    // ...and the one glyph that could be misread as progress is simply absent from a loss
-    const lostOk = /NOT CLEARED/.test(texts.lost) && /☆☆☆ · 4 of 6 out · 9\/6 moves/.test(texts.lost)
-      && !/route/.test(texts.lost) && !/[■□]/.test(texts.lost);
-    const winOk = /★★☆ · 8\/6 moves · route 75%/.test(texts.a) && /^■{6}□{2}$/m.test(texts.a);
-    if (pinned && allowed && spoilerFree && capOk && lostOk && winOk && texts.none === null && !errs.length)
-      console.log('field report ok: format pinned, codepoints limited to ASCII + ★☆■□·, bar capped at 20 with +n (and absent entirely from a NOT CLEARED report, where a par marker would read as progress), a loss reads as a loss — and two different boards played to the same numbers produce the same report, so nothing about the board leaks');
-    else { failures++; console.error('field report FAIL:', JSON.stringify({ pinned, allowed, spoilerFree, capOk, lostOk, winOk, none: texts.none, errs, sample: texts.a })); }
+    // spoiler assertion: identical numbers on two different boards → identical report but for
+    // the identity line (line 0 now carries the date AND the day number)
+    const stripId = t => t.split('\n').slice(1).join('\n');
+    const lines = t => t.split('\n').length;
+    const spoilerFree = stripId(texts.a) === stripId(texts.b)
+      && all.every(t => lines(t) <= (/\nCLEARED · /.test(t) ? 4 : 3) && t.length <= 160 && !/[,()\[\]{}]/.test(t) && !/\d+\s*[,.]\s*\d+/.test(t));
+    const capOk = /\n■{6}□{14} \+10\n/.test(texts.long) && /\nrescued$/.test(texts.long);
+    // ...and the one glyph that could be misread as progress is simply absent from a loss,
+    // as is the move count, which on a loss is never anything but the whole budget
+    const lostOk = /^NOT CLEARED · 4 of 6 out$/m.test(texts.lost)
+      && !/route/.test(texts.lost) && !/[■□]/.test(texts.lost) && !/moves/.test(texts.lost);
+    const winOk = /^CLEARED · ★★☆ · 8\/6 moves$/m.test(texts.a) && /^■{6}□{2}$/m.test(texts.a);
+    // the day number: the anti-desync device (§5.3). 2026-09-05 is day 5 of a table that starts
+    // 2026-09-01, and it is derived from the DATE, so a row filed before the field existed gets one.
+    const dayOk = /^GATE ESCAPE · DRAFT 5 SEP · #005$/m.test(texts.a)
+      && /^GATE ESCAPE · DRAFT 17 APR · #229$/m.test(texts.b);
+    // the token: one word or none, and a rescue always forfeits CLEAN
+    const tokenOk = /\nCLEAN$/.test(texts.clean) && /\nCLEAN$/.test(texts.lostClean)
+      && !/CLEAN|rescued/.test(texts.hinted) && !/CLEAN|rescued/.test(texts.undone)
+      && !/CLEAN/.test(texts.long) && /\nrescued$/.test(texts.long)
+      // CLEAN is the only word in capitals: the marker must never read as its matched award
+      && !/RESCUED/.test(texts.long);
+    // strictly less is said about the ATTEMPT than the format it replaced: no route
+    // percentage, no undo count, no hint count anywhere in the string
+    const quieter = all.every(t => !/route|undo|hint/i.test(t));
+    if (pinned && allowed && spoilerFree && capOk && lostOk && winOk && dayOk && tokenOk && quieter && texts.none === null && !errs.length)
+      console.log('field report ok: one axis (moves against par, drawn again as stars and as the bar), the day number on the identity line, and ONE token — CLEAN (the only award, the only word in capitals) when no undo, no hint and no rescue, a plain lowercase "rescued" whenever the rescue was taken; the route %, the undo count and the hint count are gone from the string; codepoints limited to ASCII + ★☆■□·, bar capped at 20 with +n and absent entirely from a NOT CLEARED report; two different boards played to the same numbers produce the same report below the identity line, so nothing about the board leaks');
+    else { failures++; console.error('field report FAIL:', JSON.stringify({ pinned, allowed, spoilerFree, capOk, lostOk, winOk, dayOk, tokenOk, quieter, none: texts.none, errs, sample: texts.a })); }
   }
 
   // 10. the shipped bundles are downstream of every pass's source files, and they go
@@ -2827,6 +2930,9 @@ const pixelOf = async (sel, fx, fy) => {
       stars: document.querySelectorAll('#draftStars span.on').length, moves: document.getElementById('draftMoves').textContent,
       routeK: document.getElementById('draftRouteK').textContent, route: document.getElementById('draftRoute').textContent,
       rescue: document.getElementById('draftRescue').hidden,
+      clean: !document.getElementById('draftClean').hidden,
+      no: document.getElementById('draftNo').textContent,
+      day: document.getElementById('draftDay').textContent,
       verbatim: document.getElementById('draftReport').textContent === window.GE.dailyShareText() }));
     await pg.screenshot({ path: `${shotDir}/draft-card.png` });
     // ...and a second run that day is practice, and every surface says so
@@ -2845,16 +2951,28 @@ const pixelOf = async (sel, fx, fy) => {
       && /^Daily draft · /.test(ready.k)
       && rec.up && !rec.board && /first attempt is the one recorded/i.test(rec.body)
       && /same board for everyone/i.test(rec.body) && /back/i.test(rec.body)
+      // the rescue's price and the day boundary are both stated BEFORE the board loads
+      && /adds 3 moves to your filed total/i.test(rec.body) && /forfeits the CLEAN token/.test(rec.body)
+      && /new draft appears at midnight/i.test(rec.body) && /resolved by the day it finishes on/i.test(rec.body)
+      && /filed NOT CLEARED and the new day’s draft is ready/i.test(rec.body)
+      && /#\d{3} ·/.test(rec.body)
+      // ...and so is the published weekday band for the day the player is about to take
+      && /(easy|medium|hard|peak) day\.|week’s peak\./.test(rec.body)
       && !backed.up && !backed.board && backed.openStill
       && loaded.daily && loaded.date === DATE && /^DAILY DRAFT · /.test(loaded.hud) && loaded.chip === 'RECORDED'
       && /^Daily draft · /.test(paused) && !/Level 31/.test(paused)
-      && won.no === 'DAILY DRAFT' && won.meta && won.block && won.verbatim && rep.length === 5
+      && won.no === 'DAILY DRAFT' && won.meta && won.block && won.verbatim && rep.length === 4
       && viaShare.sent.length === 1 && viaShare.same && viaClip.sent.length === 1 && viaClip.same
       && viaText.up && viaText.same && /select and copy/i.test(viaText.label)
       && out.menu && !out.win && out.lvl === 12 && /Level 13/.test(out.cta) && /draft is filed/.test(out.status.text)
       && /FILED/.test(filed.v) && /record closed/i.test(filed.v) && /replays are practice/i.test(filed.v)
       && card.up && card.title === 'Draft filed' && card.stars === 3 && card.moves === '7 / 7'
       && card.routeK === 'Route' && card.route === '100%' && card.rescue && card.verbatim
+      // a par clear with no undo, no hint and no rescue: the card shows the token the report prints,
+      // the day number is on the card's own number stamp, and the boundary + curve are published here too
+      && card.clean && /^DAILY DRAFT · #\d{3}$/.test(card.no)
+      && /next draft appears at midnight/i.test(card.day) && /still open when it passes is filed NOT CLEARED/i.test(card.day)
+      && /easy/.test(card.day) && /peak/.test(card.day)
       && prac.card && /^PRACTICE · NOT RECORDED/.test(prac.hud) && /^Practice · not recorded/.test(pracPause)
       && pracWin.no === 'PRACTICE · NOT RECORDED' && !pracWin.block && pracWin.cur.moves === 7 && pracWin.plays === 1
       && !errs.length;
@@ -2896,7 +3014,7 @@ const pixelOf = async (sel, fx, fy) => {
     const ok = /NOT CLEARED · 4 of 6 out/.test(row.v) && /record closed/i.test(row.v) && !/★|☆/.test(row.v)
       && card.title === 'Draft not cleared' && card.stars === 0 && card.moves === '9 / 6'
       && card.routeK === 'Blocks out' && card.route === '4 / 6' && card.rescue && card.verbatim
-      && /NOT CLEARED/.test(card.report) && /rescued/.test(card.report) && !/route/.test(card.report)
+      && /NOT CLEARED/.test(card.report) && /\nrescued$/.test(card.report) && !/route/.test(card.report)
       // the loudest button on a loss card is another go, never "broadcast this" (t50)
       && card.shareCls === 'ghost' && card.againCls === 'primary'
       && !/(try again|second chance|buy|lost your)/i.test(card.body) && dismissed && !errs.length;
@@ -3368,9 +3486,11 @@ const pixelOf = async (sel, fx, fy) => {
     await pg.waitForTimeout(80);
     const campCard = await readCard();
     await ctx.close();
-    const ok = /keep today.s record open/i.test(recCard.rescue) && /^AD /.test(recCard.rescue)
+    const ok = /\+3 on today.s record/i.test(recCard.rescue) && /^AD /.test(recCard.rescue)
       && /^End today.s attempt — record NOT CLEARED$/.test(recCard.retry)
       && recCard.rule && /rescue keeps it open/i.test(recCard.rule) && /leaving the board/i.test(recCard.rule)
+      // the price is on the sheet before either button is pressed (round 2, report finding 6)
+      && /adds 3 moves to your filed total/i.test(recCard.rule) && /plain “rescued” instead of the CLEAN token/.test(recCard.rule)
       && recCard.chip === 'RECORDED'
       && /watch to continue/.test(pracCard.rescue) && pracCard.retry === 'Retry level' && !pracCard.rule && !pracCard.chip
       && /watch to continue/.test(campCard.rescue) && campCard.retry === 'Retry level' && !campCard.rule && !campCard.chip
@@ -3522,6 +3642,417 @@ const pixelOf = async (sel, fx, fy) => {
     const ok = JSON.stringify(r.before) === JSON.stringify(r.after) && r.took === r.again && !errs.length;
     if (ok) console.log(`reveal accounting ok: takeReveal() never writes prog.rv (${JSON.stringify(r.after)} before and after) — only the row landing on the card marks a reveal as played`);
     else { failures++; console.error('reveal accounting FAIL:', JSON.stringify({ r, errs })); }
+  }
+}
+
+// ---- round 2 G1 ----
+// The FIELD REPORT redesign, the rescue's price inside a recorded draft, and the day
+// boundary as a product rule (research round 2, report §5.1/§5.2 and finding 6).
+// Three claims are checked here that nothing else in the run can see:
+//   * a rescue taken during the RECORDED attempt is charged in the shared currency —
+//     the filed total is the drags plus 3 — the marker is always printed, and the
+//     CLEAN token is forfeited. Campaign rescues are unchanged.
+//   * the day boundary is device-local midnight, and an attempt belongs to the day it
+//     STARTED: crossing midnight turns the board into practice and closes the day it
+//     belonged to with NO result, never a loss.
+//   * the published weekday curve and the boundary rule are both on screen in words.
+{
+  const DTG = new Function(fs.readFileSync(root + 'dailies.js', 'utf8') + '\nreturn DAILIES;')();
+  const dsolG = JSON.parse(fs.readFileSync(root + 'tools/daily-solutions.json', 'utf8'));
+  const openG = async (today, seed) => {
+    const ctx = await browser.newContext({ viewport: { width: 420, height: 780 } });
+    const pg = await ctx.newPage();
+    const errs = [];
+    pg.on('pageerror', e => errs.push(e.message));
+    await pg.goto('file://' + root + 'index.html');
+    await pg.waitForFunction(() => window.GE && window.GE.L);
+    if (seed) {
+      // the menu derives its disclosure at boot, so a seeded save has to be there before it runs
+      await pg.evaluate(s => { localStorage.clear(); for (const k in s) localStorage.setItem(k, s[k]); }, seed);
+      await pg.reload();
+      await pg.waitForFunction(() => window.GE && window.GE.L && window.GE_MENU);
+    } else {
+      await pg.evaluate(() => localStorage.clear());
+    }
+    await setClock(pg, today);
+    return { ctx, pg, errs };
+  };
+  // walk the page's clock to a new local day WITHOUT reloading: the board stays on screen,
+  // which is the whole point — the boundary has to be caught under a live attempt
+  const setClock = (pg, dayAndTime) => pg.evaluate(d => {
+    const t = new Date(d.includes('T') ? d : d + 'T10:00:00').getTime();
+    window.GE.now = () => t;
+  }, dayAndTime);
+
+  // play `sol` up to its last three moves, then round-trip a block until the budget is
+  // spent, leaving the board EXACTLY where the partial solution left it (asserted below)
+  const spendToFail = (sol, keep) => `(() => {
+    const GE = window.GE, sol = ${JSON.stringify(sol)}, keep = ${keep};
+    const head = sol.slice(0, sol.length - keep);
+    for (const mv of head) GE.dragVia(mv.bi, mv.path, mv.side);
+    const snap = JSON.stringify(GE.pos);
+    let bi = -1, home = null, away = null;
+    for (let i = 0; i < GE.pos.length && bi < 0; i++) {
+      if (!GE.pos[i]) continue;
+      const [x, y] = GE.pos[i];
+      for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+        const tx = x + dx, ty = y + dy;
+        if (tx < 0 || ty < 0 || tx >= GE.L.w || ty >= GE.L.h) continue;
+        const before = GE.moves;
+        GE.drag(i, tx, ty);
+        if (GE.moves > before) { bi = i; home = [x, y]; away = GE.pos[i].slice(); break; }
+      }
+    }
+    if (bi < 0) return { err: 'no legal shuffle found' };
+    for (let t = 0; GE.movesLeft > 0 && t < 60; t++) GE.drag(bi, ...(t % 2 ? away : home));
+    return { err: null, drags: GE.moves, movesLeft: GE.movesLeft, over: GE.over,
+             par: GE.L.par, limit: GE.L.moves, boardIntact: JSON.stringify(GE.pos) === snap };
+  })()`;
+
+  // 1. a rescue inside the RECORDED attempt is priced, printed, and forfeits CLEAN
+  {
+    const DATE = DTG.dateAt(131);
+    const sol = dsolG[DTG.rowFor(DATE).i];
+    const { ctx, pg, errs } = await openG(DATE);
+    const burn = await pg.evaluate(src => { window.GE.loadDaily(); return eval(src); }, spendToFail(sol, 3));
+    await pg.waitForSelector('#failModal:not([hidden])', { timeout: 3000 });
+    // the price is on the sheet BEFORE either button is pressed
+    const sheet = await pg.evaluate(() => ({
+      note: document.getElementById('failDaily').textContent,
+      rescueBtn: document.getElementById('btnRescue').innerText.replace(/\s+/g, ' ').trim(),
+      retryBtn: document.getElementById('btnRetry').textContent }));
+    await pg.screenshot({ path: `${shotDir}/g1-draft-fail-priced.png` });
+    await pg.click('#btnRescue');
+    await pg.waitForTimeout(3600); // the placeholder ad runs its full countdown before it grants
+    const clear = await pg.evaluate(({ sol, keep }) => {
+      for (const mv of sol.slice(sol.length - keep)) window.GE.dragVia(mv.bi, mv.path, mv.side);
+      return { cleared: window.GE.pos.every(p => !p), drags: window.GE.moves };
+    }, { sol, keep: 3 });
+    await pg.waitForSelector('#winModal:not([hidden])', { timeout: 3000 });
+    await pg.waitForTimeout(260);
+    const won = await pg.evaluate(() => ({ sub: document.getElementById('winSub').textContent,
+      report: document.getElementById('winReport').textContent, cur: window.GE.dailyInfo.cur,
+      rescueMoves: window.GE.rescueMoves }));
+    await pg.screenshot({ path: `${shotDir}/g1-draft-win-rescued.png` });
+    await ctx.close();
+    const c = won.cur || {};
+    const ok = !burn.err && burn.boardIntact && burn.over && burn.movesLeft === 0
+      && burn.limit === burn.par + 3 && clear.cleared
+      // the price: what was filed is what was dragged, plus the rescue
+      && c.state === 'won' && c.drags === clear.drags && c.moves === clear.drags + 3 && c.rescued === true
+      && won.rescueMoves === 3
+      // ...the efficiency reflects it (1 star, and a total no clean clear could ever reach)
+      && c.stars === 1 && c.moves >= c.par + 7
+      // ...the marker is printed and CLEAN is forfeited
+      && /\nrescued$/.test(won.report) && !/CLEAN/.test(won.report) && !/RESCUED/.test(won.report)
+      && new RegExp('CLEARED · ★☆☆ · ' + c.moves + '/' + c.par + ' moves').test(won.report)
+      // ...and the win card states both numbers rather than quietly filing a different one
+      && won.sub.includes('Solved in ' + clear.drags + ' moves')
+      && won.sub.includes('rescue +3') && won.sub.includes('filed as ' + c.moves)
+      // ...and it was all said before the choice was made
+      && /adds 3 moves to your filed total/i.test(sheet.note) && /plain “rescued” instead of the CLEAN token/.test(sheet.note)
+      && /\+3 on today’s record/.test(sheet.rescueBtn) && /record NOT CLEARED/.test(sheet.retryBtn)
+      && !errs.length;
+    if (ok) console.log(`draft rescue priced ok: ${clear.drags} drags + ${won.rescueMoves} for the rescue filed as ${c.moves}/${c.par} (1★), the report prints a plain lowercase "rescued" and never CLEAN, and the fail sheet said the price before the button was pressed — an unrescued clear can never exceed par+3, so the two can never be confused`);
+    else { failures++; console.error('draft rescue priced FAIL:', JSON.stringify({ burn, clear, sheet, won: { ...won, report: won.report.split('\n') }, errs })); }
+  }
+
+  // 2. the campaign rescue is UNCHANGED: it costs the ad and nothing else. The pricing is a
+  //    property of the one recorded attempt of the day, not of the rescue button.
+  {
+    const { ctx, pg, errs } = await openG('2026-09-20');
+    const burn = await pg.evaluate(src => { window.GE.load(11); return eval(src); }, spendToFail(solutions[11], 3));
+    await pg.waitForSelector('#failModal:not([hidden])', { timeout: 3000 });
+    const sheet = await pg.evaluate(() => ({ note: document.getElementById('failDaily').hidden,
+      rescueBtn: document.getElementById('btnRescue').innerText.replace(/\s+/g, ' ').trim() }));
+    await pg.click('#btnRescue');
+    await pg.waitForTimeout(3600);
+    const clear = await pg.evaluate(({ sol, keep }) => {
+      for (const mv of sol.slice(sol.length - keep)) window.GE.dragVia(mv.bi, mv.path, mv.side);
+      return { cleared: window.GE.pos.every(p => !p), drags: window.GE.moves };
+    }, { sol: solutions[11], keep: 3 });
+    await pg.waitForSelector('#winModal:not([hidden])', { timeout: 3000 });
+    await pg.waitForTimeout(200);
+    const won = await pg.evaluate(() => ({ sub: document.getElementById('winSub').textContent,
+      best: JSON.parse(localStorage.getItem('ge_best') || '{}')['11'] }));
+    await ctx.close();
+    const ok = !burn.err && clear.cleared && sheet.note && /watch to continue/.test(sheet.rescueBtn)
+      && won.sub === `Solved in ${clear.drags} moves · par ${burn.par}` && won.best === clear.drags
+      && !errs.length;
+    if (ok) console.log(`campaign rescue unchanged ok: L12 rescued and cleared in ${clear.drags} moves, filed as ${clear.drags} — no surcharge, no marker, no recorded-draft copy on the sheet`);
+    else { failures++; console.error('campaign rescue unchanged FAIL:', JSON.stringify({ burn, clear, sheet, won, errs })); }
+  }
+
+  // 3. the day boundary. Device-local midnight, and an attempt belongs to the day it started:
+  //    crossing midnight mid-attempt turns the board into practice and closes the day it
+  //    belonged to with NO result. A clock tick is not a decision, so it can never file a loss.
+  {
+    const DATE = DTG.dateAt(150), NEXT = DTG.dateAt(151);
+    const sol = dsolG[DTG.rowFor(DATE).i];
+    const { ctx, pg, errs } = await openG(DATE + 'T23:58:00');
+    const armed = await pg.evaluate(() => { window.GE.loadDaily(); return {
+      date: window.GE.dailyDate, practice: window.GE.dailyInfo.practice,
+      hud: document.getElementById('hudLevel').textContent,
+      chip: document.getElementById('hudRec').hidden ? null : document.getElementById('hudRec').textContent }; });
+    // two moves in, on the right side of midnight
+    await pg.evaluate(({ sol }) => { for (const mv of sol.slice(0, 2)) window.GE.dragVia(mv.bi, mv.path, mv.side); }, { sol });
+    await setClock(pg, NEXT + 'T00:01:00');
+    // the next committed move is the one that notices
+    const rolled = await pg.evaluate(({ sol }) => {
+      window.GE.dragVia(sol[2].bi, sol[2].path, sol[2].side);
+      return { practice: window.GE.dailyInfo.practice, hud: document.getElementById('hudLevel').textContent,
+        chip: document.getElementById('hudRec').hidden ? null : document.getElementById('hudRec').textContent,
+        toast: document.getElementById('toast').hidden ? null : document.getElementById('toast').textContent,
+        armedDate: window.GE.dailyDate, today: window.GE.dailyInfo.today,
+        yesterdayFiled: (JSON.parse(localStorage.getItem('ge_daily') || 'null') || {}).cur };
+    }, { sol });
+    await pg.screenshot({ path: `${shotDir}/g1-draft-rolled.png` });
+    // finishing the old board now is a practice clear: it files nothing, either way
+    const finished = await pg.evaluate(({ sol }) => {
+      for (const mv of sol.slice(3)) window.GE.dragVia(mv.bi, mv.path, mv.side);
+      return { cleared: window.GE.pos.every(p => !p) };
+    }, { sol });
+    await pg.waitForSelector('#winModal:not([hidden])', { timeout: 3000 });
+    await pg.waitForTimeout(220);
+    const after = await pg.evaluate(() => ({ no: document.getElementById('winNo').textContent,
+      block: !document.getElementById('winDraft').hidden,
+      stored: JSON.parse(localStorage.getItem('ge_daily') || 'null'),
+      info: window.GE.dailyInfo }));
+    // ...and the NEW day is a clean, open, recorded draft: the boundary took nothing away
+    const fresh = await pg.evaluate(() => { window.GE.loadDaily(); return {
+      date: window.GE.dailyDate, practice: window.GE.dailyInfo.practice, done: window.GE.dailyInfo.done,
+      chip: document.getElementById('hudRec').hidden ? null : document.getElementById('hudRec').textContent }; });
+    await ctx.close();
+    const hist = (after.stored && after.stored.hist) || [];
+    const ok = armed.date === DATE && !armed.practice && armed.chip === 'RECORDED'
+      && rolled.practice && rolled.chip === null && /^PRACTICE · NOT RECORDED/.test(rolled.hud)
+      && /midnight/i.test(rolled.toast || '') && /practice/i.test(rolled.toast || '')
+      && rolled.armedDate === DATE && rolled.today === NEXT
+      // the day it belonged to closes with NO result — never a loss written by a clock
+      && !rolled.yesterdayFiled && !hist.some(h => h && h.date === DATE)
+      && finished.cleared && after.no === 'PRACTICE · NOT RECORDED' && !after.block
+      && !after.info.done && !after.info.cur
+      && fresh.date === NEXT && !fresh.practice && !fresh.done && fresh.chip === 'RECORDED'
+      && !errs.length;
+    if (ok) console.log(`day boundary ok: local midnight rolls under a live recorded attempt — the board becomes practice ("${(rolled.toast || '').trim()}"), the day it belonged to closes with no result rather than a loss written by a clock, and ${NEXT} opens as a fresh RECORDED draft`);
+    else { failures++; console.error('day boundary FAIL:', JSON.stringify({ armed, rolled, finished, after: { no: after.no, block: after.block, done: after.info.done, cur: after.info.cur, hist: hist.length }, fresh, errs })); }
+  }
+
+  // 4. the published weekday curve is on screen, and it is DERIVED from the same table the
+  //    generator used rather than typed beside it (report §5.1: publishing the gradient is
+  //    nearly free and removes a whole class of "today was unfair" reactions)
+  {
+    const WEEK = (fs.readFileSync(root + 'tools/generate-dailies.mjs', 'utf8')
+      .match(/export const WEEK = \[([^\]]+)\]/) || [])[1];
+    const table = WEEK ? WEEK.split(',').map(x => x.trim().replace(/['"]/g, '')) : null;
+    const SAT = DTG.dateAt(4);   // 2026-09-05, a Saturday
+    const MON = DTG.dateAt(6);   // 2026-09-07, a Monday
+    const { ctx, pg, errs } = await openG(SAT, { ge_prog: JSON.stringify({ u: 12, s: Array(12).fill(3) }) });
+    const band = async day => {
+      await pg.evaluate(d => { const t = new Date(d + 'T10:00:00').getTime(); window.GE.now = () => t; }, day);
+      await pg.evaluate(() => window.GE_MENU.show('levels'));
+      await pg.waitForTimeout(120);
+      await pg.click('#btnDaily');
+      await pg.waitForTimeout(140);
+      const out = await pg.evaluate(() => ({ sub: document.getElementById('recSub').textContent,
+        no: document.getElementById('recNo').textContent, day: document.getElementById('recDay').textContent }));
+      await pg.click('#btnRecBack');
+      await pg.waitForTimeout(100);
+      return out;
+    };
+    const sat = await band(SAT), mon = await band(MON);
+    await pg.screenshot({ path: `${shotDir}/g1-draft-preboard.png` });
+    // the runtime table the cards actually render from — it must BE the generator's table,
+    // not a copy of it that can drift (the fallback in menu.js is only for a table that
+    // predates the manifest)
+    const shipped = await pg.evaluate(() => (typeof DAILIES !== 'undefined' && DAILIES.curve) || null);
+    const legend = await pg.evaluate(() => { window.GE_MENU.show('legend'); return {
+      curve: (document.getElementById('legendCurve') || {}).textContent,
+      daily: document.getElementById('legendDaily').innerText.replace(/\s+/g, ' ').trim(),
+      report: document.getElementById('legendReport').innerText.replace(/\s+/g, ' ').trim(),
+      streak: document.getElementById('legendStreak').innerText.replace(/\s+/g, ' ').trim() }; });
+    await pg.waitForTimeout(180);
+    await pg.screenshot({ path: `${shotDir}/g1-legend-daily.png` });
+    await ctx.close();
+    const ok = table && table.length === 7 && table[6] === 'peak' && table[1] === 'easy'
+      && shipped && JSON.stringify(shipped) === JSON.stringify(table)
+      && /Saturday is the week’s peak\./.test(sat.sub) && /Monday is an easy day\./.test(mon.sub)
+      // ...and the band is spelled out in the manifest's own numbers, not just an adjective
+      && /Peak board: 7 blocks · 4 colours · 2 stones · 7×9\./.test(sat.sub)
+      && /Routine board: 4 blocks · 2 colours · no stones · 6×8\./.test(mon.sub)
+      && sat.no === 'DAILY DRAFT · #005 · 5 SEP' && mon.no === 'DAILY DRAFT · #007 · 7 SEP'
+      && legend.curve === 'Mon and Tue easy, Wed and Sun medium, Thu and Fri hard, Sat the peak'
+      // the boundary and the belongs-to-its-day rule, in the legend and on the card
+      && /midnight on this device’s own clock/.test(legend.daily)
+      && /resolved by the day it finishes on/.test(legend.daily)
+      && /filed NOT CLEARED and the new day’s draft is ready/.test(legend.daily)
+      && /new draft appears at midnight/i.test(sat.day)
+      // ...and the report's own rules, stated where a player can read them
+      && /CLEAN is the only award/.test(legend.report)
+      && /no undo, no hint and no rescue/.test(legend.report)
+      && /plain “rescued”/.test(legend.report)
+      && /adds 3 moves to the total you file/.test(legend.report)
+      // no accounts: the device-local disclosure the report asks for, up front and undramatic
+      && /no accounts/i.test(legend.streak) && /this device only/i.test(legend.streak)
+      && /reinstalling the app starts them over/i.test(legend.streak)
+      && /never how the board was solved/i.test(legend.report)
+      && !errs.length;
+    if (ok) console.log(`weekday curve ok: the pre-board card names today's published band ("${sat.sub.trim()}" / "${mon.sub.trim()}") and the legend prints the whole ramp ("${legend.curve}") derived from the generator's own WEEK table, alongside the day boundary and the CLEAN/RESCUED rule`);
+    else { failures++; console.error('weekday curve FAIL:', JSON.stringify({ table, shipped, sat, mon, legend, errs })); }
+  }
+}
+
+// ---- round 2 P1: soak ----
+// Everything above this line tests an interaction someone thought of. This tests the ones nobody
+// did: a seeded monkey drives the real game — random drags, taps, bursts, Escapes and reloads
+// across undo / rescue / hint / the ad slot / pause / every card / the daily draft / the field
+// survey — and every invariant is re-asserted after every single action. The seed is fixed so the
+// gate is a gate and not a coin toss; a failure prints the seed and writes the full action trace,
+// which is the repro. GE_SOAK_SECONDS=0 skips it; GE_SOAK_SEED picks a different stream.
+{
+  const secs = process.env.GE_SOAK_SECONDS != null ? parseFloat(process.env.GE_SOAK_SECONDS) : 60;
+  if (!(secs > 0)) console.log('monkey soak skipped (GE_SOAK_SECONDS=0)');
+  else {
+    const { soak } = await import('./monkey-soak.mjs');
+    const seed = parseInt(process.env.GE_SOAK_SEED || '1337', 10);
+    const res = await soak(browser, { seed, ms: secs * 1000, root, quiet: true });
+    if (res.ok) console.log(`monkey soak ok: seed ${seed} · ${res.steps} random actions over ${secs}s on day ${res.day} · every invariant held after every one · reached ${res.covered.join(', ')}`);
+    else {
+      failures++;
+      console.error(`monkey soak FAIL: seed ${seed} broke after ${res.steps} actions on day ${res.day}`);
+      for (const v of res.violations) console.error('  · ' + v);
+      console.error(`  trace: ${res.trace}\n  reproduce: node prototypes/p01-gate-escape/tools/monkey-soak.mjs --seed ${seed} --seconds ${secs} --headed`);
+    }
+  }
+}
+
+// ---- round 2 T1 ----
+// The Daily Draft's integrity in the PAGE rather than in the repository, plus the one
+// difficulty claim the merged `sawtooth` guard above does not cover (the drafts).
+//
+// The stochastic estimate itself is asserted UP THERE, folded into the pass-7 sawtooth check
+// so that one guard carries both rulers — the lead's ruling for this pass, and the right
+// shape for it: a curve pinned in two places is a curve that can be half-retuned.
+{
+  // 1. THE DAILY DRAFT IS CLEARABLE OFF A NON-OPTIMAL ROUTE.
+  //    The L16-30 sawtooth is asserted on both rulers by the `sawtooth` guard further up this
+  //    file — one guard, two profiles, per the lead's ruling for this pass. What that guard does
+  //    NOT cover is the drafts, and report §5.3 names the gap precisely: the pipeline proves par
+  //    is optimal and replays the optimal line, but nothing ever proved `par+3` is reachable by a
+  //    plausible NON-optimal human route. `tools/estimate-difficulty.mjs --dailies N` samples the
+  //    year and runs each sampled board through the full agent roster; this pins the result.
+  {
+    const est = JSON.parse(fs.readFileSync(root + 'tools/difficulty.json', 'utf8'));
+    const worst = est.dailies.length ? est.dailies.slice().sort((a, b) => a.human.pass - b.human.pass)[0] : null;
+    const thin = est.dailies.filter(d => d.human.pass < 0.5 || d.headroom < 1).map(d => d.key);
+    const ok = est.dailies.length >= 20 && !thin.length && est.runs >= 200;
+    if (ok) console.log(`daily clearability ok: ${est.dailies.length} sampled drafts across the year, every one cleared inside its par+3 limit by a clear majority of human-proxy runs (worst ${worst.key} at ${(worst.human.pass * 100).toFixed(0)}%, min headroom ${Math.min(...est.dailies.map(d => d.headroom))} drags) — the optimal-line replay proves par, this proves the limit`);
+    else { failures++; console.error('daily clearability FAIL:', JSON.stringify({ sampled: est.dailies.length, runs: est.runs, thin })); }
+  }
+
+  // 2. THE DAILY MANIFEST. `tools/dailies.lock` proves the table in the REPOSITORY has not
+  //    moved. It says nothing about the copy in a player's hands, and both documented Wordle
+  //    content incidents were exactly that — a cached client silently serving a board that was
+  //    no longer canon (report §5.3). `tools/dailies.manifest.json` is the day-by-day record,
+  //    and its `fnv` column is what ships inside dailies.js as `DAILIES.h`. All three
+  //    artefacts have to describe the same 365 boards or the correction path has nothing to
+  //    stand on.
+  {
+    const DTM = new Function(fs.readFileSync(root + 'dailies.js', 'utf8') + '\nreturn DAILIES;')();
+    const man = JSON.parse(fs.readFileSync(root + 'tools/dailies.manifest.json', 'utf8'));
+    const dates = Object.keys(man.entries);
+    let bad = null;
+    if (man.start !== DTM.start) bad = `manifest start ${man.start} != table ${DTM.start}`;
+    else if (man.days !== DTM.rows.length || dates.length !== DTM.rows.length) bad = `manifest days ${man.days}/${dates.length} != ${DTM.rows.length} rows`;
+    else if (!DTM.h || DTM.h.length !== DTM.rows.length * 8) bad = `DAILIES.h is ${DTM.h ? DTM.h.length : 'missing'} chars, expected ${DTM.rows.length * 8}`;
+    for (let i = 0; i < DTM.rows.length && !bad; i++) {
+      const date = DTM.dateAt(i), e = man.entries[date];
+      const lv = DTM.decode(DTM.rows[i]);
+      const canon = date + '|' + DTM.enc(lv);
+      if (!e) bad = `no manifest entry for ${date}`;
+      else if (e.i !== i) bad = `${date}: manifest index ${e.i} != ${i}`;
+      else if (e.par !== lv.par || e.moves !== lv.moves) bad = `${date}: manifest par/limit ${e.par}/${e.moves} != board ${lv.par}/${lv.moves}`;
+      else if (e.fnv !== DTM.h.substr(i * 8, 8)) bad = `${date}: manifest fnv ${e.fnv} != shipped column ${DTM.h.substr(i * 8, 8)}`;
+      else if (e.fnv !== DTM.digest(i, lv)) bad = `${date}: shipped digest ${DTM.digest(i, lv)} != manifest ${e.fnv}`;
+      else if (e.sha256 !== createHash('sha256').update(canon).digest('hex')) bad = `${date}: manifest sha256 does not match the board it names`;
+      else if (!DTM.verify(i, lv).ok) bad = `${date}: row fails its own shipped verify()`;
+    }
+    // the digest is bound to the row's DATE, not just its content: shifting the table by one
+    // day has to break it, because "the right board on the wrong day" is the Wordle failure
+    const shifted = DTM.verify(1, DTM.decode(DTM.rows[0])).ok;
+    if (!bad && !shifted) console.log(`daily manifest ok: ${DTM.rows.length} days — every row's shipped digest, manifest fnv, manifest SHA-256 and manifest par/limit describe the board the row actually decodes to, and the digest is bound to that row's own calendar date (row 0's board fails row 1's digest)`);
+    else { failures++; console.error('daily manifest FAIL:', bad || 'the digest is NOT date-bound: row 0 verifies against row 1'); }
+  }
+
+  // 3. THE REFUSAL, IN THE PAGE. A digest nobody acts on is decoration. This tampers with one
+  //    row inside the live page and proves the shipped decoder REFUSES to serve it: the board
+  //    comes back null, `DAILIES.integrity` carries the reason and the message the UI shows, a
+  //    console error is emitted, and `GE.loadDaily` returns false rather than loading a board
+  //    that is not the published one. Then it puts the row back and confirms the draft loads
+  //    again — so the check cannot pass by simply breaking the draft.
+  {
+    const ctx = await browser.newContext({ viewport: { width: 420, height: 780 } });
+    const pg = await ctx.newPage();
+    const consoleErrs = [], pageErrs = [];
+    pg.on('console', m => { if (m.type() === 'error') consoleErrs.push(m.text()); });
+    pg.on('pageerror', e => pageErrs.push(e.message));
+    await pg.goto('file://' + root + 'index.html');
+    await pg.waitForFunction(() => window.GE && window.GE.L);
+    const r = await pg.evaluate(() => {
+      const d = DAILIES.dateAt(9);
+      const ok = { loaded: window.GE.loadDaily(d), integrity: JSON.parse(JSON.stringify(DAILIES.integrity)) };
+      const was = DAILIES.rows[9];
+      // one base36 digit of one block's y — still a legal board, a DIFFERENT one
+      DAILIES.rows[9] = was.slice(0, 8) + ((parseInt(was[8], 36) + 1) % 7).toString(36) + was.slice(9);
+      const served = DAILIES.levelFor(d);
+      const bad = { level: served.level, integrity: JSON.parse(JSON.stringify(DAILIES.integrity)), loaded: window.GE.loadDaily(d) };
+      DAILIES.rows[9] = was;
+      const back = { loaded: window.GE.loadDaily(d), integrity: JSON.parse(JSON.stringify(DAILIES.integrity)) };
+      return { ok, bad, back, restored: DAILIES.rows[9] === was, changed: DAILIES.rows[9] !== undefined };
+    });
+    await ctx.close();
+    const shouted = consoleErrs.some(t => /DAILY DRAFT INTEGRITY FAILURE/.test(t) && /digest-mismatch/.test(t));
+    const good = r.ok.loaded === true && r.ok.integrity.ok === true
+      && r.bad.level === null && r.bad.integrity.ok === false && r.bad.integrity.reason === 'digest-mismatch'
+      && r.bad.integrity.message === 'Draft unavailable — please update' && r.bad.loaded === false
+      && r.back.loaded === true && r.back.integrity.ok === true && r.restored && shouted
+      // refusing must be CLEAN: a divergent table is declined, never thrown on
+      && !pageErrs.length;
+    if (good) console.log(`daily integrity refusal ok: one altered digit in one row makes the shipped decoder refuse the draft (level null, DAILIES.integrity.ok false, reason "${r.bad.integrity.reason}", message "${r.bad.integrity.message}"), GE.loadDaily returns false, and the console says so; restoring the row serves it again`);
+    else { failures++; console.error('daily integrity refusal FAIL:', JSON.stringify({ r, shouted, pageErrs, consoleErrs: consoleErrs.slice(0, 3) })); }
+  }
+
+  // 4. THE PUBLISHED WEEKDAY CURVE is the generator's own table, not a copy of it. `curve` is
+  //    the archetype per UTC weekday, `curveSpec` is what each archetype IS, and both are
+  //    derived from WEEK/DAILY_CURVE at generation time — so retuning a daily spec cannot
+  //    leave the published copy lying. Re-derived here from the generator source, and then
+  //    checked against the BOARDS: the archetype a weekday advertises has to be the archetype
+  //    every row on that weekday actually is.
+  {
+    const gsrc = fs.readFileSync(root + 'tools/generate-dailies.mjs', 'utf8');
+    const week = (gsrc.match(/export const WEEK = \[([^\]]+)\]/) || [])[1];
+    const table = week ? week.split(',').map(x => x.trim().replace(/['"]/g, '')) : null;
+    const DTC = new Function(fs.readFileSync(root + 'dailies.js', 'utf8') + '\nreturn DAILIES;')();
+    const specOk = table && [...new Set(table)].every(k => {
+      const s = DTC.curveSpec[k];
+      const m = gsrc.match(new RegExp('\\n  ' + k + ':\\s*\\{([^}]+)\\}'));
+      if (!s || !m) return false;
+      const num = f => { const g = m[1].match(new RegExp('\\b' + f + ':\\s*(\\d+)')); return g ? +g[1] : null; };
+      return s.w === num('w') && s.h === num('h') && s.colors === num('colors')
+        && s.blocks === num('blockCount') && s.stones === num('stoneCount');
+    });
+    let mismatch = null;
+    for (let i = 0; i < DTC.rows.length && !mismatch; i++) {
+      const c = DTC.curveFor(DTC.dateAt(i)), lv = DTC.decode(DTC.rows[i]);
+      const colors = new Set(lv.blocks.map(b => b.color)).size;
+      if (lv.blocks.length !== c.blocks || lv.stones.length !== c.stones || lv.w !== c.w || lv.h !== c.h || colors !== c.colors)
+        mismatch = `${DTC.dateAt(i)} (${c.day}/${c.key}): board ${lv.w}x${lv.h} ${lv.blocks.length}b ${colors}c ${lv.stones.length}s vs published ${c.w}x${c.h} ${c.blocks}b ${c.colors}c ${c.stones}s`;
+    }
+    const curveOk = table && Array.isArray(DTC.curve) && DTC.curve.length === 7
+      && DTC.curve.every((k, i) => k === table[i]) && specOk && !mismatch
+      && DTC.curveFor('2026-09-05').key === 'peak' && DTC.curveFor('2026-09-07').key === 'easy';
+    if (curveOk) console.log(`daily curve published ok: DAILIES.curve is the generator's own WEEK table (${DTC.curve.join(' ')}), curveSpec matches DAILY_CURVE field for field, and all ${DTC.rows.length} boards are the archetype their weekday advertises — Saturday is "${DTC.curveFor('2026-09-05').label}" (${DTC.curveFor('2026-09-05').summary})`);
+    else { failures++; console.error('daily curve published FAIL:', JSON.stringify({ table, curve: DTC.curve, specOk, mismatch })); }
   }
 }
 

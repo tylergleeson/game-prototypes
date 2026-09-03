@@ -424,11 +424,40 @@ const isDaily = () => li === DAILY_INDEX;
 const isTest = () => li === TEST_INDEX;
 const dailyReady = () => typeof DAILIES !== 'undefined' && !!(DAILIES && DAILIES.levelFor);
 const levelAt = i => (i === DAILY_INDEX ? dailyLevel : i === TEST_INDEX ? testLevel : LEVELS[i]);
-// the same day boundary the streak logic uses: local midnight, read through the
-// overridable clock so a bot can walk days without touching the system clock
+// ---------- the day boundary ----------
+// DEVICE-LOCAL MIDNIGHT, and nothing else. `dayStr` formats the clock with the
+// device's OWN calendar fields (getFullYear/getMonth/getDate), so the draft rolls
+// when the phone's own midnight passes — not at a server hour, not at UTC. The
+// streak logic reads the same function, so the two can never drift apart, and it
+// all runs through the overridable `GE.now()` so a bot can walk the calendar
+// without touching the system clock. This is the rule the product states in plain
+// words on the draft cards and in the legend (report §5.1, Appendix C tier-1 #5).
 const dayStr = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 const todayStr = () => dayStr(GE.now());
 const dayLabel = d => { const p = d.split('-'); return +p[2] + ' ' + MON[+p[1] - 1]; };
+// The day NUMBER: days since the table's first day, 1-based, printed on the FIELD
+// REPORT. Two documented Wordle incidents were silent divergence between cached
+// clients and canon, and the published countermeasure is that a screenshot alone
+// must be enough to diagnose it (report §5.3). A date BEFORE the table starts
+// cannot happen in product; if a clock is wound back it names the verified row the
+// date actually wrapped onto, so the number always identifies a real board.
+function dailyDayNo(d) {
+  if (!dailyReady() || !d) return 0;
+  const n = DAILIES.index(d) + 1;
+  return n >= 1 ? n : DAILIES.rowFor(d).i + 1;
+}
+
+// ---------- the rescue's price inside a recorded draft ----------
+// The rescue grants +3 moves. In the campaign that is all it is. Inside the ONE
+// recorded attempt of the day it is also charged: the filed total is the drags the
+// player made PLUS 3, the report always prints RESCUED, and the CLEAN token is
+// forfeited. That pricing is what keeps the report comparable — an unrescued clear
+// can never exceed par+3 (that is the whole move budget), and a rescued one can
+// never come in under par+7, so the two can never be confused for one another.
+// Precedent: Apple's Emoji Game clue "will count toward the player's total number
+// of moves"; Apple's Reveal voids the record outright. Campaign play is untouched.
+const RESCUE_MOVES = 3;
+const pricedMoves = (mv, resc) => mv + (resc ? RESCUE_MOVES : 0);
 
 // ---------- the day's record ----------
 // `cur` is the ONE recorded attempt for today. It opens when the draft is first
@@ -469,7 +498,12 @@ function closeDaily(state, extra) {
   if (dailyPractice || !dailyDate || dailyDate !== todayStr()) return false;
   const r = dailyRec();
   if (!r.cur || r.cur.date !== dailyDate || r.cur.state) return false; // already closed: never rewritten
-  r.cur = Object.assign({ date: dailyDate, state }, extra);
+  // ONE place prices the rescue, so the win card, the result card and the shared
+  // report can never disagree about what was filed. `drags` keeps the honest count
+  // of what the player actually did next to the total they are charged.
+  const e = Object.assign({ day: dailyDayNo(dailyDate) }, extra);
+  if (e.rescued) { e.drags = extra.moves; e.moves = pricedMoves(extra.moves, true); }
+  r.cur = Object.assign({ date: dailyDate, state }, e);
   saveDailyRec(r);
   dailyPractice = true; // from here on this board is practice
   track('daily_' + state, dailyDate);
@@ -485,6 +519,41 @@ function closePendingDaily() {
   if (!dailyPending) return;
   const d = dailyPending;
   closeDaily('lost', d);
+}
+
+// ---------- crossing local midnight mid-attempt ----------
+// The rule, stated in product: A RECORDED ATTEMPT IS RESOLVED BY THE DAY IT FINISHES
+// ON. The boundary is device-local midnight, and it is a resolution like any other:
+// if the board is still open when the date changes, THAT DAY'S RECORD IS FILED NOT
+// CLEARED right here, at the boundary, and the new day's draft is offered. A day
+// cannot be left open behind the player, and an attempt cannot be carried across a
+// boundary into a day whose board is a different board.
+//
+// The record is written with the position as it actually stood — the moves made, the
+// blocks out, the assists used, and the rescue priced if one was taken — so the row a
+// boundary files is the same shape as the row a Retry files, and the report renders it
+// with no special case. `syncDailyMode` then archives it, exactly as it archives a day
+// resolved any other way, and the board on screen becomes practice.
+//
+// Called from the move commit, from the two places a result is decided, and on return
+// to the foreground — so a player who crosses the boundary sees the HUD change under
+// them rather than discovering it on the win card.
+function dailyRollCheck() {
+  if (!isDaily() || dailyPractice || !dailyDate) return false;
+  if (dailyDate === todayStr()) return false;  // the common case: a string compare, no storage touched
+  // An attempt belongs to the day it STARTED. A clock tick is not a decision, so the
+  // boundary never files a result: an open record for the old day is simply dropped —
+  // nothing is archived, nothing counts, and the board in hand becomes practice.
+  const r = dailyRec();
+  if (r.cur && r.cur.date === dailyDate && !r.cur.state) { r.cur = null; saveDailyRec(r); }
+  dailyPending = null;             // the fail sheet's question is answered by the boundary
+  syncDailyMode();                 // archives the row it just resolved; recomputes dailyPractice
+  paintDailyChip();
+  updateHud();
+  window.dispatchEvent(new CustomEvent('ge:daily', { detail: dailyInfo() }));
+  toast('Midnight passed — today\u2019s draft is ready. This board is now practice.', 4600);
+  track('daily_rolled', dailyDate);
+  return true;
 }
 
 function loadDaily(dateStr) {
@@ -503,7 +572,9 @@ function dailyInfo() {
   const today = todayStr();
   return {
     today,
+    todayDay: dailyDayNo(today),     // today's DAY NUMBER (1 = the table's first day)
     date: dailyDate,                 // the armed draft's date (null before the first load)
+    day: dailyDayNo(dailyDate),      // ...and its day number
     index: dailyRow,                 // its row in the table
     wrapped: dailyWrapped,           // true = the date ran past the table and wrapped onto a verified row
     active: isDaily(),               // the draft is the board on screen right now
@@ -518,15 +589,43 @@ function dailyInfo() {
 }
 
 // ---------- FIELD REPORT ----------
-// The share text, and only the share text: five short lines that say how the day
-// went and nothing whatever about HOW. A per-move grid is the obvious thing to
-// build and the one thing that cannot ship — every player is on the SAME board,
-// so a picture of the route is a walkthrough. So the report carries the shape of
-// the attempt (a bar of par-filled and over-par cells), the stars, the moves
-// against par, route efficiency, and what help was used. Two different boards
-// with the same numbers produce the same text; that is the proof it leaks nothing.
-// Codepoints are pinned to ASCII plus the five marks in ALLOWED.
-// the five non-ASCII marks the report is allowed to use: ★ ☆ ■ □ · (playtest pins this)
+// The share text, and only the share text: it says how the day went and nothing
+// whatever about HOW. A per-move grid is the obvious thing to build and the one
+// thing that cannot ship — every player is on the SAME board, so a picture of the
+// route is a walkthrough. Two different boards played to the same numbers produce
+// the same text but for the identity line; that is the proof it leaks nothing.
+// Codepoints are pinned to ASCII plus five marks: ★ ☆ ■ □ · (playtest pins this).
+//
+// 2026-09-03 redesign (research round 2, report §5.2). The old report printed five
+// information rows — a bar, stars, moves/par, a route percentage, and two assist
+// counters — and the published evidence is that a share string has to be rankable
+// at a glance on ONE axis or it stops being read at all: Wordle by rows, Waffle by
+// stars, LinkedIn by time plus "Flawless"; Connections' grid is the documented
+// failure ("lack[s] the at-a-glance comprehensibility of the Wordle grids"). So:
+//   * the primary axis is MOVES AGAINST PAR. The stars and the bar are two renderings
+//     of that same number, not two more axes.
+//   * the route percentage is gone — it is arithmetic on the primary axis, and a
+//     second axis destroys glanceable comparability. It stays on the in-app card.
+//   * the undo and hint COUNTERS are gone, replaced by one CLEAN token, printed only
+//     when the attempt used no undo, no hint and no rescue (LinkedIn's "Flawless" is
+//     "displayed if you didn't use any backtracks or hints"). A rescued run prints
+//     RESCUED in its place, always, and carries the +3 in its filed total.
+//   * the DAY NUMBER is added — the anti-desync device from §5.3: a client that has
+//     diverged from canon has to be diagnosable from a screenshot.
+// Strictly less is said about the attempt than before: the route %, the undo count
+// and the hint count are dropped and nothing about the attempt is added. The day
+// number is a public calendar fact about the BOARD (the same for every player), not
+// a fact about the run.
+//
+// The pinned shape:
+//   GATE ESCAPE · DRAFT 3 SEP · #003        <- identity: the day, and the day number
+//   CLEARED · ★★☆ · 8/7 moves               <- verdict + the one axis
+//   ■■■■■■■□                                <- the same axis as a bar (cleared only)
+//   CLEAN                                    <- or RESCUED, or nothing at all
+// A loss states how far it got and carries no bar: on a NOT CLEARED report, stripped
+// of every other cue in a group chat, six filled cells of nine read as a progress bar
+// two-thirds of the way to a clear (t50), and a loss's move count is never anything
+// but the whole budget, so printing it would be noise.
 const REPORT_BAR_MAX = 20;
 function parBar(mv, par) {
   const n = Math.min(mv, REPORT_BAR_MAX);
@@ -544,18 +643,33 @@ function dailyShareText(dateStr) {
   const p = row.date.split('-');
   const stars = '★'.repeat(row.stars || 0) + '☆'.repeat(3 - (row.stars || 0));
   const won = row.state === 'won';
-  // The bar is a PAR MARKER (filled = moves up to par, hollow = the ones over) and it only reads
-  // that way next to a cleared board. On a NOT CLEARED report — stripped of every other cue in a
-  // group chat — six filled cells of nine read as a progress bar two-thirds of the way to a clear,
-  // which is the one glyph in the report that would then be a lie (t50). A loss states its numbers
-  // in words on the line below and carries no bar at all.
-  const head = 'GATE ESCAPE · FIELD REPORT\n'
-    + (+p[2]) + ' ' + MON[+p[1] - 1] + ' ' + p[0] + ' · ' + (won ? 'CLEARED' : 'NOT CLEARED') + '\n'
-    + (won ? parBar(row.moves, row.par) + '\n' : '');
+  // rows filed before the day number existed still get one, derived from their date
+  const day = row.day || dailyDayNo(row.date);
+  const head = 'GATE ESCAPE · DRAFT ' + (+p[2]) + ' ' + MON[+p[1] - 1].toUpperCase()
+    + ' · #' + String(day).padStart(3, '0') + '\n';
   const line = won
-    ? stars + ' · ' + row.moves + '/' + row.par + ' moves · route ' + Math.round(row.par / Math.max(1, row.moves) * 100) + '%'
-    : stars + ' · ' + row.cleared + ' of ' + row.blocks + ' out · ' + row.moves + '/' + row.par + ' moves';
-  return head + line + '\nundo ' + (row.undos || 0) + ' · hint ' + (row.hints || 0) + (row.rescued ? ' · rescued' : '');
+    ? 'CLEARED · ' + stars + ' · ' + row.moves + '/' + row.par + ' moves\n' + parBar(row.moves, row.par)
+    : 'NOT CLEARED · ' + row.cleared + ' of ' + row.blocks + ' out';
+  // ONE token, or none. CLEAN is the only AWARD in the string and it is the only word
+  // set in capitals: no undo, no hint, no rescue. The rescue marker is deliberately its
+  // plain-ink opposite — lowercase `rescued`, a fact printed unconditionally (clear or
+  // loss), never a badge that could be read as an achievement of its own. A rescue
+  // always forfeits CLEAN, so exactly one of the two can ever appear.
+  const token = row.rescued ? 'rescued'
+    : (!(row.undos || 0) && !(row.hints || 0)) ? 'CLEAN' : '';
+  return head + line + (token ? '\n' + token : '');
+}
+
+// The HUD's board label and its RECORDED chip: the one-recorded-attempt rule, stated
+// on the board itself for as long as it is true. Split out of loadLevel because the
+// day can roll UNDER a board that is already loaded (dailyRollCheck), and when it
+// does the chip has to flip from RECORDED to PRACTICE without reloading anything.
+function paintDailyChip() {
+  hudLevel.textContent = isDaily()
+    ? (dailyPractice ? 'PRACTICE \u00b7 NOT RECORDED' : 'DAILY DRAFT \u00b7 ' + dayLabel(dailyDate))
+    : isTest() ? 'TEST BOARD' : 'Level ' + (li + 1);
+  hudLevel.classList.toggle('daily', isDaily());
+  if (hudRec) { hudRec.hidden = !(isDaily() && !dailyPractice); hudRec.textContent = 'RECORDED'; }
 }
 
 function loadLevel(i) {
@@ -586,14 +700,7 @@ function loadLevel(i) {
   for (const t of winTimers) clearTimeout(t);
   winTimers = [];
   adClose();
-  hudLevel.textContent = isDaily()
-    ? (dailyPractice ? 'PRACTICE \u00b7 NOT RECORDED' : 'DAILY DRAFT \u00b7 ' + dayLabel(dailyDate))
-    : isTest() ? 'TEST BOARD' : 'Level ' + (li + 1);
-  hudLevel.classList.toggle('daily', isDaily());
-  // the one-recorded-attempt rule, stated on the board itself for as long as it is true. The label
-  // beside it already says PRACTICE · NOT RECORDED once the day has closed, so the chip is the
-  // positive half of that pair and nothing else needs to change to swap it.
-  if (hudRec) { hudRec.hidden = !(isDaily() && !dailyPractice); hudRec.textContent = 'RECORDED'; }
+  paintDailyChip();
   hudPar.textContent = 'par ' + L.par;
   winModal.hidden = true; failModal.hidden = true;
   document.body.classList.remove('fail-up'); cv.style.transform = '';
@@ -1040,6 +1147,7 @@ function countMove() {
   undoSnap = pendingSnap; pendingSnap = null;
   hint = null; // the board changed: the hint has been acted on (or ignored)
   updateHud();
+  dailyRollCheck(); // a move made after local midnight is a move on a practice board
   if (drag) drag.counted = true;
   // the first time a player crosses par with work still to do: undo hands the move back
   if (moves > L.par && blocksLeft() > 0) tip('undo', 'Undo is free — it gives the move back too.');
@@ -1070,6 +1178,7 @@ function maybeFail() {
   if (movesLeft <= 0 && pos.some(p => p)) {
     over = true;
     hint = null;
+    dailyRollCheck(); // ...and a loss after local midnight is a practice loss, filed against nothing
     // the draft's result is not written yet — the rescue is still on offer
     if (isDaily() && !dailyPractice) {
       dailyPending = { moves, par: L.par, stars: 0, undos: attemptUndos, hints: attemptHints,
@@ -1105,11 +1214,16 @@ function maybeFail() {
       // cost before they are pressed, and the line above them states the rule for every other exit.
       const recorded = isDaily() && !!dailyPending;
       btnRescueEl.innerHTML = recorded
-        ? '<span class="ad">AD</span> +3 moves <small>· keep today\u2019s record open</small>'
+        ? '<span class="ad">AD</span> +3 moves <small>· and +3 on today\u2019s record</small>'
         : '<span class="ad">AD</span> +3 moves <small>· watch to continue</small>';
       btnRetryEl.textContent = recorded ? 'End today\u2019s attempt — record NOT CLEARED' : 'Retry level';
       failDaily.hidden = !recorded;
-      if (recorded) failDaily.textContent = 'This is today\u2019s recorded attempt. The rescue keeps it open — retrying, or leaving the board, files it as NOT CLEARED.';
+      // The price is stated in plain words BEFORE the choice, not discovered on the report
+      // afterwards (report finding 6): the rescue keeps the attempt alive and costs 3 moves
+      // on the filed total, and it forfeits the CLEAN token whichever way the attempt ends.
+      if (recorded) failDaily.textContent = 'This is today\u2019s recorded attempt. The rescue keeps it open and adds '
+        + RESCUE_MOVES + ' moves to your filed total — the report prints a plain \u201crescued\u201d instead of the CLEAN token. '
+        + 'Retrying, or leaving the board, files it as NOT CLEARED.';
       document.getElementById('btnRescue').hidden = rescued;
       // the board rises and shrinks so the sheet never covers the position it asks you to bet on
       document.body.classList.add('fail-up');
@@ -1156,9 +1270,17 @@ function win() {
   if (winModal.hidden === false) return;
   over = true;
   hint = null;
+  dailyRollCheck(); // a clear after local midnight is a practice clear: yesterday's day is closed
   updateHud();
-  const stars = starsFor(moves);
   const daily = isDaily(), test = isTest();
+  // A rescue taken inside the RECORDED attempt is priced: the filed total is the drags
+  // plus 3, and the stars are read off that same number so the win card, the result card
+  // and the shared report can never state three different things about one attempt.
+  // (In practice a rescued clear is a 1-star clear either way — the rescue is only ever
+  // offered once the budget is spent — but the display is derived, never asserted.)
+  const recDraft = daily && !dailyPractice;
+  const filedMoves = pricedMoves(moves, recDraft && rescued);
+  const stars = starsFor(filedMoves);
   // the draft has nothing after it: its "next" is the way out, never LEVELS[31]
   const last = daily || test || li === LEVELS.length - 1;
   const winUndos = attemptUndos, winHints = attemptHints;
@@ -1167,9 +1289,11 @@ function win() {
   // par is the target, never "best"; the player's own best is a separate fact once one exists
   // the draft keeps no personal best: one board, one recorded attempt, no ladder to climb
   const prev = daily || test ? 0 : best[li];
-  winSub.textContent = `Solved in ${moves} move${moves === 1 ? '' : 's'}`
-    + (stars === 3 ? ' — perfect!' : ` · par ${L.par}`)
-    + (prev && prev < moves ? ` · your best ${prev}` : '');
+  winSub.textContent = recDraft && rescued
+    ? `Solved in ${moves} moves · rescue +${RESCUE_MOVES} · filed as ${filedMoves} · par ${L.par}`
+    : `Solved in ${moves} move${moves === 1 ? '' : 's'}`
+      + (stars === 3 ? ' — perfect!' : ` · par ${L.par}`)
+      + (prev && prev < moves ? ` · your best ${prev}` : '');
   if (!daily && !test && (!prev || moves < prev)) { best[li] = moves; try { localStorage.setItem('ge_best', JSON.stringify(best)); } catch (e) {} }
   // the day's record closes here, before the event goes out, so every listener
   // (and GE.dailyShareText) sees the resolved row rather than an open one
@@ -1303,7 +1427,12 @@ cv.addEventListener('pointerup', e => { if (ownPointer(e)) endDrag(true); });
 cv.addEventListener('pointercancel', e => { if (ownPointer(e)) cancelDrag(); });
 // the finger can vanish without an up (app switch, system sheet): never leave a block welded to it
 window.addEventListener('blur', cancelDrag);
-document.addEventListener('visibilitychange', () => { if (document.hidden) cancelDrag(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) cancelDrag();
+  // back in the foreground: the phone's clock may have crossed local midnight while the
+  // app was away, and the board on screen may no longer belong to today
+  else dailyRollCheck();
+});
 
 // ---------- rewarded-ad stub ----------
 // Both paid surfaces (rescue, hint) run through here. In the prototype the "ad" is a
@@ -1412,12 +1541,12 @@ document.getElementById('btnRetry').onclick = () => {
   track('retry', li + 1); loadLevel(li);
 };
 function grantRescue() {
-  rescued = true; over = false; movesLeft += 3;
+  rescued = true; over = false; movesLeft += RESCUE_MOVES;
   failModal.hidden = true; failRoute = null;
   dailyPending = null; // the attempt continues, so the day is still undecided
   document.body.classList.remove('fail-up'); cv.style.transform = '';
   // the losing move stays undoable; undo must hand back the move without taking the rescue away
-  if (undoSnap) undoSnap.movesLeft += 3;
+  if (undoSnap) undoSnap.movesLeft += RESCUE_MOVES;
   updateHud(); sound('win'); track('rescue_used', li + 1);
   // the +3 lands on the counter: green flash + a floating "+3"
   hudBox.classList.remove('boost'); void hudBox.offsetWidth; hudBox.classList.add('boost');
@@ -2186,6 +2315,8 @@ window.GE = {
   get dailyInfo() { return dailyInfo(); },    // cur/practice/history state + today's row
   get dailyIndex() { return DAILY_INDEX; },   // the virtual level index it lives at
   dailyShareText,                             // (dateStr?) -> the FIELD REPORT string, or null
+  get rescueMoves() { return RESCUE_MOVES; },  // what the rescue grants — and what it costs a recorded draft
+  dailyRollCheck,                             // force the local-midnight check (the UI and the bots use it)
   undo,
   route: findRoute,   // (bi, {ignoreSeq}?) -> the drag out, or null; respects the chain by default
   solve: solveFrom,   // reference next move from any position (bots / reviewer console)

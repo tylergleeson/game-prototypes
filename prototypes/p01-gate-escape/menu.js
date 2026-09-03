@@ -786,6 +786,59 @@
   const MONS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const dateLabel = d => { const q = String(d).split('-'); return +q[2] + ' ' + MONS[+q[1] - 1]; };
   const draftReady = () => !!(GE.loadDaily && GE.dailyInfo && typeof DAILIES !== 'undefined' && DAILIES);
+
+  // ---------- the published weekday curve ----------
+  // Connections' single most-repeated complaint is that there is "no way to tell whether a
+  // puzzle will be easy or hard until they are playing it", while the crossword's Monday→
+  // Saturday ramp sets expectations for free. The drafts already HAVE a curve — the generator
+  // picks one of four archetypes by weekday — so publishing it costs nothing and removes a
+  // whole class of "today was unfair" reactions (report §5.1, Appendix C tier-2 #13).
+  // `DAILIES.curve` is the generator's own table when the manifest ships it; until then this
+  // mirrors WEEK in tools/generate-dailies.mjs verbatim. Index = UTC weekday, 0 = Sunday, and
+  // the weekday is read in UTC because that is how the generator assigned it — a calendar date
+  // is a date, not a moment, so every player's Saturday board is the Saturday archetype.
+  const CURVE_FALLBACK = ['mid', 'easy', 'easy', 'mid', 'hard', 'hard', 'peak'];
+  const BAND = { easy: 'an easy day', mid: 'a medium day', hard: 'a hard day', peak: 'the week\u2019s peak' };
+  const DAYS_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const BAND_SHORT = { easy: 'easy', mid: 'medium', hard: 'hard', peak: 'the peak' };
+  const curveTable = () => {
+    const c = typeof DAILIES !== 'undefined' && DAILIES && DAILIES.curve;
+    return (Array.isArray(c) && c.length === 7 && c.every(k => BAND[k])) ? c : CURVE_FALLBACK;
+  };
+  const weekdayOf = d => { const q = String(d).split('-'); return new Date(Date.UTC(+q[0], +q[1] - 1, +q[2])).getUTCDay(); };
+  // "Thursday is a hard day." — today's published band, named
+  const bandLine = d => { const w = weekdayOf(d); return DAYS_LONG[w] + ' is ' + BAND[curveTable()[w]] + '.'; };
+  // ...and what that band actually means, from the manifest's own archetype spec, so the
+  // expectation the player forms before committing their one attempt is the generator's
+  // number rather than an adjective ("4 blocks · 2 colours · no stones · 6×8").
+  const bandDetail = d => {
+    const f = typeof DAILIES !== 'undefined' && DAILIES && DAILIES.curveFor;
+    if (!f) return '';
+    try { const c = DAILIES.curveFor(d); return c && c.summary ? c.label + ' board: ' + c.summary + '.' : ''; }
+    catch (e) { return ''; }
+  };
+  // ...and the whole week in one line, DERIVED from the table rather than typed out beside it,
+  // so retuning the curve in the generator can never leave the published copy lying.
+  function curveLine() {
+    const c = curveTable(), rank = { easy: 0, mid: 1, hard: 2, peak: 3 }, groups = [];
+    for (const w of [1, 2, 3, 4, 5, 6, 0]) {           // Mon..Sun, the way a week reads
+      const g = groups.find(x => x.b === c[w]);
+      if (g) g.d.push(DAYS_SHORT[w]); else groups.push({ b: c[w], d: [DAYS_SHORT[w]] });
+    }
+    groups.sort((a, b) => rank[a.b] - rank[b.b]);      // easiest first: the ramp, in order
+    return groups.map(g => g.d.join(' and ') + ' ' + BAND_SHORT[g.b]).join(', ');
+  }
+  { const el = $('legendCurve'); if (el) el.textContent = curveLine(); }
+  // The day boundary, in the plain words the evidence says every major operator publishes,
+  // plus the rule for an attempt that is still open when it passes. Both facts are engine
+  // truth: game.js derives the day from the DEVICE's own calendar fields through GE.now(),
+  // and dailyRollCheck turns the board on screen into practice the moment the day rolls.
+  const BOUNDARY = 'A new draft appears at midnight, by this device\u2019s clock. An attempt is resolved by the day it '
+    + 'finishes on: if midnight passes while the board is still open, that day is filed NOT CLEARED and the new day\u2019s draft is ready.';
+  // ...and the short form for the RESULT card, where the attempt is already over and the only
+  // live question is when the next board arrives
+  const BOUNDARY_SHORT = 'The next draft appears at midnight, by this device\u2019s clock; a board still open when it passes is filed NOT CLEARED.';
   const SHARE_LABEL = 'Share field report';
   const draftModal = $('draftModal');
   let recordedNow = null;  // the row the engine just closed (ge:daily fires before ge:win)
@@ -808,6 +861,21 @@
     if (!on) return;
     const i = GE.dailyInfo, cur = i.done ? i.cur : null;
     $('fDailyK').textContent = 'Daily draft · ' + dateLabel(i.today);
+    // The decoder verifies each row against a shipped per-row digest bound to that row's own
+    // calendar date and REFUSES a mismatch (t1's manifest). The failure has to be LOUD: without
+    // this the row would read READY and the tap would silently do nothing, which is precisely the
+    // silent client/canon divergence the two Wordle incidents are about. So the row states the
+    // refusal in the engine's own words and stops being a door.
+    const bad = typeof DAILIES !== 'undefined' && DAILIES && DAILIES.integrity && DAILIES.integrity.ok === false
+      ? DAILIES.integrity : null;
+    if (bad) {
+      $('fDaily').innerHTML = 'UNAVAILABLE<small>' + String(bad.message || 'Draft unavailable — please update')
+        .replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c]) + '</small>';
+      $('btnDaily').setAttribute('aria-label', 'Daily draft unavailable — ' + (bad.message || 'please update'));
+      $('btnDaily').classList.add('unavailable');
+      return;
+    }
+    $('btnDaily').classList.remove('unavailable');
     // Three facts right-aligned on one row wrapped into three ragged lines and read as an error
     // state (t52). One line for the result — no star rack on a day that scored none, since an empty
     // rack is not information — and one forward-looking line about what a tap gives you NOW. While
@@ -826,15 +894,28 @@
     const i = GE.dailyInfo, row = i.done ? i.cur : null;
     if (!row) return false;
     const won = row.state === 'won';
+    const day = row.day || (row.date === i.today ? i.todayDay : 0);
     fillStars($('draftStars'), row.stars || 0);
+    $('draftNo').textContent = 'DAILY DRAFT' + (day ? ' · #' + String(day).padStart(3, '0') : '');
     $('draftTitle').textContent = won ? 'Draft filed' : 'Draft not cleared';
     $('draftSub').textContent = dateLabel(row.date) + ' · ' + (won ? 'cleared' : row.cleared + ' of ' + row.blocks + ' blocks out')
       + ' · undo ' + (row.undos || 0) + ' · hint ' + (row.hints || 0);
     $('draftMoves').textContent = row.moves + ' / ' + row.par;
     $('draftRouteK').textContent = won ? 'Route' : 'Blocks out';
+    // route % lives HERE and only here: it is arithmetic on moves/par, and a second axis is
+    // what makes a share string unrankable at a glance — so the report dropped it and the
+    // in-app card kept it (report §5.2).
     $('draftRoute').textContent = won ? Math.round(row.par / Math.max(1, row.moves) * 100) + '%'
       : row.cleared + ' / ' + row.blocks;
+    // A rescued record states BOTH numbers: what the player dragged, and what was filed.
+    // Nothing is hidden, and the total is never left to be explained by the report alone.
     $('draftRescue').hidden = !row.rescued;
+    $('draftRescueV').textContent = row.drags != null
+      ? row.drags + ' drags + ' + (row.moves - row.drags) + ' counted for the rescue'
+      : '+3 moves counted in this record';
+    // ...and the token the attempt earned, if it earned one. Same rule as the report.
+    $('draftClean').hidden = !!row.rescued || !!(row.undos || 0) || !!(row.hints || 0);
+    $('draftDay').textContent = bandLine(row.date) + ' ' + curveLine() + '. ' + BOUNDARY_SHORT;
     // On a NOT CLEARED report the primary action is another go, not a broadcast: nobody sends
     // "0 of 5 out" to a group chat, and a filled CTA asking them to reads as a mode that wants
     // virality more than it wants the player (t50). Share stays available, quietly.
@@ -885,8 +966,20 @@
   function startDraft(from) { if (GE.loadDaily()) track('daily_enter', { from }); } // ge:load puts the screens down
   $('btnDaily').onclick = () => {
     if (!draftReady()) return;
+    // a refused row is not a door. The row itself already carries the engine's message, so the
+    // tap simply does not travel — it never opens a board that the decoder refused to serve.
+    if (typeof DAILIES !== 'undefined' && DAILIES && DAILIES.integrity && DAILIES.integrity.ok === false) {
+      track('daily_unavailable', DAILIES.integrity.reason || 'unknown');
+      return;
+    }
     if (GE.dailyInfo.done) { openDraft(); return; }
-    $('recNo').textContent = 'DAILY DRAFT · ' + dateLabel(GE.dailyInfo.today).toUpperCase();
+    const i = GE.dailyInfo;
+    $('recNo').textContent = 'DAILY DRAFT · #' + String(i.todayDay || 0).padStart(3, '0')
+      + ' · ' + dateLabel(i.today).toUpperCase();
+    $('recSub').textContent = ('Same board for everyone today. ' + bandLine(i.today) + ' ' + bandDetail(i.today)).trim();
+    $('recRescueV').textContent = 'It adds ' + (GE.rescueMoves || 3)
+      + ' moves to your filed total and forfeits the CLEAN token';
+    $('recDay').textContent = BOUNDARY;
     recModal.hidden = false;
     track('daily_confirm', { date: GE.dailyInfo.today });
   };

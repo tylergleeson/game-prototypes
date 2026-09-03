@@ -66,10 +66,21 @@ The "Daily draft · <date>" row on the sheet index reads READY while today's rec
 name it by date rather than by a level number. The FIRST attempt is the one that is recorded, and the record closes on the first resolution —
 a clear, or a loss the player resolves by declining the rescue (retrying or leaving). After that the row states the result (★★☆ FILED, or
 NOT CLEARED) with "practice · not recorded" under it, a tap opens the FIELD REPORT card instead of the board, and any further play is practice
-that rewrites nothing. The field report is five lines — a par bar, stars, moves/par, route efficiency, undo/hint counts, and "rescued" when a
-rescue was taken — and deliberately contains NO route or grid: every player is on the same board, so a picture of the line would be a walkthrough.
-The card shows that exact text in a block above the Share button (what you send is what you see); sharing tries navigator.share, then the
-clipboard, then hands the text over in a selectable box. Nothing about the draft is ever sold, and a skipped day is simply a day that went by.
+that rewrites nothing. THE DAY BOUNDARY is device-local midnight, published in plain words on both draft cards and in the legend, and an attempt
+is RESOLVED BY THE DAY IT FINISHES ON: if midnight passes with the board still open, that day's record is filed NOT CLEARED at the boundary, the
+board on screen becomes practice, and the new day's draft is offered. A RESCUE TAKEN DURING THE RECORDED ATTEMPT IS PRICED: the filed total is the
+drags plus 3, the report always prints the marker, and the CLEAN token is forfeited. The marker is deliberately UNDERSTATED — a lowercase, plain-ink
+"rescued" on the report and a borderless dim label on the cards — because CLEAN is the only award the draft hands out and the two must never read as
+a matched pair of badges. That price is stated on the pre-board card and on the fail sheet before either button is
+pressed. Campaign rescues are unchanged — there a rescue costs the ad and nothing else. The FIELD REPORT was redesigned on 2026-09-03 to be
+rankable at a glance on ONE axis (Wordle/Waffle/LinkedIn precedent): an identity line with the date and the day number, then CLEARED plus stars
+plus moves-against-par, then the par bar (the same number drawn again — cleared reports only), then ONE token — CLEAN when no undo, no hint and no
+rescue were used, a lowercase "rescued" whenever the rescue was taken, and nothing at all otherwise. Route efficiency and the undo/hint counters were removed
+from the string and live on the in-app result card only. It deliberately contains NO route or grid: every player is on the same board, so a picture
+of the line would be a walkthrough. The card shows that exact text in a block above the Share button (what you send is what you see); sharing tries
+navigator.share, then the clipboard, then hands the text over in a selectable box. The generator's WEEKDAY CURVE is published too (Mon/Tue easy,
+Wed/Sun medium, Thu/Fri hard, Sat the peak): the pre-board card names today's band and the legend prints the whole ramp. Nothing about the draft is
+ever sold, and a skipped day is simply a day that went by.
 STAGED DISCLOSURE (FTUE) — the sheet index opens BARE on a new save: level, stars, the forty tiles, sound. Each meta system arrives on the win
 that earns it — sheet certification (and the paper picker) after 2 levels cleared, the Daily Draft after 3, the Field Survey after 5 (revealed
 with the easiest of the week's four contracts ALREADY taken, as a worked example; swapping stays free until progress). Each reveal is announced
@@ -105,6 +116,11 @@ top-left origin; its cells are listed absolute.`,
     btnSurvey: "sheet index: Field survey row — open this week's sheet (day spine, contracts, marks, seal)",
     btnSurveyClose: 'survey sheet: Close',
     btnAppr: 'sheet index: the Stamp shelf beside the paper picker — a tap names the approval stamp, or (while pending) the sheet that pays it. There is nothing to select: the stamp is on the win card or it is not',
+    btnRecStart: "daily draft, pre-board card: Start today's draft (the card states the one-recorded-attempt rule, the rescue's +3 price, today's published difficulty band and the local-midnight day boundary before the board loads)",
+    // NO ACCOUNTS: the streak and every draft record are device-local and are lost on reinstall.
+    // That is disclosed up front in the legend's Streak row rather than discovered after a restore.
+
+    btnRecBack: 'daily draft, pre-board card: Back — a real way out; it does not start the day',
     btnDaily: "sheet index: Daily draft row — loads today's board while the day is READY; once the record has closed it opens the field report card instead (hidden until 3 levels are cleared)",
     btnDraftShare: 'field report card: Share field report (navigator.share → clipboard → a selectable text box; the string is exactly what the card shows)',
     btnDraftPractice: "field report card: Play again · not recorded — reload today's board as practice",
