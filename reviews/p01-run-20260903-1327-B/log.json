@@ -1,0 +1,703 @@
+{
+  "game": "p01",
+  "device": "iphone-17",
+  "os": "iOS 18.7",
+  "build": "2026-09-03 · 13:06",
+  "rater": "B",
+  "minutes": 12,
+  "levels": null,
+  "start": "1",
+  "turns": 41,
+  "levelsWon": 4,
+  "wonLevels": [
+    1,
+    2,
+    3,
+    41
+  ],
+  "log": [
+    {
+      "turn": 2,
+      "level": 1,
+      "say": "Clean landing. One block, one gate, a dashed ghost route showing me exactly what to do before I even touch it. REV stamp and NO. GE-01 in the corner sell the drafting-paper conceit immediately. Three taps, no clutter. Let me check How to play before diving in.",
+      "thought": "Strong cold-open legibility. Curious if How to play adds or just repeats this.",
+      "note": {
+        "id": "B-t2",
+        "turn": 2,
+        "level": 1,
+        "persona": "critic",
+        "rater": "B",
+        "kind": "positive",
+        "area": "onboarding",
+        "theme": "landing-ghost-route-preview",
+        "heuristic": "onboarding",
+        "raterSeverity": null,
+        "severity": null,
+        "severityScore": null,
+        "severityRating": null,
+        "text": "The landing screen shows a live mini-board with a dashed ghost route already animating the solve before any tap. It teaches the core verb (drag block to gate) with zero text required.",
+        "evidence": "t002 screenshot, landing screen",
+        "causes": null,
+        "playerImpact": "A first-time player understands the goal before reading a word of copy.",
+        "positives": null,
+        "reproRate": null,
+        "build": "2026-09-03 · 13:06",
+        "device": "iPhone 17 · studio 2 (Simulator)",
+        "os": "iOS 18.7",
+        "locale": "en-US"
+      }
+    },
+    {
+      "turn": 2,
+      "action": {
+        "type": "tap",
+        "button": "btnLegend"
+      },
+      "result": "tapped landing: How to play"
+    },
+    {
+      "turn": 3,
+      "level": 1,
+      "say": "Good density here — shape-plus-color is called out explicitly, colourblind presets and drag-step are mentioned but tucked under a Reading the board sub-head so a first-timer isnt forced through them. I see a faint AD chip ghosted in the top-right corner though, bleeding through from somewhere. Lets get into the game.",
+      "thought": "The AD ghost is odd — check if its a transition artifact or a real z-index bug once I have more turns to spare.",
+      "note": {
+        "id": "B-t3",
+        "turn": 3,
+        "level": 1,
+        "persona": "critic",
+        "rater": "B",
+        "kind": "issue",
+        "area": "ui",
+        "theme": "stray-ad-chip-ghosting",
+        "heuristic": "legibility",
+        "raterSeverity": "nit",
+        "frequency": 2,
+        "impact": 1,
+        "persistence": 1,
+        "severityScore": 0.25,
+        "severityRating": 0,
+        "severity": "nit",
+        "text": "On the How to play screen, a small AD badge is faintly visible ghosted through the top-right corner over the how-to-play card, presumably bled through from an underlying HUD/hint layer. Its faint enough not to read as broken but it looks unintentional.",
+        "evidence": "t003 screenshot, top-right corner",
+        "causes": "Likely a lower z-index or opacity leak from the HUD hint-ad placeholder rendering underneath the modal.",
+        "playerImpact": "Barely noticeable; wont confuse anyone but reads as unpolished on close inspection.",
+        "positives": null,
+        "reproRate": null,
+        "build": "2026-09-03 · 13:06",
+        "device": "iPhone 17 · studio 2 (Simulator)",
+        "os": "iOS 18.7",
+        "locale": "en-US"
+      }
+    },
+    {
+      "turn": 3,
+      "action": {
+        "type": "tap",
+        "button": "btnLegendBack"
+      },
+      "result": "tapped how-to-play: Back"
+    },
+    {
+      "turn": 4,
+      "action": {
+        "type": "tap",
+        "button": "btnPlay"
+      },
+      "result": "tapped landing: the primary CTA — \"Play\" on a fresh install, \"Continue — Level N\", or \"Resume level N\" when a paused attempt is on the board"
+    },
+    {
+      "turn": 5,
+      "level": 1,
+      "say": "L1: one red circle block, gate straight to the right. Cant miss it. Dragging it out now.",
+      "thought": "True no-fail teaching level, matches the CrazyLabs curve rule.",
+      "note": null
+    },
+    {
+      "turn": 5,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": null,
+        "exit": "right"
+      },
+      "result": "block #0 escaped through the right gate. 4 moves left."
+    },
+    {
+      "turn": 6,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 7,
+      "level": 2,
+      "say": "Refiling that last note, wrong area field.",
+      "thought": "schema slip on my part",
+      "note": {
+        "id": "B-t7",
+        "turn": 7,
+        "level": 2,
+        "persona": "critic",
+        "rater": "B",
+        "kind": "positive",
+        "area": "feedback",
+        "theme": "honest-par-callout",
+        "heuristic": "honesty",
+        "raterSeverity": null,
+        "severity": null,
+        "severityScore": null,
+        "severityRating": null,
+        "text": "The win card states best/par plainly next to the stars (your best 1 par 1) instead of just celebrating, reinforcing that stars are earned truthfully.",
+        "evidence": "t006 screenshot, win card",
+        "causes": null,
+        "playerImpact": "Builds trust that star ratings mean something, which matters later when par gets tight.",
+        "positives": null,
+        "reproRate": null,
+        "build": "2026-09-03 · 13:06",
+        "device": "iPhone 17 · studio 2 (Simulator)",
+        "os": "iOS 18.7",
+        "locale": "en-US"
+      }
+    },
+    {
+      "turn": 7,
+      "level": 2,
+      "say": "Two blocks now, and I see it — that AD chip on the hint button is the source of the ghost I saw earlier, it must be bleeding through modals. Two gates, two obvious moves: triangle straight up, circle straight right. Par 2, so this is exactly that.",
+      "thought": "Confirms the ad-chip note; not a new bug, just a z-index leak worth flagging.",
+      "note": null
+    },
+    {
+      "turn": 7,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": null,
+        "exit": "top"
+      },
+      "result": "block #1 escaped through the top gate. 5 moves left."
+    },
+    {
+      "turn": 8,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": null,
+        "exit": "right"
+      },
+      "result": "block #0 escaped through the right gate. 4 moves left."
+    },
+    {
+      "turn": 9,
+      "level": 2,
+      "say": "Refiling with area bug, this is important.",
+      "thought": null,
+      "note": {
+        "id": "B-t9",
+        "turn": 9,
+        "level": 2,
+        "persona": "critic",
+        "rater": "B",
+        "kind": "issue",
+        "area": "bug",
+        "theme": "win-card-sheet-mislabel",
+        "heuristic": "honesty",
+        "raterSeverity": "critical",
+        "frequency": 4,
+        "impact": 4,
+        "persistence": 2,
+        "severityScore": 4,
+        "severityRating": 4,
+        "severity": "critical",
+        "text": "The Level 2 win card header reads SHEET 02 with headline Sheet filed! and shows the Sheet certification (24 on a sheet earns its paper) panel with a NEW badge, after clearing only 2 of the 10 levels in Sheet 1. Sheet 1 is nowhere near certified (needs 24/30 stars across all ten levels). This looks like a template/copy bug conflating level index with sheet index and level-clear language with sheet-certification language.",
+        "evidence": "t009 screenshot, Level 2 win card",
+        "causes": "Most likely: the win-card component picks its header/copy variant off the raw level number (2) rather than checking whether a sheet was actually just certified, so level 2 (and possibly other early levels) gets the sheet-filed template by coincidence.",
+        "playerImpact": "A brand-new player is told after their second level that they finished and certified a whole sheet of ten. Either they believe it, or they immediately distrust every future certification and stars claim the game makes, undercutting the honest-totals design goal.",
+        "positives": null,
+        "reproRate": "1/1 so far, checking level 3",
+        "build": "2026-09-03 · 13:06",
+        "device": "iPhone 17 · studio 2 (Simulator)",
+        "os": "iOS 18.7",
+        "locale": "en-US"
+      }
+    },
+    {
+      "turn": 9,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 10,
+      "level": 3,
+      "say": "Nice, corner-turn tutorial baked right into the board with a ghost path showing exactly how one drag threads left-then-down. Three blocks, one gate on the bottom-left. Lining up each ones lane so they dont cross.",
+      "thought": "Testing the drag corner mechanic for real now.",
+      "note": null
+    },
+    {
+      "turn": 10,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          2,
+          2
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #2 escaped through the bottom gate. 6 moves left."
+    },
+    {
+      "turn": 11,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": [
+          0,
+          1
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #1 escaped through the bottom gate. 5 moves left."
+    },
+    {
+      "turn": 12,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          0,
+          0
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #0 escaped through the bottom gate. 4 moves left."
+    },
+    {
+      "turn": 13,
+      "level": 3,
+      "say": "Confirmed — Level 3s win card also says SHEET 03. Its not a one-off: the header literally increments with the level number instead of staying SHEET 01 through all ten levels of the first sheet. Also a Daily Draft banner just unlocked. Lets check the sheet index now with three clears banked.",
+      "thought": "Filing the repro update as its own note since the console merges by theme.",
+      "note": {
+        "id": "B-t13",
+        "turn": 13,
+        "level": 3,
+        "persona": "critic",
+        "rater": "B",
+        "kind": "issue",
+        "area": "bug",
+        "theme": "win-card-sheet-mislabel",
+        "heuristic": "honesty",
+        "raterSeverity": "major",
+        "frequency": 4,
+        "impact": 3,
+        "persistence": 2,
+        "severityScore": 3,
+        "severityRating": 3,
+        "severity": "major",
+        "text": "Confirmed 3/3: win-card headers read SHEET 01, SHEET 02, SHEET 03 on levels 1, 2 and 3 respectively — it tracks level number, not the actual sheet (which should read SHEET 01 for all of levels 1-10). Level 2 additionally borrowed sheet-certification headline/copy (Sheet filed!, the certification panel) it has not earned.",
+        "evidence": "t006, t009, t013 screenshots — win cards for levels 1, 2, 3",
+        "causes": "Header/copy variant keyed off raw level index rather than the level-to-sheet mapping and an actual certification check.",
+        "playerImpact": "Undermines the sheets whole certification narrative before the player even reaches the sheet index — by level 3 the SHEET 0N counter has nothing to do with the ten-level groupings the rest of the UI uses.",
+        "positives": null,
+        "reproRate": "3/3",
+        "build": "2026-09-03 · 13:06",
+        "device": "iPhone 17 · studio 2 (Simulator)",
+        "os": "iOS 18.7",
+        "locale": "en-US"
+      }
+    },
+    {
+      "turn": 13,
+      "action": {
+        "type": "tap",
+        "button": "btnMenu"
+      },
+      "result": "tapped HUD: pause / unpause — the button is disabled, no effect"
+    },
+    {
+      "turn": 14,
+      "action": {
+        "type": "tap",
+        "button": "btnPauseLevels"
+      },
+      "result": "error: btnPauseLevels is not on screen right now"
+    },
+    {
+      "turn": 15,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 16,
+      "action": {
+        "type": "tap",
+        "button": "btnMenu"
+      },
+      "result": "tapped HUD: pause / unpause"
+    },
+    {
+      "turn": 17,
+      "action": {
+        "type": "tap",
+        "button": "btnPauseLevels"
+      },
+      "result": "tapped pause: Levels"
+    },
+    {
+      "turn": 18,
+      "level": 4,
+      "say": "This is the real certification framing, and its good: 24 star nine banked fifteen to certify, stated plainly, no ratio trick. This is what the win card should have echoed instead of jumping straight to Sheet filed. Also see Daily Draft is ready up top. Lets open it.",
+      "thought": "So the honest-totals design intent IS implemented correctly here — the bug is isolated to the win-card template, not a studio-wide miss.",
+      "note": {
+        "id": "B-t18",
+        "turn": 18,
+        "level": 4,
+        "persona": "critic",
+        "rater": "B",
+        "kind": "positive",
+        "area": "feedback",
+        "theme": "sheet-index-honest-totals",
+        "heuristic": "honesty",
+        "raterSeverity": null,
+        "severity": null,
+        "severityScore": null,
+        "severityRating": null,
+        "text": "The sheet index states certification progress as 24 star, 9 banked, 15 to certify — total stated, remaining stated small, never a ratio. Matches the games own honest-totals design intent and reads clearly at a glance.",
+        "evidence": "t018 screenshot, Sheet 1 row",
+        "causes": null,
+        "playerImpact": "Player always knows exactly how far they are from certifying a sheet without doing math.",
+        "positives": null,
+        "reproRate": null,
+        "build": "2026-09-03 · 13:06",
+        "device": "iPhone 17 · studio 2 (Simulator)",
+        "os": "iOS 18.7",
+        "locale": "en-US"
+      }
+    },
+    {
+      "turn": 18,
+      "action": {
+        "type": "tap",
+        "button": "btnLevelsBack"
+      },
+      "result": "tapped levels: Back (returns to the pause card if opened from pause)"
+    },
+    {
+      "turn": 20,
+      "action": {
+        "type": "tap",
+        "button": "btnPauseLevels"
+      },
+      "result": "tapped pause: Levels"
+    },
+    {
+      "turn": 21,
+      "action": {
+        "type": "tap",
+        "button": "btnDaily"
+      },
+      "result": "tapped sheet index: Daily draft row — loads today's board while the day is READY; once the record has closed it opens the field report card instead (hidden until 3 levels are cleared)"
+    },
+    {
+      "turn": 22,
+      "level": 4,
+      "say": "This pre-board card is transparent to a fault — first attempt is recorded, rescue costs the CLEAN token, midnight boundary spelled out. Good honesty, but its a wall of rules text before what should be a quick daily habit-loop tap. Starting todays draft now.",
+      "thought": "Balance note: transparency good, but density might cost completion rate on a feature meant to be a fast daily ritual.",
+      "note": {
+        "id": "B-t22",
+        "turn": 22,
+        "level": 4,
+        "persona": "critic",
+        "rater": "B",
+        "kind": "issue",
+        "area": "onboarding",
+        "theme": "daily-draft-preboard-density",
+        "heuristic": "pacing",
+        "raterSeverity": "minor",
+        "frequency": 2,
+        "impact": 2,
+        "persistence": 1,
+        "severityScore": 0.5,
+        "severityRating": 1,
+        "severity": "nit",
+        "text": "The Daily Draft pre-board card packs three separate rule blocks (recorded-attempt, rescue/CLEAN-token tradeoff, midnight boundary) into one dense read before the Start button. For a feature pitched as a quick daily ritual, this is a lot of legalese-style text between the tap and the board.",
+        "evidence": "t022 screenshot, Today's draft pre-board card",
+        "causes": "All rules front-loaded into the pre-board card rather than progressively disclosed (e.g. rescue rules shown only when rescue is actually offered).",
+        "playerImpact": "A returning daily player has to re-skim this every day (or skims past it and gets surprised later by the rescue/CLEAN tradeoff).",
+        "positives": "The transparency itself is good — nothing about recording or rescue cost is hidden.",
+        "reproRate": null,
+        "build": "2026-09-03 · 13:06",
+        "device": "iPhone 17 · studio 2 (Simulator)",
+        "os": "iOS 18.7",
+        "locale": "en-US"
+      }
+    },
+    {
+      "turn": 22,
+      "action": {
+        "type": "tap",
+        "button": "btnRecStart"
+      },
+      "result": "tapped daily draft, pre-board card: Start today's draft (the card states the one-recorded-attempt rule, the rescue's +3 price, today's published difficulty band and the local-midnight day boundary before the board loads)"
+    },
+    {
+      "turn": 23,
+      "level": 41,
+      "say": "Thursday hard day lives up to it — six blocks, two stones, three colors, and the reds and cyans are tangled around each other. Green diamond is the free one, taking that first.",
+      "thought": "Genuinely a step up in complexity from the sheet levels at this point; good signal that the daily draft is deliberately spikier.",
+      "note": null
+    },
+    {
+      "turn": 23,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          4,
+          0
+        ],
+        "exit": "top"
+      },
+      "result": "block #2 escaped through the top gate. 9 moves left."
+    },
+    {
+      "turn": 24,
+      "level": 41,
+      "say": "Green is out clean. Everything else is genuinely tangled though — the reds need to file past a stone and past each other, and the cyan square cant reach its own gate lane without crossing that same stone. Im going to burn a hint here; this is past reasonable first-look struggle for a casual player.",
+      "thought": "About 3-4 moves in without a clear next step on the remaining five blocks — legitimate hint use, not padding.",
+      "note": {
+        "id": "B-t24",
+        "turn": 24,
+        "level": 41,
+        "persona": "critic",
+        "rater": "B",
+        "kind": "issue",
+        "area": "difficulty",
+        "theme": "daily-draft-hard-day-spike",
+        "heuristic": "challenge",
+        "raterSeverity": "minor",
+        "frequency": 2,
+        "impact": 2,
+        "persistence": 1,
+        "severityScore": 0.5,
+        "severityRating": 1,
+        "severity": "nit",
+        "text": "Today's (Thursday) Daily Draft board is a real jump from anything in Sheet 1 so far: 6 blocks, 2 stones, 3 colours, and the routing has genuine dependency chains (block A must clear before block B can pass, which blocks block C). Reasonable for a labeled hard day, but there is no par-based feedback or difficulty context shown before starting beyond the one adjective (Complex board), so a casual daily player gets a much bigger spike than the sheet curve trained them for.",
+        "evidence": "t023 screenshot, Daily Draft board, level par 7",
+        "causes": "Daily draft difficulty is presumably drawn from a wider band than the sheet curve and not gated by player progress the way sheet levels are.",
+        "playerImpact": "A player who is only a few sheet-levels in may bounce off the daily habit loop specifically on a hard day, right when theyre trying to build a streak.",
+        "positives": null,
+        "reproRate": "1/1 (today's board only)",
+        "build": "2026-09-03 · 13:06",
+        "device": "iPhone 17 · studio 2 (Simulator)",
+        "os": "iOS 18.7",
+        "locale": "en-US"
+      }
+    },
+    {
+      "turn": 24,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #5 (cyan / triangle) to origin (0,6). 6 drag(s) remain in that line."
+    },
+    {
+      "turn": 25,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "to": [
+          0,
+          6
+        ],
+        "exit": null
+      },
+      "result": "block #5 now at (0,6). 8 moves left."
+    },
+    {
+      "turn": 26,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #3 (red / circle) and push it out through the right gate. 5 drag(s) remain in that line."
+    },
+    {
+      "turn": 27,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": null,
+        "exit": "right"
+      },
+      "result": "block #3 escaped through the right gate. 7 moves left."
+    },
+    {
+      "turn": 28,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #4 (red / circle) and push it out through the right gate. 4 drag(s) remain in that line."
+    },
+    {
+      "turn": 29,
+      "action": {
+        "type": "drag",
+        "block": 4,
+        "to": null,
+        "exit": "right"
+      },
+      "result": "block #4 escaped through the right gate. 6 moves left."
+    },
+    {
+      "turn": 30,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #5 (cyan / triangle) and push it out through the bottom gate. 3 drag(s) remain in that line."
+    },
+    {
+      "turn": 31,
+      "action": {
+        "type": "drag",
+        "block": 5,
+        "to": null,
+        "exit": "bottom"
+      },
+      "result": "block #5 escaped through the bottom gate. 5 moves left."
+    },
+    {
+      "turn": 32,
+      "action": {
+        "type": "hint"
+      },
+      "result": "Designer's reference solution from here: drag block #0 (red / circle) and push it out through the right gate. 2 drag(s) remain in that line."
+    },
+    {
+      "turn": 33,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": null,
+        "exit": "right"
+      },
+      "result": "block #0 escaped through the right gate. 4 moves left."
+    },
+    {
+      "turn": 34,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": null,
+        "exit": "bottom"
+      },
+      "result": "block #1 escaped through the bottom gate. 3 moves left."
+    },
+    {
+      "turn": 35,
+      "level": 41,
+      "say": "This is a real honesty gap. I burned five hints to get through that board, one per remaining block, and the field report still stamps it CLEAN, three stars, Solved in 7 moves — perfect!, with zero mention of hint use anywhere on the card or in the shareable text. Rescue explicitly costs the CLEAN token per the pre-board rules, but hint apparently doesnt touch it at all.",
+      "thought": "This is shareable, public-facing copy — a CLEAN streak that was actually five hints deep is exactly the kind of inflated claim this game is otherwise careful to avoid.",
+      "note": {
+        "id": "B-t35",
+        "turn": 35,
+        "level": 41,
+        "persona": "critic",
+        "rater": "B",
+        "kind": "issue",
+        "area": "monetization",
+        "theme": "clean-badge-ignores-hint-use",
+        "heuristic": "honesty",
+        "raterSeverity": "critical",
+        "frequency": 3,
+        "impact": 4,
+        "persistence": 2,
+        "severityScore": 3,
+        "severityRating": 3,
+        "severity": "major",
+        "text": "After using the hint (a rewarded-ad-gated assist) five times in a row to solve today's Daily Draft, the result card and shareable field report still read CLEAN, three stars, Solved in 7 moves — perfect!, with no mention of hints anywhere. The pre-board card explicitly states a rescue forfeits the CLEAN token, but hint use is never mentioned as affecting it, and evidently does not.",
+        "evidence": "t035 screenshot, Daily Draft win/field-report card, after 5 hint calls",
+        "causes": "CLEAN status logic likely only checks for rescue/retry flags, not hint count, even though the app separately tracks hint-free clears elsewhere (the nohint8 weekly survey contract).",
+        "playerImpact": "The field report is designed to be shared (Share field report button) — a friend seeing CLEAN · 3 stars · perfect has no way to know the run leaned on five designer-solution hints. That is the exact inflated-honesty problem this game otherwise goes out of its way to avoid.",
+        "positives": null,
+        "reproRate": "1/1",
+        "build": "2026-09-03 · 13:06",
+        "device": "iPhone 17 · studio 2 (Simulator)",
+        "os": "iOS 18.7",
+        "locale": "en-US"
+      }
+    },
+    {
+      "turn": 36,
+      "action": {
+        "type": "tap",
+        "button": "btnBackToMenu"
+      },
+      "result": "error: unknown button \"btnBackToMenu\""
+    },
+    {
+      "turn": 37,
+      "action": {
+        "type": "tap",
+        "button": "btnDraftClose"
+      },
+      "result": "error: btnDraftClose is not on screen right now"
+    },
+    {
+      "turn": 38,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 39,
+      "action": {
+        "type": "tap",
+        "button": "btnLevels"
+      },
+      "result": "tapped landing: Levels (the sheet index, which also carries the field log: stars, the field survey, paper, sound)"
+    },
+    {
+      "turn": 41,
+      "level": 4,
+      "say": "Refiling with area bug.",
+      "thought": null,
+      "note": {
+        "id": "B-t41",
+        "turn": 41,
+        "level": 4,
+        "persona": "critic",
+        "rater": "B",
+        "kind": "issue",
+        "area": "bug",
+        "theme": "colourblind-preset-tap-error",
+        "heuristic": "accessibility",
+        "raterSeverity": "minor",
+        "frequency": 1,
+        "impact": 2,
+        "persistence": 1,
+        "severityScore": 0.25,
+        "severityRating": 0,
+        "severity": "nit",
+        "text": "Tapping the deuteranopia ink preset on the sheet index threw an error (el.count is not a function) instead of switching the colour preset, so the colourblind presets promised in How to play could not be verified this session.",
+        "evidence": "actE tap on ink:deuteranopia",
+        "causes": "Possibly a selector bug in the preset-switching code, or a console-harness issue reaching the same control.",
+        "playerImpact": "If this reproduces for real players, the colourblind presets called out in onboarding would be unusable, which matters for the accessibility promise made in How to play.",
+        "positives": null,
+        "reproRate": "1/1, not retried due to time",
+        "build": "2026-09-03 · 13:06",
+        "device": "iPhone 17 · studio 2 (Simulator)",
+        "os": "iOS 18.7",
+        "locale": "en-US"
+      }
+    }
+  ]
+}

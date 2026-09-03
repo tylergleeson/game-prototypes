@@ -1,0 +1,802 @@
+{
+  "game": "p01",
+  "device": "iphone-17",
+  "os": "iOS 18.7",
+  "build": "2026-09-03 · 13:06",
+  "rater": "A",
+  "minutes": 12,
+  "levels": null,
+  "start": "1",
+  "turns": 82,
+  "levelsWon": 4,
+  "wonLevels": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "log": [
+    {
+      "turn": 5,
+      "level": 1,
+      "say": "Cover sheet reads calm and confident right out of the gate — one title block, one primary CTA, a REV timestamp like a real drafting sheet. Let me check How to play before I touch anything.",
+      "thought": "Nice restraint on the landing. Checking legend first like a real newcomer would.",
+      "note": null
+    },
+    {
+      "turn": 5,
+      "action": {
+        "type": "tap",
+        "button": "btnLegend"
+      },
+      "result": "tapped landing: How to play"
+    },
+    {
+      "turn": 6,
+      "level": 1,
+      "say": "This legend is doing real work — shape-plus-color right in the diagram, and it front-loads the one-drag-equals-one-move rule with a visual corner example instead of just text. Heading back to Play.",
+      "thought": "Good onboarding density without feeling like a wall of text.",
+      "note": {
+        "id": "A-t6",
+        "turn": 6,
+        "level": 1,
+        "persona": "critic",
+        "rater": "A",
+        "kind": "positive",
+        "area": "onboarding",
+        "theme": "legend-shape-color-clarity",
+        "heuristic": "onboarding",
+        "raterSeverity": null,
+        "severity": null,
+        "severityScore": null,
+        "severityRating": null,
+        "text": "The How to Play screen teaches the shape+color redundancy and the one-drag=one-move rule with a single annotated diagram rather than paragraphs, and even calls out where colorblind presets and drag-step live. A new player gets the whole mental model in one screen before touching the board.",
+        "evidence": "t006 screenshot — How to play screen",
+        "causes": null,
+        "playerImpact": null,
+        "positives": null,
+        "reproRate": null,
+        "build": "2026-09-03 · 13:06",
+        "device": "iPhone 17 (Simulator)",
+        "os": "iOS 18.7",
+        "locale": "en-US"
+      }
+    },
+    {
+      "turn": 6,
+      "action": {
+        "type": "tap",
+        "button": "btnLegendBack"
+      },
+      "result": "tapped how-to-play: Back"
+    },
+    {
+      "turn": 7,
+      "action": {
+        "type": "tap",
+        "button": "btnPlay"
+      },
+      "result": "tapped landing: the primary CTA — \"Play\" on a fresh install, \"Continue — Level N\", or \"Resume level N\" when a paused attempt is on the board"
+    },
+    {
+      "turn": 9,
+      "level": 1,
+      "say": "Level one, dead simple — one block, gate right there. Drag it out.",
+      "thought": "No-fail L1 confirmed, per the design rule.",
+      "note": null
+    },
+    {
+      "turn": 9,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": null,
+        "exit": "right"
+      },
+      "result": "block #0 escaped through the right gate. 4 moves left."
+    },
+    {
+      "turn": 10,
+      "level": 1,
+      "say": "Clean win card, third star still sparkles even though I only earned two of the visible ones filled — wait, all three are lit, good, that tracks since I hit par. Moving to level two.",
+      "thought": "First win moment lands fine, on to L2.",
+      "note": null
+    },
+    {
+      "turn": 10,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 12,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": null,
+        "exit": "top"
+      },
+      "result": "block #1 escaped through the top gate. 5 moves left."
+    },
+    {
+      "turn": 13,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": null,
+        "exit": "right"
+      },
+      "result": "block #0 escaped through the right gate. 4 moves left."
+    },
+    {
+      "turn": 15,
+      "level": 2,
+      "say": "Whoa, hang on — level two just told me Sheet 02 is filed and shows the certification blurb. I have cleared two levels total, not a full sheet. That is a real honesty problem on a card that is supposed to be trustworthy.",
+      "thought": "This looks like the win card header is reading the level number where it should read the sheet number, and firing the sheet-filed copy on a plain level clear.",
+      "note": {
+        "id": "A-t15",
+        "turn": 15,
+        "level": 2,
+        "persona": "critic",
+        "rater": "A",
+        "kind": "issue",
+        "area": "bug",
+        "theme": "win-card-sheet-mislabel",
+        "heuristic": "honesty",
+        "raterSeverity": "major",
+        "frequency": 4,
+        "impact": 3,
+        "persistence": 2,
+        "severityScore": 3,
+        "severityRating": 3,
+        "severity": "major",
+        "text": "Clearing Level 2 (still Sheet 01, 2 of 10 levels done) shows a win card headed \"SHEET 02\" with the title \"Sheet filed!\" and the certification blurb (\"24 stars on a sheet earns its paper\"), identical framing to an actual sheet completion. A brand-new player has cleared two levels and is being told a sheet — ten levels — is filed. Level 1s card correctly said \"SHEET 01 / Level clear!\", so this looks like the header is reading the level number in place of the sheet index and the title logic is firing the sheet-complete copy on level 2 specifically.",
+        "evidence": "t015 screenshot — Level 2 win card, header SHEET 02, title Sheet filed!",
+        "causes": "Off-by-one or shared-index bug: sheet label and completion-title branch likely keyed off level number (2) instead of computed sheet number (still 1) and sheet-progress (2/10, not 8+/10).",
+        "playerImpact": "A player is told they finished a whole sheet and earned certification progress two levels into a forty-level game. It reads as either a serious bug or a dishonest inflation of progress, either of which damages trust in every subsequent star count and certification claim on the same card family.",
+        "positives": "Level 1s win card (SHEET 01 / Level clear!) was correctly labeled, so the surrounding system works; this looks like an isolated branch/index bug rather than a design problem.",
+        "reproRate": "1/1, deterministic — happened exactly at Level 2 on a fresh save",
+        "build": "2026-09-03 · 13:06",
+        "device": "iPhone 17 (Simulator)",
+        "os": "iOS 18.7",
+        "locale": "en-US"
+      }
+    },
+    {
+      "turn": 15,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 17,
+      "level": 3,
+      "say": "Three red blocks, one gate at the bottom-left three lanes. It is even pre-showing me a ghost route for the corner-turn tutorial beat. Let me shift the long block into the lane first.",
+      "thought": "Nice — the corner-turn hint appears exactly when the mechanic first matters, not before.",
+      "note": null
+    },
+    {
+      "turn": 17,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": [
+          0,
+          1
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #1 escaped through the bottom gate. 6 moves left."
+    },
+    {
+      "turn": 18,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          1,
+          2
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #2 escaped through the bottom gate. 5 moves left."
+    },
+    {
+      "turn": 19,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          0,
+          0
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #0 escaped through the bottom gate. 4 moves left."
+    },
+    {
+      "turn": 21,
+      "level": 3,
+      "say": "Daily draft card just unlocked after three clears, and I noticed the sheet header still says Sheet 03 even though Im still on sheet one at level three — that confirms the header bug is on every level, not a one-off. Let me check the sheet index before moving on.",
+      "thought": "Reproduces every level; strengthens the earlier bug note.",
+      "note": null
+    },
+    {
+      "turn": 21,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 22,
+      "action": {
+        "type": "tap",
+        "button": "btnMenu"
+      },
+      "result": "tapped HUD: pause / unpause"
+    },
+    {
+      "turn": 23,
+      "action": {
+        "type": "tap",
+        "button": "btnPauseLevels"
+      },
+      "result": "tapped pause: Levels"
+    },
+    {
+      "turn": 25,
+      "level": 4,
+      "say": "The sheet index does the honesty thing right — banked stars, to-certify count spelled out in plain numbers, future sheets shown locked and dimmed instead of hidden. And the daily draft card flags First attempt is recorded before I even open it, which is the kind of honesty flag that matters for a scored daily.",
+      "thought": "This is the honest-totals framing the round focus asked about, and it holds up well.",
+      "note": {
+        "id": "A-t25",
+        "turn": 25,
+        "level": 4,
+        "persona": "critic",
+        "rater": "A",
+        "kind": "positive",
+        "area": "retention",
+        "theme": "sheet-index-honest-totals",
+        "heuristic": "honesty",
+        "raterSeverity": null,
+        "severity": null,
+        "severityScore": null,
+        "severityRating": null,
+        "text": "The Levels screen states banked stars vs to-certify plainly per sheet (e.g. \"9 banked · 15 to certify\") instead of just a bar, and locked sheets 2-4 are shown as visibly dimmed/striped tiles rather than hidden, so progression feels legible rather than mysterious. The Daily Draft entry also pre-warns \"FIRST ATTEMPT IS RECORDED\" before the player opens it, which is an honest framing for a scored one-shot mode.",
+        "evidence": "t025 screenshot — Levels screen after 3 clears",
+        "causes": null,
+        "playerImpact": null,
+        "positives": null,
+        "reproRate": null,
+        "build": "2026-09-03 · 13:06",
+        "device": "iPhone 17 (Simulator)",
+        "os": "iOS 18.7",
+        "locale": "en-US"
+      }
+    },
+    {
+      "turn": 25,
+      "action": {
+        "type": "tap",
+        "button": "btnLevelsBack"
+      },
+      "result": "tapped levels: Back (returns to the pause card if opened from pause)"
+    },
+    {
+      "turn": 28,
+      "action": {
+        "type": "tap",
+        "button": "btnResume"
+      },
+      "result": "tapped pause: Resume"
+    },
+    {
+      "turn": 31,
+      "action": {
+        "type": "tap",
+        "button": "btnMenu"
+      },
+      "result": "tapped HUD: pause / unpause"
+    },
+    {
+      "turn": 36,
+      "level": 4,
+      "say": "Fixing the field — filing that ink-preset bug under bug/accessibility.",
+      "thought": "Schema fix, same finding.",
+      "note": {
+        "id": "A-t36",
+        "turn": 36,
+        "level": 4,
+        "persona": "critic",
+        "rater": "A",
+        "kind": "issue",
+        "area": "bug",
+        "theme": "ink-preset-unresponsive",
+        "heuristic": "accessibility",
+        "raterSeverity": "major",
+        "frequency": 2,
+        "impact": 4,
+        "persistence": 2,
+        "severityScore": 2,
+        "severityRating": 2,
+        "severity": "minor",
+        "text": "On the pause card, tapping the deuteranopia or protanopia ink preset tiles never changes the selected preset — the default (A) tile stays highlighted and the on-board block colors are unchanged in three separate attempts. The third attempt (protanopia) returned a hard error from the tap handler rather than silently no-opping. For a color-matching puzzle game, the colorblind presets are the single most load-bearing accessibility feature in the product, and right now a colorblind player who opens this exact menu to fix their experience gets nothing.",
+        "evidence": "t034/t036 screenshots — A still highlighted after tapping ink:deuteranopia twice; ink:protanopia returned {\"error\":\"el.count is not a function\"}",
+        "causes": "Likely a broken click handler or missing DOM binding on the non-default ink tiles — the default tile presumably needs no handler since it is already active, which would explain why only the alternate presets fail.",
+        "playerImpact": "A colorblind player cannot switch off the default palette through the documented control. Given the How to Play screen explicitly promises shape-plus-color redundancy AND colorblind presets as the accessibility answer, this leaves that promise unfulfilled for exactly the audience it targets.",
+        "positives": "The shape+color redundancy (circle/triangle/etc. on every block and gate) still works regardless, so this is a degraded-not-broken accessibility story, not a total failure.",
+        "reproRate": "2/2 visible no-ops, 1/1 hard error on a third distinct preset",
+        "build": "2026-09-03 · 13:06",
+        "device": "iPhone 17 (Simulator)",
+        "os": "iOS 18.7",
+        "locale": "en-US"
+      }
+    },
+    {
+      "turn": 37,
+      "action": {
+        "type": "tap",
+        "button": "btnResume"
+      },
+      "result": "tapped pause: Resume"
+    },
+    {
+      "turn": 39,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": null,
+        "exit": "left"
+      },
+      "result": "block #0 escaped through the left gate. 7 moves left."
+    },
+    {
+      "turn": 40,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": [
+          1,
+          3
+        ],
+        "exit": "bottom"
+      },
+      "result": "error: block #1 has no clear path out the bottom side (wrong color gate, lanes not covered, or something in the way)"
+    },
+    {
+      "turn": 42,
+      "action": {
+        "type": "drag",
+        "block": 2,
+        "to": [
+          0,
+          2
+        ],
+        "exit": "left"
+      },
+      "result": "block #2 escaped through the left gate. 6 moves left."
+    },
+    {
+      "turn": 43,
+      "action": {
+        "type": "drag",
+        "block": 1,
+        "to": [
+          1,
+          3
+        ],
+        "exit": "bottom"
+      },
+      "result": "block #1 escaped through the bottom gate. 5 moves left."
+    },
+    {
+      "turn": 44,
+      "action": {
+        "type": "drag",
+        "block": 3,
+        "to": [
+          3,
+          2
+        ],
+        "exit": "left"
+      },
+      "result": "block #3 escaped through the left gate. 4 moves left."
+    },
+    {
+      "turn": 46,
+      "action": {
+        "type": "tap",
+        "button": "btnNext"
+      },
+      "result": "tapped win card: Next level"
+    },
+    {
+      "turn": 48,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          1
+        ],
+        "exit": null
+      },
+      "result": "error: give a destination cell and/or an exit side"
+    },
+    {
+      "turn": 49,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          1
+        ],
+        "exit": null
+      },
+      "result": "error: give a destination cell and/or an exit side"
+    },
+    {
+      "turn": 50,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          1
+        ],
+        "exit": null
+      },
+      "result": "error: give a destination cell and/or an exit side"
+    },
+    {
+      "turn": 51,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          1
+        ],
+        "exit": null
+      },
+      "result": "error: give a destination cell and/or an exit side"
+    },
+    {
+      "turn": 52,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          1
+        ],
+        "exit": null
+      },
+      "result": "error: give a destination cell and/or an exit side"
+    },
+    {
+      "turn": 53,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          1
+        ],
+        "exit": null
+      },
+      "result": "error: give a destination cell and/or an exit side"
+    },
+    {
+      "turn": 54,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          1
+        ],
+        "exit": null
+      },
+      "result": "error: give a destination cell and/or an exit side"
+    },
+    {
+      "turn": 55,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          4
+        ]
+      },
+      "result": "error: block #0 cannot slide to (1,4) — blocked or off-board"
+    },
+    {
+      "turn": 56,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          1
+        ]
+      },
+      "result": "error: give a destination cell and/or an exit side"
+    },
+    {
+      "turn": 57,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          4
+        ]
+      },
+      "result": "error: block #0 cannot slide to (1,4) — blocked or off-board"
+    },
+    {
+      "turn": 58,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          1
+        ]
+      },
+      "result": "error: give a destination cell and/or an exit side"
+    },
+    {
+      "turn": 59,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          4
+        ]
+      },
+      "result": "error: block #0 cannot slide to (1,4) — blocked or off-board"
+    },
+    {
+      "turn": 60,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          1
+        ]
+      },
+      "result": "error: give a destination cell and/or an exit side"
+    },
+    {
+      "turn": 61,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          4
+        ]
+      },
+      "result": "error: block #0 cannot slide to (1,4) — blocked or off-board"
+    },
+    {
+      "turn": 63,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          3,
+          1
+        ]
+      },
+      "result": "error: block #0 cannot slide to (3,1) — blocked or off-board"
+    },
+    {
+      "turn": 64,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          1
+        ]
+      },
+      "result": "error: give a destination cell and/or an exit side"
+    },
+    {
+      "turn": 65,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          3,
+          1
+        ]
+      },
+      "result": "error: block #0 cannot slide to (3,1) — blocked or off-board"
+    },
+    {
+      "turn": 66,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          1
+        ]
+      },
+      "result": "error: give a destination cell and/or an exit side"
+    },
+    {
+      "turn": 67,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          3,
+          1
+        ]
+      },
+      "result": "error: block #0 cannot slide to (3,1) — blocked or off-board"
+    },
+    {
+      "turn": 68,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          1
+        ]
+      },
+      "result": "error: give a destination cell and/or an exit side"
+    },
+    {
+      "turn": 69,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          3,
+          1
+        ]
+      },
+      "result": "error: block #0 cannot slide to (3,1) — blocked or off-board"
+    },
+    {
+      "turn": 70,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          2
+        ]
+      },
+      "result": "block #0 now at (1,2). 6 moves left."
+    },
+    {
+      "turn": 71,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          1
+        ]
+      },
+      "result": "block #0 now at (1,1). 5 moves left."
+    },
+    {
+      "turn": 72,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          2
+        ]
+      },
+      "result": "block #0 now at (1,2). 4 moves left."
+    },
+    {
+      "turn": 73,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          1
+        ]
+      },
+      "result": "block #0 now at (1,1). 3 moves left."
+    },
+    {
+      "turn": 74,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          2
+        ]
+      },
+      "result": "block #0 now at (1,2). 2 moves left."
+    },
+    {
+      "turn": 75,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          1
+        ]
+      },
+      "result": "block #0 now at (1,1). 1 moves left."
+    },
+    {
+      "turn": 76,
+      "action": {
+        "type": "drag",
+        "block": 0,
+        "to": [
+          1,
+          2
+        ]
+      },
+      "result": "block #0 now at (1,2). 0 moves left."
+    },
+    {
+      "turn": 79,
+      "level": 5,
+      "say": "The fail card is honest and calm — no shame framing, states plainly zero of four escaped, flags one block is a single drag from its gate as real state truth, and the rescue button is clearly ad-gated with an AD tag, not disguised as a freebie. Let me watch the rescue to check the grant does not celebrate like a purchase would.",
+      "thought": "This matches the near-miss and monetization rules from the brief well.",
+      "note": {
+        "id": "A-t79",
+        "turn": 79,
+        "level": 5,
+        "persona": "critic",
+        "rater": "A",
+        "kind": "positive",
+        "area": "monetization",
+        "theme": "fail-card-honest-rescue",
+        "heuristic": "honesty",
+        "raterSeverity": null,
+        "severity": null,
+        "severityScore": null,
+        "severityRating": null,
+        "text": "The Out of Moves card is calm rather than punishing, states the exact outcome (0 of 4 escaped), truthfully flags that one block is a single drag from its gate (real state, not manufactured), and clearly marks the rescue button with an AD tag and watch to continue copy rather than hiding that it costs a video. Retry sits as an equal, non-shamed alternative underneath.",
+        "evidence": "t078 screenshot — Level 5 fail card",
+        "causes": null,
+        "playerImpact": null,
+        "positives": null,
+        "reproRate": null,
+        "build": "2026-09-03 · 13:06",
+        "device": "iPhone 17 (Simulator)",
+        "os": "iOS 18.7",
+        "locale": "en-US"
+      }
+    },
+    {
+      "turn": 79,
+      "action": {
+        "type": "tap",
+        "button": "btnRescue"
+      },
+      "result": "tapped fail card: +3 moves rescue"
+    }
+  ]
+}
