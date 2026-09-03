@@ -36,11 +36,11 @@ node tools/reviewer-server.mjs --game <game> --out <runDir> (--levels A-B | --mi
 Wait until its log prints "studio on http://127.0.0.1:7411", then `curl -s localhost:7411/state` once to confirm `screen` and a `screenshot` path come back — the same line reports the build stamp and OS it read from the page, which is what gets stamped on every note, so a `build unstamped` there means the run dir will not say which build was reviewed. To self-test the harness without a model: `node tools/reviewer-dry.mjs --levels 2` (it also posts one full-schema note and fails if the console does not compute the severity itself). If port 7411 is busy, stop the previous server with `curl -s -X POST localhost:7411/end -d '{}'` first.
 
 Do NOT stream the commentary into the conversation (the studio panel and `<runDir>/live.md` already show it) unless the user passes `--stream`; keep the chat free while the reviewer works.
-## 2. Spawn the reviewer subagent (general-purpose, name `reviewer` — or `breaker`, **model: opus**)
+## 2. Spawn the rater subagents (general-purpose, names `critic-A/B/C` on **model: sonnet**; a `breaker` on **model: opus**)
 
-Model defaults (set on the Agent call's `model`): first-run personas on **opus** (repeat coverage on **sonnet**); the developer on **opus**, escalated to **fable** only for scoring/level-generation/validity work or after a failed opus pass; mechanical helpers such as dry runs on **sonnet**.
+Model defaults (set on the Agent call's `model`): the three critic raters on **sonnet** — three raters buys severity reliability, not model strength (NN/g); the breaker on **opus**; the developer on **opus**, escalated to **fable** only for scoring/level-generation/validity work or after a failed opus pass; mechanical helpers such as dry runs on **sonnet**. Run ONE developer pass at a time.
 
-## 3. When the reviewer finishes, spawn the developer subagent (general-purpose, name `developer`, **model: fable**) — unless `--no-dev`
+## 3. When every rater has filed, spawn ONE developer subagent (general-purpose, name `developer`, **model: opus**; fable only on escalation) — unless `--no-dev`
 
 Use the prompt in `prompts/developer.md`, substituting `<runDir>` (all run dirs when sessions ran in parallel — one developer pass consumes every report). It reads `review.md`, `notes.json` (schema 2), `live.md`; **merges the raters' notes by `theme` and prioritises on the mean severity before triaging anything**; actions every theme it can; re-runs the playtest bots; rebuilds `dist/` and `app/www`; and writes `<runDir>/dev-report.md` with a merged findings table, the rater disagreements, a "do not change" list from the raters' positives, and a **SKIP log naming every note it did not action**. It must not commit.
 
