@@ -1189,9 +1189,9 @@ const pickTwo = () => page.evaluate(() => {
   await closeSheet();
   await winL1(); const st3 = await S();
   const missedDay = await page.evaluate(() => { const d = new Date(window.GE.now() - 864e5); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); });
-  const ok = filedRow && filedRow.stamp === 'FILED' && filedRow.k === 'Contract filed' && /Weather delay banked · 1 held/.test(filedRow.v)
+  const ok = filedRow && filedRow.stamp === 'FILED' && filedRow.k === 'Contract filed' && /Weather delay banked — covers one missed streak day · 1 held/.test(filedRow.v)
     && v1.filed.length === 1 && v1.seal === false && st1.freezes === 1 && st1.stats.contract_filed === 1
-    && fr.r === 'freeze' && fr.up && fr.h2 === 'Weather delay' && fr.sub === 'Weather delay used — survey day covered · 0 left'
+    && fr.r === 'freeze' && fr.up && fr.h2 === 'Weather delay' && fr.sub === 'You missed a day. A banked delay covered it, so the streak carries on · 0 left'
     && st2.freezes === 0 && st2.stats.weather_delay_used === 1
     && JSON.stringify(v2.delays) === JSON.stringify([missedDay])
     && covered.spine.filter(d => d.delay).length === 1 && covered.spine.find(d => d.delay).m === '~'

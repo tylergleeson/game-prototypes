@@ -65,7 +65,7 @@ row on the sheet index reads "n/7 · N pts" (plus a SELECT 2 badge until the con
  * the WEEKLY SEAL: filing ONE contract banks a WEATHER DELAY (max 2 held); filing BOTH seals the week and yields a fragment (a keepsake tally —
    nothing is gated on it, or on any of this).
 The streak is unchanged: consecutive calendar days with ≥1 clear, stated in the survey sheet's header. A missed day consumes a banked weather delay
-automatically (calm "Weather delay used — survey day covered" notice at next launch) and that day is stamped ~ on the spine. With nothing banked the
+automatically (calm "You missed a day. A banked delay covered it, so the streak carries on" notice at next launch) and that day is stamped ~ on the spine. With nothing banked the
 streak simply LAPSES SILENTLY — there is no repair surface at all: no card, no ad, no offer at the moment of loss; the counter clears and the next
 clear starts a new streak at 1. (Worth a reviewer's attention: does the silent reset read as calm, or as something going missing? And is "choose 2 of 4,
 set once you start" a real decision or a trap?) Only last week's result line is kept. Dates all come from GE.now (overridable for testing).
@@ -129,7 +129,7 @@ top-left origin; its cells are listed absolute.`,
     btnPausePaperCyan: 'pause: Paper → Cyanotype', btnPausePaperSepia: 'pause: Paper → Sepia draft', btnPausePaperNight: 'pause: Paper → Night vellum', btnPausePaperWhite: 'pause: Paper → Whiteprint',
     btnHaptics: 'sheet index: toggle haptics (native app only — hidden in a browser)', btnPauseHaptics: 'pause: toggle haptics (native app only)',
     btnPauseMotion: 'pause: toggle Motion on/off — off forces the reduced-motion rendering path (persisted)',
-    btnFreezeOk: 'weather-delay notice: Continue — dismiss the "Weather delay used — survey day covered" notice',
+    btnFreezeOk: 'weather-delay notice: Continue — dismiss the "You missed a day. A banked delay covered it" notice',
     btnSurvey: "sheet index: Field survey row — open this week's sheet (day spine, contracts, marks, seal)",
     btnSurveyClose: 'survey sheet: Close',
     btnAppr: 'sheet index: the Stamp shelf beside the paper picker — a tap names the approval stamp, or (while pending) the sheet that pays it. There is nothing to select: the stamp is on the win card or it is not',

@@ -436,6 +436,7 @@
   #livesModal { z-index:25; }
   #livesModal .hearts { display:block; font-size:26px; letter-spacing:7px; margin-bottom:8px; }
   #freezeModal { z-index:25; }
+  #infoModal { z-index:25; } /* revision notes open over the cover sheet (screens are z-20) */
   /* contract list on the survey sheet — label, progress bar, count, FILED stamp. (This markup
      used to be the three daily quests; the merge kept the row shape and moved it into the sheet.) */
   .quests { border:1px solid var(--line2); margin-top:8px; text-align:left; }
@@ -576,7 +577,7 @@
   [hidden] { display:none !important; }
 .build{margin-top:6px;font-family:var(--mono,monospace);font-size:10px;letter-spacing:.14em;opacity:.6;background:none;border:0;color:inherit;padding:6px 8px;cursor:pointer}
 .build:after{content:"  \24D8";letter-spacing:0;font-size:12px}
-#infoNotes{margin:10px 0 0;padding-left:18px;font-size:13px;line-height:1.45}#infoNotes li{margin:4px 0}
+#infoNotes{margin:10px 0 0;padding-left:18px;font-size:13px;line-height:1.45;text-align:left}#infoNotes li{margin:4px 0}
 </style>
 </head>
 <body>
@@ -704,6 +705,7 @@
     <div class="card">
       <span class="no">FIELD LOG</span>
       <h2>Weather delay</h2>
+      <p style="margin-bottom:6px">A weather delay covers one missed day of your streak. You bank one by filing a survey contract.</p>
       <p id="freezeSub"></p>
       <button class="primary" id="btnFreezeOk">Continue</button>
     </div>

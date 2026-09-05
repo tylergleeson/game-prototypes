@@ -1,7 +1,7 @@
 # What's new (the top section ships in the app's ⓘ revision notes)
 
 ## 2026-09-05
-- Tap ⓘ on the cover sheet for these notes and the build stamp
+- ⓘ notes now open over the cover sheet; a weather delay covers one missed streak day
 - FIELD REPORT is one line to compare: stars, moves/par, a CLEAN token, the draft number
 - A rescue inside a recorded draft is priced into the record (+3) and always marked
 - Midnight rule stated in-game: a draft belongs to the day it started

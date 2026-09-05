@@ -1241,7 +1241,7 @@
     const rs = onWinSurvey(info);
     let row = null;
     if (rs.sealed) row = { stamp: 'SEAL', k: 'Survey sealed', v: `Both contracts filed · fragment ${survey.frags}` };
-    else if (rs.justFiled.length) row = { stamp: 'FILED', k: 'Contract filed', v: rs.delayBanked ? `Weather delay banked · ${streak.freezes} held` : CONTRACTS[rs.justFiled[0]].label };
+    else if (rs.justFiled.length) row = { stamp: 'FILED', k: 'Contract filed', v: rs.delayBanked ? `Weather delay banked — covers one missed streak day · ${streak.freezes} held` : CONTRACTS[rs.justFiled[0]].label };
     else if (sr.newBest) row = { stamp: 'BEST', k: 'New best streak', v: `${streak.len} days in a row` };
     queueQuietRow(row);
   });
@@ -1291,7 +1291,7 @@
       for (let i = gap - 1; i >= 1; i--) { const d = dayStr(GE.now() - i * 864e5); if (!isBroken(d) && !s.delays.includes(d)) s.delays.push(d); }
       saveSurvey();
       track('weather_delay_used', { missed, left: streak.freezes });
-      $('freezeSub').textContent = `Weather delay used — survey day covered · ${streak.freezes} left`;
+      $('freezeSub').textContent = `You missed a day. A banked delay covered it, so the streak carries on · ${streak.freezes} left`;
       $('freezeModal').hidden = false;
       GE.armCard($('freezeModal').querySelector('.card'));
       refreshSurvey();
