@@ -4,7 +4,7 @@
 // This folder is both directly hostable (Add to Home Screen works) and the
 // Capacitor webDir for the native iOS build.
 import fs from 'fs';
-const GE_STAMP = (d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + ' · ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'))(new Date());
+const GE_STAMP = (d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + ' · ' + (d.getHours() % 12 || 12) + ':' + String(d.getMinutes()).padStart(2,'0') + ' ' + (d.getHours() < 12 ? 'AM' : 'PM'))(new Date()); // 12-hour clock, user's ask 2026-09-05
 const root = new URL('..', import.meta.url).pathname;
 const GE_NOTES = (() => { try { const md = fs.readFileSync(root + 'WHATS-NEW.md', 'utf8'); const sec = md.split(/^## /m)[1] || ''; return sec.split('\n').filter(l => l.startsWith('- ')).map(l => l.slice(2).trim().slice(0, 96)).slice(0, 10); } catch (e) { console.error('WHATS-NEW.md not read: ' + e.message); return []; } })();
 const out = root + 'app/www/';

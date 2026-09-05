@@ -5158,7 +5158,7 @@ const pixelOf = async (sel, fx, fy) => {
 // that opens the build stamp plus the top section of WHATS-NEW.md written at build time.
 {
   const r = await page.evaluate(() => {
-    window.GE_BUILD = '2026-09-05 · 00:00'; window.GE_NOTES = ['Alpha note', 'Beta note'];
+    window.GE_BUILD = '2026-09-05 · 12:00 AM'; window.GE_NOTES = ['Alpha note', 'Beta note'];
     window.GE_MENU.show('menu');
     const btn = document.getElementById('btnInfo');
     const landing = window.GE_MENU.landing();

@@ -3,7 +3,7 @@
 // game files, nothing else. BEACON_URL ships exactly as configured in index.html.
 //   node tools/build-itch.mjs  →  dist/itch/gate-escape-itch.zip
 import fs from 'fs';
-const GE_STAMP = (d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + ' · ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'))(new Date());
+const GE_STAMP = (d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + ' · ' + (d.getHours() % 12 || 12) + ':' + String(d.getMinutes()).padStart(2,'0') + ' ' + (d.getHours() < 12 ? 'AM' : 'PM'))(new Date()); // 12-hour clock, user's ask 2026-09-05
 import { execSync } from 'child_process';
 
 const root = new URL('..', import.meta.url).pathname;
