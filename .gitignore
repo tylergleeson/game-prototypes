@@ -3,3 +3,4 @@ node_modules/
 reviews/*/shots/
 prototypes/*/app/ios/App/build-device/
 prototypes/*/tools/soak-fail-*.json
+prototypes/*/app/.asc.json

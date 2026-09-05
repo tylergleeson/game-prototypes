@@ -26,8 +26,34 @@ npm run ios:open    # opens Xcode
 ```
 
 In Xcode: select your Team under Signing & Capabilities, pick your device or
-a simulator, press Run. To ship: Product → Archive → Distribute (TestFlight
-first, then App Store review).
+a simulator, press Run.
+
+## Shipping to TestFlight (one command)
+
+```bash
+../tools/ship-testflight.mjs                 # bump build number, rebuild www/, archive, upload, add to the tester group
+../tools/ship-testflight.mjs --notes "…"     # "what to test" text (default: the top section of WHATS-NEW.md)
+../tools/ship-testflight.mjs --export-only   # just produce a signed .ipa in ios/App/build/export/
+```
+
+One-time setup (the two things the API can't do for you):
+
+1. **App record** — appstoreconnect.apple.com → My Apps → + → New App: iOS,
+   name `Gate Escape: Blueprint Puzzle` (plain "Gate Escape" is taken), bundle
+   `com.gleeson.gateescape`, SKU `GE01`.
+2. **API key** — Users and Access → Integrations → App Store Connect API → +,
+   access **Admin**. Save the `.p8` as
+   `~/.appstoreconnect/private_keys/AuthKey_<KEYID>.p8` and put the Key ID,
+   Issuer ID and your contact details in `app/.asc.json` (git-ignored; the
+   script writes the template on first run).
+
+The script then finds the app, picks the next build number, archives with
+automatic signing, uploads, waits for Apple to process the build, fills in
+"what to test", adds it to the `Testers` group (created as an external group
+with a public link if it doesn't exist) and prints the link. The first build of
+each version goes through Beta App Review (up to a day); later builds reach
+testers minutes after processing, and their phones auto-update. TestFlight
+builds expire 90 days after upload — any new ship resets that.
 
 App identity lives in `capacitor.config.json` (`appId` must match the bundle
 ID you register in App Store Connect — change it if you prefer a different
