@@ -1,5 +1,10 @@
 # What's new (the top section ships in the app's ⓘ revision notes)
 
+## 2026-09-05 (comparator pass)
+- HUD and fail sheet: the limit reads par N · limit M — never a bare number
+- Level tiles show best · par before you play, not just after
+- Store copy rewritten around no-timer + proven par
+
 ## 2026-09-05
 - ⓘ notes now open over the cover sheet; a weather delay covers one missed streak day
 - FIELD REPORT is one line to compare: stars, moves/par, a CLEAN token, the draft number

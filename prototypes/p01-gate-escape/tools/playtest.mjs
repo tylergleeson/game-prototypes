@@ -5067,6 +5067,92 @@ const pixelOf = async (sel, fx, fy) => {
   }
 }
 
+// ---- comparator round: limit legibility + rescue independence ----
+// P1: the HUD chip and the fail sheet say the limit is what it is — par plus a small,
+// always-computed allowance — never a bare "moves" count. P2: a level tile shows the target
+// (par, and the filed best against it) before the player commits to a board. The new bright
+// line for the rulebook: a rescue's availability never depends on purchase history, and no
+// ad surface is ever drawn inside the play area.
+{
+  const ctx = await browser.newContext({ viewport: { width: 393, height: 852 } });
+  const pg = await ctx.newPage();
+  const errs = [];
+  pg.on('pageerror', e => errs.push(e.message));
+  await pg.goto('file://' + root + 'index.html');
+  await pg.waitForFunction(() => window.GE && window.GE.L && window.GE_MENU);
+
+  const burn = () => pg.evaluate(() => {
+    const L = window.GE.L;
+    for (let m = 0; m < L.moves + 2 && window.GE.movesLeft > 0; m++) {
+      let done = false;
+      for (let bi = 0; bi < L.blocks.length && !done; bi++) {
+        const p = window.GE.pos[bi]; if (!p) continue;
+        for (const [tx, ty] of [[p[0] + 1, p[1]], [p[0] - 1, p[1]], [p[0], p[1] + 1], [p[0], p[1] - 1]]) {
+          const b = JSON.stringify(window.GE.pos[bi]); window.GE.dragVia(bi, [[tx, ty]], null);
+          if (JSON.stringify(window.GE.pos[bi]) !== b) { done = true; break; }
+        }
+      }
+      if (!done) break;
+    }
+  });
+
+  // (a) the HUD chip on L1 and L12, matching the level's own par/moves fields exactly
+  const hud = await pg.evaluate(() => {
+    const read = i => { window.GE.load(i); const L = window.GE.L; return { text: document.getElementById('hudPar').textContent, par: L.par, moves: L.moves }; };
+    return { l1: read(0), l12: read(11) };
+  });
+  const hudOk = [hud.l1, hud.l12].every(h => h.text === `par ${h.par} · limit ${h.moves}`);
+
+  // (b) the fail sheet: par is the solver's own shortest route, the limit is par + K, K computed
+  await pg.evaluate(() => window.GE.load(0));
+  await pg.waitForTimeout(60);
+  await burn();
+  await pg.waitForSelector('#failModal:not([hidden])', { timeout: 3000 });
+  const fail = await pg.evaluate(() => ({ hidden: document.getElementById('failLimit').hidden, text: document.getElementById('failLimit').textContent, par: window.GE.L.par, moves: window.GE.L.moves }));
+  const failOk = !fail.hidden && fail.text === `Par ${fail.par} is the solver’s shortest route · the limit is par + ${fail.moves - fail.par}`;
+  await pg.screenshot({ path: `${shotDir}/comparator-fail-limit.png` });
+
+  // (c) the sheet index: a cleared tile prints its filed best against par, an uncleared one
+  // prints par alone — the target is visible before the player commits to a board
+  await pg.evaluate(() => {
+    localStorage.setItem('ge_prog', JSON.stringify({ u: 6, s: [3, 0, 0, 0, 0, 0, 0] }));
+    localStorage.setItem('ge_best', JSON.stringify({ 0: 1 }));
+  });
+  await pg.reload();
+  await pg.waitForFunction(() => window.GE && window.GE.L && window.GE_MENU);
+  await pg.evaluate(() => window.GE_MENU.show('levels'));
+  await pg.waitForTimeout(80);
+  const tiles = await pg.evaluate(() => ({
+    cleared: document.querySelector('#levelGrid .tile[data-level="1"] .pr')?.textContent ?? null,
+    uncleared: document.querySelector('#levelGrid .tile[data-level="6"] .pr')?.textContent ?? null,
+  }));
+  await pg.screenshot({ path: `${shotDir}/comparator-tiles.png` });
+  const tilesOk = tiles.cleared === '1 · par 1' && tiles.uncleared === 'par 6';
+
+  // (d) rescue availability never depends on purchase history, and no ad surface is ever drawn
+  // inside the play area. "ge_purchases" names no key the shipped code reads or writes — assert
+  // the source is silent on it, then force the key into storage anyway and confirm nothing
+  // changes: the rescue button on the fail sheet stays present and enabled, and no banner element
+  // exists in the DOM while a level is loaded.
+  const srcHits = ['game.js', 'menu.js', 'index.html']
+    .reduce((n, f) => n + (fs.readFileSync(root + f, 'utf8').match(/ge_purchases/g) || []).length, 0);
+  await pg.evaluate(() => { localStorage.setItem('ge_purchases', JSON.stringify({ tier: 'pro' })); window.GE.load(11); });
+  await pg.waitForTimeout(60);
+  const banners = await pg.evaluate(() => document.querySelectorAll('#banner, .banner, [data-ad-banner]').length);
+  await burn();
+  await pg.waitForSelector('#failModal:not([hidden])', { timeout: 3000 });
+  const rescue = await pg.evaluate(() => {
+    const btn = document.getElementById('btnRescue');
+    return { present: !!btn, hidden: btn.hidden, disabled: btn.disabled };
+  });
+  const rescueOk = srcHits === 0 && banners === 0 && rescue.present && !rescue.hidden && !rescue.disabled;
+
+  await ctx.close();
+  const ok = hudOk && failOk && tilesOk && rescueOk && !errs.length;
+  if (ok) console.log(`limit legibility ok: HUD reads "${hud.l1.text}" on L1 and "${hud.l12.text}" on L12; the fail sheet reads "${fail.text}"; tiles read "${tiles.cleared}" cleared / "${tiles.uncleared}" uncleared; the rescue button stays present and enabled with a fake ge_purchases key in storage (zero references to it in source) and no ad-banner element ever appears in the play area`);
+  else { failures++; console.error('limit legibility FAIL:', JSON.stringify({ hud, fail, tiles, srcHits, banners, rescue, errs })); }
+}
+
 // ---- round 2 lead: ⓘ revision notes ----
 // The cover's REV line is a tappable ⓘ (chrome, excluded from the landing's 3-action count)
 // that opens the build stamp plus the top section of WHATS-NEW.md written at build time.

@@ -13,16 +13,25 @@ listing content only.
   **Gate Escape: Blueprint Puzzle** (30-char limit; this is 28 ✓).
   The in-app title and `CFBundleDisplayName` (the name under the icon) can stay
   "Gate Escape" — only the store listing name must be unique.
-- **Subtitle** (30 chars): `Drag blocks out. One move each.` (31 — trim to
-  `Drag blocks out, one move each` = 30 ✓)
+- **Subtitle** (30 chars): `No timer. Every star a proof` (28 ✓) — from the
+  comparator round's store-positioning sheet (`reviews/p01-comparators-20260905/uvp.md`):
+  it carries the segment's search words and the one claim none of the three
+  comparator apps can make without changing their business model. Previous
+  subtitle, kept as the listed alternative if "no timer" is already in the
+  keyword field: `Drag blocks out, one move each` (30 ✓)
 - **Category**: Games → Puzzle (secondary: Board)
 - **Price**: Free. No IAP at this stage (the ad slots are free placeholders —
   do NOT declare IAP until real monetization ships).
 
 ## Promotional text (170 chars, editable without review)
 
-> 40 hand-drafted blueprint puzzles across four sheets. Every level is machine-verified
-> solvable — when you're stuck, that's the puzzle talking. No timer, ever.
+> Drag every block through its gate — one move, any distance, around corners. Par is
+> solver-proven. No timer, no lives, no ads between levels, verified on every build.
+
+(165 chars ✓. The comparator round's UVP sheet — `reviews/p01-comparators-20260905/uvp.md`
+— gives this as one sentence at 188 chars, 18 over the field's 170-char limit; trimmed here
+to fit while keeping all three ownable claims — every star is a proof, no timer/lives/ads
+verified on every build, one drag around corners.)
 
 ## Description
 
@@ -36,15 +45,16 @@ time: corners, ordering, stones, corked boards where a block has to step aside a
 back, new shapes, a fourth colour — a proper spike in the twenties — and then Sheet 4,
 where some blocks carry a revision stamp and have to leave in numbered order.
 
-- ONE DRAG = ONE MOVE. Plan complete routes, not steps. Three stars at par, two at one over.
-- NO TIMER ANYWHERE. Thinking is free; only drags are spent.
-- EVERY LEVEL PROVED SOLVABLE by the same solver that sets par. No unfair boards.
+- EVERY STAR IS A PROOF. Par is computed by the same solver that built the level and proved
+  it solvable — three stars only when you match it, two at one over. Never a guess.
+- NO TIMER, NO LIVES, NO ADS BETWEEN LEVELS — verified on every build. The playtest bot
+  fails the build if a clock, a life or an interstitial ever appears.
+- ONE DRAG, ANY DISTANCE, AROUND CORNERS — and a symbol on every colour. Route-finding,
+  not rail-shunting, on a board four-colour-blind players can read as easily as anyone.
 - THE APPROVAL CHAIN (Sheet 4): numbered blocks leave in order. Out of turn, a block still
   slides anywhere — it just parks at its gate instead of leaving.
 - UNDO, HINTS AND A RESCUE when you're one move short.
-- A DRAFTING-TABLE WORLD: cyanotype blueprint art, stamped gates, generated
-  audio, and a shape stamped on every block and gate so colour is never the
-  only cue.
+- A DRAFTING-TABLE WORLD: cyanotype blueprint art, stamped gates, and generated audio.
 - A DAILY DRAFT: one board a day, the same board for every player, with its own par. Share
   a spoiler-free field report — the numbers, never the route.
 - A FIELD SURVEY, one sheet a week: a stamp for every day you clear a level, two contracts
@@ -58,8 +68,13 @@ where some blocks carry a revision stamp and have to leave in numbered order.
 
 ## Keywords (100 chars max, comma-separated, no spaces)
 
-`unblock,slide,puzzle,block,escape,brain,logic,drag,blueprint,minimal,casual,gate`
-(96 chars ✓ — don't waste characters on "game" or the app name; Apple indexes those.)
+`unblock,slide,puzzle,block,escape,brain,logic,drag,blueprint,gate,timer,relaxing,calm,par`
+(89 chars ✓ — don't waste characters on "game" or the app name; Apple indexes those.)
+
+Per the comparator round's store-positioning sheet: added `timer`, `relaxing`, `calm`,
+`par` (the segment's search words, and "par" is the term the ownable proof claim hangs
+on); dropped `minimal` and `casual` (no search value — the prior list's own note already
+said so about "game"/the app name, and these two carry no more).
 
 ## Age rating questionnaire
 
@@ -103,6 +118,24 @@ verification bot on the simulator — no staging, no device frames, no added cop
 
 Suggested order on the listing: L12 board first (the game at its best), then
 L1 (instant readability), win card, fail/rescue, title block.
+
+## Screenshots (first three)
+
+The comparator round's store-positioning sheet (`reviews/p01-comparators-20260905/uvp.md`)
+specs the first three frames — the ones that carry the ownable claims before a scroll —
+replacing the generic order above for those three slots. `tools/capture-vertical.mjs` still
+produces the shots listed in "Screenshots (in this folder)"; it does NOT yet stage these
+three exact frames or burn in these captions, and is scoped to be re-scripted in the next
+marketing pass, not this one.
+
+1. **Frame 1** — mid-drag corner route, the PAR chip visible in the HUD, no clock anywhere
+   on screen.
+   Caption: **ONE DRAG. ANY DISTANCE.**
+2. **Frame 2** — a board with all four colours and their four symbols, gates stamped to
+   match, with "PAR 6 · LIMIT 8" (or the on-screen level's own numbers) visible in the HUD.
+   Caption: **EVERY STAR IS A PROOF**
+3. **Frame 3** — a Daily Draft result screen showing the field report line.
+   Caption: **NO TIMER. NO LIVES. NO ADS BETWEEN LEVELS.**
 
 ## Other fields
 

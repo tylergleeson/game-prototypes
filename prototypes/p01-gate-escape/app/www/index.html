@@ -397,6 +397,11 @@
     color:var(--ink); font:800 17px var(--mono); font-variant-numeric:tabular-nums;
   }
   .tile .st { font-size:9px; letter-spacing:1px; color:var(--amber-ink); font-family:system-ui; min-height:11px; }
+  /* best · par (comparator round P2): a fact about the tile, low-key next to the stars — never
+     louder than the TOUGH ONE stamp, so it moves above the stars on a tough tile instead of
+     colliding with the stamp's own line at the bottom */
+  .tile .pr { font:600 8px var(--mono); letter-spacing:.02em; color:var(--dim); opacity:.85; min-height:9px; }
+  .tile.tough .pr { margin-bottom:1px; }
   .tile.done { background:var(--done-fill); border-color:var(--done); }
   .tile.cur { outline:2px solid var(--amber-ink); outline-offset:2px; }
   .tile.locked {
@@ -645,6 +650,7 @@
       <p id="failSub"></p>
       <p class="hint" id="failHint"></p>
       <p class="prox" id="failProx" hidden></p>
+      <p class="teach" id="failLimit"></p>
       <p class="teach" id="failTeach" hidden></p>
       <!-- the recorded draft only: what the two buttons cost, said before either is pressed -->
       <p class="teach rec" id="failDaily" hidden></p>
@@ -886,7 +892,7 @@
         <div class="li"><canvas id="symBlock" width="128" height="88"></canvas><div><b>Block</b><span>Slides anywhere, corners included.</span></div></div>
         <div class="li"><canvas id="symGate" width="128" height="88"></canvas><div><b>Gate</b><span>Same color and symbol: push through to escape.</span></div></div>
         <div class="li"><canvas id="symStone" width="128" height="88"></canvas><div><b>Stone</b><span>Never moves.</span></div></div>
-        <div class="li"><canvas id="symMoves" width="128" height="88"></canvas><div><b>Moves</b><span>One drag = one move. ★★★ at par · ★★ one over. Undo (↶) gives a move back; ? shows the next move.</span></div></div>
+        <div class="li"><canvas id="symMoves" width="128" height="88"></canvas><div><b>Moves</b><span>One drag = one move. ★★★ at par · ★★ one over. Undo (↶) gives a move back; ? shows the next move. Limit = par + a small margin.</span></div></div>
         <!-- pass 5: the approval chain. Hidden until a chained sheet exists (pass 6). -->
         <div class="li" id="liSeq" hidden><canvas id="symSeq" width="128" height="88"></canvas><div><b>Approval chain</b><span>Numbered blocks leave in order. The solid stamp is next up; the outlined ones wait.</span></div></div>
         <div class="mi" id="legendAccess"><span class="g">Reading the board</span><span>Every block carries a shape as well as a colour — circle, triangle, diamond, star — and its gate carries the same one, so the match never depends on telling two inks apart. Colourblind <b>Inks</b> and <b>Drag step</b> are under More below, and on the pause card.</span></div>

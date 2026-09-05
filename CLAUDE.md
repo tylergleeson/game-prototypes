@@ -110,6 +110,12 @@ compliance, not optimisation, and is never revisable, whatever the numbers say.
   most-quoted operators (Puzzmo, NYT Games) sell exactly this posture. A
   rescue is an offer at the moment of loss; it is never the gate in front of a
   solution.]**
+- A rescue or hint offer's **availability never depends on purchase history**, and
+  no ad surface is ever drawn inside the play area **[E3 (legal) — the same
+  Robinhood consent order / EU DFA basis as the economy rules. The comparator
+  round (reviews/p01-comparators-20260905) found Color Block Jam reviews
+  describing the free rescue-ad path vanishing after a first purchase, and
+  banner-in-play complaints in two of the three apps; the bot asserts both.]**
 - No clock as pressure — **accessibility input debounces are allowed** **[E4 —
   team judgment, and a correction to the old blanket "no timers anywhere"
   phrasing, which read as forbidding the 0.5 s post-acceptance delay and

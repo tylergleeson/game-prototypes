@@ -390,6 +390,10 @@
     const g = $('levelGrid');
     g.innerHTML = '';
     const per = PER;
+    // best · par (comparator round P2): the target is visible before play, not just after —
+    // read from the same ge_best key game.js writes a personal best move-count to.
+    let bestMap = {};
+    try { bestMap = JSON.parse(localStorage.getItem('ge_best') || '{}') || {}; } catch (e) {}
     for (let i = 0; i < N; i++) {
       if (i % per === 0) {
         // chapter rule: a header per sheet of ten with its star count and the sheet's certification —
@@ -417,7 +421,15 @@
       if (tough) b.title = tough.label + ' — ' + tough.note;
       b.dataset.level = i + 1; // tiles are addressed by level, not by grid position (headers are children too)
       b.disabled = locked;
-      b.innerHTML = `<span>${String(i + 1).padStart(2, '0')}</span><span class="st">${prog.s[i] ? '★'.repeat(prog.s[i]) : ''}</span>`
+      // the target is visible before play, not just after: a cleared tile shows the filed best
+      // against par, an uncleared one shows par alone — same numbers the HUD and fail sheet print
+      const par = LEVELS[i] ? LEVELS[i].par : null;
+      const best = bestMap[i];
+      const prLine = par == null ? '' : (prog.s[i] && best ? best + ' · par ' + par : 'par ' + par);
+      const prSpan = locked ? '' : `<span class="pr">${prLine}</span>`;
+      const starSpan = `<span class="st">${prog.s[i] ? '★'.repeat(prog.s[i]) : ''}</span>`;
+      b.innerHTML = `<span>${String(i + 1).padStart(2, '0')}</span>`
+        + (tough ? prSpan + starSpan : starSpan + prSpan)
         + (tough ? '<span class="tg">' + tough.label + '</span>' : '');
       if (!locked) b.onclick = () => { if (GE.livesGate(i)) GE.load(i); };
       g.appendChild(b);

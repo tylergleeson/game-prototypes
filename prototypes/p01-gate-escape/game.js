@@ -291,6 +291,7 @@ const failSub = document.getElementById('failSub');
 const failHint = document.getElementById('failHint');
 const failTitle = document.getElementById('failTitle');
 const failDaily = document.getElementById('failDaily');
+const failLimit = document.getElementById('failLimit');
 const btnRescueEl = document.getElementById('btnRescue');
 const btnRetryEl = document.getElementById('btnRetry');
 const hudRec = document.getElementById('hudRec');
@@ -795,7 +796,7 @@ function loadLevel(i) {
   winTimers = [];
   adClose();
   paintDailyChip();
-  hudPar.textContent = 'par ' + L.par;
+  hudPar.textContent = 'par ' + L.par + ' · limit ' + L.moves;
   paintTough();
   winModal.hidden = true; failModal.hidden = true;
   document.body.classList.remove('fail-up'); cv.style.transform = '';
@@ -1392,6 +1393,10 @@ function maybeFail() {
       // two facts already on disk, stated plainly under the reading of the position
       const fp = document.getElementById('failProx'), fpt = proxLine(best[li]);
       fp.textContent = fpt; fp.hidden = !fpt;
+      // the limit says what it is, every time, on every level including a draft: par is the
+      // solver's own shortest route, not a guess, and the limit is that number plus a small,
+      // always-computed allowance — never a hidden budget printed as a bare "moves" count.
+      failLimit.textContent = 'Par ' + L.par + ' is the solver’s shortest route · the limit is par + ' + (L.moves - L.par);
       // the board rises and shrinks so the sheet never covers the position it asks you to bet on
       document.body.classList.add('fail-up');
       toastEl.hidden = true; clearTimeout(toastTimer); // nothing sits over the board the sheet asks you to judge
