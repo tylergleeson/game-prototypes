@@ -574,7 +574,9 @@
   body.reduce-motion #hudSeq.bump { animation:none; }
   @media (prefers-reduced-motion: reduce) { #hudSeq.bump { animation:none; } }
   [hidden] { display:none !important; }
-.build{margin-top:6px;font-family:var(--mono,monospace);font-size:10px;letter-spacing:.14em;opacity:.55}
+.build{margin-top:6px;font-family:var(--mono,monospace);font-size:10px;letter-spacing:.14em;opacity:.6;background:none;border:0;color:inherit;padding:6px 8px;cursor:pointer}
+.build:after{content:"  \24D8";letter-spacing:0;font-size:12px}
+#infoNotes{margin:10px 0 0;padding-left:18px;font-size:13px;line-height:1.45}#infoNotes li{margin:4px 0}
 </style>
 </head>
 <body>
@@ -689,7 +691,16 @@
        automatically for a missed day, and that day is stamped WEATHER DELAY on the survey sheet.
        Informational only — one calm line, one button, nothing to buy. (The element ids keep the
        original "freeze" spelling on purpose: ge_streak.freezes is the same field it always was.) -->
-  <div class="modal" id="freezeModal" hidden>
+  <div class="modal" id="infoModal" hidden>
+      <div class="card">
+        <div class="sheetno" id="infoNo">REVISION NOTES</div>
+        <h2>What changed</h2>
+        <div class="stamp" id="infoStamp"></div>
+        <ul id="infoNotes"></ul>
+        <div class="row"><button class="ghostbtn" id="btnInfoClose">Close</button></div>
+      </div>
+    </div>
+    <div class="modal" id="freezeModal" hidden>
     <div class="card">
       <span class="no">FIELD LOG</span>
       <h2>Weather delay</h2>
@@ -805,7 +816,7 @@
            a button — the landing is exactly three taps and that is not negotiable. At most two
            clauses, no countdown, no CTA, and never a statement of something lost. -->
       <div class="status" id="menuStatus" hidden></div>
-      <div class="build" id="menuBuild" hidden></div>
+      <button class="build" id="btnInfo" data-chrome="1" hidden aria-label="Revision notes"></button>
       <button class="gatebtn" id="btnPlay">
         <svg class="blk" viewBox="0 0 22 22" aria-hidden="true"><defs><pattern id="h" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#ff8078"/><rect width="1.4" height="4" fill="#c24d46" opacity=".55"/></pattern></defs><rect x="1.5" y="1.5" width="19" height="19" fill="url(#h)" stroke="#c24d46" stroke-width="2"/><circle cx="11" cy="11" r="3" fill="#fff" opacity=".9"/></svg>
         <span id="playLabel">Play</span>

@@ -355,7 +355,7 @@
     refreshStatus();
     // Build revision stamp: written by the build scripts (build-info.js); absent in a raw dev
     // checkout, so the line simply stays hidden there. Passive text — never interactive.
-    const bb = $('menuBuild'), bv = typeof window !== 'undefined' && window.GE_BUILD;
+    const bb = $('btnInfo'), bv = typeof window !== 'undefined' && window.GE_BUILD;
     bb.hidden = !bv; if (bv) bb.textContent = 'REV ' + bv;
   }
   // The status line is the LAST thing the landing gained and the most easily abused: it is a passive
@@ -487,6 +487,18 @@
   dismissOnScrim($('recModal'), () => $('btnRecBack').click());                    // Back, not Start
   dismissOnScrim($('surveyModal'), () => $('btnSurveyClose').click());
   dismissOnScrim($('freezeModal'), () => $('btnFreezeOk').click());
+  // ⓘ revision notes: the build stamp plus the top section of WHATS-NEW.md, written at build
+  // time (window.GE_NOTES). Chrome, not a primary action — the landing count excludes it.
+  function showInfo() {
+    $('infoStamp').textContent = 'REV ' + (window.GE_BUILD || 'dev');
+    const ul = $('infoNotes'); ul.innerHTML = '';
+    const notes = Array.isArray(window.GE_NOTES) && window.GE_NOTES.length ? window.GE_NOTES : ['No notes for this build.'];
+    for (const n of notes) { const li = document.createElement('li'); li.textContent = n; ul.appendChild(li); }
+    $('infoModal').hidden = false; track('info_open');
+  }
+  $('btnInfo').onclick = showInfo;
+  $('btnInfoClose').onclick = () => { $('infoModal').hidden = true; };
+  dismissOnScrim($('infoModal'), () => $('btnInfoClose').click());
   dismissOnScrim($('livesModal'), () => $('btnLivesHome').click());                 // browsing is never blocked
   dismissOnScrim(screens.levels, () => $('btnLevelsBack').click());                 // back one layer
   dismissOnScrim(screens.legend, () => $('btnLegendBack').click());                 // back one layer
@@ -1568,7 +1580,7 @@
   window.GE_MENU = { show, get prog() { return prog; }, setSkin, CERT_STARS, CERT_SKINS, CHAPTERS, PER,
     APPR_SHEET, APPR_NAME, apprOn, refreshAppr, rewardName,
     // the landing's whole interactive surface: Play + two quiet entries, nothing else
-    landing: () => [...screens.menu.querySelectorAll('button, a, input, select, textarea, [role="button"], [tabindex]')]
+    landing: () => [...screens.menu.querySelectorAll('button, a, input, select, textarea, [role="button"], [tabindex]')].filter(el => !el.hasAttribute('data-chrome'))
       .filter(b => !b.hidden && b.getClientRects().length > 0).map(b => b.id || b.className),
     get streak() { return streak; }, checkStreak, refreshSurvey, renderSurvey,
     get survey() { return surveyWeek(); }, weekDates: () => weekDates(GE.now()), isoWeek: () => isoWeek(GE.now()),

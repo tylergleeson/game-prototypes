@@ -5,6 +5,7 @@
 import fs from 'fs';
 const GE_STAMP = (d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + ' · ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'))(new Date());
 const root = new URL('..', import.meta.url).pathname;
+const GE_NOTES = (() => { try { const md = fs.readFileSync(root + 'WHATS-NEW.md', 'utf8'); const sec = md.split(/^## /m)[1] || ''; return sec.split('\n').filter(l => l.startsWith('- ')).map(l => l.slice(2).trim().slice(0, 96)).slice(0, 10); } catch (e) { console.error('WHATS-NEW.md not read: ' + e.message); return []; } })();
 const html = fs.readFileSync(root + 'index.html', 'utf8');
 const levels = fs.readFileSync(root + 'levels.js', 'utf8');
 const dailies = fs.readFileSync(root + 'dailies.js', 'utf8'); // Daily Draft table (generated)
@@ -19,6 +20,7 @@ const out = `<title>Gate Escape</title>
 ${style}
 ${body}<script>
 window.GE_BUILD = '${GE_STAMP}';
+window.GE_NOTES = ${JSON.stringify(GE_NOTES)};
 window.BEACON_URL = window.BEACON_URL || ''; // '' = beacon disabled (zero network) — artifact builds stay offline
 ${levels}
 ${dailies}

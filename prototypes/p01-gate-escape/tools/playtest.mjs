@@ -5067,6 +5067,30 @@ const pixelOf = async (sel, fx, fy) => {
   }
 }
 
+// ---- round 2 lead: ⓘ revision notes ----
+// The cover's REV line is a tappable ⓘ (chrome, excluded from the landing's 3-action count)
+// that opens the build stamp plus the top section of WHATS-NEW.md written at build time.
+{
+  const r = await page.evaluate(() => {
+    window.GE_BUILD = '2026-09-05 · 00:00'; window.GE_NOTES = ['Alpha note', 'Beta note'];
+    window.GE_MENU.show('menu');
+    const btn = document.getElementById('btnInfo');
+    const landing = window.GE_MENU.landing();
+    btn.click();
+    const modal = document.getElementById('infoModal');
+    const out = { btnHidden: btn.hidden, btnText: btn.textContent, landing, open: !modal.hidden,
+      stamp: document.getElementById('infoStamp').textContent,
+      items: [...document.querySelectorAll('#infoNotes li')].map(li => li.textContent) };
+    document.getElementById('btnInfoClose').click();
+    out.closed = modal.hidden;
+    return out;
+  });
+  const ok = !r.btnHidden && /^REV 2026-09-05/.test(r.btnText) && JSON.stringify(r.landing) === '["btnPlay","btnLevels","btnLegend"]'
+    && r.open && /REV 2026-09-05/.test(r.stamp) && r.items.length === 2 && r.items[0] === 'Alpha note' && r.closed;
+  if (ok) console.log('revision notes ok: ⓘ shows "' + r.btnText + '", is not counted as a landing action, opens the stamp + ' + r.items.length + ' notes, and closes');
+  else { failures++; console.error('revision notes FAIL:', JSON.stringify(r)); }
+}
+
 // with BEACON_URL empty (the shipped index.html) the whole run must have been network-silent
 if (netReqs.length) { failures++; console.error('beacon off FAIL: unexpected network requests:', JSON.stringify(netReqs.slice(0, 5))); }
 else console.log('beacon off ok: BEACON_URL empty → zero network requests across the whole run');
