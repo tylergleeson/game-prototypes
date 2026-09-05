@@ -1,0 +1,681 @@
+{
+ "app": "color-block-jam",
+ "id": "6504332779",
+ "fetched": "2026-09-05",
+ "ccs": [
+  "us",
+  "gb",
+  "ca",
+  "au"
+ ],
+ "gaps": [],
+ "n": 1673,
+ "mean": 2.19,
+ "hist": [
+  761,
+  300,
+  305,
+  140,
+  167
+ ],
+ "byCc": {
+  "us": {
+   "n": 500,
+   "mean": 2.08,
+   "hist": [
+    252,
+    83,
+    86,
+    33,
+    46
+   ]
+  },
+  "gb": {
+   "n": 433,
+   "mean": 2.4,
+   "hist": [
+    164,
+    73,
+    97,
+    55,
+    44
+   ]
+  },
+  "ca": {
+   "n": 500,
+   "mean": 2.1,
+   "hist": [
+    237,
+    106,
+    76,
+    32,
+    49
+   ]
+  },
+  "au": {
+   "n": 240,
+   "mean": 2.26,
+   "hist": [
+    108,
+    38,
+    46,
+    20,
+    28
+   ]
+  }
+ },
+ "byVersion": [
+  {
+   "version": "6.2.0",
+   "n": 2,
+   "mean": 1.5,
+   "from": "2026-09-04"
+  },
+  {
+   "version": "6.1.6",
+   "n": 39,
+   "mean": 2.31,
+   "from": "2026-08-25"
+  },
+  {
+   "version": "5.3.0",
+   "n": 20,
+   "mean": 2,
+   "from": "2026-08-21"
+  },
+  {
+   "version": "5.2.3",
+   "n": 10,
+   "mean": 2.8,
+   "from": "2026-08-19"
+  },
+  {
+   "version": "5.1.5",
+   "n": 40,
+   "mean": 2.25,
+   "from": "2026-08-12"
+  },
+  {
+   "version": "4.2.0",
+   "n": 18,
+   "mean": 2.33,
+   "from": "2026-08-07"
+  },
+  {
+   "version": "4.1.3",
+   "n": 59,
+   "mean": 1.69,
+   "from": "2026-07-29"
+  },
+  {
+   "version": "3.2.0",
+   "n": 27,
+   "mean": 1.59,
+   "from": "2026-07-25"
+  }
+ ],
+ "byMonth": [
+  {
+   "month": "2025-10",
+   "n": 59,
+   "mean": 2.39
+  },
+  {
+   "month": "2025-11",
+   "n": 32,
+   "mean": 2.03
+  },
+  {
+   "month": "2025-12",
+   "n": 33,
+   "mean": 1.97
+  },
+  {
+   "month": "2026-01",
+   "n": 52,
+   "mean": 2.23
+  },
+  {
+   "month": "2026-02",
+   "n": 33,
+   "mean": 2.06
+  },
+  {
+   "month": "2026-03",
+   "n": 53,
+   "mean": 2.28
+  },
+  {
+   "month": "2026-04",
+   "n": 85,
+   "mean": 2.12
+  },
+  {
+   "month": "2026-05",
+   "n": 119,
+   "mean": 2.24
+  },
+  {
+   "month": "2026-06",
+   "n": 139,
+   "mean": 2.19
+  },
+  {
+   "month": "2026-07",
+   "n": 131,
+   "mean": 1.89
+  },
+  {
+   "month": "2026-08",
+   "n": 161,
+   "mean": 2.11
+  },
+  {
+   "month": "2026-09",
+   "n": 11,
+   "mean": 2.45
+  }
+ ],
+ "buckets": [
+  {
+   "id": "calm",
+   "label": "calm / craft praise",
+   "n": 646,
+   "share": 38.6,
+   "low": 306,
+   "high": 183,
+   "quotes": [
+    {
+     "rating": 3,
+     "version": "6.1.6",
+     "date": "2026-09-03",
+     "cc": "us",
+     "text": "Love it butttt — So I love this game, it’s very addictive. But some levels are impossible and force you to purchase the power ups. For the amount of money they want, the power ups really aren’t useful. If I spend $5 ther"
+    },
+    {
+     "rating": 3,
+     "version": "6.1.6",
+     "date": "2026-09-03",
+     "cc": "us",
+     "text": "Ads — Don’t get me wrong this game is really nice to play and I love it. But the fact that there is an ad after every level is crazy. It is after every single one. You do kind of get used to it, but it’s super annoying. "
+    },
+    {
+     "rating": 3,
+     "version": "6.1.6",
+     "date": "2026-09-02",
+     "cc": "us",
+     "text": "Time too short — I absolutely love this game but lately (struggling with 1879 right now) the levels are just repeating but with an insanely short time that makes it nearly impossible to pass so it stops being enjoyable a"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "timer",
+   "label": "timer / pressure",
+   "n": 462,
+   "share": 27.6,
+   "low": 295,
+   "high": 66,
+   "quotes": [
+    {
+     "rating": 2,
+     "version": "6.1.6",
+     "date": "2026-09-03",
+     "cc": "us",
+     "text": "Bait and Switch — If you run out of time or need a gate switched, you can watch an ad and it will do that for you: UNTIL you buy from them the first time. Then it will never offer the ad, only REAL money can help. NEVER "
+    },
+    {
+     "rating": 4,
+     "version": "6.1.6",
+     "date": "2026-09-02",
+     "cc": "us",
+     "text": "The time limits are crazy — I love this game but the time limits are so hard sometimes."
+    },
+    {
+     "rating": 5,
+     "version": "6.1.6",
+     "date": "2026-09-02",
+     "cc": "au",
+     "text": "Disruptive ads — Ads pay for free games. And there are many ways ads are delivered in this App: between rounds, to collect extra coins, to extend a round by 20 seconds etc But why have an ad banner displayed during actua"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "ads",
+   "label": "ads",
+   "n": 457,
+   "share": 27.3,
+   "low": 340,
+   "high": 55,
+   "quotes": [
+    {
+     "rating": 3,
+     "version": "6.1.6",
+     "date": "2026-09-03",
+     "cc": "us",
+     "text": "Ads — Don’t get me wrong this game is really nice to play and I love it. But the fact that there is an ad after every level is crazy. It is after every single one. You do kind of get used to it, but it’s super annoying. "
+    },
+    {
+     "rating": 5,
+     "version": "6.1.6",
+     "date": "2026-09-02",
+     "cc": "au",
+     "text": "Disruptive ads — Ads pay for free games. And there are many ways ads are delivered in this App: between rounds, to collect extra coins, to extend a round by 20 seconds etc But why have an ad banner displayed during actua"
+    },
+    {
+     "rating": 1,
+     "version": "6.1.6",
+     "date": "2026-09-01",
+     "cc": "us",
+     "text": "Ads take over — The ads continue to play music after you’ve collected points and continue playing music into the next game. Many of the ads cannot be muted, and this is very frustrating. When you are watching an ad, and "
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "difficulty",
+   "label": "difficulty / fairness",
+   "n": 310,
+   "share": 18.5,
+   "low": 194,
+   "high": 47,
+   "quotes": [
+    {
+     "rating": 3,
+     "version": "6.1.6",
+     "date": "2026-09-03",
+     "cc": "us",
+     "text": "Love it butttt — So I love this game, it’s very addictive. But some levels are impossible and force you to purchase the power ups. For the amount of money they want, the power ups really aren’t useful. If I spend $5 ther"
+    },
+    {
+     "rating": 3,
+     "version": "6.1.6",
+     "date": "2026-09-02",
+     "cc": "us",
+     "text": "Time too short — I absolutely love this game but lately (struggling with 1879 right now) the levels are just repeating but with an insanely short time that makes it nearly impossible to pass so it stops being enjoyable a"
+    },
+    {
+     "rating": 3,
+     "version": "6.1.6",
+     "date": "2026-08-31",
+     "cc": "ca",
+     "text": "Hard levels — Why make hard levels every other level? No fun when you stuck on same one for days and days. Better rewards needed. Other than that I enjoy the game"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "pricing",
+   "label": "pricing / IAP",
+   "n": 295,
+   "share": 17.6,
+   "low": 208,
+   "high": 36,
+   "quotes": [
+    {
+     "rating": 3,
+     "version": "6.1.6",
+     "date": "2026-09-03",
+     "cc": "us",
+     "text": "Love it butttt — So I love this game, it’s very addictive. But some levels are impossible and force you to purchase the power ups. For the amount of money they want, the power ups really aren’t useful. If I spend $5 ther"
+    },
+    {
+     "rating": 2,
+     "version": "6.1.6",
+     "date": "2026-09-03",
+     "cc": "us",
+     "text": "Bait and Switch — If you run out of time or need a gate switched, you can watch an ad and it will do that for you: UNTIL you buy from them the first time. Then it will never offer the ad, only REAL money can help. NEVER "
+    },
+    {
+     "rating": 1,
+     "version": "6.1.6",
+     "date": "2026-09-02",
+     "cc": "us",
+     "text": "Scam game — I bought the fail offer and they charged me $21.64 instead of $4.99. This game is just a scam to get money out of you."
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "praise:no-timer",
+   "label": "no-timer mention (praise ≥4★ / demand ≤2★)",
+   "n": 140,
+   "share": 8.4,
+   "low": 84,
+   "high": 19,
+   "quotes": [
+    {
+     "rating": 4,
+     "version": "4.1.3",
+     "date": "2026-08-01",
+     "cc": "ca",
+     "text": "Not what’s advertised — This game is fun but after a few levels there is a timer and what drew me to the game was it advertised no timer so I can’t just take my time to complete the level and you only get so many lives t"
+    },
+    {
+     "rating": 2,
+     "version": "2.3.1",
+     "date": "2026-07-20",
+     "cc": "gb",
+     "text": "Not free!! — I downloaded this because I had seen so many ads about it and thought it might be challenging. However, it is not possible to play this for free, because you get to about level 48 and you get a puzzle that y"
+    },
+    {
+     "rating": 1,
+     "version": "2.3.1",
+     "date": "2026-07-19",
+     "cc": "ca",
+     "text": "Arrêtez le temps 👎😡 pourquoi toujours un timer dans le cul !!! On ne peut pas jouer et relaxer 👎 — Arrêtez le temps 👎😡"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "lives",
+   "label": "lives / energy",
+   "n": 139,
+   "share": 8.3,
+   "low": 81,
+   "high": 29,
+   "quotes": [
+    {
+     "rating": 3,
+     "version": "6.1.6",
+     "date": "2026-08-31",
+     "cc": "us",
+     "text": "lives — I would like to give this game 5 stars because overall it is a great game, but the lives are so annoying. if you use all your lives (3) you can’t play a game until the clock is finished. IT SO ANNOYING!! what’s t"
+    },
+    {
+     "rating": 2,
+     "version": "6.1.6",
+     "date": "2026-08-27",
+     "cc": "au",
+     "text": "Fix time issues — later levels are essentially impossible to complete because developers keep shortening the times. Look at walkthroughs on YouTube to find out that the same level layouts have been cut by half the time. "
+    },
+    {
+     "rating": 3,
+     "version": "5.2.3",
+     "date": "2026-08-19",
+     "cc": "us",
+     "text": "So many ads — The ads are out of control. After you finish a level, before you start, randomly between lives. It's quickly becoming unplayable"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "bugs",
+   "label": "bugs / performance",
+   "n": 139,
+   "share": 8.3,
+   "low": 92,
+   "high": 15,
+   "quotes": [
+    {
+     "rating": 1,
+     "version": "6.2.0",
+     "date": "2026-09-04",
+     "cc": "us",
+     "text": "Bug or intentional? — I can no longer receive free ad rewards after purchasing item."
+    },
+    {
+     "rating": 1,
+     "version": "6.1.6",
+     "date": "2026-08-31",
+     "cc": "us",
+     "text": "Poor customer service — I spent hundreds of US dollars in this game, and when the game had a bug, they didn’t care to fix it. Contacted the customer service via in-app chat and email. No responses whatsoever. Don’t waste"
+    },
+    {
+     "rating": 2,
+     "version": "6.1.6",
+     "date": "2026-08-31",
+     "cc": "us",
+     "text": "Worked great until the ads! — Ever since the ads were added the game freezes way too much. Why I do like the feature to watch an ad for an extra 20 seconds I find it glitches way too much. I liked it better before they a"
+    }
+   ],
+   "spikes": [
+    {
+     "version": "5.3.0",
+     "share": 20
+    },
+    {
+     "version": "5.2.3",
+     "share": 20
+    }
+   ]
+  },
+  {
+   "id": "praise:no-ads",
+   "label": "no-ads mention (praise ≥4★ / demand ≤2★)",
+   "n": 73,
+   "share": 4.4,
+   "low": 48,
+   "high": 16,
+   "quotes": [
+    {
+     "rating": 1,
+     "version": "6.2.0",
+     "date": "2026-09-04",
+     "cc": "us",
+     "text": "Bug or intentional? — I can no longer receive free ad rewards after purchasing item."
+    },
+    {
+     "rating": 2,
+     "version": "6.2.0",
+     "date": "2026-09-04",
+     "cc": "us",
+     "text": "Getting Disappointing — This used to be my absolute favorite game, but lately it seems I am being inundated with little pop ups and different events and it is just so annoying. And I’m not talking about ads, I’m talking "
+    },
+    {
+     "rating": 2,
+     "version": "6.1.6",
+     "date": "2026-09-03",
+     "cc": "us",
+     "text": "Bait and Switch — If you run out of time or need a gate switched, you can watch an ad and it will do that for you: UNTIL you buy from them the first time. Then it will never offer the ad, only REAL money can help. NEVER "
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "supply",
+   "label": "level supply",
+   "n": 59,
+   "share": 3.5,
+   "low": 35,
+   "high": 12,
+   "quotes": [
+    {
+     "rating": 2,
+     "version": "6.1.6",
+     "date": "2026-09-03",
+     "cc": "us",
+     "text": "Bait and Switch — If you run out of time or need a gate switched, you can watch an ad and it will do that for you: UNTIL you buy from them the first time. Then it will never offer the ad, only REAL money can help. NEVER "
+    },
+    {
+     "rating": 3,
+     "version": "6.1.6",
+     "date": "2026-09-02",
+     "cc": "us",
+     "text": "Time too short — I absolutely love this game but lately (struggling with 1879 right now) the levels are just repeating but with an insanely short time that makes it nearly impossible to pass so it stops being enjoyable a"
+    },
+    {
+     "rating": 1,
+     "version": "6.1.6",
+     "date": "2026-08-29",
+     "cc": "us",
+     "text": "no new levels — once you cross a certain level, the older levels repeat but with less time"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "hints",
+   "label": "hints / undo",
+   "n": 32,
+   "share": 1.9,
+   "low": 15,
+   "high": 5,
+   "quotes": [
+    {
+     "rating": 2,
+     "version": "4.2.0",
+     "date": "2026-08-11",
+     "cc": "us",
+     "text": "I hate this game — The timer is ridiculous. More stressful for enjoyable. Skip it."
+    },
+    {
+     "rating": 1,
+     "version": "4.1.3",
+     "date": "2026-07-30",
+     "cc": "us",
+     "text": "This game’s ad keeps crashing my other game — Terrible! I play a different game where this game is one of many advertisements. Every other ad waits and times out correctly yet this ad does not. It’s a terrible cycle - th"
+    },
+    {
+     "rating": 2,
+     "version": "3.1.3",
+     "date": "2026-07-20",
+     "cc": "gb",
+     "text": "Good at start then too hard — The time limit ruins a great game. I’m at level 484 and the levels are just impossible in the time they give you without looking up the solution. A shame, if they removed the time limit, or "
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "meta",
+   "label": "meta / daily",
+   "n": 27,
+   "share": 1.6,
+   "low": 15,
+   "high": 7,
+   "quotes": [
+    {
+     "rating": 2,
+     "version": "6.2.0",
+     "date": "2026-09-04",
+     "cc": "us",
+     "text": "Getting Disappointing — This used to be my absolute favorite game, but lately it seems I am being inundated with little pop ups and different events and it is just so annoying. And I’m not talking about ads, I’m talking "
+    },
+    {
+     "rating": 4,
+     "version": "4.2.0",
+     "date": "2026-08-07",
+     "cc": "au",
+     "text": "Pls add some free bonus — Love the game, very challenging and some levels can have me stuck for a while! Could you pls add something like a daily login bonus ..?"
+    },
+    {
+     "rating": 4,
+     "version": "3.1.3",
+     "date": "2026-07-20",
+     "cc": "us",
+     "text": "Daily Prize — This is my favorite game! As you get up on levels, they get harder to beat. Since it’s so difficult & I play every single day, it would be nice if we got some type of daily rewards for logging in. Rather it"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "controls",
+   "label": "controls / legibility",
+   "n": 24,
+   "share": 1.4,
+   "low": 15,
+   "high": 3,
+   "quotes": [
+    {
+     "rating": 1,
+     "version": "6.1.6",
+     "date": "2026-09-01",
+     "cc": "us",
+     "text": "Ads take over — The ads continue to play music after you’ve collected points and continue playing music into the next game. Many of the ads cannot be muted, and this is very frustrating. When you are watching an ad, and "
+    },
+    {
+     "rating": 3,
+     "version": "5.2.3",
+     "date": "2026-08-19",
+     "cc": "us",
+     "text": "So many ads — The ads are out of control. After you finish a level, before you start, randomly between lives. It's quickly becoming unplayable"
+    },
+    {
+     "rating": 1,
+     "version": "5.1.5",
+     "date": "2026-08-14",
+     "cc": "us",
+     "text": "Stop fixing things that aren’t broken — I hate the new update and changed look. The brighter colors make it overstimulating and hard to see/focus. The new graphics like a cartoon for a baby. Please change it back!!!"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "praise:no-lives",
+   "label": "no-lives mention (praise ≥4★ / demand ≤2★)",
+   "n": 2,
+   "share": 0.1,
+   "low": 2,
+   "high": 0,
+   "quotes": [
+    {
+     "rating": 2,
+     "version": "1.33.23",
+     "date": "2026-01-18",
+     "cc": "ca",
+     "text": "good puzzle game — i have recently been having an issue where i basically do not get any lives and have a 24 hour timer that only decreases when i leave the app open it has been weeks since i made the support team aware "
+    },
+    {
+     "rating": 1,
+     "version": "1.19.3",
+     "date": "2025-06-19",
+     "cc": "au",
+     "text": "Very Glitchy! — Loved the game in the beginning, but then it became VERY glitchy! Every round you do, whether you start or end a game, Ads pops up and last a long time. If you manage to get a chance of getting unlimited "
+    }
+   ],
+   "spikes": []
+  }
+ ],
+ "stuckTop": [
+  [
+   "21",
+   3
+  ],
+  [
+   "39",
+   2
+  ],
+  [
+   "69",
+   2
+  ],
+  [
+   "1000",
+   2
+  ],
+  [
+   "1",
+   1
+  ],
+  [
+   "17",
+   1
+  ],
+  [
+   "24",
+   1
+  ],
+  [
+   "29",
+   1
+  ],
+  [
+   "34",
+   1
+  ],
+  [
+   "35",
+   1
+  ],
+  [
+   "40",
+   1
+  ],
+  [
+   "47",
+   1
+  ]
+ ]
+}

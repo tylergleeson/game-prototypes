@@ -1,0 +1,644 @@
+{
+ "app": "unblock-me",
+ "id": "315019111",
+ "fetched": "2026-09-05",
+ "ccs": [
+  "us",
+  "gb",
+  "ca",
+  "au"
+ ],
+ "gaps": [],
+ "n": 2000,
+ "mean": 4.3,
+ "hist": [
+  216,
+  69,
+  71,
+  195,
+  1449
+ ],
+ "byCc": {
+  "us": {
+   "n": 500,
+   "mean": 3.24,
+   "hist": [
+    155,
+    53,
+    35,
+    32,
+    225
+   ]
+  },
+  "gb": {
+   "n": 500,
+   "mean": 4.7,
+   "hist": [
+    15,
+    6,
+    13,
+    44,
+    422
+   ]
+  },
+  "ca": {
+   "n": 500,
+   "mean": 4.6,
+   "hist": [
+    25,
+    8,
+    15,
+    47,
+    405
+   ]
+  },
+  "au": {
+   "n": 500,
+   "mean": 4.64,
+   "hist": [
+    21,
+    2,
+    8,
+    72,
+    397
+   ]
+  }
+ },
+ "byVersion": [
+  {
+   "version": "3.0.3",
+   "n": 64,
+   "mean": 3.56,
+   "from": "2026-04-11"
+  },
+  {
+   "version": "3.0.0",
+   "n": 38,
+   "mean": 3.82,
+   "from": "2025-12-19"
+  },
+  {
+   "version": "2.4.9",
+   "n": 205,
+   "mean": 3.45,
+   "from": "2024-10-04"
+  },
+  {
+   "version": "2.4.6",
+   "n": 45,
+   "mean": 3.67,
+   "from": "2024-07-09"
+  },
+  {
+   "version": "2.4.5",
+   "n": 41,
+   "mean": 4.2,
+   "from": "2024-05-16"
+  },
+  {
+   "version": "2.4.2",
+   "n": 44,
+   "mean": 4.09,
+   "from": "2024-03-16"
+  },
+  {
+   "version": "2.4.0",
+   "n": 17,
+   "mean": 2.47,
+   "from": "2023-12-15"
+  },
+  {
+   "version": "2.3.10",
+   "n": 7,
+   "mean": 1.14,
+   "from": "2023-10-31"
+  }
+ ],
+ "byMonth": [
+  {
+   "month": "2025-09",
+   "n": 12,
+   "mean": 2.75
+  },
+  {
+   "month": "2025-10",
+   "n": 14,
+   "mean": 3.14
+  },
+  {
+   "month": "2025-11",
+   "n": 10,
+   "mean": 3.6
+  },
+  {
+   "month": "2025-12",
+   "n": 9,
+   "mean": 4
+  },
+  {
+   "month": "2026-01",
+   "n": 11,
+   "mean": 2.82
+  },
+  {
+   "month": "2026-02",
+   "n": 10,
+   "mean": 4.2
+  },
+  {
+   "month": "2026-03",
+   "n": 12,
+   "mean": 4.33
+  },
+  {
+   "month": "2026-04",
+   "n": 11,
+   "mean": 3.09
+  },
+  {
+   "month": "2026-05",
+   "n": 12,
+   "mean": 3.08
+  },
+  {
+   "month": "2026-06",
+   "n": 9,
+   "mean": 3.78
+  },
+  {
+   "month": "2026-07",
+   "n": 22,
+   "mean": 3.82
+  },
+  {
+   "month": "2026-08",
+   "n": 12,
+   "mean": 3.75
+  }
+ ],
+ "buckets": [
+  {
+   "id": "calm",
+   "label": "calm / craft praise",
+   "n": 1146,
+   "share": 57.3,
+   "low": 58,
+   "high": 1064,
+   "quotes": [
+    {
+     "rating": 5,
+     "version": "3.0.3",
+     "date": "2026-08-26",
+     "cc": "gb",
+     "text": "Review — Very good. Very fun. I can feel my brain growing more powerful. Mwuhuhahahahahahahaha!! #J sux"
+    },
+    {
+     "rating": 5,
+     "version": "3.0.3",
+     "date": "2026-08-20",
+     "cc": "us",
+     "text": "Rating — Great game"
+    },
+    {
+     "rating": 5,
+     "version": "3.0.3",
+     "date": "2026-08-18",
+     "cc": "au",
+     "text": "The best 🌟 — So relaxing 😴"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "ads",
+   "label": "ads",
+   "n": 280,
+   "share": 14,
+   "low": 194,
+   "high": 56,
+   "quotes": [
+    {
+     "rating": 1,
+     "version": "3.0.3",
+     "date": "2026-08-20",
+     "cc": "us",
+     "text": "Dirty — Uses ads and location tracking. I went to remove ads and hit the \"ads\" button. Can you believe that patches you into an ad??? So stupid. Instant uninstall."
+    },
+    {
+     "rating": 5,
+     "version": "3.0.3",
+     "date": "2026-08-17",
+     "cc": "us",
+     "text": "Solid little game — Keeps being fun even when I pause for awhile. One of the best parts is that you can kill the ANNOYING ads with a one time 99¢ donation. Hell, it’s totally worth that. The developers did a nice job her"
+    },
+    {
+     "rating": 1,
+     "version": "3.0.3",
+     "date": "2026-08-10",
+     "cc": "au",
+     "text": "Ads that don’t close — I really wanted this game after playing on a friend’s phone, but after every few puzzles there’s an ad, and what’s worse, the ad won’t close when I push the close button. This has happened multiple"
+    }
+   ],
+   "spikes": [
+    {
+     "version": "3.0.3",
+     "share": 37.5
+    },
+    {
+     "version": "3.0.0",
+     "share": 28.9
+    },
+    {
+     "version": "2.4.9",
+     "share": 37.1
+    },
+    {
+     "version": "2.4.2",
+     "share": 29.5
+    },
+    {
+     "version": "2.4.0",
+     "share": 70.6
+    },
+    {
+     "version": "2.3.10",
+     "share": 71.4
+    }
+   ]
+  },
+  {
+   "id": "praise:no-ads",
+   "label": "no-ads mention (praise ≥4★ / demand ≤2★)",
+   "n": 46,
+   "share": 2.3,
+   "low": 22,
+   "high": 20,
+   "quotes": [
+    {
+     "rating": 5,
+     "version": "3.0.3",
+     "date": "2026-06-09",
+     "cc": "us",
+     "text": "Love — Great game, not too many ads."
+    },
+    {
+     "rating": 1,
+     "version": "3.0.0",
+     "date": "2026-02-11",
+     "cc": "us",
+     "text": "ads on the play screen — no mention it is ad based. deleted"
+    },
+    {
+     "rating": 1,
+     "version": "3.0.0",
+     "date": "2026-01-06",
+     "cc": "us",
+     "text": "Ad Agony!!! — I used to play this forever years ago — loaded it up, set for some simple relaxing puzzles — and the ads are so bad, so prolific, and there’s a forced timer you have to wait for the cancel out X to even sho"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "pricing",
+   "label": "pricing / IAP",
+   "n": 44,
+   "share": 2.2,
+   "low": 21,
+   "high": 21,
+   "quotes": [
+    {
+     "rating": 1,
+     "version": "3.0.3",
+     "date": "2026-05-10",
+     "cc": "us",
+     "text": "Won’t remove ads — Paid to remove ads and they won’t remove them"
+    },
+    {
+     "rating": 1,
+     "version": "3.0.3",
+     "date": "2026-04-15",
+     "cc": "us",
+     "text": "It was good. — I played 1021 levels until the first ad started. Why? I’d rather pay you $5 directly than to deal with endless ads. I’m deleting this game for this reason."
+    },
+    {
+     "rating": 4,
+     "version": "3.0.3",
+     "date": "2026-04-11",
+     "cc": "us",
+     "text": "the 2nd game — I like the idea of the game but the price of this is you have to pay for more hints"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "difficulty",
+   "label": "difficulty / fairness",
+   "n": 44,
+   "share": 2.2,
+   "low": 18,
+   "high": 19,
+   "quotes": [
+    {
+     "rating": 1,
+     "version": "3.0.3",
+     "date": "2026-07-01",
+     "cc": "us",
+     "text": "Okay game, aggressive ads — There's no way to report this so I assume apple is okay with it, but the ads on these games are getting ridiculous. Hitting the \"x\" to close the ad opens more ad and the store. Some ads don't "
+    },
+    {
+     "rating": 1,
+     "version": "3.0.3",
+     "date": "2026-06-12",
+     "cc": "us",
+     "text": "Good grief! — I like the game BUT really an ad after 2 puzzles? And no way to say no thanks? And no way to pay to turn them off? I’m done!"
+    },
+    {
+     "rating": 1,
+     "version": "3.0.3",
+     "date": "2026-06-04",
+     "cc": "us",
+     "text": "Ad Takeover — Simple fun game but why do the ads trap me? You get the constant ad for Royal Kingdom which I’ll sit and watch the ad but it won’t go away and there is no way to make it go away. If I wanted to play Royal K"
+    }
+   ],
+   "spikes": [
+    {
+     "version": "2.3.10",
+     "share": 28.6
+    }
+   ]
+  },
+  {
+   "id": "bugs",
+   "label": "bugs / performance",
+   "n": 39,
+   "share": 2,
+   "low": 13,
+   "high": 21,
+   "quotes": [
+    {
+     "rating": 2,
+     "version": "3.0.3",
+     "date": "2026-08-13",
+     "cc": "ca",
+     "text": "IOS 12 — It very good game played a lot. If it’s compatible with iOS 12 developer should made it work but it crashing right after it click to start."
+    },
+    {
+     "rating": 2,
+     "version": "3.0.0",
+     "date": "2026-03-08",
+     "cc": "us",
+     "text": "So many ads — This game is challenging and fun to play. I don’t mind ads but this game has gotten overrun with ads every 3 or 4 levels. This is bad enough, but the ads are so poorly done they almost always leave the play"
+    },
+    {
+     "rating": 5,
+     "version": "2.4.9",
+     "date": "2025-12-05",
+     "cc": "us",
+     "text": "Why you should get unblock me — It is fun and it trains your brain while being fair, and not making kids like me crash out. Unblock me isn’t always easy, but isn’t just for kids, Adults can have fun, look cool, be cool w"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "hints",
+   "label": "hints / undo",
+   "n": 37,
+   "share": 1.9,
+   "low": 9,
+   "high": 22,
+   "quotes": [
+    {
+     "rating": 4,
+     "version": "3.0.3",
+     "date": "2026-05-24",
+     "cc": "ca",
+     "text": "Seriously 😒😒😮😮😮🤯🤯🤯 — I want to make it so you can’t skip levels fix this my brother cheated on me and skipped a level"
+    },
+    {
+     "rating": 1,
+     "version": "3.0.3",
+     "date": "2026-04-18",
+     "cc": "us",
+     "text": "Game is great but the ads are hard to skip — I’m fine with ads but this was different. It was like a new game appeared out of the blue. Come on, man."
+    },
+    {
+     "rating": 4,
+     "version": "3.0.3",
+     "date": "2026-04-11",
+     "cc": "us",
+     "text": "the 2nd game — I like the idea of the game but the price of this is you have to pay for more hints"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "meta",
+   "label": "meta / daily",
+   "n": 26,
+   "share": 1.3,
+   "low": 2,
+   "high": 23,
+   "quotes": [
+    {
+     "rating": 5,
+     "version": "3.0.3",
+     "date": "2026-07-10",
+     "cc": "us",
+     "text": "Classic and fun — Really appreciate that you guys maintain the classic feel to this app. Makes me want to support it more. Also great that there’s both relax and challenge mode. One of the best mobile puzzle games!"
+    },
+    {
+     "rating": 5,
+     "version": "2.4.9",
+     "date": "2025-12-07",
+     "cc": "us",
+     "text": "Last Authentic, Non-Deceitful, Game Left in the App Store. — 12/7/2025. I discovered this game maybe over a decade ago, more or less. It ached me that every mobile game I download is full of covert tactics to get you to "
+    },
+    {
+     "rating": 5,
+     "version": "2.4.9",
+     "date": "2025-09-20",
+     "cc": "us",
+     "text": "Love it !!! — This game is super awesome, I’ve been playing for years on relax mode especially on my free time at work."
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "controls",
+   "label": "controls / legibility",
+   "n": 17,
+   "share": 0.9,
+   "low": 6,
+   "high": 9,
+   "quotes": [
+    {
+     "rating": 5,
+     "version": "3.0.3",
+     "date": "2026-08-06",
+     "cc": "us",
+     "text": "OG gamer — I use to play this on my iPod touch when I was younger. Glad to see it’s still around! Love this game."
+    },
+    {
+     "rating": 1,
+     "version": "3.0.0",
+     "date": "2026-03-16",
+     "cc": "us",
+     "text": "This game showed up on my phone — I downloaded this game to my ipod touch in 2011. Used to love it snd play alot but, I have never put it on any of my iphones yet today its magically there….. excuse me"
+    },
+    {
+     "rating": 3,
+     "version": "2.4.9",
+     "date": "2025-03-23",
+     "cc": "us",
+     "text": "Ads are out control — The app slams you with ads almost right out of the gate which ruins the experience."
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "supply",
+   "label": "level supply",
+   "n": 13,
+   "share": 0.7,
+   "low": 1,
+   "high": 10,
+   "quotes": [
+    {
+     "rating": 5,
+     "version": "2.4.6",
+     "date": "2024-09-07",
+     "cc": "us",
+     "text": "Needs more expert levels please! — I love this game and used to play it on the school bus years ago… I’d occasionally come back to it once or twice a year usually on road trips when I’m not driving, but it’s only fun to "
+    },
+    {
+     "rating": 5,
+     "version": "2.4.5",
+     "date": "2024-06-11",
+     "cc": "gb",
+     "text": "Great offline game — I've always turned to this game when I don't have network. It's challenging, doable and it has so many stages that I don't feel like I'll ever run out!"
+    },
+    {
+     "rating": 3,
+     "version": "2.4.5",
+     "date": "2024-05-25",
+     "cc": "us",
+     "text": "Good game but annoying ads. — I don’t mind ads in general, but apparently here there is no way to get back to the game after the ad. It just opens the app store. I have to close the whole app and repeat the level I just "
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "timer",
+   "label": "timer / pressure",
+   "n": 7,
+   "share": 0.4,
+   "low": 2,
+   "high": 4,
+   "quotes": [
+    {
+     "rating": 1,
+     "version": "3.0.0",
+     "date": "2026-01-06",
+     "cc": "us",
+     "text": "Ad Agony!!! — I used to play this forever years ago — loaded it up, set for some simple relaxing puzzles — and the ads are so bad, so prolific, and there’s a forced timer you have to wait for the cancel out X to even sho"
+    },
+    {
+     "rating": 5,
+     "version": "2.4.9",
+     "date": "2025-12-07",
+     "cc": "us",
+     "text": "Last Authentic, Non-Deceitful, Game Left in the App Store. — 12/7/2025. I discovered this game maybe over a decade ago, more or less. It ached me that every mobile game I download is full of covert tactics to get you to "
+    },
+    {
+     "rating": 1,
+     "version": "2.1.7",
+     "date": "2022-12-02",
+     "cc": "gb",
+     "text": "Ads! Ads! Ads! — Don’t waste your time. It’s a good game, but you don’t get to play it, there’s ads, literally every minute !! I timed it. The ads get longer, too ! Ridiculous"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "praise:no-timer",
+   "label": "no-timer mention (praise ≥4★ / demand ≤2★)",
+   "n": 4,
+   "share": 0.2,
+   "low": 0,
+   "high": 4,
+   "quotes": [
+    {
+     "rating": 5,
+     "version": "3.0.3",
+     "date": "2026-04-30",
+     "cc": "gb",
+     "text": "Love it! — Unblock me is so fun but also keeps your brain active. It gives your brain a time to think by not putting a time limit on the levels! Great for people of all ages."
+    },
+    {
+     "rating": 5,
+     "version": "2.4.9",
+     "date": "2025-05-24",
+     "cc": "us",
+     "text": "It’s Like Color Block Jam Without The Timer! — Soothing. Relaxed mode and challenge mode. Lots of ads, but it’s enjoyable nonetheless."
+    },
+    {
+     "rating": 5,
+     "version": "2.4.0",
+     "date": "2024-01-27",
+     "cc": "us",
+     "text": "Simple and great — Very basic app version of one of my favorite brain teaser games, and I don’t want or need it to be anything more. I play it with no timer (enough of my life is on a timer), and there’s a short ad every"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "lives",
+   "label": "lives / energy",
+   "n": 2,
+   "share": 0.1,
+   "low": 0,
+   "high": 2,
+   "quotes": [
+    {
+     "rating": 5,
+     "version": "2.4.9",
+     "date": "2025-12-03",
+     "cc": "us",
+     "text": "The best game ever — This is the best tweet I’ve seen all week so so happy 😁 thank you so very kind to everyone and thank you so many people that are so supportive to us and I love you 😘 and thank for being so kind to "
+    },
+    {
+     "rating": 5,
+     "version": "1.3.7",
+     "date": "2013-08-13",
+     "cc": "gb",
+     "text": "Good — Good but takes too long to load lives"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "praise:no-lives",
+   "label": "no-lives mention (praise ≥4★ / demand ≤2★)",
+   "n": 1,
+   "share": 0.1,
+   "low": 0,
+   "high": 1,
+   "quotes": [
+    {
+     "rating": 5,
+     "version": "1.5.95",
+     "date": "2017-03-14",
+     "cc": "gb",
+     "text": "Play for 2 minutes or 2 hours — The perfect filler for every boring moment, no problem to pick up and put down at any point. Instantly absorbing, beautiful design. No more fuming waiting for others who are late! Just rel"
+    }
+   ],
+   "spikes": []
+  }
+ ],
+ "stuckTop": [
+  [
+   "277",
+   1
+  ]
+ ]
+}

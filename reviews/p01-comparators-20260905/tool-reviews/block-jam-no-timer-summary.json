@@ -1,0 +1,397 @@
+{
+ "app": "block-jam-no-timer",
+ "id": "6749565663",
+ "fetched": "2026-09-05",
+ "ccs": [
+  "us",
+  "gb",
+  "ca",
+  "au"
+ ],
+ "gaps": [],
+ "n": 18,
+ "mean": 2.72,
+ "hist": [
+  7,
+  1,
+  5,
+  0,
+  5
+ ],
+ "byCc": {
+  "us": {
+   "n": 10,
+   "mean": 2.5,
+   "hist": [
+    4,
+    1,
+    3,
+    0,
+    2
+   ]
+  },
+  "gb": {
+   "n": 4,
+   "mean": 3.5,
+   "hist": [
+    1,
+    0,
+    1,
+    0,
+    2
+   ]
+  },
+  "ca": {
+   "n": 2,
+   "mean": 2,
+   "hist": [
+    1,
+    0,
+    1,
+    0,
+    0
+   ]
+  },
+  "au": {
+   "n": 2,
+   "mean": 3,
+   "hist": [
+    1,
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ },
+ "byVersion": [
+  {
+   "version": "1.25.1",
+   "n": 5,
+   "mean": 2,
+   "from": "2026-05-10"
+  },
+  {
+   "version": "1.20.1",
+   "n": 5,
+   "mean": 2.6,
+   "from": "2026-03-02"
+  },
+  {
+   "version": "1.19.1",
+   "n": 1,
+   "mean": 5,
+   "from": "2026-02-05"
+  },
+  {
+   "version": "1.12.1",
+   "n": 3,
+   "mean": 3,
+   "from": "2025-11-03"
+  },
+  {
+   "version": "1.9.1",
+   "n": 2,
+   "mean": 3,
+   "from": "2025-09-14"
+  },
+  {
+   "version": "1.8.1",
+   "n": 2,
+   "mean": 3,
+   "from": "2025-09-08"
+  }
+ ],
+ "byMonth": [
+  {
+   "month": "2025-09",
+   "n": 4,
+   "mean": 3
+  },
+  {
+   "month": "2025-11",
+   "n": 3,
+   "mean": 3
+  },
+  {
+   "month": "2026-02",
+   "n": 1,
+   "mean": 5
+  },
+  {
+   "month": "2026-03",
+   "n": 3,
+   "mean": 3
+  },
+  {
+   "month": "2026-04",
+   "n": 2,
+   "mean": 2
+  },
+  {
+   "month": "2026-05",
+   "n": 1,
+   "mean": 1
+  },
+  {
+   "month": "2026-06",
+   "n": 1,
+   "mean": 1
+  },
+  {
+   "month": "2026-07",
+   "n": 3,
+   "mean": 2.67
+  }
+ ],
+ "buckets": [
+  {
+   "id": "praise:no-timer",
+   "label": "no-timer mention (praise ≥4★ / demand ≤2★)",
+   "n": 9,
+   "share": 50,
+   "low": 4,
+   "high": 3,
+   "quotes": [
+    {
+     "rating": 3,
+     "version": "1.25.1",
+     "date": "2026-07-03",
+     "cc": "us",
+     "text": "No timer but limited moves — Nothing like the real block game. A little annoying because it takes you to the store in between each level but you don’t have to watch ads as they are at the bottom."
+    },
+    {
+     "rating": 1,
+     "version": "1.25.1",
+     "date": "2026-06-19",
+     "cc": "us",
+     "text": "You say NO TIMER — What a misleading statement! You have a timer and what a waste for such a game. DONE with this game. You don’t even deserve the 1 star I had to give."
+    },
+    {
+     "rating": 1,
+     "version": "1.25.1",
+     "date": "2026-05-10",
+     "cc": "ca",
+     "text": "Let down — No timer. Great! But then you have a limited amount of moves. Not impressed!"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "calm",
+   "label": "calm / craft praise",
+   "n": 4,
+   "share": 22.2,
+   "low": 1,
+   "high": 2,
+   "quotes": [
+    {
+     "rating": 2,
+     "version": "1.25.1",
+     "date": "2026-07-12",
+     "cc": "us",
+     "text": "Stops at 1500 level — This was fun, but it has stopped at level 1500 permanently. I should never have paid for anything. I feel cheated. This game needs to continue."
+    },
+    {
+     "rating": 3,
+     "version": "1.20.1",
+     "date": "2026-04-04",
+     "cc": "us",
+     "text": "Fun but irritating — This is a super-addictive game, but there are some annoyances. One frustrating one is that every 7 days you’ll receive a “big prize” that will wipe out all the cheats that you’ve accumulated up to th"
+    },
+    {
+     "rating": 5,
+     "version": "1.19.1",
+     "date": "2026-02-05",
+     "cc": "us",
+     "text": "Great game — Surprisingly challenging!"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "ads",
+   "label": "ads",
+   "n": 2,
+   "share": 11.1,
+   "low": 1,
+   "high": 0,
+   "quotes": [
+    {
+     "rating": 3,
+     "version": "1.25.1",
+     "date": "2026-07-03",
+     "cc": "us",
+     "text": "No timer but limited moves — Nothing like the real block game. A little annoying because it takes you to the store in between each level but you don’t have to watch ads as they are at the bottom."
+    },
+    {
+     "rating": 1,
+     "version": "1.8.1",
+     "date": "2025-09-08",
+     "cc": "us",
+     "text": "Impossible to pass level 61 — It’s actually impossible to solve level 61 unless you watch ads or buy things. Not worth it"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "pricing",
+   "label": "pricing / IAP",
+   "n": 2,
+   "share": 11.1,
+   "low": 2,
+   "high": 0,
+   "quotes": [
+    {
+     "rating": 2,
+     "version": "1.25.1",
+     "date": "2026-07-12",
+     "cc": "us",
+     "text": "Stops at 1500 level — This was fun, but it has stopped at level 1500 permanently. I should never have paid for anything. I feel cheated. This game needs to continue."
+    },
+    {
+     "rating": 1,
+     "version": "1.9.1",
+     "date": "2025-09-14",
+     "cc": "au",
+     "text": "Typical app that starts out great — And then eventually uses tactics to try to manipulate you to spend money. Don’t download it. It’s trash."
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "timer",
+   "label": "timer / pressure",
+   "n": 1,
+   "share": 5.6,
+   "low": 0,
+   "high": 0,
+   "quotes": [
+    {
+     "rating": 3,
+     "version": "1.12.1",
+     "date": "2025-11-03",
+     "cc": "us",
+     "text": "Yes, TIMER! — Almost immediately an ad displayed asking me to pay for no ads. Am I misunderstanding something?"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "difficulty",
+   "label": "difficulty / fairness",
+   "n": 1,
+   "share": 5.6,
+   "low": 1,
+   "high": 0,
+   "quotes": [
+    {
+     "rating": 1,
+     "version": "1.8.1",
+     "date": "2025-09-08",
+     "cc": "us",
+     "text": "Impossible to pass level 61 — It’s actually impossible to solve level 61 unless you watch ads or buy things. Not worth it"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "praise:no-ads",
+   "label": "no-ads mention (praise ≥4★ / demand ≤2★)",
+   "n": 1,
+   "share": 5.6,
+   "low": 0,
+   "high": 0,
+   "quotes": [
+    {
+     "rating": 3,
+     "version": "1.12.1",
+     "date": "2025-11-03",
+     "cc": "us",
+     "text": "Yes, TIMER! — Almost immediately an ad displayed asking me to pay for no ads. Am I misunderstanding something?"
+    }
+   ],
+   "spikes": []
+  },
+  {
+   "id": "lives",
+   "label": "lives / energy",
+   "n": 0,
+   "share": 0,
+   "low": 0,
+   "high": 0,
+   "quotes": [],
+   "spikes": []
+  },
+  {
+   "id": "supply",
+   "label": "level supply",
+   "n": 0,
+   "share": 0,
+   "low": 0,
+   "high": 0,
+   "quotes": [],
+   "spikes": []
+  },
+  {
+   "id": "bugs",
+   "label": "bugs / performance",
+   "n": 0,
+   "share": 0,
+   "low": 0,
+   "high": 0,
+   "quotes": [],
+   "spikes": []
+  },
+  {
+   "id": "controls",
+   "label": "controls / legibility",
+   "n": 0,
+   "share": 0,
+   "low": 0,
+   "high": 0,
+   "quotes": [],
+   "spikes": []
+  },
+  {
+   "id": "hints",
+   "label": "hints / undo",
+   "n": 0,
+   "share": 0,
+   "low": 0,
+   "high": 0,
+   "quotes": [],
+   "spikes": []
+  },
+  {
+   "id": "meta",
+   "label": "meta / daily",
+   "n": 0,
+   "share": 0,
+   "low": 0,
+   "high": 0,
+   "quotes": [],
+   "spikes": []
+  },
+  {
+   "id": "praise:no-lives",
+   "label": "no-lives mention (praise ≥4★ / demand ≤2★)",
+   "n": 0,
+   "share": 0,
+   "low": 0,
+   "high": 0,
+   "quotes": [],
+   "spikes": []
+  }
+ ],
+ "stuckTop": [
+  [
+   "61",
+   1
+  ],
+  [
+   "1500",
+   1
+  ]
+ ]
+}
